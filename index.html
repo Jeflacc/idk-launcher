@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDK Launcher - The Next Generation Minecraft Experience</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-container">
+        <video autoplay muted loop playsinline class="bg-video">
+            <source src="assets/background.mp4" type="video/mp4">
+        </video>
+        <div class="bg-overlay"></div>
+    </div>
+
+    <nav class="glass-nav">
+        <div class="container">
+            <div class="logo">
+                <img src="assets/logo.png" alt="IDK Logo">
+                <span>IDK. <span>LAUNCHER</span></span>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#download" class="download-btn-small">Download Now</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <span class="badge">V1.0.0 STABLE</span>
+                    <h1>Elevate Your <span>Minecraft</span> Journey</h1>
+                    <p>Experience the most powerful, beautiful, and intuitive Minecraft launcher ever built. Sandboxed modpacks, built-in marketplace, and peak performance optimization.</p>
+                    <div class="hero-actions">
+                        <a href="../dist-electron/IDK Launcher Setup 1.0.0.exe" class="main-download-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Download for Windows
+                        </a>
+                        <a href="#features" class="secondary-btn">Explore Features</a>
+                    </div>
+                </div>
+                <div class="hero-preview">
+                    <div class="mockup-container">
+                        <img src="assets/logo.png" class="mockup-img" alt="Launcher Preview">
+                        <div class="floating-badge fb-1"><span>⚡</span> 240+ FPS</div>
+                        <div class="floating-badge fb-2"><span>🧩</span> 1000+ Mods</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Engineered for <span>Excellence</span></h2>
+                    <p>Stop settling for average launchers. IDK gives you total control over your game.</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="icon">🧩</div>
+                        <h3>Modpack Manager</h3>
+                        <p>Create sandboxed profiles with their own mods, resource packs, and shaders. Zero conflict, total isolation.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon">🏪</div>
+                        <h3>Live Marketplace</h3>
+                        <p>Browse and install thousands of mods directly from Modrinth without ever leaving the launcher.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon">🚀</div>
+                        <h3>Performance First</h3>
+                        <p>One-click Sodium integration and smart memory allocation for the smoothest gameplay possible.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="download" class="cta">
+            <div class="container">
+                <div class="glass-card">
+                    <h2>Ready to start your adventure?</h2>
+                    <p>Join thousands of players who have already upgraded to the IDK experience.</p>
+                    <a href="../dist-electron/IDK Launcher Setup 1.0.0.exe" class="main-download-btn large">Download Standalone Installer</a>
+                    <span class="subtext">Requires Windows 10 or 11 (x64)</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Indkingdom Launcher. Built with passion for the community.</p>
+        </div>
+    </footer>
+</body>
+</html>
