@@ -1,0 +1,53 @@
+{
+  "name": "idk-launcher",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "electron-main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
+    "dev:electron": "concurrently \"npm run dev\" \"npm run electron\"",
+    "dist": "npm run build && electron-builder --win"
+  },
+  "build": {
+    "appId": "com.vathir.idklauncher",
+    "productName": "IDK Launcher",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "win": {
+      "icon": "logo.png",
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "files": [
+      "dist/**/*",
+      "electron-main.cjs",
+      "preload.cjs",
+      "splash.html",
+      "public/**/*"
+    ]
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "electron": "^42.1.0",
+    "electron-builder": "^26.8.1",
+    "vite": "^8.0.12",
+    "wait-on": "^9.0.10"
+  },
+  "dependencies": {
+    "cross-env": "^10.1.0",
+    "minecraft-launcher-core": "^3.18.2"
+  }
+}
