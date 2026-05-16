@@ -110,14 +110,8 @@ document.querySelector('#app').innerHTML = `
                 <div class="custom-option" data-loader="Forge">
                   <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> Forge</span>
                 </div>
-                <div class="custom-option" data-loader="NeoForge">
-                  <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path><circle cx="19" cy="5" r="2"></circle></svg> NeoForge</span>
-                </div>
                 <div class="custom-option" data-loader="Fabric">
                   <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="15"></line></svg> Fabric</span>
-                </div>
-                <div class="custom-option" data-loader="Quilt">
-                  <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Quilt</span>
                 </div>
               </div>
             </div>
@@ -252,15 +246,9 @@ document.querySelector('#app').innerHTML = `
             <p style="font-size:18px; font-family:var(--font-title);">Select or create a modpack to get started</p>
           </div>
           <div class="news-section" style="padding: 0 40px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-              <h2 class="section-title" style="margin-bottom:0;">Trending Modpacks</h2>
-              <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
-                CurseForge
-              </span>
-            </div>
-            <div class="trending-modpacks-grid" id="trending-mods-grid">
-              <div style="padding: 40px; text-align: center; color: var(--text-muted); width: 100%;">Loading modpacks...</div>
+            <h2 class="section-title">Trending on Modrinth</h2>
+            <div class="news-grid" id="trending-mods-grid">
+              <div style="padding: 40px; text-align: center; color: var(--text-muted); width: 100%;">Loading marketplace...</div>
             </div>
           </div>
         </div>
@@ -297,14 +285,8 @@ document.querySelector('#app').innerHTML = `
     </div>
     <div class="mod-browser" id="mod-browser">
       <div class="mod-browser-header">
-        <h3 id="browser-title">Browse Mods</h3>
+        <h3 id="browser-title">Browse on Modrinth</h3>
         <button class="mod-browser-close" id="btn-close-browser">✕</button>
-      </div>
-      <div style="padding: 0 24px 12px; display:flex; align-items:center; gap:10px;">
-        <div class="provider-pill-group" id="provider-pill-group">
-          <button class="provider-pill active" data-provider="modrinth" id="pill-modrinth">Modrinth</button>
-          <button class="provider-pill" data-provider="curseforge" id="pill-curseforge">CurseForge</button>
-        </div>
       </div>
       <input type="text" class="clean-input" id="mod-search" placeholder="Search..." style="margin:0 24px 16px;width:calc(100% - 48px);" />
       <div class="mod-browser-results" id="mod-browser-results"></div>
@@ -315,13 +297,7 @@ document.querySelector('#app').innerHTML = `
         <input class="clean-input" id="new-mp-name" placeholder="Modpack name..." style="text-align:left;" />
         <div style="display:flex;gap:12px;">
           <select class="clean-select" id="new-mp-version"></select>
-          <select class="clean-select" id="new-mp-loader">
-            <option value="Vanilla">Vanilla</option>
-            <option value="Forge">Forge</option>
-            <option value="NeoForge">NeoForge</option>
-            <option value="Fabric" selected>Fabric</option>
-            <option value="Quilt">Quilt</option>
-          </select>
+          <select class="clean-select" id="new-mp-loader"><option value="Fabric">Fabric</option><option value="Vanilla">Vanilla</option></select>
         </div>
         <div style="display:flex;gap:10px;">
           <button class="submit-btn" id="btn-confirm-create-mp" style="flex:1;">Create</button>
@@ -845,8 +821,7 @@ if (modpacks.length !== originalCount) {
   localStorage.setItem('idk_modpacks', JSON.stringify(modpacks));
 }
 let activeModpackId = null;
-let browserMode = 'mod'; // 'mod' | 'resourcepack' | 'shader' | 'modpack'
-let currentProvider = 'modrinth';
+let browserMode = 'mod'; // 'mod' | 'resourcepack' | 'shader'
 
 function mpSave() { localStorage.setItem('idk_modpacks', JSON.stringify(modpacks)); }
 function mpGet() { return modpacks.find(m => m.id === activeModpackId) || null; }
@@ -944,7 +919,7 @@ async function mpRemoveItem(item, type, apiMethod) {
 document.getElementById('btn-new-modpack').addEventListener('click', () => {
   const sel = document.getElementById('new-mp-version');
   if (sel.options.length === 0 && allVersions.length > 0) {
-    allVersions.filter(v => v.type === 'release').slice(0, 50).forEach(v => {
+    allVersions.filter(v => v.type === 'release').slice(0, 30).forEach(v => {
       const o = document.createElement('option'); o.value = v.id; o.textContent = v.id; sel.appendChild(o);
     });
   }
@@ -977,7 +952,7 @@ document.getElementById('btn-delete-modpack').addEventListener('click', () => {
 // --- Unified Browser ---
 function openBrowser(mode) {
   browserMode = mode;
-  const titles = { mod: 'Browse Mods', resourcepack: 'Browse Resource Packs', shader: 'Browse Shaders', modpack: 'Browse Modpacks' };
+  const titles = { mod: 'Browse Mods on Modrinth', resourcepack: 'Browse Resource Packs', shader: 'Browse Shaders' };
   const placeholders = { mod: 'Search mods...', resourcepack: 'Search resource packs...', shader: 'Search shaders...' };
   document.getElementById('browser-title').innerText = titles[mode];
   document.getElementById('mod-search').placeholder = placeholders[mode];
@@ -989,16 +964,6 @@ document.getElementById('btn-browse-mods').addEventListener('click', () => openB
 document.getElementById('btn-browse-rp').addEventListener('click', () => openBrowser('resourcepack'));
 document.getElementById('btn-browse-shaders').addEventListener('click', () => openBrowser('shader'));
 document.getElementById('btn-close-browser').addEventListener('click', () => document.getElementById('mod-browser').classList.remove('active'));
-
-// Provider pill switching
-document.querySelectorAll('.provider-pill').forEach(pill => {
-  pill.addEventListener('click', () => {
-    document.querySelectorAll('.provider-pill').forEach(p => p.classList.remove('active'));
-    pill.classList.add('active');
-    currentProvider = pill.getAttribute('data-provider');
-    mpBrowse(document.getElementById('mod-search').value);
-  });
-});
 
 let mpSearchTimeout;
 document.getElementById('mod-search').addEventListener('input', e => {
@@ -1013,19 +978,7 @@ async function mpBrowse(query) {
   try {
     let facets;
     if (browserMode === 'mod') {
-      // Modrinth uses 'neoforge' for NeoForge and 'quilt' for Quilt; map display names to API slugs
-      const loaderSlugMap = { vanilla: 'vanilla', forge: 'forge', neoforge: 'neoforge', fabric: 'fabric', quilt: 'quilt' };
-      const loaderSlug = loaderSlugMap[mp.loader.toLowerCase()] || mp.loader.toLowerCase();
-      // Quilt is compatible with Fabric mods; include both in the search (inner array = OR condition)
-      const loaderFacets = loaderSlug === 'quilt'
-        ? [[`categories:quilt`, `categories:fabric`]]
-        : [[`categories:${loaderSlug}`]];
-      
-      // NeoForge can also run Forge mods on 1.20.1-; add forge as fallback (inner array = OR condition)
-      const facetArr = loaderSlug === 'neoforge'
-        ? [[`categories:neoforge`, `categories:forge`], [`versions:${mp.mcVersion}`], [`project_type:mod`]]
-        : [...loaderFacets, [`versions:${mp.mcVersion}`], [`project_type:mod`]];
-      facets = encodeURIComponent(JSON.stringify(facetArr));
+      facets = encodeURIComponent(JSON.stringify([[`categories:${mp.loader.toLowerCase()}`],[`versions:${mp.mcVersion}`],[`project_type:mod`]]));
     } else if (browserMode === 'resourcepack') {
       facets = encodeURIComponent(JSON.stringify([[`versions:${mp.mcVersion}`],[`project_type:resourcepack`]]));
     } else {
@@ -1060,77 +1013,6 @@ async function mpBrowse(query) {
 }
 
 async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
-  // ---- MODPACK IMPORT FLOW ----
-  if (browserMode === 'modpack' && !isDependency) {
-    if (btn) { btn.textContent = 'Fetching...'; btn.disabled = true; }
-    try {
-      const projectId = typeof mod === 'string' ? mod : mod.project_id;
-      const modName = typeof mod === 'string' ? 'Modpack' : mod.title;
-      const filesRes = await fetch(`https://api.curse.tools/v1/cf/mods/${projectId}/files`);
-      const filesData = await filesRes.json();
-      let files = filesData.data || [];
-      files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
-      if (!files.length) { showWarningToast('No downloadable files found.'); if(btn){btn.textContent='+ Import';btn.disabled=false;} return; }
-      const fileObj = files[0];
-      let dlUrl = fileObj.downloadUrl;
-      if (!dlUrl) {
-        const p1 = Math.floor(fileObj.id / 1000);
-        const p2 = (fileObj.id % 1000).toString().padStart(3, '0');
-        dlUrl = `https://edge.forgecdn.net/files/${p1}/${p2}/${encodeURIComponent(fileObj.fileName)}`;
-      }
-      document.getElementById('mod-browser').classList.remove('active');
-      overlay.classList.add('active');
-      launchStatus.innerText = 'Downloading modpack archive...';
-      launchFill.style.width = '5%';
-      if (!window.electronAPI) { overlay.classList.remove('active'); showWarningToast('Only available in the desktop app.'); return; }
-      const importRes = await window.electronAPI.downloadCurseforgeModpack({ downloadUrl: dlUrl });
-      if (!importRes.success) throw new Error(importRes.error || 'Import failed');
-      const manifest = importRes.manifest;
-      const loaderStr = (manifest.minecraft?.modLoaders?.[0]?.id || '').toLowerCase();
-      const loader = loaderStr.includes('fabric') ? 'Fabric' : loaderStr.includes('forge') ? 'Forge' : loaderStr.includes('neoforge') ? 'NeoForge' : 'Vanilla';
-      const mcVersion = manifest.minecraft?.version || '1.20.4';
-      const newMp = { id: importRes.modpackId, name: manifest.name || modName, mcVersion, loader, mods: [], resourcepacks: [], shaders: [] };
-      const mpData = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
-      mpData.push(newMp);
-      localStorage.setItem('idk_modpacks', JSON.stringify(mpData));
-      modpacks.push(newMp);
-      activeModpackId = newMp.id;
-      mpRenderList(); mpRenderDetail();
-      const manifestFiles = manifest.files || [];
-      for (let i = 0; i < manifestFiles.length; i++) {
-        const f = manifestFiles[i];
-        launchStatus.innerText = `Downloading mod ${i+1} / ${manifestFiles.length}...`;
-        launchFill.style.width = `${5 + (i / manifestFiles.length) * 90}`;
-        try {
-          const fRes = await fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}/files/${f.fileID}`);
-          const fData = await fRes.json();
-          if (!fData.data) continue;
-          const mf = fData.data;
-          let mUrl = mf.downloadUrl;
-          if (!mUrl) {
-            const mp1 = Math.floor(mf.id/1000), mp2 = (mf.id%1000).toString().padStart(3,'0');
-            mUrl = `https://edge.forgecdn.net/files/${mp1}/${mp2}/${encodeURIComponent(mf.fileName)}`;
-          }
-          newMp.mods.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.jar$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
-          await window.electronAPI.installMod({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
-        } catch(me) { console.warn('Failed mod', f.projectID, me); }
-      }
-      const mpData2 = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
-      const idx = mpData2.findIndex(m => m.id === newMp.id);
-      if (idx >= 0) mpData2[idx] = newMp; else mpData2.push(newMp);
-      localStorage.setItem('idk_modpacks', JSON.stringify(mpData2));
-      mpRenderDetail();
-      launchFill.style.width = '100%';
-      overlay.classList.remove('active');
-      showWarningToast(`"${newMp.name}" imported successfully!`);
-    } catch(e) {
-      overlay.classList.remove('active');
-      showWarningToast('Import failed: ' + e.message);
-      if (btn) { btn.textContent = '+ Import'; btn.disabled = false; }
-    }
-    return;
-  }
-  // ---- NORMAL MOD/RP/SHADER FLOW ----
   const mp = passedMp || mpGet(); if (!mp) return;
   if (btn) { btn.textContent = '⬇ Fetching...'; btn.disabled = true; }
   try {
@@ -1145,146 +1027,26 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
         return;
       }
-
-      // --- Recursive dependency resolver ---
-      // visited: shared Set to prevent installing the same dep twice
-      const visitedDeps = passedMp ? (mpAddItem._visited || new Set()) : new Set();
-      mpAddItem._visited = visitedDeps;
-      const autoInstalledLibs = [];
-
-      /**
-       * Recursively resolves & installs a mod and all its required dependencies.
-       * Returns the display name of the installed mod, or null if skipped.
-       */
-      async function resolveModWithDeps(pid, title, iconUrl, depth) {
-        if (visitedDeps.has(pid)) return null; // already queued/installed
-        visitedDeps.add(pid);
-
-        // Already installed in this modpack?
-        if (mp.mods.find(m => m.modrinthId === pid)) return null;
-
-        // Build loader slug list to try (in order of preference)
-        const rawLoader = mp.loader.toLowerCase();
-        const loaderSlugsToTry = rawLoader === 'neoforge'
-          ? ['neoforge', 'forge']       // NeoForge is mostly Forge-compatible
-          : rawLoader === 'quilt'
-          ? ['quilt', 'fabric']          // Quilt runs Fabric mods
-          : [rawLoader];
-
-        // Fetch compatible versions — try each loader slug until we find a match
-        let verData = [];
-        for (const slug of loaderSlugsToTry) {
-          const r = await fetch(
-            `https://api.modrinth.com/v2/project/${pid}/version` +
-            `?loaders=${encodeURIComponent(JSON.stringify([slug]))}` +
-            `&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`
-          );
-          verData = await r.json();
-          if (Array.isArray(verData) && verData.length > 0) break;
-        }
-
-        // If strict match fails, try without loader filter (some libs are loader-agnostic)
-        if (!Array.isArray(verData) || verData.length === 0) {
-          const r = await fetch(
-            `https://api.modrinth.com/v2/project/${pid}/version` +
-            `?game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`
-          );
-          verData = await r.json();
-        }
-
-        if (!Array.isArray(verData) || verData.length === 0) {
-          console.warn(`[DepResolver] No compatible version found for ${pid} (${title})`);
-          return null;
-        }
-
-        const vObj = verData[0];
-        const fObj = vObj.files.find(f => f.primary) || vObj.files[0];
-        const displayName = title && title !== 'Dependency'
-          ? title
-          : (vObj.name || fObj.filename.replace(/[-_][0-9].*\.jar$/, ''));
-
-        const depEntry = {
-          modrinthId: pid,
-          name: displayName,
-          version: vObj.version_number,
-          filename: fObj.filename,
-          downloadUrl: fObj.url,
-          iconUrl: iconUrl || ''
-        };
-        mp.mods.push(depEntry);
-        mpSave();
-        if (window.electronAPI) {
-          await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: fObj.url, filename: fObj.filename });
-        }
-
-        // Recurse into this dep's own required dependencies
-        if (vObj.dependencies) {
-          for (const child of vObj.dependencies) {
-            if (child.dependency_type === 'required' && child.project_id) {
-              await resolveModWithDeps(child.project_id, 'Dependency', '', depth + 1);
-            }
-          }
-        }
-
-        return displayName;
+      
+      const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?loaders=${encodeURIComponent(JSON.stringify([mp.loader.toLowerCase()]))}&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
+      versions = await res.json();
+      if (!versions.length) { 
+        if(btn) { showWarningToast(`${modTitle} has no version for MC ${mp.mcVersion} + ${mp.loader}`); btn.textContent='+ Add'; btn.disabled=false; }
+        return; 
       }
-
-      // --- Install the main mod ---
-      const mainRes = await fetch(
-        `https://api.modrinth.com/v2/project/${projectId}/version` +
-        `?loaders=${encodeURIComponent(JSON.stringify([mp.loader.toLowerCase()]))}` +
-        `&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`
-      );
-      versions = await mainRes.json();
-
-      // Fallback: try compatible loaders for NeoForge / Quilt
-      if (!Array.isArray(versions) || versions.length === 0) {
-        const rawL = mp.loader.toLowerCase();
-        const fallbacks = rawL === 'neoforge' ? ['forge'] : rawL === 'quilt' ? ['fabric'] : [];
-        for (const slug of fallbacks) {
-          const r = await fetch(
-            `https://api.modrinth.com/v2/project/${projectId}/version` +
-            `?loaders=${encodeURIComponent(JSON.stringify([slug]))}` +
-            `&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`
-          );
-          versions = await r.json();
-          if (Array.isArray(versions) && versions.length > 0) break;
-        }
-      }
-
-      if (!Array.isArray(versions) || !versions.length) {
-        if (btn) { showWarningToast(`${modTitle} has no compatible version for MC ${mp.mcVersion} + ${mp.loader}`); btn.textContent = '+ Add'; btn.disabled = false; }
-        mpAddItem._visited = null;
-        return;
-      }
-
       const versionObj = versions[0];
-      fileObj = versionObj.files.find(f => f.primary) || versionObj.files[0];
-      entry = { modrinthId: projectId, name: modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
-
-      // Mark main mod as visited before recursing into deps
-      visitedDeps.add(projectId);
-      mp.mods.push(entry); mpSave();
-      if (btn) btn.textContent = '⬇ Installing...';
+      fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
+      entry = { modrinthId: projectId, name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
+      mp.mods.push(entry); mpSave(); 
+      if (btn) btn.textContent='⬇ Installing...';
       if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
-
-      // --- Resolve all required dependencies recursively ---
+      
       if (versionObj.dependencies) {
         for (const dep of versionObj.dependencies) {
           if (dep.dependency_type === 'required' && dep.project_id) {
-            if (btn) btn.textContent = '📦 Resolving deps...';
-            const libName = await resolveModWithDeps(dep.project_id, 'Dependency', '', 0);
-            if (libName) autoInstalledLibs.push(libName);
+            await mpAddItem(dep.project_id, null, true, mp);
           }
         }
-      }
-
-      // Clean up shared visited set after top-level call
-      if (!passedMp) mpAddItem._visited = null;
-
-      // Notify user about auto-installed libraries
-      if (autoInstalledLibs.length > 0) {
-        showWarningToast(`📦 Auto-installed ${autoInstalledLibs.length} required librar${autoInstalledLibs.length === 1 ? 'y' : 'ies'}: ${autoInstalledLibs.join(', ')}`);
       }
     } else if (browserMode === 'resourcepack') {
       const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
@@ -1371,48 +1133,30 @@ async function fetchMojangNews() {
   }
 }
 
-async function fetchTrendingModpacks() {
+async function fetchTrendingMods() {
   const grid = document.getElementById('trending-mods-grid');
   if (!grid) return;
-  grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted)">Loading modpacks...</div>';
-  const FALLBACK = [
-    { id: '389615', name: 'RLCraft',       summary: 'A modpack designed to make Minecraft as hard as possible.',                      thumb: 'https://media.forgecdn.net/avatars/255/644/637285881806441891.png', dl: '12M',  loader: 'Forge'   },
-    { id: '35539',  name: 'SkyFactory 4',  summary: 'SkyFactory 4 is a new Skyblock-inspired modpack.',                              thumb: 'https://media.forgecdn.net/avatars/145/866/636730709659626580.png', dl: '20M',  loader: 'Forge'   },
-    { id: '497279', name: 'All the Mods 9',summary: 'All the Mods started as a private pack for a friend group.',                    thumb: 'https://media.forgecdn.net/avatars/740/633/638163849529059464.png', dl: '8M',   loader: 'Forge'   },
-    { id: '641528', name: 'Better MC [FABRIC]', summary: 'The Better Minecraft modpack series — now for Fabric.',                   thumb: 'https://media.forgecdn.net/avatars/524/491/637880462219327988.png', dl: '6M',   loader: 'Fabric'  }
-  ];
-  let packs = null;
   try {
-    const res = await fetch('https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=4471&sortField=2&sortOrder=desc&pageSize=4');
-    const json = await res.json();
-    if (json.data && json.data.length > 0) packs = json.data;
-  } catch(e) { console.warn('CurseForge trending fetch failed:', e); }
-
-  grid.innerHTML = '';
-  if (packs) {
-    packs.forEach(mp => {
-      const thumb = mp.logo ? mp.logo.thumbnailUrl : '';
-      const dl = mp.downloadCount >= 1e6 ? (mp.downloadCount/1e6).toFixed(1)+'M' : mp.downloadCount >= 1000 ? (mp.downloadCount/1000).toFixed(0)+'K' : mp.downloadCount;
-      const loader = (mp.categories||[]).find(c => ['Forge','Fabric','NeoForge','Quilt'].includes(c.name))?.name || '';
-      const modObj = JSON.stringify({ project_id: mp.id.toString(), title: mp.name, provider: 'curseforge' }).replace(/"/g,'&quot;');
-      grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
-        <div class="trending-mp-thumb" style="background-image:url('${thumb}');background-size:cover;background-position:center;"></div>
-        <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
-          <div class="trending-mp-meta"><span>&#11015; ${dl}</span>${loader?'<span class="trending-mp-tag">'+loader+'</span>':''}</div>
-        </div></div>`;
+    const facets = encodeURIComponent(JSON.stringify([["project_type:mod"]]));
+    const res = await fetch(`https://api.modrinth.com/v2/search?limit=4&facets=${facets}`);
+    const data = await res.json();
+    grid.innerHTML = '';
+    data.hits.forEach(mod => {
+      grid.innerHTML += `
+        <div class="news-card" onclick="alert('Select a modpack from the left sidebar to install mods!')" style="cursor:pointer;">
+          <div class="news-img" style="background-image: url('${mod.icon_url || ''}'); background-size: cover; background-position: center; border-bottom: 1px solid var(--border-color); height: 160px;"></div>
+          <div class="news-content">
+            <h3 style="font-size: 15px; margin-bottom: 6px;">${mod.title}</h3>
+            <p style="font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--text-muted);">${mod.description}</p>
+          </div>
+        </div>
+      `;
     });
-  } else {
-    FALLBACK.forEach(mp => {
-      const modObj = JSON.stringify({ project_id: mp.id, title: mp.name, provider: 'curseforge' }).replace(/"/g,'&quot;');
-      grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
-        <div class="trending-mp-thumb" style="background-image:url('${mp.thumb}');background-size:cover;background-position:center;"></div>
-        <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
-          <div class="trending-mp-meta"><span>&#11015; ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>
-        </div></div>`;
-    });
+  } catch(e) {
+    grid.innerHTML = '<div style="padding: 20px; color: var(--text-muted); width: 100%; text-align: center;">Failed to load marketplace.</div>';
   }
 }
 
 // Initialize on load
 fetchMojangNews();
-fetchTrendingModpacks();
+fetchTrendingMods();

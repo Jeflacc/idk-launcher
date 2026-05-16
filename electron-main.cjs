@@ -154,6 +154,77 @@ ipcMain.handle('remove-shader', async (event, { modpackId, filename }) => {
   return { success: true };
 });
 
+
+ipcMain.handle('unzip-curseforge', async (event, { filePath }) => {
+  try {
+    const tempExt = path.join(app.getPath('userData'), 'temp-import-' + Date.now());
+    if (fs.existsSync(tempExt)) fs.rmSync(tempExt, { recursive: true, force: true });
+    fs.mkdirSync(tempExt, { recursive: true });
+    
+    execSync(`powershell.exe -NoProfile -NonInteractive -Command "Expand-Archive -Path '${filePath}' -DestinationPath '${tempExt}' -Force"`);
+    
+    const manifestPath = path.join(tempExt, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) throw new Error("Not a valid CurseForge modpack (manifest.json missing)");
+    
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    const modpackId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    
+    const profilePath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`);
+    fs.mkdirSync(profilePath, { recursive: true });
+    
+    const overridesFolder = manifest.overrides || 'overrides';
+    const overridesPath = path.join(tempExt, overridesFolder);
+    if (fs.existsSync(overridesPath)) {
+      // Use Copy-Item to copy contents inside overrides path
+      execSync(`powershell.exe -NoProfile -NonInteractive -Command "Copy-Item -Path '${overridesPath}\*' -Destination '${profilePath}' -Recurse -Force"`);
+    }
+    
+    fs.rmSync(tempExt, { recursive: true, force: true });
+    
+    return { success: true, manifest, modpackId };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+
+ipcMain.handle('download-curseforge-modpack', async (event, { downloadUrl }) => {
+  try {
+    const tempZip = path.join(app.getPath('userData'), 'temp-modpack-' + Date.now() + '.zip');
+    await new Promise((resolve, reject) => {
+      downloadFile(downloadUrl, tempZip, resolve, reject);
+    });
+    
+    const tempExt = path.join(app.getPath('userData'), 'temp-import-' + Date.now());
+    if (fs.existsSync(tempExt)) fs.rmSync(tempExt, { recursive: true, force: true });
+    fs.mkdirSync(tempExt, { recursive: true });
+    
+    execSync(`powershell.exe -NoProfile -NonInteractive -Command "Expand-Archive -Path '${tempZip}' -DestinationPath '${tempExt}' -Force"`);
+    
+    const manifestPath = path.join(tempExt, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) throw new Error("Not a valid CurseForge modpack (manifest.json missing)");
+    
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    const modpackId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    
+    const profilePath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`);
+    fs.mkdirSync(profilePath, { recursive: true });
+    
+    const overridesFolder = manifest.overrides || 'overrides';
+    const overridesPath = path.join(tempExt, overridesFolder);
+    if (fs.existsSync(overridesPath)) {
+      execSync(`powershell.exe -NoProfile -NonInteractive -Command "Copy-Item -Path '${overridesPath}\*' -Destination '${profilePath}' -Recurse -Force"`);
+    }
+    
+    fs.rmSync(tempExt, { recursive: true, force: true });
+    fs.unlinkSync(tempZip);
+    
+    return { success: true, manifest, modpackId };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
 // Launch minecraft with a specific modpack profile
 ipcMain.handle('elyby-authenticate', async (event, { username, password, clientToken }) => {
   return new Promise((resolve) => {
@@ -232,7 +303,12 @@ ipcMain.on('launch-modpack', async (event, args) => {
     }
   }
 
-  if ((loader || '').toLowerCase() === 'fabric') {
+  const loaderLC = (loader || '').toLowerCase();
+
+  // Initialize customArgs if not already present
+  if (!opts.customArgs) opts.customArgs = [];
+
+  if (loaderLC === 'fabric') {
     try {
       event.sender.send('launch-progress', { status: 'Setting up Fabric...', percent: 10 });
       const fabricVersion = await installFabric(mcVersion, rootPath);
@@ -241,6 +317,30 @@ ipcMain.on('launch-modpack', async (event, args) => {
       event.sender.send('launch-error', 'Failed to install Fabric: ' + err);
       return;
     }
+  } else if (loaderLC === 'forge') {
+    try {
+      event.sender.send('launch-progress', { status: 'Installing Forge (this may take a moment)...', percent: 10 });
+      const forgeVersionId = await installForge(mcVersion, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
+      opts.version.custom = forgeVersionId;
+    } catch (err) {
+      event.sender.send('launch-error', 'Failed to install Forge: ' + err.message);
+      return;
+    }
+  } else if (loaderLC === 'neoforge') {
+    try {
+      event.sender.send('launch-progress', { status: 'Installing NeoForge (this may take a moment)...', percent: 10 });
+      const neoVersionId = await installNeoForge(mcVersion, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
+      opts.version.custom = neoVersionId;
+    } catch (err) {
+      event.sender.send('launch-error', 'Failed to install NeoForge: ' + err.message);
+      return;
+    }
+  }
+
+  // Inject Forge/NeoForge specific JVM arguments (module paths, etc.)
+  if (loaderLC === 'forge' || loaderLC === 'neoforge') {
+    const forgeArgs = getForgeJvmArgs(rootPath, opts.version.custom);
+    opts.customArgs.push(...forgeArgs);
   }
 
   const launchClient = new Client();
@@ -252,6 +352,8 @@ ipcMain.on('launch-modpack', async (event, args) => {
     event.sender.send('launch-progress', { percent: Math.round((e.current / e.total) * 100), status: `Downloading ${e.name}...` });
   });
   launchClient.on('close', () => event.sender.send('launch-closed'));
+  launchClient.on('data', (e) => console.log('[MC Process]', e));
+  launchClient.on('debug', (e) => console.log('[MC Debug]', e));
   try {
     event.sender.send('launch-progress', { percent: 0, status: 'Initializing...' });
     // Clean empty files to prevent ZipException corruption
@@ -326,11 +428,15 @@ ipcMain.on('launch-minecraft', async (event, args) => {
 
   // Handle Mod Loader
   try {
-    if ((loader || '').toLowerCase() === 'fabric') {
+    const loaderNameLC = (loader || '').toLowerCase();
+
+    if (!opts.customArgs) opts.customArgs = [];
+
+    if (loaderNameLC === 'fabric') {
       event.sender.send('launch-progress', { status: 'Downloading Fabric loader...', percent: 10 });
       const fabricVersion = await installFabric(version, rootPath);
       opts.version.custom = fabricVersion;
-      
+
       if (autoOptimization) {
         event.sender.send('launch-progress', { status: 'Downloading Sodium...', percent: 20 });
         const sodiumInstalled = await installSodium(version, profilePath);
@@ -338,12 +444,27 @@ ipcMain.on('launch-minecraft', async (event, args) => {
           event.sender.send('launch-warning', `Sodium is not available for Minecraft ${version}. The game will launch without it.`);
         }
       }
-    } else if (loader === 'Forge') {
-      event.sender.send('launch-error', 'Automated Forge & Optifine downloads are blocked by their ad-walls! Please download them manually, or use Fabric + Sodium instead!');
-      return;
+    } else if (loaderNameLC === 'forge') {
+      event.sender.send('launch-progress', { status: 'Installing Forge (this may take a moment)...', percent: 10 });
+      const forgeVersionId = await installForge(version, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
+      opts.version.custom = forgeVersionId;
+    } else if (loaderNameLC === 'neoforge') {
+      event.sender.send('launch-progress', { status: 'Installing NeoForge (this may take a moment)...', percent: 10 });
+      const neoVersionId = await installNeoForge(version, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
+      opts.version.custom = neoVersionId;
+    } else if (loaderNameLC === 'quilt') {
+      event.sender.send('launch-progress', { status: 'Setting up Quilt loader...', percent: 10 });
+      const quiltVersionId = await installQuilt(version, rootPath);
+      opts.version.custom = quiltVersionId;
+    }
+    
+    // Inject Forge/NeoForge specific JVM arguments (module paths, etc.)
+    if (loaderNameLC === 'forge' || loaderNameLC === 'neoforge') {
+      const forgeArgs = getForgeJvmArgs(rootPath, opts.version.custom);
+      opts.customArgs.push(...forgeArgs);
     }
   } catch (err) {
-    event.sender.send('launch-error', 'Failed to install mod loader: ' + err);
+    event.sender.send('launch-error', 'Failed to install mod loader: ' + err.message);
     return;
   }
 
@@ -544,6 +665,327 @@ function cleanEmptyFiles(dir) {
       try { fs.unlinkSync(fullPath); } catch (e) {}
     }
   }
+}
+
+// ============================================================
+// === VANILLA CLIENT PRE-DOWNLOADER ===========================
+// (Required by the Forge/NeoForge installer to patch against) =
+// ============================================================
+async function ensureVanillaClient(mcVersion, rootPath, progressCallback) {
+  const versionDir  = path.join(rootPath, 'versions', mcVersion);
+  const versionJsonPath = path.join(versionDir, `${mcVersion}.json`);
+  const versionJarPath  = path.join(versionDir, `${mcVersion}.jar`);
+
+  // Check both files exist and the JAR is non-empty
+  if (fs.existsSync(versionJsonPath) && fs.existsSync(versionJarPath) && fs.statSync(versionJarPath).size > 0) {
+    console.log(`[Vanilla] Already present: ${mcVersion}`);
+    return;
+  }
+
+  progressCallback({ status: `Fetching Minecraft ${mcVersion} manifest...`, percent: 5 });
+
+  // Step 1 — version manifest
+  const manifest = await new Promise((resolve, reject) => {
+    https.get('https://launchermeta.mojang.com/mc/game/version_manifest.json',
+      { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => { try { resolve(JSON.parse(d)); } catch(e) { reject(e); } });
+    }).on('error', reject);
+  });
+
+  const versionEntry = manifest.versions.find(v => v.id === mcVersion);
+  if (!versionEntry) throw new Error(`Minecraft version ${mcVersion} not found in Mojang manifest`);
+
+  // Step 2 — version JSON
+  let versionData;
+  if (fs.existsSync(versionJsonPath)) {
+    versionData = JSON.parse(fs.readFileSync(versionJsonPath, 'utf8'));
+  } else {
+    versionData = await new Promise((resolve, reject) => {
+      https.get(versionEntry.url, { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
+        let d = '';
+        res.on('data', c => d += c);
+        res.on('end', () => { try { resolve(JSON.parse(d)); } catch(e) { reject(e); } });
+      }).on('error', reject);
+    });
+    if (!fs.existsSync(versionDir)) fs.mkdirSync(versionDir, { recursive: true });
+    fs.writeFileSync(versionJsonPath, JSON.stringify(versionData, null, 2));
+  }
+
+  // Step 3 — client JAR (what Forge needs to patch)
+  if (!fs.existsSync(versionJarPath) || fs.statSync(versionJarPath).size === 0) {
+    progressCallback({ status: `Downloading Minecraft ${mcVersion} client (for Forge patching)...`, percent: 8 });
+    const clientUrl = versionData.downloads?.client?.url;
+    if (!clientUrl) throw new Error(`No client download URL for Minecraft ${mcVersion}`);
+    await new Promise((resolve, reject) => downloadFile(clientUrl, versionJarPath, resolve, reject));
+  }
+
+  console.log(`[Vanilla] Client ready for Forge patching: ${mcVersion}`);
+}
+
+// ============================================================
+// === FORGE INSTALLER =========================================
+// ============================================================
+async function installForge(mcVersion, rootPath, javaExe, progressCallback) {
+  const { spawn } = require('child_process');
+
+  // 1. Use promotions_slim.json — the authoritative source for recommended/latest Forge builds
+  const promoData = await new Promise((resolve, reject) => {
+    https.get('https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json',
+      { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => { try { resolve(JSON.parse(d)); } catch(e) { reject(e); } });
+    }).on('error', reject);
+  });
+
+  const promos = promoData.promos || {};
+  const forgeVersion = promos[`${mcVersion}-recommended`] || promos[`${mcVersion}-latest`];
+  if (!forgeVersion) throw new Error(`No Forge builds found for MC ${mcVersion}. This version may not have a Forge release.`);
+
+  const forgeFullId = `${mcVersion}-${forgeVersion}`;
+  const versionId   = `${mcVersion}-forge-${forgeVersion}`;
+
+  // 2. Check if already installed
+  const versionsDir = path.join(rootPath, 'versions', versionId);
+  const versionJson = path.join(versionsDir, `${versionId}.json`);
+  if (fs.existsSync(versionJson)) {
+    console.log(`[Forge] Already installed: ${versionId}`);
+    return versionId;
+  }
+
+  // 3. PRE-DOWNLOAD vanilla Minecraft so the Forge installer can patch it
+  progressCallback({ status: `Preparing Minecraft ${mcVersion} for Forge...`, percent: 10 });
+  await ensureVanillaClient(mcVersion, rootPath, progressCallback);
+
+  // 3.5 Forge installer requires a launcher_profiles.json to exist, or it aborts.
+  const profilesPath = path.join(rootPath, 'launcher_profiles.json');
+  if (!fs.existsSync(profilesPath)) {
+    fs.writeFileSync(profilesPath, JSON.stringify({ profiles: {} }));
+  }
+
+  // 4. Download the Forge installer JAR
+  const installerFilename = `forge-${forgeFullId}-installer.jar`;
+  const installerUrls = [
+    `https://maven.minecraftforge.net/net/minecraftforge/forge/${forgeFullId}/${installerFilename}`,
+    `https://files.minecraftforge.net/net/minecraftforge/forge/${forgeFullId}/${installerFilename}`
+  ];
+  const installerPath = path.join(rootPath, installerFilename);
+
+  if (!fs.existsSync(installerPath)) {
+    progressCallback({ status: `Downloading Forge ${forgeVersion} installer...`, percent: 25 });
+    let downloaded = false;
+    for (const url of installerUrls) {
+      try {
+        await new Promise((resolve, reject) => downloadFile(url, installerPath, resolve, reject));
+        downloaded = true;
+        console.log(`[Forge] Downloaded installer from: ${url}`);
+        break;
+      } catch (e) {
+        console.warn(`[Forge] Download failed from ${url}:`, e.message);
+        try { if (fs.existsSync(installerPath)) fs.unlinkSync(installerPath); } catch(_) {}
+      }
+    }
+    if (!downloaded) throw new Error(`Could not download Forge ${forgeVersion} installer. Check your internet connection.`);
+  }
+
+  // 5. Run the Forge installer headlessly — use spawn for real-time stderr capture
+  progressCallback({ status: `Installing Forge ${forgeVersion} (this takes ~1 minute)...`, percent: 40 });
+  await new Promise((resolve, reject) => {
+    let stderrBuf = '';
+    const proc = spawn(javaExe, [
+      '-jar', installerPath,
+      '--installClient', rootPath
+    ], { timeout: 600000 });
+
+    proc.stdout.on('data', d => console.log('[Forge]', d.toString().trim()));
+    proc.stderr.on('data', d => {
+      const txt = d.toString();
+      console.error('[Forge stderr]', txt.trim());
+      stderrBuf += txt;
+    });
+
+    proc.on('close', (code) => {
+      if (fs.existsSync(versionJson)) {
+        // Version JSON present = success regardless of exit code
+        resolve();
+      } else if (code === 0) {
+        resolve();
+      } else {
+        // Extract the most useful line from stderr
+        const lines = stderrBuf.split('\n').filter(l => l.includes('ERROR') || l.includes('Exception') || l.includes('error'));
+        const hint = lines[0] || stderrBuf.slice(-300);
+        reject(new Error(`Forge installer exited with code ${code}.\n${hint}`));
+      }
+    });
+
+    proc.on('error', (e) => reject(new Error('Failed to start Forge installer: ' + e.message)));
+  });
+
+  try { fs.unlinkSync(installerPath); } catch(e) {}
+
+  if (!fs.existsSync(versionJson)) throw new Error('Forge installation failed — version JSON not found after install.');
+  progressCallback({ status: `Forge ${forgeVersion} installed!`, percent: 65 });
+  return versionId;
+}
+
+// ============================================================
+// === NEOFORGE INSTALLER ======================================
+// ============================================================
+
+async function installNeoForge(mcVersion, rootPath, javaExe, progressCallback) {
+  const { spawn } = require('child_process');
+
+  // NeoForge uses a different Maven and a different version scheme starting 1.20.2+
+  // For 1.20.1 and below NeoForge does not exist (use Forge instead)
+  const match = (mcVersion || '').match(/^1\.(\d+)(?:\.(\d+))?/);
+  const minor = match ? parseInt(match[1]) : 0;
+  const patch = match && match[2] ? parseInt(match[2]) : 0;
+
+  if (minor < 20 || (minor === 20 && patch <= 1)) {
+    // NeoForge doesn't support 1.20.1 and below — fall back to Forge
+    console.warn(`[NeoForge] ${mcVersion} not supported, falling back to Forge`);
+    return installForge(mcVersion, rootPath, javaExe, progressCallback);
+  }
+
+  // NeoForge version format: mcMinor.mcPatch.neoVersion (e.g. 20.4.x for MC 1.20.4)
+  const neoMcPrefix = `${minor}.${patch}`;
+  const metaUrl = `https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml`;
+
+  const xmlData = await new Promise((resolve, reject) => {
+    https.get(metaUrl, { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => resolve(d));
+    }).on('error', reject);
+  });
+
+  // Parse all <version> tags and find the latest matching this MC minor.patch
+  const allVersions = [...xmlData.matchAll(/<version>([^<]+)<\/version>/g)].map(m => m[1]);
+  const matching = allVersions.filter(v => v.startsWith(neoMcPrefix + '.'));
+  if (matching.length === 0) throw new Error(`No NeoForge builds found for MC ${mcVersion}`);
+  const neoVersion = matching[matching.length - 1]; // Latest
+  const versionId = `neoforge-${neoVersion}`;
+
+  const versionsDir = path.join(rootPath, 'versions', versionId);
+  const versionJson = path.join(versionsDir, `${versionId}.json`);
+  if (fs.existsSync(versionJson)) {
+    console.log(`[NeoForge] Already installed: ${versionId}`);
+    return versionId;
+  }
+
+  // PRE-DOWNLOAD vanilla Minecraft so the NeoForge installer can patch it
+  progressCallback({ status: `Preparing Minecraft ${mcVersion} for NeoForge...`, percent: 10 });
+  await ensureVanillaClient(mcVersion, rootPath, progressCallback);
+
+  // NeoForge installer requires a launcher_profiles.json to exist, or it aborts.
+  const profilesPath = path.join(rootPath, 'launcher_profiles.json');
+  if (!fs.existsSync(profilesPath)) {
+    fs.writeFileSync(profilesPath, JSON.stringify({ profiles: {} }));
+  }
+
+  const installerUrl = `https://maven.neoforged.net/releases/net/neoforged/neoforge/${neoVersion}/neoforge-${neoVersion}-installer.jar`;
+  const installerPath = path.join(rootPath, `neoforge-installer-${neoVersion}.jar`);
+
+  if (!fs.existsSync(installerPath)) {
+    progressCallback({ status: `Downloading NeoForge ${neoVersion} installer...`, percent: 25 });
+    await new Promise((resolve, reject) => downloadFile(installerUrl, installerPath, resolve, reject));
+  }
+
+  progressCallback({ status: `Installing NeoForge ${neoVersion} (this takes ~1 minute)...`, percent: 40 });
+  await new Promise((resolve, reject) => {
+    let stderrBuf = '';
+    const proc = spawn(javaExe, [
+      '-jar', installerPath,
+      '--installClient', rootPath
+    ], { timeout: 600000 });
+
+    proc.stdout.on('data', d => console.log('[NeoForge]', d.toString().trim()));
+    proc.stderr.on('data', d => {
+      const txt = d.toString();
+      console.error('[NeoForge stderr]', txt.trim());
+      stderrBuf += txt;
+    });
+
+    proc.on('close', (code) => {
+      if (fs.existsSync(versionJson)) {
+        resolve();
+      } else if (code === 0) {
+        resolve();
+      } else {
+        const lines = stderrBuf.split('\n').filter(l => l.includes('ERROR') || l.includes('Exception') || l.includes('error'));
+        const hint = lines[0] || stderrBuf.slice(-300);
+        reject(new Error(`NeoForge installer exited with code ${code}.\n${hint}`));
+      }
+    });
+
+    proc.on('error', (e) => reject(new Error('Failed to start NeoForge installer: ' + e.message)));
+  });
+
+  try { fs.unlinkSync(installerPath); } catch(e) {}
+
+  if (!fs.existsSync(versionJson)) throw new Error('NeoForge installation failed — version JSON not found after install.');
+  progressCallback({ status: `NeoForge ${neoVersion} installed!`, percent: 65 });
+  return versionId;
+}
+
+// ============================================================
+// === FORGE JVM ARGUMENTS PARSER ==============================
+// ============================================================
+function getForgeJvmArgs(rootPath, versionId) {
+  try {
+    if (!versionId) return [];
+    const jsonPath = path.join(rootPath, 'versions', versionId, `${versionId}.json`);
+    if (!fs.existsSync(jsonPath)) return [];
+    
+    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    if (!data.arguments || !data.arguments.jvm) return [];
+    
+    const sep = process.platform === 'win32' ? ';' : ':';
+    const libDir = path.join(rootPath, 'libraries').replace(/\\/g, '/');
+
+    return data.arguments.jvm
+      .filter(arg => typeof arg === 'string') // Ignore rule-based object args (handled by core if needed)
+      .map(arg => {
+        return arg
+          .replace(/\$\{library_directory\}/g, libDir)
+          .replace(/\$\{classpath_separator\}/g, sep)
+          .replace(/\$\{version_name\}/g, versionId);
+      });
+  } catch (e) {
+    console.error('[Forge Parser] Failed to parse JVM args:', e);
+    return [];
+  }
+}
+
+// ============================================================
+// === QUILT INSTALLER =========================================
+// ============================================================
+function installQuilt(version, rootPath) {
+  return new Promise((resolve, reject) => {
+    https.get(`https://meta.quiltmc.org/v3/versions/loader/${version}`,
+      { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (!json.length) return reject(new Error('Quilt not available for this MC version.'));
+          const loaderVersion = json[0].loader.version;
+          const jarName = `quilt-loader-${loaderVersion}-${version}`;
+          const versionsPath = path.join(rootPath, 'versions', jarName);
+          if (!fs.existsSync(versionsPath)) fs.mkdirSync(versionsPath, { recursive: true });
+          const jsonUrl = `https://meta.quiltmc.org/v3/versions/loader/${version}/${loaderVersion}/profile/json`;
+          const file = fs.createWriteStream(path.join(versionsPath, `${jarName}.json`));
+          https.get(jsonUrl, { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (r) => {
+            r.pipe(file);
+            file.on('finish', () => { file.close(); resolve(jarName); });
+          }).on('error', reject);
+        } catch(e) { reject(e); }
+      });
+    }).on('error', reject);
+  });
 }
 
 function installFabric(version, rootPath) {
