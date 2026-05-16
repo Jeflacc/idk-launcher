@@ -207,6 +207,75 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* Version Selector */
+.hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.download-group {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+@media (max-width: 640px) {
+  .download-group {
+    flex-direction: column;
+  }
+}
+
+.version-select {
+  height: 100%;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0 40px 0 20px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: var(--font-main);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  min-width: 140px;
+}
+
+.version-select:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-green);
+}
+
+.version-select:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.cta-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.cta-download-group {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+@media (max-width: 640px) {
+  .cta-download-group {
+    flex-direction: column;
+  }
+}
+
 /* Hero Preview Mockup */
 .hero-preview {
   position: relative;

@@ -5,8 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
 
-  launchMinecraft: (username, version, javaPath, loader, autoOptimization, maxMemory) =>
-    ipcRenderer.send('launch-minecraft', { username, version, javaPath, loader, autoOptimization, maxMemory }),
+  launchMinecraft: (username, version, javaPath, loader, autoOptimization, maxMemory, authData) =>
+    ipcRenderer.send('launch-minecraft', { username, version, javaPath, loader, autoOptimization, maxMemory, authData }),
 
   // All IPC listeners — registered once at startup
   onLaunchProgress:  (cb) => ipcRenderer.on('launch-progress',  (_e, data)  => cb(data)),
@@ -14,9 +14,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onLaunchClosed:    (cb) => ipcRenderer.on('launch-closed',    ()          => cb()),
   onLaunchError:     (cb) => ipcRenderer.on('launch-error',     (_e, error) => cb(error)),
   onLaunchWarning:   (cb) => ipcRenderer.on('launch-warning',   (_e, msg)   => cb(msg)),
+  onClearJavaPath:   (cb) => ipcRenderer.on('clear-java-path',  ()          => cb()),
 
   openMinecraftFolder: () => ipcRenderer.send('open-minecraft-folder'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
+  elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
 
   // Mod / resourcepack / shader management
   installMod:          (data) => ipcRenderer.invoke('install-mod',         data),
@@ -27,4 +29,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeShader:        (data) => ipcRenderer.invoke('remove-shader',        data),
 
   launchModpack: (args) => ipcRenderer.send('launch-modpack', args),
+  toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
 });

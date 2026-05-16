@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IDK Launcher - The Next Generation Minecraft Experience</title>
+    <meta name="description" content="The ultimate Minecraft launcher with sandboxed modpacks, built-in marketplace, and peak performance optimization.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://idk-launcher-landing.vathirchatib.workers.dev/">
+    <meta property="og:title" content="IDK Launcher">
+    <meta property="og:description" content="The ultimate Minecraft launcher with sandboxed modpacks, built-in marketplace, and peak performance optimization.">
+    <meta property="og:image" content="https://raw.githubusercontent.com/Jeflacc/idk-launcher-landing/master/assets/banner.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://idk-launcher-landing.vathirchatib.workers.dev/">
+    <meta property="twitter:title" content="IDK Launcher">
+    <meta property="twitter:description" content="The ultimate Minecraft launcher with sandboxed modpacks, built-in marketplace, and peak performance optimization.">
+    <meta property="twitter:image" content="https://raw.githubusercontent.com/Jeflacc/idk-launcher-landing/master/assets/banner.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
@@ -38,10 +54,17 @@
                     <h1>Elevate Your <span>Minecraft</span> Journey</h1>
                     <p>Experience the most powerful, beautiful, and intuitive Minecraft launcher ever built. Sandboxed modpacks, built-in marketplace, and peak performance optimization.</p>
                     <div class="hero-actions">
-                        <a href="../dist-electron/IDK Launcher Setup 1.0.0.exe" class="main-download-btn">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                            Download for Windows
-                        </a>
+                        <div class="download-group">
+                            <a href="https://github.com/Jeflacc/idk-launcher-landing/releases/download/v1.0.0/IDK.Launcher.Setup.1.0.0.exe" id="heroDownloadBtn" class="main-download-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                Download for Windows
+                            </a>
+                            <select class="version-select" onchange="updateDownloadLinks(this.value)">
+                                <option value="v1.0.0">v1.0.0 Stable</option>
+                                <option value="v1.1.0-beta">v1.1.0 Beta</option>
+                                <option value="v0.9.5-legacy">v0.9.5 Legacy</option>
+                            </select>
+                        </div>
                         <a href="#features" class="secondary-btn">Explore Features</a>
                     </div>
                 </div>
@@ -86,8 +109,17 @@
                 <div class="glass-card">
                     <h2>Ready to start your adventure?</h2>
                     <p>Join thousands of players who have already upgraded to the IDK experience.</p>
-                    <a href="../dist-electron/IDK Launcher Setup 1.0.0.exe" class="main-download-btn large">Download Standalone Installer</a>
-                    <span class="subtext">Requires Windows 10 or 11 (x64)</span>
+                    <div class="cta-actions">
+                        <div class="cta-download-group">
+                            <a href="https://github.com/Jeflacc/idk-launcher-landing/releases/download/v1.0.0/IDK.Launcher.Setup.1.0.0.exe" id="ctaDownloadBtn" class="main-download-btn large">Download Standalone Installer</a>
+                            <select class="version-select" onchange="updateDownloadLinks(this.value)">
+                                <option value="v1.0.0">v1.0.0 Stable</option>
+                                <option value="v1.1.0-beta">v1.1.0 Beta</option>
+                                <option value="v0.9.5-legacy">v0.9.5 Legacy</option>
+                            </select>
+                        </div>
+                        <span class="subtext">Requires Windows 10 or 11 (x64)</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -98,5 +130,23 @@
             <p>&copy; 2026 Indkingdom Launcher. Built with passion for the community.</p>
         </div>
     </footer>
+    <script>
+        const versions = {
+            'v1.0.0': 'https://github.com/Jeflacc/idk-launcher-landing/releases/download/v1.0.0/IDK.Launcher.Setup.1.0.0.exe',
+            'v1.1.0-beta': 'https://github.com/Jeflacc/idk-launcher-landing/releases/download/v1.1.0-beta/IDK.Launcher.Setup.1.1.0-beta.exe',
+            'v0.9.5-legacy': 'https://github.com/Jeflacc/idk-launcher-landing/releases/download/v0.9.5/IDK.Launcher.Setup.0.9.5.exe'
+        };
+
+        function updateDownloadLinks(version) {
+            const url = versions[version];
+            document.getElementById('heroDownloadBtn').href = url;
+            document.getElementById('ctaDownloadBtn').href = url;
+            
+            // Sync all selects
+            document.querySelectorAll('.version-select').forEach(select => {
+                select.value = version;
+            });
+        }
+    </script>
 </body>
 </html>

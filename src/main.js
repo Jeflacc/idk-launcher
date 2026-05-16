@@ -23,9 +23,9 @@ document.querySelector('#app').innerHTML = `
       <h2>Welcome Back</h2>
       <p style="color: var(--text-muted); margin-bottom: 10px;">Select your login method to enter the launcher.</p>
       
-      <div class="login-btn microsoft" onclick="alert('Microsoft login not implemented yet!')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zM24 11.4H12.6V0H24v11.4z"/></svg>
-        Microsoft Account
+      <div class="login-btn microsoft" id="btn-elyby-login">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        Ely.by Account
       </div>
       
       <div class="login-btn offline" id="btn-offline-login">
@@ -36,6 +36,12 @@ document.querySelector('#app').innerHTML = `
       <div class="offline-form" id="offline-form">
         <input type="text" class="clean-input" id="login-username" placeholder="Enter username..." />
         <button class="submit-btn" id="btn-submit-login">Enter Launcher</button>
+      </div>
+
+      <div class="offline-form" id="elyby-form">
+        <input type="text" class="clean-input" id="elyby-username" placeholder="Ely.by Username or Email" />
+        <input type="password" class="clean-input" id="elyby-password" placeholder="Password" style="margin-top: 10px;" />
+        <button class="submit-btn" id="btn-submit-elyby" style="margin-top: 10px;">Login via Ely.by</button>
       </div>
     </div>
   </div>
@@ -213,6 +219,12 @@ document.querySelector('#app').innerHTML = `
       <p>Open the folder where your Minecraft game files, mods, and resource packs are stored.</p>
       <button class="submit-btn" id="btn-open-folder" style="width: auto; padding: 10px 20px;">Open Minecraft Folder</button>
     </div>
+
+    <div class="settings-section">
+      <h3>Developer Options</h3>
+      <p>Enable the debug console (DevTools) to troubleshoot issues. This is usually only needed for debugging.</p>
+      <button class="submit-btn" id="btn-toggle-devtools" style="width: auto; padding: 10px 20px; background: #4b5563;">Open Debug Console</button>
+    </div>
   </div>
 
   <!-- MODS VIEW -->
@@ -229,8 +241,16 @@ document.querySelector('#app').innerHTML = `
       </div>
       <div class="modpack-detail" id="modpack-detail">
         <div class="no-modpack-msg" id="no-modpack-msg">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-          <p>Select or create a modpack to get started</p>
+          <div style="text-align:center; padding: 40px 0;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            <p style="font-size:18px; font-family:var(--font-title);">Select or create a modpack to get started</p>
+          </div>
+          <div class="news-section" style="padding: 0 40px;">
+            <h2 class="section-title">Trending on Modrinth</h2>
+            <div class="news-grid" id="trending-mods-grid">
+              <div style="padding: 40px; text-align: center; color: var(--text-muted); width: 100%;">Loading marketplace...</div>
+            </div>
+          </div>
         </div>
         <div class="modpack-content" id="modpack-content">
           <div class="modpack-content-header">
@@ -319,6 +339,7 @@ document.querySelector('#app').innerHTML = `
 
 // --- STATE & DOM ---
 let currentUser = localStorage.getItem('craftlaunch_username') || '';
+let authMode = localStorage.getItem('craftlaunch_authmode') || 'offline';
 let lastPlayed = JSON.parse(localStorage.getItem('idk_last_played') || '{"version": null, "loader": "Vanilla"}');
 let selectedVersion = lastPlayed.version;
 let selectedLoader = lastPlayed.loader;
@@ -352,6 +373,12 @@ const offlineForm = document.getElementById('offline-form');
 const loginInput = document.getElementById('login-username');
 const btnSubmitLogin = document.getElementById('btn-submit-login');
 
+const btnElybyLogin = document.getElementById('btn-elyby-login');
+const elybyForm = document.getElementById('elyby-form');
+const elybyUserInput = document.getElementById('elyby-username');
+const elybyPassInput = document.getElementById('elyby-password');
+const btnSubmitElyby = document.getElementById('btn-submit-elyby');
+
 if (currentUser) {
   // Auto-login
   updateUserDisplay(currentUser);
@@ -359,8 +386,15 @@ if (currentUser) {
 }
 
 btnOfflineLogin.addEventListener('click', () => {
+  elybyForm.classList.remove('open');
   offlineForm.classList.add('open');
   loginInput.focus();
+});
+
+btnElybyLogin.addEventListener('click', () => {
+  offlineForm.classList.remove('open');
+  elybyForm.classList.add('open');
+  elybyUserInput.focus();
 });
 
 loginInput.addEventListener('keydown', (e) => {
@@ -372,14 +406,62 @@ function login() {
   const val = loginInput.value.trim();
   if (!val) return;
   currentUser = val;
+  authMode = 'offline';
   localStorage.setItem('craftlaunch_username', currentUser);
+  localStorage.setItem('craftlaunch_authmode', authMode);
   updateUserDisplay(currentUser);
   switchView('main');
 }
 
+btnSubmitElyby.addEventListener('click', async () => {
+  const username = elybyUserInput.value.trim();
+  const password = elybyPassInput.value;
+  if(!username || !password) return;
+  
+  btnSubmitElyby.innerText = 'Logging in...';
+  try {
+    let ok = false;
+    let data = {};
+    if (window.electronAPI && window.electronAPI.elybyAuthenticate) {
+      const res = await window.electronAPI.elybyAuthenticate({ username, password, clientToken: 'idklauncher-token-' + Date.now() });
+      ok = res.ok;
+      data = res.data;
+    } else {
+      const res = await fetch('https://authserver.ely.by/auth/authenticate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent: { name: 'Minecraft', version: 1 }, username, password, clientToken: 'idklauncher-token-' + Date.now() })
+      });
+      data = await res.json();
+      ok = res.ok;
+    }
+
+    if(ok && data.accessToken) {
+      currentUser = data.selectedProfile.name;
+      authMode = 'elyby';
+      localStorage.setItem('craftlaunch_username', currentUser);
+      localStorage.setItem('craftlaunch_authmode', authMode);
+      localStorage.setItem('craftlaunch_elybydata', JSON.stringify(data));
+      updateUserDisplay(currentUser);
+      switchView('main');
+    } else {
+      alert(data.errorMessage || 'Login failed');
+    }
+  } catch(e) {
+    alert('Network error during login.');
+  }
+  btnSubmitElyby.innerText = 'Login via Ely.by';
+});
+
 function updateUserDisplay(name) {
   document.getElementById('display-username').innerText = name;
-  document.getElementById('avatar-img').src = `https://minotar.net/helm/${name}/64.png`;
+  document.getElementById('display-username').nextElementSibling.innerText = authMode === 'elyby' ? 'Ely.by Account' : 'Offline Account';
+  
+  // Use Minotar for the launcher avatar to ensure a clean 2D face (Ely.by raw skin URLs are full 64x64 maps and 404 if no custom skin exists).
+  // The actual in-game skin will still use Ely.by because of authlib-injector!
+  const avatarImg = document.getElementById('avatar-img');
+  avatarImg.src = `https://minotar.net/helm/${name}/64.png`;
+  avatarImg.onerror = () => { avatarImg.src = 'https://minotar.net/helm/Steve/64.png'; };
 }
 
 // Logout 
@@ -431,6 +513,14 @@ document.getElementById('btn-open-folder').addEventListener('click', () => {
     window.electronAPI.openMinecraftFolder();
   } else {
     alert("This feature is only available in the desktop app.");
+  }
+});
+
+document.getElementById('btn-toggle-devtools').addEventListener('click', () => {
+  if (window.electronAPI) {
+    window.electronAPI.toggleDevTools();
+  } else {
+    alert("Debug console is only available in the desktop app.");
   }
 });
 
@@ -618,6 +708,17 @@ if (window.electronAPI) {
     playBtn.disabled = false;
   });
   window.electronAPI.onLaunchWarning((msg) => showWarningToast(msg));
+  window.electronAPI.onClearJavaPath(() => {
+    localStorage.removeItem('craftlaunch_javaPath');
+    javaPath = '';
+    const javaPathInput = document.getElementById('java-path');
+    if (javaPathInput) javaPathInput.value = '';
+    showWarningToast('Auto-Healer: Incompatible Java version detected. Custom Java path was cleared to let the launcher auto-download Java 21!');
+    overlay.classList.remove('active');
+    playBtn.innerText = 'PLAY';
+    playBtn.classList.remove('running');
+    playBtn.disabled = false;
+  });
 }
 
 playBtn.addEventListener('click', () => {
@@ -626,8 +727,10 @@ playBtn.addEventListener('click', () => {
   gameStartTime = Date.now();
   launchFill.style.width = '0%';
   launchStatus.innerText = 'Initializing...';
+  const authData = authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
+
   if (window.electronAPI) {
-    window.electronAPI.launchMinecraft(currentUser, selectedVersion, javaPath, selectedLoader, autoOptimization, `${maxMemoryGB}G`);
+    window.electronAPI.launchMinecraft(currentUser, selectedVersion, javaPath, selectedLoader, autoOptimization, `${maxMemoryGB}G`, authData);
   } else {
     let progress = 0;
     const statuses = ['Fetching manifest...', 'Downloading assets...', 'Finalizing...'];
@@ -706,8 +809,17 @@ if (viewMain && bgSlider) {
 // === MODPACK MANAGER =====================================
 // =========================================================
 let modpacks = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
-// Migrate old modpacks to add resourcepacks/shaders arrays if missing
-modpacks = modpacks.map(mp => ({ resourcepacks: [], shaders: [], ...mp }));
+// Migrate old modpacks and remove any "Default Modpack" or generic "Modpack" placeholders
+const originalCount = modpacks.length;
+modpacks = modpacks.filter(mp => {
+  const n = (mp.name || "").trim().toLowerCase();
+  return n !== 'default modpack' && n !== 'modpack' && n !== 'new modpack';
+});
+modpacks = modpacks.map(mp => ({ mods: [], resourcepacks: [], shaders: [], ...mp }));
+// Save immediately if we filtered anything out to prevent it from coming back
+if (modpacks.length !== originalCount) {
+  localStorage.setItem('idk_modpacks', JSON.stringify(modpacks));
+}
 let activeModpackId = null;
 let browserMode = 'mod'; // 'mod' | 'resourcepack' | 'shader'
 
@@ -716,6 +828,7 @@ function mpGet() { return modpacks.find(m => m.id === activeModpackId) || null; 
 
 function mpRenderList() {
   const list = document.getElementById('modpacks-list');
+  if (!list) return; // Guard for startup
   list.innerHTML = '';
   if (modpacks.length === 0) {
     list.innerHTML = `<div class="mp-empty">No modpacks yet.<br>Click <strong>+ New Modpack</strong> to create one.</div>`;
@@ -733,6 +846,9 @@ function mpRenderList() {
     list.appendChild(el);
   });
 }
+
+// Initial Render
+setTimeout(() => { mpRenderList(); mpRenderDetail(); }, 100);
 
 function mpRenderInstalledList(type) {
   const mp = mpGet(); if (!mp) return;
@@ -767,8 +883,8 @@ function mpRenderDetail() {
   const noMpMsg = document.getElementById('no-modpack-msg');
   const mpContent = document.getElementById('modpack-content');
   
-  if (noMpMsg) noMpMsg.style.display = mp ? 'none' : 'flex';
-  if (mpContent) mpContent.style.display = mp ? 'block' : 'none';
+  if (noMpMsg) noMpMsg.style.setProperty('display', mp ? 'none' : 'block', 'important');
+  if (mpContent) mpContent.style.setProperty('display', mp ? 'block' : 'none', 'important');
   
   if (!mp) return;
   document.getElementById('modpack-name-display').innerText = mp.name;
@@ -896,41 +1012,70 @@ async function mpBrowse(query) {
   }
 }
 
-async function mpAddItem(mod, btn) {
-  const mp = mpGet(); if (!mp) return;
-  btn.textContent = '⬇ Fetching...'; btn.disabled = true;
+async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
+  const mp = passedMp || mpGet(); if (!mp) return;
+  if (btn) { btn.textContent = '⬇ Fetching...'; btn.disabled = true; }
   try {
     let versions, fileObj, entry;
-    if (browserMode === 'mod') {
-      const res = await fetch(`https://api.modrinth.com/v2/project/${mod.project_id}/version?loaders=${encodeURIComponent(JSON.stringify([mp.loader.toLowerCase()]))}&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
+    
+    const projectId = typeof mod === 'string' ? mod : mod.project_id;
+    const modTitle = typeof mod === 'string' ? 'Dependency' : mod.title;
+    const modIcon = typeof mod === 'string' ? '' : (mod.icon_url || '');
+
+    if (browserMode === 'mod' || isDependency) {
+      if (mp.mods.find(m => m.modrinthId === projectId)) {
+        if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+        return;
+      }
+      
+      const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?loaders=${encodeURIComponent(JSON.stringify([mp.loader.toLowerCase()]))}&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
       versions = await res.json();
-      if (!versions.length) { showWarningToast(`${mod.title} has no version for MC ${mp.mcVersion} + ${mp.loader}`); btn.textContent='+ Add'; btn.disabled=false; return; }
-      fileObj = versions[0].files.find(f=>f.primary)||versions[0].files[0];
-      entry = { modrinthId: mod.project_id, name: mod.title, version: versions[0].version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: mod.icon_url||'' };
-      mp.mods.push(entry); mpSave(); btn.textContent='⬇ Installing...';
+      if (!versions.length) { 
+        if(btn) { showWarningToast(`${modTitle} has no version for MC ${mp.mcVersion} + ${mp.loader}`); btn.textContent='+ Add'; btn.disabled=false; }
+        return; 
+      }
+      const versionObj = versions[0];
+      fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
+      entry = { modrinthId: projectId, name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
+      mp.mods.push(entry); mpSave(); 
+      if (btn) btn.textContent='⬇ Installing...';
       if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
+      
+      if (versionObj.dependencies) {
+        for (const dep of versionObj.dependencies) {
+          if (dep.dependency_type === 'required' && dep.project_id) {
+            await mpAddItem(dep.project_id, null, true, mp);
+          }
+        }
+      }
     } else if (browserMode === 'resourcepack') {
-      const res = await fetch(`https://api.modrinth.com/v2/project/${mod.project_id}/version?game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
+      const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
       versions = await res.json();
-      if (!versions.length) { showWarningToast(`${mod.title} has no version for MC ${mp.mcVersion}`); btn.textContent='+ Add'; btn.disabled=false; return; }
-      fileObj = versions[0].files.find(f=>f.primary)||versions[0].files[0];
-      entry = { modrinthId: mod.project_id, name: mod.title, version: versions[0].version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: mod.icon_url||'' };
-      mp.resourcepacks.push(entry); mpSave(); btn.textContent='⬇ Installing...';
+      if (!versions.length) { showWarningToast(`${modTitle} has no version for MC ${mp.mcVersion}`); if(btn){btn.textContent='+ Add'; btn.disabled=false;} return; }
+      const versionObj = versions[0];
+      fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
+      entry = { modrinthId: projectId, name: modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
+      mp.resourcepacks.push(entry); mpSave(); 
+      if(btn) btn.textContent='⬇ Installing...';
       if (window.electronAPI) await window.electronAPI.installResourcepack({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
     } else {
-      const res = await fetch(`https://api.modrinth.com/v2/project/${mod.project_id}/version`);
+      const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`);
       versions = await res.json();
-      if (!versions.length) { showWarningToast(`${mod.title} has no downloadable version.`); btn.textContent='+ Add'; btn.disabled=false; return; }
-      fileObj = versions[0].files.find(f=>f.primary)||versions[0].files[0];
-      entry = { modrinthId: mod.project_id, name: mod.title, version: versions[0].version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: mod.icon_url||'' };
-      mp.shaders.push(entry); mpSave(); btn.textContent='⬇ Installing...';
+      if (!versions.length) { showWarningToast(`${modTitle} has no downloadable version.`); if(btn){btn.textContent='+ Add'; btn.disabled=false;} return; }
+      const versionObj = versions[0];
+      fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
+      entry = { modrinthId: projectId, name: modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
+      mp.shaders.push(entry); mpSave(); 
+      if(btn) btn.textContent='⬇ Installing...';
       if (window.electronAPI) await window.electronAPI.installShader({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
     }
-    btn.textContent = '✓ Added'; btn.classList.add('installed');
+    if (btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
     mpRenderDetail(); mpRenderList();
   } catch(e) {
-    showWarningToast(`Failed to add ${mod.title}: ${e.message}`);
-    btn.textContent = '+ Add'; btn.disabled = false;
+    if (btn && !isDependency) {
+      showWarningToast(`Failed to add ${typeof mod === 'string' ? mod : mod.title}: ${e.message}`);
+      btn.textContent = '+ Add'; btn.disabled = false;
+    }
   }
 }
 
@@ -943,8 +1088,10 @@ document.getElementById('btn-play-modpack').addEventListener('click', () => {
   gameStartTime = Date.now();
   launchFill.style.width = '0%';
   launchStatus.innerText = 'Launching modpack...';
+  const authData = authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
+
   if (window.electronAPI) {
-    window.electronAPI.launchModpack({ username: currentUser, modpackId: mp.id, mcVersion: mp.mcVersion, loader: mp.loader, javaPath, maxMemory: `${maxMemoryGB}G` });
+    window.electronAPI.launchModpack({ username: currentUser, modpackId: mp.id, mcVersion: mp.mcVersion, loader: mp.loader, javaPath, maxMemory: `${maxMemoryGB}G`, authData });
   }
 });
 
@@ -986,5 +1133,30 @@ async function fetchMojangNews() {
   }
 }
 
+async function fetchTrendingMods() {
+  const grid = document.getElementById('trending-mods-grid');
+  if (!grid) return;
+  try {
+    const facets = encodeURIComponent(JSON.stringify([["project_type:mod"]]));
+    const res = await fetch(`https://api.modrinth.com/v2/search?limit=4&facets=${facets}`);
+    const data = await res.json();
+    grid.innerHTML = '';
+    data.hits.forEach(mod => {
+      grid.innerHTML += `
+        <div class="news-card" onclick="alert('Select a modpack from the left sidebar to install mods!')" style="cursor:pointer;">
+          <div class="news-img" style="background-image: url('${mod.icon_url || ''}'); background-size: cover; background-position: center; border-bottom: 1px solid var(--border-color); height: 160px;"></div>
+          <div class="news-content">
+            <h3 style="font-size: 15px; margin-bottom: 6px;">${mod.title}</h3>
+            <p style="font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--text-muted);">${mod.description}</p>
+          </div>
+        </div>
+      `;
+    });
+  } catch(e) {
+    grid.innerHTML = '<div style="padding: 20px; color: var(--text-muted); width: 100%; text-align: center;">Failed to load marketplace.</div>';
+  }
+}
+
 // Initialize on load
 fetchMojangNews();
+fetchTrendingMods();

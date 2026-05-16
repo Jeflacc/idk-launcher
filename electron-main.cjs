@@ -3,7 +3,7 @@ const path = require('path');
 const { Client } = require('minecraft-launcher-core');
 const fs = require('fs');
 const https = require('https');
-const { exec } = require('child_process');
+const { exec, execSync } = require('child_process');
 
 let mainWindow;
 
@@ -89,6 +89,16 @@ ipcMain.on('open-minecraft-folder', () => {
 ipcMain.on('open-external', (event, url) => {
   shell.openExternal(url);
 });
+
+ipcMain.on('toggle-devtools', () => {
+  if (mainWindow) {
+    if (mainWindow.webContents.isDevToolsOpened()) {
+      mainWindow.webContents.closeDevTools();
+    } else {
+      mainWindow.webContents.openDevTools({ mode: 'detach' });
+    }
+  }
+});
 // Mod install IPC (for modpack manager)
 ipcMain.handle('install-mod', async (event, { modpackId, downloadUrl, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
@@ -145,8 +155,31 @@ ipcMain.handle('remove-shader', async (event, { modpackId, filename }) => {
 });
 
 // Launch minecraft with a specific modpack profile
+ipcMain.handle('elyby-authenticate', async (event, { username, password, clientToken }) => {
+  return new Promise((resolve) => {
+    const postData = JSON.stringify({
+      agent: { name: 'Minecraft', version: 1 },
+      username, password, clientToken
+    });
+    const req = https.request({
+      hostname: 'authserver.ely.by', port: 443, path: '/auth/authenticate', method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try { resolve({ ok: res.statusCode === 200, data: JSON.parse(data) }); }
+        catch (e) { resolve({ ok: false, data: { errorMessage: 'Invalid JSON response' } }); }
+      });
+    });
+    req.on('error', (e) => resolve({ ok: false, data: { errorMessage: e.message } }));
+    req.write(postData);
+    req.end();
+  });
+});
+
 ipcMain.on('launch-modpack', async (event, args) => {
-  const { username, modpackId, mcVersion, loader, javaPath, maxMemory } = args;
+  const { username, modpackId, mcVersion, loader, javaPath, maxMemory, authData } = args;
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
   const profilePath = path.join(rootPath, 'profiles', `modpack-${modpackId}`);
   if (!fs.existsSync(profilePath)) fs.mkdirSync(profilePath, { recursive: true });
@@ -167,9 +200,39 @@ ipcMain.on('launch-modpack', async (event, args) => {
     version: { number: mcVersion, type: 'release' },
     memory: { max: maxMem, min: minMem }
   };
-  if (javaPath && javaPath.trim() !== '') opts.javaPath = javaPath;
 
-  if (loader === 'Fabric') {
+  if (authData && authData.accessToken) {
+    opts.authorization = {
+      access_token: authData.accessToken,
+      client_token: authData.clientToken,
+      uuid: authData.selectedProfile.id,
+      name: authData.selectedProfile.name,
+      user_properties: '{}',
+      meta: { type: 'mojang', demo: false }
+    };
+    try {
+      event.sender.send('launch-progress', { status: 'Downloading Ely.by Injector...', percent: 50 });
+      const injectorPath = await ensureAuthlibInjector(rootPath);
+      opts.customArgs = [`-javaagent:${injectorPath}=https://authserver.ely.by`];
+    } catch (e) {
+      console.warn("Injector failed", e);
+      event.sender.send('launch-warning', "Ely.by skins may not work (injector failed).");
+    }
+  }
+  if (javaPath && javaPath.trim() !== '') {
+    opts.javaPath = javaPath;
+  } else {
+    try {
+      opts.javaPath = await ensureJava(mcVersion, rootPath, loader, (progress) => {
+        event.sender.send('launch-progress', progress);
+      });
+    } catch (e) {
+      event.sender.send('launch-error', 'Java Auto-Install Failed: ' + e.message);
+      return;
+    }
+  }
+
+  if ((loader || '').toLowerCase() === 'fabric') {
     try {
       event.sender.send('launch-progress', { status: 'Setting up Fabric...', percent: 10 });
       const fabricVersion = await installFabric(mcVersion, rootPath);
@@ -191,6 +254,9 @@ ipcMain.on('launch-modpack', async (event, args) => {
   launchClient.on('close', () => event.sender.send('launch-closed'));
   try {
     event.sender.send('launch-progress', { percent: 0, status: 'Initializing...' });
+    // Clean empty files to prevent ZipException corruption
+    cleanEmptyFiles(path.join(rootPath, 'libraries'));
+    cleanEmptyFiles(path.join(rootPath, 'versions'));
     await launchClient.launch(opts);
     // Game process is now running — tell renderer to hide overlay
     event.sender.send('game-launched');
@@ -201,7 +267,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
 
 // Minecraft Launch IPC
 ipcMain.on('launch-minecraft', async (event, args) => {
-  const { username, version, javaPath, loader, autoOptimization, maxMemory } = args;
+  const { username, version, javaPath, loader, autoOptimization, maxMemory, authData } = args;
   
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
   const profilePath = path.join(rootPath, 'profiles', version);
@@ -226,13 +292,41 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     memory: { max: maxMem, min: minMem }
   };
 
+  if (authData && authData.accessToken) {
+    opts.authorization = {
+      access_token: authData.accessToken,
+      client_token: authData.clientToken,
+      uuid: authData.selectedProfile.id,
+      name: authData.selectedProfile.name,
+      user_properties: '{}',
+      meta: { type: 'mojang', demo: false }
+    };
+    try {
+      event.sender.send('launch-progress', { status: 'Downloading Ely.by Injector...', percent: 50 });
+      const injectorPath = await ensureAuthlibInjector(rootPath);
+      opts.customArgs = [`-javaagent:${injectorPath}=https://authserver.ely.by`];
+    } catch (e) {
+      console.warn("Injector failed", e);
+      event.sender.send('launch-warning', "Ely.by skins may not work (injector failed).");
+    }
+  }
+
   if (javaPath && javaPath.trim() !== '') {
     opts.javaPath = javaPath;
+  } else {
+    try {
+      opts.javaPath = await ensureJava(version, rootPath, loader, (progress) => {
+        event.sender.send('launch-progress', progress);
+      });
+    } catch (e) {
+      event.sender.send('launch-error', 'Java Auto-Install Failed: ' + e.message);
+      return;
+    }
   }
 
   // Handle Mod Loader
   try {
-    if (loader === 'Fabric') {
+    if ((loader || '').toLowerCase() === 'fabric') {
       event.sender.send('launch-progress', { status: 'Downloading Fabric loader...', percent: 10 });
       const fabricVersion = await installFabric(version, rootPath);
       opts.version.custom = fabricVersion;
@@ -257,7 +351,39 @@ ipcMain.on('launch-minecraft', async (event, args) => {
   const launchClient = new Client();
 
   launchClient.on('debug', (e) => console.log(e));
-  launchClient.on('data', (e) => console.log(e));
+  
+  let outputBuffer = '';
+  launchClient.on('data', (e) => {
+    const str = e.toString();
+    console.log(str);
+    
+    // Auto-Healing: Detect corrupted JAR files that cause Java to crash with a ZipException or IOException
+    outputBuffer += str;
+    if (outputBuffer.length > 5000) outputBuffer = outputBuffer.slice(-5000); // Keep last 5000 chars to avoid memory bloat
+    
+    const match = outputBuffer.match(/error reading (.*?\.jar)/i);
+    if (match && match[1]) {
+      const corruptedJar = match[1].trim();
+      try {
+        if (fs.existsSync(corruptedJar)) {
+          console.log(`[Auto-Healer] Detected corrupted JAR, deleting: ${corruptedJar}`);
+          fs.unlinkSync(corruptedJar);
+          event.sender.send('launch-warning', `Corrupted file removed: ${path.basename(corruptedJar)}. Click PLAY again to redownload!`);
+          outputBuffer = ''; // Clear buffer to avoid multi-deletes
+        }
+      } catch (err) {
+        console.error('[Auto-Healer] Failed to delete corrupted jar', err);
+      }
+    }
+    
+    // Auto-Healing: Detect Java Version Compatibility Errors (e.g. JAVA_25 Mixin Error)
+    if (outputBuffer.includes('Level is not supported by the active JRE') || 
+        outputBuffer.includes('has been compiled by a more recent version') ||
+        outputBuffer.includes('Error parsing or using Mixin config')) {
+      event.sender.send('clear-java-path');
+      outputBuffer = '';
+    }
+  });
   
   launchClient.on('progress', (e) => {
     console.log('Progress:', e);
@@ -283,6 +409,9 @@ ipcMain.on('launch-minecraft', async (event, args) => {
 
   try {
     event.sender.send('launch-progress', { percent: 0, status: 'Initializing...' });
+    // Clean empty files to prevent ZipException corruption
+    cleanEmptyFiles(path.join(rootPath, 'libraries'));
+    cleanEmptyFiles(path.join(rootPath, 'versions'));
     await launchClient.launch(opts);
     // Game process is now running — tell renderer to hide the overlay
     event.sender.send('game-launched');
@@ -293,6 +422,130 @@ ipcMain.on('launch-minecraft', async (event, args) => {
 });
 
 // Helper Functions
+async function ensureAuthlibInjector(rootPath) {
+  const libPath = path.join(rootPath, 'authlib-injector.jar');
+  if (fs.existsSync(libPath)) return libPath;
+  
+  return new Promise((resolve, reject) => {
+    https.get('https://api.github.com/repos/yushijinhun/authlib-injector/releases/latest', { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          const asset = json.assets.find(a => a.name.endsWith('.jar'));
+          if (!asset) return reject(new Error('No authlib-injector jar found'));
+          downloadFile(asset.browser_download_url, libPath, () => resolve(libPath), reject);
+        } catch(e) { reject(e); }
+      });
+    }).on('error', reject);
+  });
+}
+
+function getRequiredJavaVersion(mcVersion, loader) {
+  const isFabric = (loader || '').toLowerCase() === 'fabric';
+
+  // Extract the minor version ONLY from legacy "1.x.x" format (e.g., 21 from "1.21.4").
+  // The regex is anchored to ^ so "26.1.2" does NOT falsely match "1.2".
+  // If the version doesn't start with "1." (modern format like 26.x.x, snapshots, etc),
+  // default to 999 which forces the latest Java.
+  const match = (mcVersion || '').match(/^1\.(\d+)/);
+  const minor = match ? parseInt(match[1], 10) : 999;
+
+  // Modern Minecraft (26.x+) and modern Fabric mods require Java 25
+  if (minor >= 999) return 25; // Non-1.x versions (e.g. 26.1.2) → Java 25
+  if (isFabric && minor >= 20) return 25; // Fabric 1.20+ mods now compile against Java 25
+  if (isFabric && minor >= 16) return 21; // Older Fabric (1.16-1.19) → Java 21
+
+  if (minor >= 20) return 21; // Vanilla 1.20+ → Java 21
+  if (minor >= 17) return 17; // 1.17 to 1.19.x → Java 17
+  return 8; // 1.16.5 and below → Java 8
+}
+
+async function ensureJava(mcVersion, rootPath, loader, progressCallback) {
+  const javaVersion = getRequiredJavaVersion(mcVersion, loader);
+  const runtimesPath = path.join(rootPath, 'runtimes');
+  if (!fs.existsSync(runtimesPath)) fs.mkdirSync(runtimesPath, { recursive: true });
+  
+  const jreFolder = path.join(runtimesPath, `jre-${javaVersion}`);
+  const javaExe = path.join(jreFolder, 'bin', 'java.exe');
+
+  if (fs.existsSync(javaExe)) return javaExe; // Already downloaded!
+
+  const zipPath = path.join(runtimesPath, `jre-${javaVersion}.zip`);
+  const apiUrl = `https://api.adoptium.net/v3/binary/latest/${javaVersion}/ga/windows/x64/jre/hotspot/normal/eclipse`;
+
+  progressCallback({ status: `Downloading Java ${javaVersion}...`, percent: 0 });
+
+  await new Promise((resolve, reject) => {
+    let downloaded = 0;
+    function downloadJava(url, dest, depth = 0) {
+      if (depth > 5) return reject(new Error('Too many redirects'));
+      https.get(url, (r) => {
+        if ([301, 302, 303, 307, 308].includes(r.statusCode)) {
+          return downloadJava(r.headers.location, dest, depth + 1);
+        }
+        if (r.statusCode !== 200) return reject(new Error(`Download failed: ${r.statusCode}`));
+        
+        const total = parseInt(r.headers['content-length'] || '0', 10);
+        const file = fs.createWriteStream(dest);
+        
+        r.on('data', (chunk) => {
+          downloaded += chunk.length;
+          if (total > 0) {
+            const percent = Math.round((downloaded / total) * 100);
+            progressCallback({ status: `Downloading Java ${javaVersion}...`, percent: Math.min(percent, 99) });
+          }
+        });
+        
+        r.pipe(file);
+        file.on('finish', () => { file.close(); resolve(); });
+        file.on('error', reject);
+      }).on('error', reject);
+    }
+    downloadJava(apiUrl, zipPath);
+  });
+
+  progressCallback({ status: `Extracting Java ${javaVersion}... (This may take a minute)`, percent: 100 });
+  
+  const tempExt = path.join(runtimesPath, `temp-${javaVersion}`);
+  if (fs.existsSync(tempExt)) fs.rmSync(tempExt, { recursive: true, force: true });
+  fs.mkdirSync(tempExt, { recursive: true });
+  
+  try {
+    execSync(`powershell.exe -NoProfile -NonInteractive -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${tempExt}' -Force"`);
+    
+    const extractedDirs = fs.readdirSync(tempExt);
+    if (extractedDirs.length > 0) {
+      const innerDir = path.join(tempExt, extractedDirs[0]);
+      fs.renameSync(innerDir, jreFolder);
+    }
+    
+    fs.rmSync(tempExt, { recursive: true, force: true });
+    fs.unlinkSync(zipPath);
+    
+    if (fs.existsSync(javaExe)) return javaExe;
+    throw new Error('java.exe not found after extraction');
+  } catch (err) {
+    throw new Error(`Extraction failed: ${err.message}`);
+  }
+}
+
+function cleanEmptyFiles(dir) {
+  if (!fs.existsSync(dir)) return;
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      cleanEmptyFiles(fullPath);
+    } else if (stat.isFile() && stat.size === 0) {
+      console.log(`[Cleaner] Deleting empty file: ${fullPath}`);
+      try { fs.unlinkSync(fullPath); } catch (e) {}
+    }
+  }
+}
+
 function installFabric(version, rootPath) {
   return new Promise((resolve, reject) => {
     https.get(`https://meta.fabricmc.net/v2/versions/loader/${version}`, (res) => {
