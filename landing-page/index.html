@@ -1,30 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IDK Launcher - The Next Generation Minecraft Experience</title>
-    <meta name="description" content="The ultimate Minecraft launcher with sandboxed modpacks, built-in marketplace, and peak performance optimization.">
-    
+    <meta name="description"
+        content="The ultimate Minecraft launcher with sandboxed modpacks, built-in marketplace, and peak performance optimization.">
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://idk-launcher-landing.vathirchatib.workers.dev/">
     <meta property="og:title" content="IDK Launcher">
-    <meta property="og:description" content="The ultimate Minecraft launcher with sandboxed modpacks, built-in marketplace, and peak performance optimization.">
-    <meta property="og:image" content="https://raw.githubusercontent.com/Jeflacc/idk-launcher-landing/master/assets/banner.png">
+    <meta property="og:description"
+        content="The ultimate Minecraft launcher with sandboxed modpacks, built-in marketplace, and peak performance optimization.">
+    <meta property="og:image"
+        content="https://raw.githubusercontent.com/Jeflacc/idk-launcher-landing/master/assets/banner.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://idk-launcher-landing.vathirchatib.workers.dev/">
     <meta property="twitter:title" content="IDK Launcher">
-    <meta property="twitter:description" content="The ultimate Minecraft launcher with sandboxed modpacks, built-in marketplace, and peak performance optimization.">
-    <meta property="twitter:image" content="https://raw.githubusercontent.com/Jeflacc/idk-launcher-landing/master/assets/banner.png">
+    <meta property="twitter:description"
+        content="The ultimate Minecraft launcher with sandboxed modpacks, built-in marketplace, and peak performance optimization.">
+    <meta property="twitter:image"
+        content="https://raw.githubusercontent.com/Jeflacc/idk-launcher-landing/master/assets/banner.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="background-container">
         <video autoplay muted loop playsinline class="bg-video">
@@ -50,21 +59,20 @@
         <section class="hero">
             <div class="container">
                 <div class="hero-content">
-                    <span class="badge">V1.0.0 STABLE</span>
+                    <span class="badge">V1.1.2 STABLE</span>
                     <h1>Elevate Your <span>Minecraft</span> Journey</h1>
-                    <p>Experience the most powerful, beautiful, and intuitive Minecraft launcher ever built. Sandboxed modpacks, built-in marketplace, and peak performance optimization.</p>
+                    <p>Experience the most powerful, beautiful, and intuitive Minecraft launcher ever built. Sandboxed
+                        modpacks, built-in marketplace, and peak performance optimization.</p>
                     <div class="hero-actions">
-                        <div class="download-group">
-                            <a href="https://github.com/Jeflacc/idk-launcher-landing/releases/download/v1.0.0/IDK.Launcher.Setup.1.0.0.exe" id="heroDownloadBtn" class="main-download-btn">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                Download for Windows
-                            </a>
-                            <select class="version-select" onchange="updateDownloadLinks(this.value)">
-                                <option value="v1.0.0">v1.0.0 Stable</option>
-                                <option value="v1.1.0-beta">v1.1.0 Beta</option>
-                                <option value="v0.9.5-legacy">v0.9.5 Legacy</option>
-                            </select>
-                        </div>
+                        <a href="https://github.com/Jeflacc/idk-launcher-landing/releases" class="main-download-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download for Windows
+                        </a>
                         <a href="#features" class="secondary-btn">Explore Features</a>
                     </div>
                 </div>
@@ -73,6 +81,26 @@
                         <img src="assets/logo.png" class="mockup-img" alt="Launcher Preview">
                         <div class="floating-badge fb-1"><span>⚡</span> 240+ FPS</div>
                         <div class="floating-badge fb-2"><span>🧩</span> 1000+ Mods</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="loaders-section">
+            <div class="container">
+                <div class="loaders-card">
+                    <div class="loaders-content">
+                        <h2>All Your <span>Favorites</span> Supported</h2>
+                        <p>IDK Launcher comes with native, high-performance support for every major mod loader. Forge, NeoForge, Fabric, and Quilt (Beta) are fully integrated with one-click installation.</p>
+                        <div class="loaders-list">
+                            <div class="loader-tag">Forge</div>
+                            <div class="loader-tag">NeoForge</div>
+                            <div class="loader-tag">Fabric</div>
+                            <div class="loader-tag">Quilt <span class="beta">BETA</span></div>
+                        </div>
+                    </div>
+                    <div class="loaders-graphic">
+                        <img src="assets/loaders.png" alt="Mod Loaders Support">
                     </div>
                 </div>
             </div>
@@ -88,17 +116,67 @@
                     <div class="feature-card">
                         <div class="icon">🧩</div>
                         <h3>Modpack Manager</h3>
-                        <p>Create sandboxed profiles with their own mods, resource packs, and shaders. Zero conflict, total isolation.</p>
+                        <p>Create sandboxed profiles with their own mods, resource packs, and shaders. Zero conflict,
+                            total isolation.</p>
                     </div>
                     <div class="feature-card">
                         <div class="icon">🏪</div>
                         <h3>Live Marketplace</h3>
-                        <p>Browse and install thousands of mods directly from Modrinth without ever leaving the launcher.</p>
+                        <p>Browse and install thousands of mods directly from Modrinth without ever leaving the
+                            launcher.</p>
                     </div>
                     <div class="feature-card">
                         <div class="icon">🚀</div>
                         <h3>Performance First</h3>
-                        <p>One-click Sodium integration and smart memory allocation for the smoothest gameplay possible.</p>
+                        <p>One-click Sodium integration and smart memory allocation for the smoothest gameplay possible.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="runtime-recommendation">
+            <div class="container">
+                <div class="adoptium-card">
+                    <div class="card-decorations">
+                        <div class="deco-line line-1"></div>
+                        <div class="deco-line line-2"></div>
+                        <div class="deco-particle particle-1"></div>
+                        <div class="deco-particle particle-2"></div>
+                        <div class="deco-particle particle-3"></div>
+                    </div>
+                    <div class="adoptium-content">
+                        <div class="adoptium-header">
+                            <span class="adoptium-badge">Recommended Runtime</span>
+                            <h2>Powered by <span>Eclipse Temurin</span></h2>
+                        </div>
+                        <p>For the best experience, peak stability, and maximum FPS, we officially recommend using the
+                            Temurin 17 OpenJDK runtime. It is the perfect engine for the IDK Launcher.</p>
+                        <div class="adoptium-actions">
+                            <a href="https://adoptium.net/temurin/releases/?variant=openjdk17&jvmVariant=hotspot"
+                                target="_blank" class="adoptium-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Get Temurin 17
+                            </a>
+                            <span class="runtime-info">OpenJDK 17 (LTS) • Hotspot JVM</span>
+                        </div>
+                    </div>
+                    <div class="adoptium-visual">
+                        <div class="java-icon">
+                            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#ff5a92"
+                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                </path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -107,19 +185,18 @@
         <section id="download" class="cta">
             <div class="container">
                 <div class="glass-card">
+                    <div class="card-decorations">
+                        <div class="deco-line line-1"></div>
+                        <div class="deco-line line-2"></div>
+                        <div class="deco-particle particle-1"></div>
+                        <div class="deco-particle particle-2"></div>
+                        <div class="deco-particle particle-3"></div>
+                    </div>
                     <h2>Ready to start your adventure?</h2>
                     <p>Join thousands of players who have already upgraded to the IDK experience.</p>
-                    <div class="cta-actions">
-                        <div class="cta-download-group">
-                            <a href="https://github.com/Jeflacc/idk-launcher-landing/releases/download/v1.0.0/IDK.Launcher.Setup.1.0.0.exe" id="ctaDownloadBtn" class="main-download-btn large">Download Standalone Installer</a>
-                            <select class="version-select" onchange="updateDownloadLinks(this.value)">
-                                <option value="v1.0.0">v1.0.0 Stable</option>
-                                <option value="v1.1.0-beta">v1.1.0 Beta</option>
-                                <option value="v0.9.5-legacy">v0.9.5 Legacy</option>
-                            </select>
-                        </div>
-                        <span class="subtext">Requires Windows 10 or 11 (x64)</span>
-                    </div>
+                    <a href="https://github.com/Jeflacc/idk-launcher-landing/releases"
+                        class="main-download-btn large">Download Standalone Installer</a>
+                    <span class="subtext">Requires Windows 10 or 11 (x64)</span>
                 </div>
             </div>
         </section>
@@ -130,23 +207,6 @@
             <p>&copy; 2026 Indkingdom Launcher. Built with passion for the community.</p>
         </div>
     </footer>
-    <script>
-        const versions = {
-            'v1.0.0': 'https://github.com/Jeflacc/idk-launcher-landing/releases/download/v1.0.0/IDK.Launcher.Setup.1.0.0.exe',
-            'v1.1.0-beta': 'https://github.com/Jeflacc/idk-launcher-landing/releases/download/v1.1.0-beta/IDK.Launcher.Setup.1.1.0-beta.exe',
-            'v0.9.5-legacy': 'https://github.com/Jeflacc/idk-launcher-landing/releases/download/v0.9.5/IDK.Launcher.Setup.0.9.5.exe'
-        };
-
-        function updateDownloadLinks(version) {
-            const url = versions[version];
-            document.getElementById('heroDownloadBtn').href = url;
-            document.getElementById('ctaDownloadBtn').href = url;
-            
-            // Sync all selects
-            document.querySelectorAll('.version-select').forEach(select => {
-                select.value = version;
-            });
-        }
-    </script>
 </body>
+
 </html>
