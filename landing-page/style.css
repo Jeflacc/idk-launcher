@@ -433,7 +433,7 @@ body {
 
 @keyframes scroll-left {
   0% { transform: translateX(0); }
-  100% { transform: translateX(calc(-50% - 40px)); }
+  100% { transform: translateX(-50%); }
 }
 
 @media (max-width: 968px) {
