@@ -724,3 +724,92 @@ footer {
   50% { transform: translateY(-30px) scale(1.2); opacity: 1; }
   100% { transform: translateY(0) scale(1); opacity: 0.5; }
 }
+
+/* Multi-Platform Download Cards */
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1000px;
+  margin: 40px auto 32px;
+  position: relative;
+  z-index: 10;
+}
+
+.download-platform-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 36px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.download-platform-card:hover {
+  transform: translateY(-10px);
+  background: rgba(34, 197, 94, 0.05);
+  border-color: rgba(34, 197, 94, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.platform-icon {
+  font-size: 44px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+  transition: transform 0.3s;
+}
+
+.download-platform-card:hover .platform-icon {
+  transform: scale(1.15) rotate(5deg);
+}
+
+.download-platform-card h3 {
+  font-family: var(--font-title);
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: white;
+}
+
+.platform-req {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+  min-height: 20px;
+  text-align: center;
+}
+
+.platform-dl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  text-decoration: none;
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  width: 100%;
+  margin-top: auto;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.download-platform-card:hover .platform-dl-btn {
+  background: var(--accent-green);
+  color: white;
+  border-color: var(--accent-green);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+}
+
+@media (max-width: 868px) {
+  .download-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 16px;
+  }
+}
