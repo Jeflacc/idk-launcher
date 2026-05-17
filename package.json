@@ -1,6 +1,7 @@
 {
   "name": "idk-launcher",
   "version": "1.2.0",
+  "author": "Jeflacc <109415855+Jeflacc@users.noreply.github.com>",
   "private": true,
   "type": "module",
   "main": "electron-main.cjs",
@@ -44,6 +45,7 @@
     },
     "linux": {
       "icon": "logo.png",
+      "maintainer": "Jeflacc <109415855+Jeflacc@users.noreply.github.com>",
       "target": [
         "AppImage",
         "deb"
@@ -52,7 +54,7 @@
     "publish": {
       "provider": "github",
       "owner": "Jeflacc",
-      "repo": "idk-launcher-landing"
+      "repo": "idk-launcher"
     },
     "files": [
       "dist/**/*",
