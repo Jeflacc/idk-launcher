@@ -1,6 +1,6 @@
 {
   "name": "idk-launcher",
-  "version": "1.2.0",
+  "version": "1.2.0-preview.26w20a",
   "author": "Jeflacc <109415855+Jeflacc@users.noreply.github.com>",
   "private": true,
   "type": "module",
@@ -61,6 +61,7 @@
       "electron-main.cjs",
       "preload.cjs",
       "splash.html",
+      "logo.png",
       "public/**/*"
     ]
   },

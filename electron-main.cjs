@@ -332,8 +332,21 @@ function isNewerVersion(current, latest) {
   return false;
 }
 
+function isModernVersion(ver) {
+  if (!ver || typeof ver !== 'string') return false;
+  const match = ver.match(/^([0-9]+)\.([0-9]+)/);
+  if (match) {
+    const major = parseInt(match[1]);
+    const minor = parseInt(match[2]);
+    if (major > 1) return true;
+    if (major === 1 && minor >= 20) return true;
+  }
+  if (ver.match(/^[0-9]{2}w/)) return true;
+  return false;
+}
+
 ipcMain.on('launch-modpack', async (event, args) => {
-  const { username, modpackId, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData } = args;
+  const { username, modpackId, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData, quickConnect } = args;
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
   const profilePath = path.join(rootPath, 'profiles', `modpack-${modpackId}`);
   if (!fs.existsSync(profilePath)) fs.mkdirSync(profilePath, { recursive: true });
@@ -354,6 +367,20 @@ ipcMain.on('launch-modpack', async (event, args) => {
     version: { number: mcVersion, type: 'release' },
     memory: { max: maxMem, min: minMem }
   };
+
+  if (quickConnect) {
+    opts.server = {
+      host: quickConnect.host,
+      port: quickConnect.port
+    };
+    if (isModernVersion(mcVersion)) {
+      if (!opts.customLaunchArgs) {
+        opts.customLaunchArgs = [];
+      }
+      opts.customLaunchArgs.push('--quickPlayMultiplayer', `${quickConnect.host}:${quickConnect.port}`);
+    }
+    console.log(`[QuickConnect Modpack] Setting target server: ${opts.server.host}:${opts.server.port}`);
+  }
 
   if (authData && authData.accessToken) {
     opts.authorization = {
@@ -452,7 +479,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
 
 // Minecraft Launch IPC
 ipcMain.on('launch-minecraft', async (event, args) => {
-  const { username, version, javaPath, loader, autoOptimization, maxMemory, authData } = args;
+  const { username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect } = args;
   
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
   const profilePath = path.join(rootPath, 'profiles', version);
@@ -476,6 +503,20 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     version: { number: version, type: 'release' },
     memory: { max: maxMem, min: minMem }
   };
+
+  if (quickConnect) {
+    opts.server = {
+      host: quickConnect.host,
+      port: quickConnect.port
+    };
+    if (isModernVersion(version)) {
+      if (!opts.customLaunchArgs) {
+        opts.customLaunchArgs = [];
+      }
+      opts.customLaunchArgs.push('--quickPlayMultiplayer', `${quickConnect.host}:${quickConnect.port}`);
+    }
+    console.log(`[QuickConnect] Setting target server: ${opts.server.host}:${opts.server.port}`);
+  }
 
   if (authData && authData.accessToken) {
     opts.authorization = {
@@ -1225,3 +1266,219 @@ function installSodium(version, profilePath) {
     });
   });
 }
+
+// ============================================================
+// === CLOUDFLARED TUNNEL MULTIPLAYER SYSTEM ===================
+// ============================================================
+let activeTunnelProcess = null;
+
+ipcMain.handle('ensure-cloudflared', async (event) => {
+  const binDir = path.join(app.getPath('userData'), 'bin');
+  if (!fs.existsSync(binDir)) fs.mkdirSync(binDir, { recursive: true });
+  const exePath = path.join(binDir, 'cloudflared.exe');
+  
+  if (fs.existsSync(exePath) && fs.statSync(exePath).size > 0) {
+    return { success: true, path: exePath };
+  }
+  
+  const url = 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe';
+  event.sender.send('cloudflared-install-progress', { status: 'Downloading cloudflared.exe...', percent: 0 });
+  
+  return new Promise((resolve) => {
+    function download(downloadUrl, redirectCount = 0) {
+      if (redirectCount > 7) {
+        return resolve({ success: false, error: 'Too many redirects' });
+      }
+      
+      https.get(downloadUrl, (res) => {
+        if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
+          const nextUrl = res.headers.location;
+          if (!nextUrl) {
+            return resolve({ success: false, error: 'Redirect location missing' });
+          }
+          return download(nextUrl, redirectCount + 1);
+        }
+        
+        if (res.statusCode !== 200) {
+          return resolve({ success: false, error: 'Status ' + res.statusCode });
+        }
+        
+        const total = parseInt(res.headers['content-length'] || '0', 10);
+        const file = fs.createWriteStream(exePath);
+        let downloadedBytes = 0;
+        
+        res.on('data', (chunk) => {
+          downloadedBytes += chunk.length;
+          if (total > 0) {
+            const percent = Math.round((downloadedBytes / total) * 100);
+            event.sender.send('cloudflared-install-progress', { status: 'Downloading cloudflared...', percent });
+          }
+        });
+        
+        res.pipe(file);
+        
+        file.on('finish', () => {
+          file.close();
+          resolve({ success: true, path: exePath });
+        });
+        
+        file.on('error', (e) => {
+          fs.unlink(exePath, () => {});
+          resolve({ success: false, error: e.message });
+        });
+      }).on('error', (e) => {
+        resolve({ success: false, error: e.message });
+      });
+    }
+    
+    download(url);
+  });
+});
+
+ipcMain.handle('start-cloudflared-tunnel', async (event, { port }) => {
+  if (activeTunnelProcess) {
+    try { activeTunnelProcess.kill(); } catch (e) {}
+    activeTunnelProcess = null;
+  }
+
+  const binDir = path.join(app.getPath('userData'), 'bin');
+  const exePath = path.join(binDir, 'cloudflared.exe');
+  
+  if (!fs.existsSync(exePath)) {
+    return { success: false, error: 'cloudflared.exe is not installed' };
+  }
+
+  return new Promise((resolve) => {
+    const { spawn } = require('child_process');
+    console.log(`[Cloudflared] Starting tunnel on port tcp://localhost:${port}`);
+    
+     // Spawn cloudflared to forward TCP traffic
+    const proc = spawn(exePath, ['tunnel', '--url', `tcp://127.0.0.1:${port}`]);
+    activeTunnelProcess = proc;
+
+    let resolved = false;
+    let logBuffer = '';
+
+    const handleLogData = (data, source) => {
+      const line = data.toString();
+      console.log(`[Cloudflared ${source}]`, line.trim());
+      
+      // Strip ANSI escape sequences (colors, formatting) to prevent regex matching failures
+      const cleanLine = line.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+      logBuffer += cleanLine;
+
+      // Scan for the trycloudflare URL (both HTTPS and TCP quick tunnels)
+      const match = logBuffer.match(/(https|tcp):\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.trycloudflare\.com(:[0-9]{1,5})?/);
+      if (match && !resolved) {
+        resolved = true;
+        const tunnelUrl = match[0];
+        console.log(`[Cloudflared] Tunnel successfully established: ${tunnelUrl}`);
+        resolve({ success: true, url: tunnelUrl });
+      }
+    };
+
+    proc.stderr.on('data', (data) => handleLogData(data, 'Output'));
+    proc.stdout.on('data', (data) => handleLogData(data, 'Stdout'));
+
+    proc.on('close', (code) => {
+      console.log(`[Cloudflared] Process exited with code ${code}`);
+      activeTunnelProcess = null;
+      if (!resolved) {
+        const lines = logBuffer.split('\n').map(l => l.trim()).filter(Boolean);
+        const lastErrorLine = lines[lines.length - 1] || 'Check if the port is correct or another process is running on it.';
+        resolve({ success: false, error: `Cloudflared exited (code ${code}): ${lastErrorLine}` });
+      }
+      event.sender.send('cloudflared-tunnel-closed');
+    });
+
+    // Timeout if tunnel is not established in 20 seconds
+    setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        try { proc.kill(); } catch(e) {}
+        activeTunnelProcess = null;
+        resolve({ success: false, error: 'Tunnel connection timed out (20 seconds)' });
+      }
+    }, 20000);
+  });
+});
+
+ipcMain.handle('stop-cloudflared-tunnel', async () => {
+  if (activeTunnelProcess) {
+    console.log('[Cloudflared] Stopping active tunnel...');
+    try { activeTunnelProcess.kill(); } catch(e) {}
+    activeTunnelProcess = null;
+    return { success: true };
+  }
+  return { success: false, error: 'No active tunnel running' };
+});
+
+let activeAccessProcess = null;
+
+ipcMain.handle('start-cloudflared-access', async (event, { url, localPort }) => {
+  if (activeAccessProcess) {
+    try { activeAccessProcess.kill(); } catch (e) {}
+    activeAccessProcess = null;
+  }
+
+  const binDir = path.join(app.getPath('userData'), 'bin');
+  const exePath = path.join(binDir, 'cloudflared.exe');
+  
+  if (!fs.existsSync(exePath)) {
+    return { success: false, error: 'cloudflared.exe is not installed' };
+  }
+
+  return new Promise((resolve) => {
+    const { spawn } = require('child_process');
+    console.log(`[Cloudflared Access] Mapping ${url} to local port tcp://127.0.0.1:${localPort}`);
+    
+    // Spawn cloudflared in client access mode
+    const proc = spawn(exePath, ['access', 'tcp', '--listener', `127.0.0.1:${localPort}`, '--hostname', url]);
+    activeAccessProcess = proc;
+
+    let established = false;
+
+    proc.stderr.on('data', (data) => {
+      const line = data.toString();
+      console.log('[Cloudflared Access Output]', line.trim());
+    });
+
+    // Assume success after 1.5 seconds if the process hasn't exited
+    const timer = setTimeout(() => {
+      if (!established) {
+        established = true;
+        resolve({ success: true });
+      }
+    }, 1500);
+
+    proc.on('close', (code) => {
+      console.log(`[Cloudflared Access] Process exited with code ${code}`);
+      activeAccessProcess = null;
+      clearTimeout(timer);
+      if (!established) {
+        resolve({ success: false, error: `Process exited with code ${code}` });
+      }
+      event.sender.send('cloudflared-access-closed');
+    });
+  });
+});
+
+ipcMain.handle('stop-cloudflared-access', async () => {
+  if (activeAccessProcess) {
+    console.log('[Cloudflared Access] Stopping active client-side bridge...');
+    try { activeAccessProcess.kill(); } catch(e) {}
+    activeAccessProcess = null;
+    return { success: true };
+  }
+  return { success: false, error: 'No active access bridge running' };
+});
+
+app.on('will-quit', () => {
+  if (activeTunnelProcess) {
+    try { activeTunnelProcess.kill(); } catch(e) {}
+  }
+  if (activeAccessProcess) {
+    try { activeAccessProcess.kill(); } catch(e) {}
+  }
+});
+
