@@ -1,5 +1,53 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.3.0 Changelog
+
+Halo semuanya! Versi stabil **v1.3.0** kini resmi dirilis! Pembaruan besar ini membawa launcher ke tingkat berikutnya dengan menghadirkan fitur multiplayer terintegrasi, manajemen modpack mandiri (Import/Export), serta perbaikan kompatibilitas mod pack yang luar biasa.
+
+---
+
+### 🚀 Fitur Baru & Unggulan
+
+* **📥 Import Modpack Lokal dari File `.zip`**
+  - Sekarang Anda bisa mengimpor modpack CurseForge pilihan Anda langsung dari file `.zip` di komputer Anda!
+  - Proses download file mod dijamin super ngebut karena menggunakan antrean pengunduhan paralel **(hingga 12 mod sekaligus)**.
+  - Secara otomatis mendeteksi dan menyalin semua folder konfigurasi (*configs*), *resource packs*, *shaders*, dan menu kustom (*overrides*) dari file zip!
+
+* **📤 Export Modpack ke File `.zip` Portabel**
+  - Punya modpack racikan sendiri yang ingin dibagikan ke teman? Cukup klik ikon **Export** biru (tombol panah ke atas) di samping nama modpack!
+  - Menghasilkan file `.zip` portabel CurseForge-compatible yang berisi seluruh mod, konfigurasi, dan resource packs Anda.
+  - **Optimasi Privasi & Ukuran:** Proses export secara cerdas akan menyaring dan menghapus folder log permainan (`logs/`) untuk melindungi privasi akun Anda dan menghemat ukuran file zip!
+
+* **👥 IDK CONNECT (Beta) — Sistem Teman & Mabar Real-Time**
+  - Sidebar sosial baru yang terletak di bagian kanan atas launcher!
+  - Tambahkan teman, lihat daftar teman, serta pantau status online/offline dan aktivitas mabar mereka secara langsung (*contoh: "Bermain TerrafirmaCraft Optimized"*).
+  - Hubungkan akun dan mabar P2P dengan aman tanpa ribet setup IP, cukup klik tombol join dari profil teman Anda!
+  - Dilengkapi sistem notifikasi lencana (*pending invitation badge*) untuk permintaan pertemanan yang masuk.
+
+* **🖼️ Ikon Modpack & Logo Kustom Otomatis**
+  - Ketika Anda mengimpor modpack CurseForge yang cantik, launcher akan otomatis mengambil logo resmi dari modpack tersebut dan memasangnya sebagai ikon profil modpack di dashboard agar tampilan launcher Anda jauh lebih menawan!
+
+---
+
+### 🔧 Peningkatan Kompatibilitas & Optimasi
+
+* **🛠️ Perbaikan Modpack Terrafirmacraft & Kustom Title**
+  - Memperbaiki masalah di mana title Minecraft atau menu kustom modpack tidak berubah saat diluncurkan.
+  - Mengoptimalkan alokasi direktori kerja game (*working directory alignment*) sehingga mod kustom seperti custom title logo, menu grafis, dan opsi spesifik modpack termuat dengan sempurna 100%!
+
+* **⚡ Efisiensi Antrean Download Modpack**
+  - Melakukan perombakan penuh pada modul pengunduh modpack dengan sistem antrean dinamis *concurrency-limit* untuk mencegah kegagalan unduhan akibat batasan server (*network throttling*).
+
+---
+
+### 📦 Informasi Build
+* **Versi:** `1.3.0`
+* **Status:** Stable Release
+* **Platform:** Windows, macOS, Linux
+* **Build CI:** Terintegrasi penuh dengan GitHub Actions Workflow untuk kompilasi multiplatform otomatis saat tag di-push!
+
+---
+
 ## 🎮 IDK Launcher v1.2.0-preview.26w20c Changelog
 
 Halo semuanya! Versi preview **v1.2.0-preview.26w20c** kini hadir dengan fitur super seru yang paling ditunggu-tunggu: **Integrasi Discord Rich Presence!** Sekarang, teman-teman Anda di Discord bisa melihat aktivitas game Anda secara langsung dengan tampilan yang sangat premium.

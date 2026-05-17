@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const { Client } = require('minecraft-launcher-core');
 const fs = require('fs');
@@ -282,17 +282,112 @@ ipcMain.handle('unzip-curseforge', async (event, { filePath }) => {
     const overridesFolder = manifest.overrides || 'overrides';
     const overridesPath = path.join(tempExt, overridesFolder);
     if (fs.existsSync(overridesPath)) {
-      // Use Copy-Item to copy contents inside overrides path
-      execSync(`powershell.exe -NoProfile -NonInteractive -Command "Copy-Item -Path '${overridesPath}\*' -Destination '${profilePath}' -Recurse -Force"`);
+      // Use standard Node.js cpSync to copy overrides contents directly to profilePath
+      fs.cpSync(overridesPath, profilePath, { recursive: true, force: true });
     }
 
     fs.rmSync(tempExt, { recursive: true, force: true });
 
-    return { success: true, manifest, modpackId };
+    // Scan profile for resourcepacks and shaderpacks placed by overrides
+    const scanDir = (subdir) => {
+      const dir = path.join(profilePath, subdir);
+      if (!fs.existsSync(dir)) return [];
+      return fs.readdirSync(dir)
+        .filter(f => fs.statSync(path.join(dir, f)).isFile())
+        .map(f => ({ filename: f, name: f.replace(/\.(zip|jar)$/i, '') }));
+    };
+
+    const resourcepackFiles = scanDir('resourcepacks');
+    const shaderpackFiles = scanDir('shaderpacks');
+    const extraModFiles = scanDir('mods'); // mods bundled in overrides
+
+    return { success: true, manifest, modpackId, resourcepackFiles, shaderpackFiles, extraModFiles };
   } catch (e) {
     return { success: false, error: e.message };
   }
 });
+
+ipcMain.handle('select-modpack-zip', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select CurseForge Modpack Archive (.zip)',
+    filters: [{ name: 'Zip Archive', extensions: ['zip'] }],
+    properties: ['openFile']
+  });
+  if (result.canceled || result.filePaths.length === 0) return null;
+  return result.filePaths[0];
+});
+
+ipcMain.handle('select-export-zip', async (event, { defaultName }) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: 'Save Exported Modpack',
+    defaultPath: defaultName || 'MyModpack.zip',
+    filters: [{ name: 'Zip Archive', extensions: ['zip'] }]
+  });
+  if (result.canceled || !result.filePath) return null;
+  return result.filePath;
+});
+
+ipcMain.handle('export-modpack', async (event, { modpackId, name, mcVersion, loader, loaderVersion, destPath }) => {
+  try {
+    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const profilePath = path.join(rootPath, 'profiles', `modpack-${modpackId}`);
+    if (!fs.existsSync(profilePath)) throw new Error("Modpack folder not found.");
+
+    // Create temporary work folder
+    const tempExportDir = path.join(app.getPath('userData'), 'temp-export-' + Date.now());
+    fs.mkdirSync(tempExportDir, { recursive: true });
+
+    // 1. Create manifest.json
+    const manifest = {
+      minecraft: {
+        version: mcVersion,
+        modLoaders: [
+          {
+            id: `${loader.toLowerCase()}-${loaderVersion || 'latest'}`,
+            primary: true
+          }
+        ]
+      },
+      manifestType: "minecraftModpack",
+      manifestVersion: 1,
+      name: name,
+      version: "1.0.0",
+      author: "IDK Launcher User",
+      files: [],
+      overrides: "overrides"
+    };
+    fs.writeFileSync(path.join(tempExportDir, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf8');
+
+    // 2. Copy profilePath contents to overrides/
+    const overridesDest = path.join(tempExportDir, 'overrides');
+    fs.mkdirSync(overridesDest, { recursive: true });
+    
+    if (fs.existsSync(profilePath)) {
+      fs.cpSync(profilePath, overridesDest, { recursive: true, force: true });
+    }
+
+    // Privacy & Size Clean: Delete temporary logs inside overrides
+    const tempLogs = path.join(overridesDest, 'logs');
+    if (fs.existsSync(tempLogs)) {
+      fs.rmSync(tempLogs, { recursive: true, force: true });
+    }
+
+    // 3. Compress using PowerShell Compress-Archive (Set CWD relative to ensure clean zip structure)
+    if (fs.existsSync(destPath)) {
+      fs.unlinkSync(destPath);
+    }
+    
+    execSync(`powershell.exe -NoProfile -NonInteractive -Command "Set-Location -Path '${tempExportDir}'; Compress-Archive -Path * -DestinationPath '${destPath}' -Force"`);
+
+    // Clean up temporary folder
+    fs.rmSync(tempExportDir, { recursive: true, force: true });
+
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
 
 
 ipcMain.handle('download-curseforge-modpack', async (event, { downloadUrl }) => {
@@ -320,7 +415,8 @@ ipcMain.handle('download-curseforge-modpack', async (event, { downloadUrl }) => 
     const overridesFolder = manifest.overrides || 'overrides';
     const overridesPath = path.join(tempExt, overridesFolder);
     if (fs.existsSync(overridesPath)) {
-      execSync(`powershell.exe -NoProfile -NonInteractive -Command "Copy-Item -Path '${overridesPath}\*' -Destination '${profilePath}' -Recurse -Force"`);
+      // Use standard Node.js cpSync to copy overrides contents directly to profilePath
+      fs.cpSync(overridesPath, profilePath, { recursive: true, force: true });
     }
 
     fs.rmSync(tempExt, { recursive: true, force: true });
@@ -508,7 +604,10 @@ ipcMain.on('launch-modpack', async (event, args) => {
       meta: { type: 'mojang', demo: false }
     },
     root: rootPath,
-    overrides: { gameDirectory: profilePath },
+    overrides: {
+      gameDirectory: profilePath,
+      cwd: profilePath
+    },
     version: { number: mcVersion, type: 'release' },
     memory: { max: maxMem, min: minMem }
   };
@@ -669,7 +768,10 @@ ipcMain.on('launch-minecraft', async (event, args) => {
       meta: { type: 'mojang', demo: false }
     },
     root: rootPath,
-    overrides: { gameDirectory: profilePath },
+    overrides: {
+      gameDirectory: profilePath,
+      cwd: profilePath
+    },
     version: { number: version, type: 'release' },
     memory: { max: maxMem, min: minMem }
   };

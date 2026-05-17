@@ -1469,6 +1469,36 @@ input[type="checkbox"]:checked + .switch::after {
     inset -2px 0 0 #b34344;
 }
 
+.mp-action-btn.export {
+  background-color: #2e5b8f;
+  border: 2px solid #000000;
+  color: #9bc5ff;
+  box-shadow: 
+    inset 0 2px 0 #437ab3, 
+    inset 2px 0 0 #437ab3, 
+    inset 0 -2px 0 #163254, 
+    inset -2px 0 0 #163254;
+  text-shadow: 1px 1px 0px #163254;
+  transition: none;
+}
+.mp-action-btn.export:hover {
+  background-color: #386ba3;
+  box-shadow: 
+    inset 0 2px 0 #528fc7, 
+    inset 2px 0 0 #528fc7, 
+    inset 0 -2px 0 #1b3d63, 
+    inset -2px 0 0 #1b3d63;
+  color: white;
+}
+.mp-action-btn.export:active {
+  transform: translateY(2px);
+  box-shadow: 
+    inset 0 2px 0 #163254, 
+    inset 2px 0 0 #163254, 
+    inset 0 -2px 0 #437ab3, 
+    inset -2px 0 0 #437ab3;
+}
+
 /* Tab Pills */
 .mp-tabs {
   display: flex;
