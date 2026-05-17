@@ -2,49 +2,49 @@
 
 ## 🎮 IDK Launcher v1.3.0 Changelog
 
-Halo semuanya! Versi stabil **v1.3.0** kini resmi dirilis! Pembaruan besar ini membawa launcher ke tingkat berikutnya dengan menghadirkan fitur multiplayer terintegrasi, manajemen modpack mandiri (Import/Export), serta perbaikan kompatibilitas mod pack yang luar biasa.
+Hello everyone! The stable release **v1.3.0** is officially here! This major update elevates the launcher to the next level by introducing integrated P2P multiplayer connectivity, local modpack archiving management (Import/Export), and extensive modpack compatibility enhancements.
 
 ---
 
-### 🚀 Fitur Baru & Unggulan
+### 🚀 New & Highlighted Features
 
-* **📥 Import Modpack Lokal dari File `.zip`**
-  - Sekarang Anda bisa mengimpor modpack CurseForge pilihan Anda langsung dari file `.zip` di komputer Anda!
-  - Proses download file mod dijamin super ngebut karena menggunakan antrean pengunduhan paralel **(hingga 12 mod sekaligus)**.
-  - Secara otomatis mendeteksi dan menyalin semua folder konfigurasi (*configs*), *resource packs*, *shaders*, dan menu kustom (*overrides*) dari file zip!
+* **📥 Import Local Modpack from `.zip` Archives**
+  - You can now import any CurseForge-compatible modpack directly from a local `.zip` file on your computer!
+  - Mod downloads are incredibly fast thanks to a custom **parallel downloading queue (up to 12 files concurrently)**.
+  - Automatically extracts and registers all bundled configurations (*configs*), *resource packs*, *shaders*, and custom game menus (*overrides*) from the archive!
 
-* **📤 Export Modpack ke File `.zip` Portabel**
-  - Punya modpack racikan sendiri yang ingin dibagikan ke teman? Cukup klik ikon **Export** biru (tombol panah ke atas) di samping nama modpack!
-  - Menghasilkan file `.zip` portabel CurseForge-compatible yang berisi seluruh mod, konfigurasi, dan resource packs Anda.
-  - **Optimasi Privasi & Ukuran:** Proses export secara cerdas akan menyaring dan menghapus folder log permainan (`logs/`) untuk melindungi privasi akun Anda dan menghemat ukuran file zip!
+* **📤 Export Modpack to Portable `.zip` Archives**
+  - Created a custom modpack you want to share with friends? Simply click the blue **Export** icon (up-arrow button) next to any modpack!
+  - Generates a CurseForge-compliant portable `.zip` archive containing your exact selection of mods, configurations, and assets.
+  - **Privacy & Size Optimization:** The export process intelligently filters and purges game logs (`logs/`) to protect your account tokens/privacy and significantly reduce the output zip size!
 
-* **👥 IDK CONNECT (Beta) — Sistem Teman & Mabar Real-Time**
-  - Sidebar sosial baru yang terletak di bagian kanan atas launcher!
-  - Tambahkan teman, lihat daftar teman, serta pantau status online/offline dan aktivitas mabar mereka secara langsung (*contoh: "Bermain TerrafirmaCraft Optimized"*).
-  - Hubungkan akun dan mabar P2P dengan aman tanpa ribet setup IP, cukup klik tombol join dari profil teman Anda!
-  - Dilengkapi sistem notifikasi lencana (*pending invitation badge*) untuk permintaan pertemanan yang masuk.
+* **👥 IDK CONNECT (Beta) — Real-Time Social & Multiplayer System**
+  - A brand-new social sidebar nested in the top-right corner of the launcher dashboard!
+  - Add friends, manage your friends list, and view real-time online status and game activities (*e.g., "Playing TerraFirmaCraft Optimized"*).
+  - Connect with friends and join P2P worlds with a single click — no manual IP setups required!
+  - Features an intuitive pending invitation badge to keep track of incoming requests.
 
-* **🖼️ Ikon Modpack & Logo Kustom Otomatis**
-  - Ketika Anda mengimpor modpack CurseForge yang cantik, launcher akan otomatis mengambil logo resmi dari modpack tersebut dan memasangnya sebagai ikon profil modpack di dashboard agar tampilan launcher Anda jauh lebih menawan!
-
----
-
-### 🔧 Peningkatan Kompatibilitas & Optimasi
-
-* **🛠️ Perbaikan Modpack Terrafirmacraft & Kustom Title**
-  - Memperbaiki masalah di mana title Minecraft atau menu kustom modpack tidak berubah saat diluncurkan.
-  - Mengoptimalkan alokasi direktori kerja game (*working directory alignment*) sehingga mod kustom seperti custom title logo, menu grafis, dan opsi spesifik modpack termuat dengan sempurna 100%!
-
-* **⚡ Efisiensi Antrean Download Modpack**
-  - Melakukan perombakan penuh pada modul pengunduh modpack dengan sistem antrean dinamis *concurrency-limit* untuk mencegah kegagalan unduhan akibat batasan server (*network throttling*).
+* **🖼️ Automated Modpack Logo Rendering**
+  - When importing a modpack, the launcher automatically queries and retrieves the official modpack thumbnail/logo from the catalog, applying it as the modpack's profile picture for a beautiful dashboard appearance.
 
 ---
 
-### 📦 Informasi Build
-* **Versi:** `1.3.0`
-* **Status:** Stable Release
+### 🔧 Compatibility Fixes & Optimizations
+
+* **🛠️ TerraFirmaCraft & Custom Title Menu Alignment**
+  - Resolved compatibility bugs where custom main menus, custom title modifications, or custom game logos failed to load when launching modpacks.
+  - Optimized game launching directories (*working directory alignment*) to ensure all branding overrides, custom title menus, and specific mod configs load 100% correctly!
+
+* **⚡ Concurrent Downloader Refinements**
+  - Refactored the core mod downloader to run on a robust concurrency-limited scheduling engine, preventing network timeout issues and server throttling on large modpacks.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.3.0`
+* **Release Channel:** Stable Release
 * **Platform:** Windows, macOS, Linux
-* **Build CI:** Terintegrasi penuh dengan GitHub Actions Workflow untuk kompilasi multiplatform otomatis saat tag di-push!
+* **CI/CD Build:** Fully integrated with GitHub Actions Workflows for automated multiplatform builds triggered upon pushing release tags!
 
 ---
 
