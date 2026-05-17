@@ -1,5 +1,52 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.2.0-preview.26w20c Changelog
+
+Welcome to the Minecraft snapshot **v1.2.0-preview.26w20c** unstable preview revision! This update introduces a full-fledged Discord Rich Presence (DRP) integration, enabling automated game invite cards, customizable branding, real-time activity tracking, and dynamic metadata syncing for mod loaders and modpacks.
+
+---
+
+### 🚀 New Features
+
+* **👾 Dynamic Discord Rich Presence (DRP) System**
+  - Fully integrated the official `discord-rpc` client-side API to communicate directly with local Discord desktop clients.
+  - Automatically transitions between states: **Idle in Launcher**, **Launching game/modpack**, and **Active Playtime** with a counting live-timer showing play duration.
+
+* **📬 Native Game Invite Cards & "Join" Buttons (Multiplayer integration)**
+  - Activated the `instance: true` protocol to support native Discord multiplayer lobby sharing.
+  - Generates secure, dynamic `partyId` groups and `joinSecret` session keys uniquely matched to active player usernames.
+  - Enables players to click `+` in Discord text channels to broadcast beautiful, interactive game invitations complete with a **Join** button and player count slots (e.g., `1 of 10` slots).
+
+* **👑 Official "Indkingdom Launcher" Branding & Custom Assets**
+  - Standardized connection via Client ID `1505559083929964554` to establish a dedicated, localized Discord presence card.
+  - Configured the large image asset key to target the custom-uploaded `'icon'` asset, rendering your beautiful custom launcher cherry blossom landscape art as the invite card's header banner.
+  - Updated all state metadata tooltips, text overlays, and labels to proudly display the official **Indkingdom Launcher** brand.
+
+* **🌀 Dynamic Modpack & Mod Loader Metadata Syncing**
+  - Synchronized loader properties (`smallImageKey`) to dynamically map selected frameworks (e.g., `'fabric'`, `'forge'`, `'neoforge'`, `'quilt'`, `'vanilla'`) with high-fidelity small icons.
+  - Hooked into renderer click handlers (`launchModpack`) to dynamically sync the active modpack name (e.g., showing *Playing Modpack: [Name]* on Discord profile status feeds).
+
+---
+
+### 🔧 Robust Performance & Exception Handling
+
+* **🩹 Auto-Reconnect & Self-Healing Connection Loop**
+  - Implemented an elegant, non-blocking asynchronous reconnection routine that runs in the background. If Discord is launched *after* the launcher or is closed, the connection automatically heals every 15 seconds without freezing the UI.
+  - Registered listener hooks for `'join'` and `'joinRequest'` events in the background, keeping the IPC socket robust and error-free when users test clicking the join button.
+
+* **🧼 Automatic Lifecycle Cleanup**
+  - Hooked into the Minecraft process `close` and launch failure loops to instantly reset the active presence state back to "Idle in Launcher" (Main Menu) and release playtime counters.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.2.0-preview.26w20c` (Minecraft Snapshot Style)
+* **Release Channel:** Preview / Unstable Release
+* **Platform:** Windows x64 NSIS Standalone Installer, macOS DMG/ZIP, Linux AppImage/Debian.
+* **Build Signature:** Compiled and packaged with `electron-builder` utilizing automated Vite frontend builds.
+
+---
+
 ## 🎮 IDK Launcher v1.2.0-preview.26w20b Changelog
 
 Welcome to the Minecraft snapshot **v1.2.0-preview.26w20b** unstable preview revision! This update introduces a breathtaking 3D Character Skin Viewer directly embedded into the user interface, incorporating next-generation styling, performance optimizations, and zero-compromise CORS/responsiveness engineering.
