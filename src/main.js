@@ -36,12 +36,16 @@ document.querySelector('#app').innerHTML = `
 
       <div class="user-profile-wrapper">
         <div class="user-profile" id="user-profile-btn">
-          <div class="user-avatar">
+          <div class="user-profile-3d-wrap">
+            <canvas id="profile-3d-canvas" width="50" height="100"></canvas>
+          </div>
+          <div class="user-avatar" style="display: none;">
             <canvas id="avatar-canvas" width="28" height="28" style="width:100%;height:100%;image-rendering:pixelated;"></canvas>
           </div>
-          <div class="user-details">
-            <h4 id="display-username">PlayerOne</h4>
-            <p>Offline Account</p>
+          <div class="user-details" style="display: flex; flex-direction: column; align-items: flex-start; gap: 1px;">
+            <span style="font-size: 8px; font-weight: 600; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.8px; line-height: 1; font-family: inherit;">Playing as</span>
+            <h4 id="display-username" style="font-size: 13px; font-weight: 800; color: white; margin: 0; line-height: 1.1; font-family: var(--font-title); letter-spacing: 0.5px;">PlayerOne</h4>
+            <span style="display: none;">Offline Account</span>
           </div>
         </div>
         
@@ -49,6 +53,10 @@ document.querySelector('#app').innerHTML = `
           <div class="profile-dropdown-item" id="btn-dropdown-skin" style="display:none;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 8a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z"></path></svg>
             Change Skin (Ely.by)
+          </div>
+          <div class="profile-dropdown-item" id="btn-dropdown-3d-skin">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            View 3D Skin
           </div>
           <div class="profile-dropdown-item logout" id="btn-dropdown-logout">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -720,12 +728,90 @@ function updateUserDisplay(name) {
       `https://minotar.net/skin/Steve`
     );
   }
+
+  // Trigger our premium 3D overlapping card render!
+  updateUserDisplay3D(name);
+}
+
+let profile3dViewer = null;
+
+async function updateUserDisplay3D(name) {
+  const canvasEl = document.getElementById('profile-3d-canvas');
+  if (!canvasEl) return;
+
+  // 1. Get raw skin URL
+  let skinUrl = `https://minotar.net/skin/${name}`;
+  if (authMode === 'elyby') {
+    if (window.electronAPI && window.electronAPI.fetchElybyProfile) {
+      try {
+        const res = await window.electronAPI.fetchElybyProfile(name);
+        if (res.ok && res.data) {
+          const textureProp = res.data?.properties?.find(p => p.name === 'textures');
+          if (textureProp) {
+            const decoded = JSON.parse(atob(textureProp.value));
+            const realUrl = decoded?.textures?.SKIN?.url;
+            if (realUrl) skinUrl = realUrl;
+          }
+        }
+      } catch(_) {}
+    } else {
+      skinUrl = `https://skinsystem.ely.by/skins/${name}.png`;
+    }
+  }
+
+  // 2. Fetch via Base64 CORS Bypass
+  let localTextureUrl = skinUrl;
+  if (window.electronAPI && window.electronAPI.fetchImageBase64) {
+    try {
+      const res = await window.electronAPI.fetchImageBase64(skinUrl);
+      if (res && res.ok && res.data) {
+        localTextureUrl = res.data;
+      } else {
+        const fallbackRes = await window.electronAPI.fetchImageBase64(`https://minotar.net/skin/Steve`);
+        if (fallbackRes && fallbackRes.ok && fallbackRes.data) {
+          localTextureUrl = fallbackRes.data;
+        }
+      }
+    } catch(err) {
+      console.error('[Profile 3D CORS] Failed to proxy image:', err);
+    }
+  }
+
+  // 3. Render in Three.js
+  if (profile3dViewer) {
+    try { profile3dViewer.dispose(); } catch(e){}
+  }
+
+  import('skinview3d').then(({ SkinViewer, IdleAnimation }) => {
+    if (!document.getElementById('profile-3d-canvas')) return;
+    profile3dViewer = new SkinViewer({
+      canvas: canvasEl,
+      width: 50,
+      height: 100,
+      skin: localTextureUrl
+    });
+
+    profile3dViewer.autoRotate = false;
+    
+    // Rotate player slightly for a premium 3/4 angle
+    profile3dViewer.playerObject.rotation.y = 0.5;
+    
+    // Disable controls
+    profile3dViewer.controls.enabled = false;
+
+    // Apply soft idle breathing animation so it feels organic and premium!
+    const anim = profile3dViewer.animations.add(IdleAnimation);
+    anim.speed = 0.55;
+  }).catch((err) => {
+    console.error('Error rendering profile 3D model:', err);
+  });
 }
 
 // User Profile Dropdown Triggers
 const userProfileBtn = document.getElementById('user-profile-btn');
 const profileDropdown = document.getElementById('profile-dropdown');
 const btnDropdownSkin = document.getElementById('btn-dropdown-skin');
+const btnDropdown3dSkin = document.getElementById('btn-dropdown-3d-skin');
 const btnDropdownLogout = document.getElementById('btn-dropdown-logout');
 
 // Toggle dropdown menu on click
@@ -751,6 +837,13 @@ btnDropdownSkin.addEventListener('click', (e) => {
   }
 });
 
+// "View 3D Skin" click behavior
+btnDropdown3dSkin.addEventListener('click', (e) => {
+  e.stopPropagation();
+  profileDropdown.classList.remove('active');
+  open3dSkinViewer();
+});
+
 // Logout click behavior
 btnDropdownLogout.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -761,6 +854,226 @@ btnDropdownLogout.addEventListener('click', (e) => {
     switchView('login');
   }
 });
+
+// --- 3D SKIN VIEWER INTEGRATION ---
+async function getSkinTextureUrl(name, authMode) {
+  if (authMode === 'elyby') {
+    if (window.electronAPI && window.electronAPI.fetchElybyProfile) {
+      try {
+        const res = await window.electronAPI.fetchElybyProfile(name);
+        if (res.ok && res.data) {
+          const textureProp = res.data?.properties?.find(p => p.name === 'textures');
+          if (textureProp) {
+            const decoded = JSON.parse(atob(textureProp.value));
+            const skinUrl = decoded?.textures?.SKIN?.url;
+            if (skinUrl) return skinUrl;
+          }
+        }
+      } catch(_) {}
+    }
+    return `https://skinsystem.ely.by/skins/${name}.png`;
+  }
+  return `https://minotar.net/skin/${name}`;
+}
+
+function open3dSkinViewer() {
+  const modal = document.createElement('div');
+  modal.className = 'skin-3d-modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(9, 9, 11, 0.7);
+    backdrop-filter: blur(20px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  `;
+
+  modal.innerHTML = `
+    <div class="skin-3d-modal-card" style="
+      background: rgba(24, 24, 27, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 30px;
+      padding: 40px;
+      width: 480px;
+      max-width: 90%;
+      text-align: center;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 50px rgba(34, 197, 94, 0.1);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      position: relative;
+    ">
+      <div style="position: absolute; top: 24px; right: 24px; cursor: pointer; color: var(--text-muted); font-size: 20px;" id="btn-close-skin-3d">✕</div>
+      <h3 style="font-family: var(--font-title); font-size: 24px; margin-bottom: 8px; color: white;">3D Character Viewer</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Interact, rotate, and animate your Minecraft skin</p>
+      
+      <div style="display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.03); position: relative; height: 400px;">
+        <div id="skin-viewer-loading" style="position: absolute; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-muted); z-index: 10;">
+          <svg class="animate-spin" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="3" style="animation: spin 1s linear infinite;">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+            <path d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor"></path>
+          </svg>
+          <span style="font-size: 13px;">Fetching skin texture...</span>
+        </div>
+        <canvas id="skin-viewer-canvas" style="width: 280px; height: 360px; outline: none; opacity: 0; transition: opacity 0.5s ease;"></canvas>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+        <div style="text-align: left;">
+          <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px;">Animation</label>
+          <select id="skin-anim-select" style="
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            outline: none;
+            cursor: pointer;
+          ">
+            <option value="walk" style="background: #18181b;">Walking</option>
+            <option value="run" style="background: #18181b;">Running</option>
+            <option value="idle" style="background: #18181b;">Breathing</option>
+            <option value="fly" style="background: #18181b;">Flying</option>
+            <option value="none" style="background: #18181b;">Static</option>
+          </select>
+        </div>
+        
+        <div style="text-align: left;">
+          <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px;">Rotation</label>
+          <button id="btn-toggle-rotate" style="
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: var(--accent-green);
+            border-radius: 10px;
+            padding: 10px;
+            width: 100%;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+          ">Auto Rotation: ON</button>
+        </div>
+      </div>
+      
+      <button class="submit-btn" id="btn-skin-3d-close" style="width: 100%; padding: 14px; font-weight: 700; border-radius: 14px;">Done</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  setTimeout(() => {
+    modal.style.opacity = '1';
+    modal.querySelector('.skin-3d-modal-card').style.transform = 'scale(1)';
+  }, 10);
+
+  let viewerInstance = null;
+
+  const closeModal = () => {
+    modal.style.opacity = '0';
+    modal.querySelector('.skin-3d-modal-card').style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      if (viewerInstance) {
+        try { viewerInstance.dispose(); } catch(e){}
+      }
+      modal.remove();
+    }, 300);
+  };
+
+  document.getElementById('btn-close-skin-3d').addEventListener('click', closeModal);
+  document.getElementById('btn-skin-3d-close').addEventListener('click', closeModal);
+
+  const username = currentUser || 'Steve';
+  getSkinTextureUrl(username, authMode).then(async (skinUrl) => {
+    let localTextureUrl = skinUrl;
+
+    if (window.electronAPI && window.electronAPI.fetchImageBase64) {
+      try {
+        const res = await window.electronAPI.fetchImageBase64(skinUrl);
+        if (res && res.ok && res.data) {
+          localTextureUrl = res.data;
+        } else {
+          const fallbackRes = await window.electronAPI.fetchImageBase64(`https://minotar.net/skin/Steve`);
+          if (fallbackRes && fallbackRes.ok && fallbackRes.data) {
+            localTextureUrl = fallbackRes.data;
+          }
+        }
+      } catch (err) {
+        console.error('[CORS Bypass] Failed to load skin texture through main process:', err);
+      }
+    }
+
+    import('skinview3d').then(({ SkinViewer, WalkingAnimation, RunningAnimation, IdleAnimation, FlyingAnimation }) => {
+      const canvasEl = document.getElementById('skin-viewer-canvas');
+      const loaderEl = document.getElementById('skin-viewer-loading');
+      
+      if (!canvasEl) return;
+
+      viewerInstance = new SkinViewer({
+        canvas: canvasEl,
+        width: 280,
+        height: 360,
+        skin: localTextureUrl
+      });
+
+      if (loaderEl) loaderEl.style.display = 'none';
+      canvasEl.style.opacity = '1';
+
+      viewerInstance.autoRotate = true;
+      viewerInstance.autoRotateSpeed = 0.8;
+
+      let currentAnim = viewerInstance.animations.add(WalkingAnimation);
+      currentAnim.speed = 0.8;
+
+      const select = document.getElementById('skin-anim-select');
+      if (select) {
+        select.addEventListener('change', (e) => {
+          if (currentAnim) currentAnim.remove();
+          
+          const val = e.target.value;
+          if (val === 'walk') {
+            currentAnim = viewerInstance.animations.add(WalkingAnimation);
+          } else if (val === 'run') {
+            currentAnim = viewerInstance.animations.add(RunningAnimation);
+          } else if (val === 'idle') {
+            currentAnim = viewerInstance.animations.add(IdleAnimation);
+          } else if (val === 'fly') {
+            currentAnim = viewerInstance.animations.add(FlyingAnimation);
+          } else {
+            currentAnim = null;
+          }
+          if (currentAnim) currentAnim.speed = 0.8;
+        });
+      }
+
+      const rotateBtn = document.getElementById('btn-toggle-rotate');
+      if (rotateBtn) {
+        rotateBtn.addEventListener('click', () => {
+          viewerInstance.autoRotate = !viewerInstance.autoRotate;
+          rotateBtn.innerText = viewerInstance.autoRotate ? 'Auto Rotation: ON' : 'Auto Rotation: OFF';
+          rotateBtn.style.color = viewerInstance.autoRotate ? 'var(--accent-green)' : 'var(--text-muted)';
+          rotateBtn.style.background = viewerInstance.autoRotate ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.05)';
+          rotateBtn.style.borderColor = viewerInstance.autoRotate ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.08)';
+        });
+      }
+    }).catch((err) => {
+      console.error('[3D Viewer] Error loading skinview3d:', err);
+      const loaderEl = document.getElementById('skin-viewer-loading');
+      if (loaderEl) {
+        loaderEl.innerHTML = `<span style="color: #ef4444; font-size: 13px;">Error rendering 3D skin model</span>`;
+      }
+    });
+  }).catch((err) => {
+    console.error('[3D Viewer] Error getting skin url:', err);
+    const loaderEl = document.getElementById('skin-viewer-loading');
+    if (loaderEl) {
+      loaderEl.innerHTML = `<span style="color: #ef4444; font-size: 13px;">Error fetching skin URL</span>`;
+    }
+  });
+}
+
 
 // --- SETTINGS LOGIC ---
 const javaPathInput = document.getElementById('java-path');

@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openExternal: (url) => ipcRenderer.send('open-external', url),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
+  fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
 
   // Mod / resourcepack / shader management

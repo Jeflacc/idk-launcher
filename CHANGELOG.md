@@ -1,5 +1,46 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.2.0-preview.26w20b Changelog
+
+Welcome to the Minecraft snapshot **v1.2.0-preview.26w20b** unstable preview revision! This update introduces a breathtaking 3D Character Skin Viewer directly embedded into the user interface, incorporating next-generation styling, performance optimizations, and zero-compromise CORS/responsiveness engineering.
+
+---
+
+### 🚀 New Features
+
+* **🎨 Premium Overlapping 3D Torso Card (Feather-Style Dashboard)**
+  - Re-imagined the top-right user profile into a stunning, sky-blue to cyan glowing gradient pill card.
+  - Embedded a dynamic 3D WebGL upper torso and head canvas utilizing CSS masking and cropping to let the 3D player model overlap the top border of the card for a high-fidelity depth perspective.
+  - Injected an organic Idle Breathing animation so the character feels fully alive directly on the dashboard.
+
+* **🌀 Interactive 3D Character Viewer Modal**
+  - Added a "View 3D Skin" option to the profile dropdown that spawns a premium glassmorphic modal overlay.
+  - Fully interactive: drag to rotate 360 degrees, scroll to zoom in/out, and click to inspect.
+  - Dynamic Motion Engine: toggle auto-rotation ON/OFF and switch animations on the fly between **Walking**, **Running**, **Breathing (Idle)**, **Flying**, and **Static**.
+
+---
+
+### 🔧 Bug Fixes & Architectural Enhancements
+
+* **🔒 Node.js CORS Proxying & Protocol-Independent Loader**
+  - Implemented the `fetch-image-base64` IPC channel on the backend main process to fetch remote skin texture sheets (Mojang and Ely.by) securely, bypassing all Chromium WebGL CORS restrictions.
+  - Engineered the backend request handler to dynamically detect and support both `http://` and `https://` protocol schemes (resolving Ely.by skinsystem protocol mismatches).
+
+* **⚡ Fail-Safe Event Bindings & Memory Management**
+  - Re-architected modal control flows to bind close buttons *instantly* upon DOM attachment, ensuring that close/done buttons remain 100% responsive and clickable even if textures are slow to load or network requests fail.
+  - Added a beautiful loading spinner to the modal that fades out smoothly once WebGL rendering initializes.
+  - Zero-RAM Leaks: Automatically executes `viewer.dispose()` on context closure to garbage-collect WebGL resources immediately.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.2.0-preview.26w20b` (Minecraft Snapshot Style)
+* **Release Channel:** Preview / Unstable Release
+* **Platform:** Windows x64 NSIS Standalone Installer
+* **Build Signature:** Packed with `electron-builder` utilizing automated asset code-splitting (Vite chunking).
+
+---
+
 ## 🎮 IDK Launcher v1.2.0-preview.26w20a Changelog
 
 We are thrilled to introduce the Minecraft-style snapshot release **v1.2.0-preview.26w20a**! This unstable preview release focuses on revolutionizing multiplayer P2P sharing, introducing an automated secure tunneling bridge, and optimizing version alignments for both classic and modern Minecraft versions.

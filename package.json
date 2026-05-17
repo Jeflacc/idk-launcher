@@ -1,6 +1,6 @@
 {
   "name": "idk-launcher",
-  "version": "1.2.0-preview.26w20a",
+  "version": "1.2.0-preview.26w20b",
   "author": "Jeflacc <109415855+Jeflacc@users.noreply.github.com>",
   "private": true,
   "type": "module",
@@ -74,6 +74,8 @@
   },
   "dependencies": {
     "cross-env": "^10.1.0",
-    "minecraft-launcher-core": "^3.18.2"
+    "minecraft-launcher-core": "^3.18.2",
+    "skinview3d": "^3.4.2",
+    "three": "^0.184.0"
   }
 }

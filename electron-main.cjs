@@ -282,6 +282,31 @@ ipcMain.handle('fetch-elyby-profile', async (event, username) => {
   });
 });
 
+// Fetch any HTTP/HTTPS image as a Base64 string to bypass CORS in the renderer
+ipcMain.handle('fetch-image-base64', async (event, imageUrl) => {
+  return new Promise((resolve) => {
+    const http = require('http');
+    const client = imageUrl.startsWith('https') ? https : http;
+    client.get(imageUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+      if (res.statusCode !== 200) {
+        resolve({ ok: false, data: null });
+        return;
+      }
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        const base64 = buffer.toString('base64');
+        const mimeType = res.headers['content-type'] || 'image/png';
+        resolve({ ok: true, data: `data:${mimeType};base64,${base64}` });
+      });
+    }).on('error', (e) => {
+      console.error('[Image IPC] Error fetching image:', e.message);
+      resolve({ ok: false, data: null });
+    });
+  });
+});
+
 // Auto Update Check (query latest GitHub release)
 ipcMain.handle('check-for-updates', async () => {
   return new Promise((resolve) => {
