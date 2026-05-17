@@ -514,7 +514,7 @@ ipcMain.handle('fetch-image-base64', async (event, imageUrl) => {
 ipcMain.handle('check-for-updates', async () => {
   return new Promise((resolve) => {
     const currentVersion = app.getVersion();
-    const repo = 'Jeflacc/idk-launcher-landing';
+    const repo = 'Jeflacc/idk-launcher';
     const url = `https://api.github.com/repos/${repo}/releases/latest`;
 
     https.get(url, { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
@@ -549,8 +549,9 @@ ipcMain.handle('check-for-updates', async () => {
 });
 
 function isNewerVersion(current, latest) {
-  const cParts = current.split('.').map(Number);
-  const lParts = latest.split('.').map(Number);
+  const parseParts = (v) => v.replace(/[^0-9.]/g, '').split('.').map(Number);
+  const cParts = parseParts(current);
+  const lParts = parseParts(latest);
   for (let i = 0; i < Math.max(cParts.length, lParts.length); i++) {
     const cNum = cParts[i] || 0;
     const lNum = lParts[i] || 0;
