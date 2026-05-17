@@ -74,6 +74,7 @@
   },
   "dependencies": {
     "cross-env": "^10.1.0",
+    "discord-rpc": "^4.0.1",
     "minecraft-launcher-core": "^3.18.2",
     "skinview3d": "^3.4.2",
     "three": "^0.184.0"
