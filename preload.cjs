@@ -5,8 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
 
-  launchMinecraft: (username, version, javaPath, loader, autoOptimization, maxMemory, authData) =>
-    ipcRenderer.send('launch-minecraft', { username, version, javaPath, loader, autoOptimization, maxMemory, authData }),
+  launchMinecraft: (username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect) =>
+    ipcRenderer.send('launch-minecraft', { username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect }),
 
   // All IPC listeners — registered once at startup
   onLaunchProgress:  (cb) => ipcRenderer.on('launch-progress',  (_e, data)  => cb(data)),
@@ -20,11 +20,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openExternal: (url) => ipcRenderer.send('open-external', url),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
+  fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
 
   // Mod / resourcepack / shader management
   installMod:          (data) => ipcRenderer.invoke('install-mod',         data),
   unzipCurseforge:     (data) => ipcRenderer.invoke('unzip-curseforge',    data),
+  selectModpackZip:    () => ipcRenderer.invoke('select-modpack-zip'),
+  selectExportZip:     (data) => ipcRenderer.invoke('select-export-zip',   data),
+  exportModpack:       (data) => ipcRenderer.invoke('export-modpack',      data),
   downloadCurseforgeModpack: (data) => ipcRenderer.invoke('download-curseforge-modpack', data),
   removeMod:           (data) => ipcRenderer.invoke('remove-mod',          data),
   installResourcepack: (data) => ipcRenderer.invoke('install-resourcepack', data),
@@ -34,4 +38,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   launchModpack: (args) => ipcRenderer.send('launch-modpack', args),
   toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
+
+  // Cloudflared Multiplayer Tunneling
+  ensureCloudflared: () => ipcRenderer.invoke('ensure-cloudflared'),
+  startCloudflaredTunnel: (port) => ipcRenderer.invoke('start-cloudflared-tunnel', { port }),
+  stopCloudflaredTunnel: () => ipcRenderer.invoke('stop-cloudflared-tunnel'),
+  onCloudflaredInstallProgress: (cb) => ipcRenderer.on('cloudflared-install-progress', (_e, data) => cb(data)),
+  onCloudflaredTunnelClosed: (cb) => ipcRenderer.on('cloudflared-tunnel-closed', () => cb()),
+  
+  // Cloudflared Multiplayer Client-side Access Bridge
+  startCloudflaredAccess: (url, localPort) => ipcRenderer.invoke('start-cloudflared-access', { url, localPort }),
+  stopCloudflaredAccess: () => ipcRenderer.invoke('stop-cloudflared-access'),
+  onCloudflaredAccessClosed: (cb) => ipcRenderer.on('cloudflared-access-closed', () => cb()),
 });
+

@@ -51,6 +51,12 @@
             </div>
             <div class="nav-links">
                 <a href="#features">Features</a>
+                <a href="https://github.com/Jeflacc/idk-launcher" target="_blank" class="nav-github-link">
+                    <svg class="github-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                    </svg>
+                    GitHub
+                </a>
                 <a href="#download" class="download-btn-small">Download Now</a>
             </div>
         </div>
@@ -80,8 +86,20 @@
                 <div class="hero-preview">
                     <div class="mockup-container">
                         <img src="assets/logo.png" class="mockup-img" alt="Launcher Preview">
-                        <div class="floating-badge fb-1"><span>⚡</span> 240+ FPS</div>
-                        <div class="floating-badge fb-2"><span>🧩</span> 1000+ Mods</div>
+                        <div class="floating-badge fb-1">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                            240+ FPS
+                        </div>
+                        <div class="floating-badge fb-2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                            1000+ Mods
+                        </div>
                     </div>
                 </div>
             </div>
@@ -158,6 +176,58 @@
             </div>
         </section>
 
+        <section id="whats-new" class="whats-new-section">
+            <div class="container">
+                <div class="section-title">
+                    <span class="preview-tag">Snapshot 26w20a</span>
+                    <h2>What's New in the <span>Preview</span>?</h2>
+                    <p>Experience the cutting-edge multiplayer P2P sharing features powered by Cloudflare's secure edge network.</p>
+                </div>
+                
+                <div class="whats-new-grid">
+                    <div class="new-feature-card">
+                        <div class="icon-wrap">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                        </div>
+                        <div class="card-text">
+                            <h3>Automated P2P LAN Tunneling</h3>
+                            <p>Share your local Minecraft world over the internet securely with one click. Cloudflared TCP tunnel forwarding handles port mapping instantly without dangerous router port-forwarding.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="new-feature-card">
+                        <div class="icon-wrap">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </div>
+                        <div class="card-text">
+                            <h3>Secure Local Jembatan (Client Access)</h3>
+                            <p>Joining friends is completely automated! A secure client-side proxy runs in the background, mapping the host's web link to a safe local address. Minecraft clients join with zero hassle.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="new-feature-card">
+                        <div class="icon-wrap">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff4757" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="card-text">
+                            <h3>Intelligent Auto-Join Alignment</h3>
+                            <p>No more version mismatched crashes. The launcher dynamically aligns game arguments depending on your version: modern versions auto-join via quickplay flags, while classic versions utilize optimized server parameters.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="runtime-recommendation">
             <div class="container">
                 <div class="adoptium-card">
@@ -220,7 +290,11 @@
                     
                     <div class="download-grid">
                         <div class="download-platform-card">
-                            <div class="platform-icon">🪟</div>
+                            <div class="platform-icon">
+                                <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M0 3.449L9.75 2.1v9.45H0V3.449zM0 12.45h9.75v9.45L0 20.551v-8.1zM10.95 1.95L24 0v11.55H10.95V1.95zM10.95 12.45H24v11.55l-13.05-1.95v-9.6z"/>
+                                </svg>
+                            </div>
                             <h3>Windows</h3>
                             <span class="platform-req">Requires Windows 10 or 11 (x64)</span>
                             <a href="https://github.com/Jeflacc/idk-launcher/releases/download/v1.2.0/IDK-Launcher-Setup-1.2.0.exe" class="platform-dl-btn">
@@ -228,7 +302,11 @@
                             </a>
                         </div>
                         <div class="download-platform-card">
-                            <div class="platform-icon">🍏</div>
+                            <div class="platform-icon">
+                                <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.21.67-2.93 1.49-.62.69-1.16 1.84-1.01 2.96 1.12.09 2.27-.57 2.95-1.39z"/>
+                                </svg>
+                            </div>
                             <h3>macOS</h3>
                             <span class="platform-req">Apple Silicon (macOS 11+)</span>
                             <a href="https://github.com/Jeflacc/idk-launcher/releases/download/v1.2.0/IDK-Launcher-1.2.0-arm64.dmg" class="platform-dl-btn">
@@ -236,11 +314,41 @@
                             </a>
                         </div>
                         <div class="download-platform-card">
-                            <div class="platform-icon">🐧</div>
+                            <div class="platform-icon">
+                                <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C9.5 2 8 4 8 6.5c0 1.6.8 2.8 1.5 3.3C7.5 10.5 5 12.5 5 15.5c0 3 2.5 5.5 5.5 5.5.7 0 1.4-.2 2-.5.6.3 1.3.5 2 .5 3 0 5.5-2.5 5.5-5.5 0-3-2.5-5-4.5-5.7.7-.5 1.5-1.7 1.5-3.3C16 4 14.5 2 12 2zm-1.5 4c.6 0 1 .4 1 1s-.4 1-1 1-1-.4-1-1 .4-1 1-1zm3 0c.6 0 1 .4 1 1s-.4 1-1 1-1-.4-1-1 .4-1 1-1z"/>
+                                </svg>
+                            </div>
                             <h3>Linux</h3>
                             <span class="platform-req">AppImage & Debian Packages</span>
                             <a href="https://github.com/Jeflacc/idk-launcher/releases/download/v1.2.0/IDK-Launcher-1.2.0.AppImage" class="platform-dl-btn">
                                 Download AppImage
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-channel-container">
+                        <div class="preview-badge-row">
+                            <span class="preview-channel-badge">PREVIEW CHANNEL</span>
+                            <span class="preview-ver-badge">v1.2.0-preview.26w20b</span>
+                        </div>
+                        <h3>Try the Latest Experimental Features</h3>
+                        <p>Get early access to our next-gen Cloudflare Multiplayer Join Bridge and secure local P2P tunnels! Test new features before they hit the stable release channel.</p>
+                        
+                        <div class="preview-downloads">
+                            <a href="https://github.com/Jeflacc/idk-launcher/releases/download/v1.2.0-preview.26w20b/IDK-Launcher-Setup-1.2.0-preview.26w20b.exe" class="preview-dl-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download Windows Preview (.exe)
+                            </a>
+                            <a href="https://github.com/Jeflacc/idk-launcher/releases/download/v1.2.0-preview.26w20b/IDK-Launcher-1.2.0-preview.26w20b-arm64.dmg" class="preview-dl-btn secondary">
+                                Download macOS Preview (.dmg)
+                            </a>
+                            <a href="https://github.com/Jeflacc/idk-launcher/releases/download/v1.2.0-preview.26w20b/IDK-Launcher-1.2.0-preview.26w20b.AppImage" class="preview-dl-btn secondary">
+                                Download Linux Preview (.AppImage)
                             </a>
                         </div>
                     </div>
@@ -252,10 +360,137 @@
     </main>
 
     <footer>
-        <div class="container">
+        <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
             <p>&copy; 2026 Indkingdom Launcher. Built with passion for the community.</p>
+            <a href="https://github.com/Jeflacc/idk-launcher" target="_blank" class="footer-github-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                </svg>
+                Source Code
+            </a>
         </div>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const previewVerBadge = document.querySelector('.preview-ver-badge');
+            const previewTag = document.querySelector('.preview-tag');
+            const whatsNewGrid = document.querySelector('.whats-new-grid');
+            const previewDownloadsContainer = document.querySelector('.preview-downloads');
+            
+            try {
+                const response = await fetch('https://api.github.com/repos/Jeflacc/idk-launcher/releases');
+                if (!response.ok) return;
+                
+                const releases = await response.json();
+                const latestPreview = releases.find(r => r.prerelease || r.tag_name.includes('-preview'));
+                
+                if (latestPreview) {
+                    const tag = latestPreview.tag_name;
+                    const cleanTag = tag.replace('v', '');
+                    
+                    // 1. Update Version Badges
+                    if (previewVerBadge) previewVerBadge.innerText = tag;
+                    if (previewTag) previewTag.innerText = `Snapshot ${tag.split('-preview.')[1] || tag}`;
+                    
+                    // 2. Update Download URLs
+                    if (previewDownloadsContainer) {
+                        previewDownloadsContainer.innerHTML = `
+                            <a href="https://github.com/Jeflacc/idk-launcher/releases/download/${tag}/IDK-Launcher-Setup-${cleanTag}.exe" class="preview-dl-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download Windows Preview (.exe)
+                            </a>
+                            <a href="https://github.com/Jeflacc/idk-launcher/releases/download/${tag}/IDK-Launcher-${cleanTag}-arm64.dmg" class="preview-dl-btn secondary">
+                                Download macOS Preview (.dmg)
+                            </a>
+                            <a href="https://github.com/Jeflacc/idk-launcher/releases/download/${tag}/IDK-Launcher-${cleanTag}.AppImage" class="preview-dl-btn secondary">
+                                Download Linux Preview (.AppImage)
+                            </a>
+                        `;
+                    }
+                    
+                    // 3. Parse Markdown Changelog
+                    const lines = latestPreview.body.split('\n');
+                    const features = [];
+                    let currentFeature = null;
+                    
+                    for (let line of lines) {
+                        line = line.trim();
+                        if (line.startsWith('* **') || line.startsWith('- **')) {
+                            if (currentFeature) {
+                                features.push(currentFeature);
+                            }
+                            
+                            // Extract title inside * **Title** or - **Title**
+                            const match = line.match(/^[\-\*]\s*\*\*(.*?)\*\*(.*)$/);
+                            if (match) {
+                                let rawTitle = match[1];
+                                let description = match[2].replace(/^[:\-\s]+/, '').trim();
+                                
+                                // Extract icon emoji if present
+                                let iconChar = '⚡';
+                                const emojiMatch = rawTitle.match(/^([\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji})/u);
+                                if (emojiMatch) {
+                                    iconChar = emojiMatch[0];
+                                    rawTitle = rawTitle.replace(iconChar, '').trim();
+                                }
+                                
+                                currentFeature = {
+                                    title: rawTitle,
+                                    icon: iconChar,
+                                    description: description
+                                };
+                            }
+                        } else if (line.startsWith('-') || line.startsWith('*')) {
+                            if (currentFeature) {
+                                const cleanText = line.replace(/^[\-\*\s]+/, '').trim();
+                                currentFeature.description += ' ' + cleanText;
+                            }
+                        }
+                    }
+                    if (currentFeature) {
+                        features.push(currentFeature);
+                    }
+                    
+                    // 4. Render Features (Max 3 to keep grid clean)
+                    if (features.length > 0 && whatsNewGrid) {
+                        const SVG_MAP = {
+                            '🎨': `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.35857 19.5 5.5 20 5.5 20.5C5.5 21.3284 6.17157 22 7 22H12Z"></path><circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"></circle><circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"></circle><circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"></circle><circle cx="15.5" cy="14.5" r="1.5" fill="currentColor"></circle></svg>`,
+                            '🌀': `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"></path><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"></path><path d="M12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"></path></svg>`,
+                            '🔒': `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff4757" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`,
+                            '⚡': `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#eccc68" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`,
+                            '🏎️': `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#eccc68" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="18" r="3"></circle><circle cx="19" cy="18" r="3"></circle><path d="M10 18H14M2 18h1c.55 0 1-.45 1-1v-4.34c0-.38.22-.73.56-.9l3.1-1.55c.34-.17.56-.52.56-.9V8c0-.55.45-1 1-1h5c.55 0 1 .45 1 1v1.31c0 .38.22.73.56.9l3.1 1.55c.34.17.56.52.56.9V17c0 .55.45 1 1 1h1"></path></svg>`,
+                            '🛡️': `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9b59b6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+                            'default': `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`
+                        };
+                        
+                        let html = '';
+                        features.slice(0, 3).forEach(f => {
+                            const svg = SVG_MAP[f.icon] || SVG_MAP['default'] || SVG_MAP['⚡'];
+                            html += `
+                                <div class="new-feature-card">
+                                    <div class="icon-wrap">
+                                        ${svg}
+                                    </div>
+                                    <div class="card-text">
+                                        <h3>${f.title}</h3>
+                                        <p>${f.description}</p>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        whatsNewGrid.innerHTML = html;
+                    }
+                }
+            } catch (err) {
+                console.error('[GitHub API] Failed to fetch latest preview release:', err);
+            }
+        });
+    </script>
 </body>
 
 </html>

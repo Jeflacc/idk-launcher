@@ -23,14 +23,29 @@ document.querySelector('#app').innerHTML = `
     </div>
     
     <div class="top-bar-right">
+      <!-- FRIENDS TOGGLE BUTTON -->
+      <button class="friends-toggle-btn" id="btn-friends-toggle" title="Friends List" style="margin-right: 4px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span class="friends-badge" id="friends-pending-badge" style="display:none;">0</span>
+      </button>
+
       <div class="user-profile-wrapper">
         <div class="user-profile" id="user-profile-btn">
-          <div class="user-avatar">
+          <div class="user-profile-3d-wrap">
+            <canvas id="profile-3d-canvas" width="50" height="100"></canvas>
+          </div>
+          <div class="user-avatar" style="display: none;">
             <canvas id="avatar-canvas" width="28" height="28" style="width:100%;height:100%;image-rendering:pixelated;"></canvas>
           </div>
-          <div class="user-details">
-            <h4 id="display-username">PlayerOne</h4>
-            <p>Offline Account</p>
+          <div class="user-details" style="display: flex; flex-direction: column; align-items: flex-start; gap: 1px;">
+            <span style="font-size: 8px; font-weight: 600; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.8px; line-height: 1; font-family: inherit;">Playing as</span>
+            <h4 id="display-username" style="font-size: 13px; font-weight: 800; color: white; margin: 0; line-height: 1.1; font-family: var(--font-title); letter-spacing: 0.5px;">PlayerOne</h4>
+            <span style="display: none;">Offline Account</span>
           </div>
         </div>
         
@@ -38,6 +53,10 @@ document.querySelector('#app').innerHTML = `
           <div class="profile-dropdown-item" id="btn-dropdown-skin" style="display:none;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 8a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z"></path></svg>
             Change Skin (Ely.by)
+          </div>
+          <div class="profile-dropdown-item" id="btn-dropdown-3d-skin">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            View 3D Skin
           </div>
           <div class="profile-dropdown-item logout" id="btn-dropdown-logout">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -259,6 +278,7 @@ document.querySelector('#app').innerHTML = `
         <h2 class="view-title">Modpack Manager</h2>
         <div style="display:flex; gap:10px;">
           <button class="create-modpack-btn" id="btn-browse-modpacks" style="background:#4b5563;">Browse Modpacks</button>
+          <button class="create-modpack-btn" id="btn-import-modpack" style="background:#10b981;">Import Zip</button>
           <button class="create-modpack-btn" id="btn-new-modpack">+ New Modpack</button>
         </div>
       </div>
@@ -296,6 +316,7 @@ document.querySelector('#app').innerHTML = `
               </div>
               <div style="display:flex;gap:10px;align-items:center;">
                 <button class="mp-action-btn play" id="btn-play-modpack">▶ Play</button>
+                <button class="mp-action-btn export" id="btn-export-modpack" title="Export Modpack"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
                 <button class="mp-action-btn delete" id="btn-delete-modpack" title="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg></button>
               </div>
             </div>
@@ -397,9 +418,115 @@ document.querySelector('#app').innerHTML = `
       </div>
     </div>
   </div>
+
+  <!-- FRIENDS SIDEBAR -->
+  <div class="friends-sidebar" id="friends-sidebar">
+    <div class="friends-sidebar-header">
+      <h3>IDK CONNECT <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px; opacity: 0.8;">(Beta)</span></h3>
+      <button class="friends-sidebar-close" id="btn-friends-sidebar-close">✕</button>
+    </div>
+    
+    <div class="friends-sidebar-content">
+      <!-- PORTAL PANEL (WHEN NOT AUTHENTICATED WITH IDK SYSTEM) -->
+      <div id="friends-auth-panel" class="friends-auth-panel">
+        <p class="friends-auth-welcome">
+          Connect to <strong>IDK Network</strong> to add friends, sync presence, and join multiplayer worlds with a single click!
+        </p>
+        
+        <div class="friends-auth-tabs">
+          <button class="friends-auth-tab active" id="tab-friends-login">LOGIN</button>
+          <button class="friends-auth-tab" id="tab-friends-register">REGISTER</button>
+        </div>
+        
+        <div class="friends-auth-form">
+          <div class="friends-auth-error" id="friends-auth-error">Error message here</div>
+          <input type="text" class="clean-input" id="friends-auth-username" placeholder="IDK Username..." />
+          <input type="password" class="clean-input" id="friends-auth-password" placeholder="Password..." />
+          <button class="submit-btn" id="btn-friends-auth-submit" style="margin-top: 10px;">Connect Account</button>
+        </div>
+      </div>
+      
+      <!-- MAIN PANEL (WHEN AUTHENTICATED WITH IDK SYSTEM) -->
+      <div id="friends-main-panel" class="friends-auth-panel" style="display:none;">
+        <!-- Identity Card -->
+        <div class="friends-identity-card">
+          <div class="friends-identity-info">
+            <div class="friends-identity-avatar">
+              <canvas id="friends-my-avatar" width="28" height="28" style="image-rendering:pixelated;width:100%;height:100%;"></canvas>
+            </div>
+            <div class="friends-identity-name">
+              <h4 id="friends-my-username">Username</h4>
+              <span>● Connected</span>
+            </div>
+          </div>
+          <button class="friends-identity-disconnect" id="btn-friends-disconnect" title="Disconnect Account">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
+        </div>
+        
+        <!-- Share LAN World Card -->
+        <div class="friends-share-card" id="friends-share-card">
+          <h4>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            Host LAN World
+          </h4>
+          <p id="friends-share-instructions">Open your Minecraft singleplayer world, click "Open to LAN", then enter the port below to invite your friends!</p>
+          
+          <div class="friends-share-input-row" id="friends-share-input-row">
+            <input type="number" class="clean-input" id="friends-share-port" placeholder="LAN Port (e.g. 54321)" min="1024" max="65535" />
+            <button class="friends-share-btn" id="btn-friends-share">Share</button>
+          </div>
+          
+          <div class="friends-share-tunnel-link" id="friends-share-tunnel-link" style="display:none;" title="Click to copy IP address">
+            tcp://...
+          </div>
+          
+          <!-- Cloudflared Downloader Progress Panel -->
+          <div id="cloudflared-progress-panel" style="display:none;">
+            <div style="font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between;margin-bottom:2px;">
+              <span id="cloudflared-status-text">Downloading Cloudflared...</span>
+              <span id="cloudflared-percent-text">0%</span>
+            </div>
+            <div class="cloudflared-progress-bar">
+              <div class="cloudflared-progress-fill" id="cloudflared-progress-fill"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pending Friend Requests -->
+        <div class="friends-requests-section" id="friends-requests-section" style="display:none;">
+          <span class="friends-requests-title">Friend Requests</span>
+          <div id="friends-requests-list" class="friends-list-container">
+            <!-- Dynamic requests -->
+          </div>
+        </div>
+        
+        <!-- Add Friend -->
+        <div class="friends-requests-section">
+          <span class="friends-requests-title">Add Friend</span>
+          <div class="friends-add-row">
+            <input type="text" class="clean-input" id="friends-add-username" placeholder="Friend's username..." />
+            <button class="friends-add-btn" id="btn-friends-add" title="Send Friend Request">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Friends List -->
+        <div class="friends-list-section">
+          <span class="friends-list-header">My Friends</span>
+          <div id="friends-list" class="friends-list-container">
+            <div class="friends-list-empty">Your friends list is empty.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 `;
 
+
 // --- STATE & DOM ---
+let quickConnectTarget = null;
 let currentUser = localStorage.getItem('craftlaunch_username') || '';
 let authMode = localStorage.getItem('craftlaunch_authmode') || 'offline';
 let lastPlayed = JSON.parse(localStorage.getItem('idk_last_played') || '{"version": null, "loader": "Vanilla"}');
@@ -603,12 +730,90 @@ function updateUserDisplay(name) {
       `https://minotar.net/skin/Steve`
     );
   }
+
+  // Trigger our premium 3D overlapping card render!
+  updateUserDisplay3D(name);
+}
+
+let profile3dViewer = null;
+
+async function updateUserDisplay3D(name) {
+  const canvasEl = document.getElementById('profile-3d-canvas');
+  if (!canvasEl) return;
+
+  // 1. Get raw skin URL
+  let skinUrl = `https://minotar.net/skin/${name}`;
+  if (authMode === 'elyby') {
+    if (window.electronAPI && window.electronAPI.fetchElybyProfile) {
+      try {
+        const res = await window.electronAPI.fetchElybyProfile(name);
+        if (res.ok && res.data) {
+          const textureProp = res.data?.properties?.find(p => p.name === 'textures');
+          if (textureProp) {
+            const decoded = JSON.parse(atob(textureProp.value));
+            const realUrl = decoded?.textures?.SKIN?.url;
+            if (realUrl) skinUrl = realUrl;
+          }
+        }
+      } catch(_) {}
+    } else {
+      skinUrl = `https://skinsystem.ely.by/skins/${name}.png`;
+    }
+  }
+
+  // 2. Fetch via Base64 CORS Bypass
+  let localTextureUrl = skinUrl;
+  if (window.electronAPI && window.electronAPI.fetchImageBase64) {
+    try {
+      const res = await window.electronAPI.fetchImageBase64(skinUrl);
+      if (res && res.ok && res.data) {
+        localTextureUrl = res.data;
+      } else {
+        const fallbackRes = await window.electronAPI.fetchImageBase64(`https://minotar.net/skin/Steve`);
+        if (fallbackRes && fallbackRes.ok && fallbackRes.data) {
+          localTextureUrl = fallbackRes.data;
+        }
+      }
+    } catch(err) {
+      console.error('[Profile 3D CORS] Failed to proxy image:', err);
+    }
+  }
+
+  // 3. Render in Three.js
+  if (profile3dViewer) {
+    try { profile3dViewer.dispose(); } catch(e){}
+  }
+
+  import('skinview3d').then(({ SkinViewer, IdleAnimation }) => {
+    if (!document.getElementById('profile-3d-canvas')) return;
+    profile3dViewer = new SkinViewer({
+      canvas: canvasEl,
+      width: 50,
+      height: 100,
+      skin: localTextureUrl
+    });
+
+    profile3dViewer.autoRotate = false;
+    
+    // Rotate player slightly for a premium 3/4 angle
+    profile3dViewer.playerObject.rotation.y = 0.5;
+    
+    // Disable controls
+    profile3dViewer.controls.enabled = false;
+
+    // Apply soft idle breathing animation so it feels organic and premium!
+    const anim = profile3dViewer.animations.add(IdleAnimation);
+    anim.speed = 0.55;
+  }).catch((err) => {
+    console.error('Error rendering profile 3D model:', err);
+  });
 }
 
 // User Profile Dropdown Triggers
 const userProfileBtn = document.getElementById('user-profile-btn');
 const profileDropdown = document.getElementById('profile-dropdown');
 const btnDropdownSkin = document.getElementById('btn-dropdown-skin');
+const btnDropdown3dSkin = document.getElementById('btn-dropdown-3d-skin');
 const btnDropdownLogout = document.getElementById('btn-dropdown-logout');
 
 // Toggle dropdown menu on click
@@ -634,6 +839,13 @@ btnDropdownSkin.addEventListener('click', (e) => {
   }
 });
 
+// "View 3D Skin" click behavior
+btnDropdown3dSkin.addEventListener('click', (e) => {
+  e.stopPropagation();
+  profileDropdown.classList.remove('active');
+  open3dSkinViewer();
+});
+
 // Logout click behavior
 btnDropdownLogout.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -644,6 +856,226 @@ btnDropdownLogout.addEventListener('click', (e) => {
     switchView('login');
   }
 });
+
+// --- 3D SKIN VIEWER INTEGRATION ---
+async function getSkinTextureUrl(name, authMode) {
+  if (authMode === 'elyby') {
+    if (window.electronAPI && window.electronAPI.fetchElybyProfile) {
+      try {
+        const res = await window.electronAPI.fetchElybyProfile(name);
+        if (res.ok && res.data) {
+          const textureProp = res.data?.properties?.find(p => p.name === 'textures');
+          if (textureProp) {
+            const decoded = JSON.parse(atob(textureProp.value));
+            const skinUrl = decoded?.textures?.SKIN?.url;
+            if (skinUrl) return skinUrl;
+          }
+        }
+      } catch(_) {}
+    }
+    return `https://skinsystem.ely.by/skins/${name}.png`;
+  }
+  return `https://minotar.net/skin/${name}`;
+}
+
+function open3dSkinViewer() {
+  const modal = document.createElement('div');
+  modal.className = 'skin-3d-modal-overlay';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(9, 9, 11, 0.7);
+    backdrop-filter: blur(20px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  `;
+
+  modal.innerHTML = `
+    <div class="skin-3d-modal-card" style="
+      background: rgba(24, 24, 27, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 30px;
+      padding: 40px;
+      width: 480px;
+      max-width: 90%;
+      text-align: center;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 50px rgba(34, 197, 94, 0.1);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      position: relative;
+    ">
+      <div style="position: absolute; top: 24px; right: 24px; cursor: pointer; color: var(--text-muted); font-size: 20px;" id="btn-close-skin-3d">✕</div>
+      <h3 style="font-family: var(--font-title); font-size: 24px; margin-bottom: 8px; color: white;">3D Character Viewer</h3>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Interact, rotate, and animate your Minecraft skin</p>
+      
+      <div style="display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.03); position: relative; height: 400px;">
+        <div id="skin-viewer-loading" style="position: absolute; display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-muted); z-index: 10;">
+          <svg class="animate-spin" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="3" style="animation: spin 1s linear infinite;">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+            <path d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor"></path>
+          </svg>
+          <span style="font-size: 13px;">Fetching skin texture...</span>
+        </div>
+        <canvas id="skin-viewer-canvas" style="width: 280px; height: 360px; outline: none; opacity: 0; transition: opacity 0.5s ease;"></canvas>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+        <div style="text-align: left;">
+          <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px;">Animation</label>
+          <select id="skin-anim-select" style="
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            outline: none;
+            cursor: pointer;
+          ">
+            <option value="walk" style="background: #18181b;">Walking</option>
+            <option value="run" style="background: #18181b;">Running</option>
+            <option value="idle" style="background: #18181b;">Breathing</option>
+            <option value="fly" style="background: #18181b;">Flying</option>
+            <option value="none" style="background: #18181b;">Static</option>
+          </select>
+        </div>
+        
+        <div style="text-align: left;">
+          <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px;">Rotation</label>
+          <button id="btn-toggle-rotate" style="
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: var(--accent-green);
+            border-radius: 10px;
+            padding: 10px;
+            width: 100%;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+          ">Auto Rotation: ON</button>
+        </div>
+      </div>
+      
+      <button class="submit-btn" id="btn-skin-3d-close" style="width: 100%; padding: 14px; font-weight: 700; border-radius: 14px;">Done</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  setTimeout(() => {
+    modal.style.opacity = '1';
+    modal.querySelector('.skin-3d-modal-card').style.transform = 'scale(1)';
+  }, 10);
+
+  let viewerInstance = null;
+
+  const closeModal = () => {
+    modal.style.opacity = '0';
+    modal.querySelector('.skin-3d-modal-card').style.transform = 'scale(0.9)';
+    setTimeout(() => {
+      if (viewerInstance) {
+        try { viewerInstance.dispose(); } catch(e){}
+      }
+      modal.remove();
+    }, 300);
+  };
+
+  document.getElementById('btn-close-skin-3d').addEventListener('click', closeModal);
+  document.getElementById('btn-skin-3d-close').addEventListener('click', closeModal);
+
+  const username = currentUser || 'Steve';
+  getSkinTextureUrl(username, authMode).then(async (skinUrl) => {
+    let localTextureUrl = skinUrl;
+
+    if (window.electronAPI && window.electronAPI.fetchImageBase64) {
+      try {
+        const res = await window.electronAPI.fetchImageBase64(skinUrl);
+        if (res && res.ok && res.data) {
+          localTextureUrl = res.data;
+        } else {
+          const fallbackRes = await window.electronAPI.fetchImageBase64(`https://minotar.net/skin/Steve`);
+          if (fallbackRes && fallbackRes.ok && fallbackRes.data) {
+            localTextureUrl = fallbackRes.data;
+          }
+        }
+      } catch (err) {
+        console.error('[CORS Bypass] Failed to load skin texture through main process:', err);
+      }
+    }
+
+    import('skinview3d').then(({ SkinViewer, WalkingAnimation, RunningAnimation, IdleAnimation, FlyingAnimation }) => {
+      const canvasEl = document.getElementById('skin-viewer-canvas');
+      const loaderEl = document.getElementById('skin-viewer-loading');
+      
+      if (!canvasEl) return;
+
+      viewerInstance = new SkinViewer({
+        canvas: canvasEl,
+        width: 280,
+        height: 360,
+        skin: localTextureUrl
+      });
+
+      if (loaderEl) loaderEl.style.display = 'none';
+      canvasEl.style.opacity = '1';
+
+      viewerInstance.autoRotate = true;
+      viewerInstance.autoRotateSpeed = 0.8;
+
+      let currentAnim = viewerInstance.animations.add(WalkingAnimation);
+      currentAnim.speed = 0.8;
+
+      const select = document.getElementById('skin-anim-select');
+      if (select) {
+        select.addEventListener('change', (e) => {
+          if (currentAnim) currentAnim.remove();
+          
+          const val = e.target.value;
+          if (val === 'walk') {
+            currentAnim = viewerInstance.animations.add(WalkingAnimation);
+          } else if (val === 'run') {
+            currentAnim = viewerInstance.animations.add(RunningAnimation);
+          } else if (val === 'idle') {
+            currentAnim = viewerInstance.animations.add(IdleAnimation);
+          } else if (val === 'fly') {
+            currentAnim = viewerInstance.animations.add(FlyingAnimation);
+          } else {
+            currentAnim = null;
+          }
+          if (currentAnim) currentAnim.speed = 0.8;
+        });
+      }
+
+      const rotateBtn = document.getElementById('btn-toggle-rotate');
+      if (rotateBtn) {
+        rotateBtn.addEventListener('click', () => {
+          viewerInstance.autoRotate = !viewerInstance.autoRotate;
+          rotateBtn.innerText = viewerInstance.autoRotate ? 'Auto Rotation: ON' : 'Auto Rotation: OFF';
+          rotateBtn.style.color = viewerInstance.autoRotate ? 'var(--accent-green)' : 'var(--text-muted)';
+          rotateBtn.style.background = viewerInstance.autoRotate ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.05)';
+          rotateBtn.style.borderColor = viewerInstance.autoRotate ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.08)';
+        });
+      }
+    }).catch((err) => {
+      console.error('[3D Viewer] Error loading skinview3d:', err);
+      const loaderEl = document.getElementById('skin-viewer-loading');
+      if (loaderEl) {
+        loaderEl.innerHTML = `<span style="color: #ef4444; font-size: 13px;">Error rendering 3D skin model</span>`;
+      }
+    });
+  }).catch((err) => {
+    console.error('[3D Viewer] Error getting skin url:', err);
+    const loaderEl = document.getElementById('skin-viewer-loading');
+    if (loaderEl) {
+      loaderEl.innerHTML = `<span style="color: #ef4444; font-size: 13px;">Error fetching skin URL</span>`;
+    }
+  });
+}
+
 
 // --- SETTINGS LOGIC ---
 const javaPathInput = document.getElementById('java-path');
@@ -946,7 +1378,8 @@ playBtn.addEventListener('click', () => {
   const authData = authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
 
   if (window.electronAPI) {
-    window.electronAPI.launchMinecraft(currentUser, selectedVersion, javaPath, selectedLoader, autoOptimization, `${maxMemoryGB}G`, authData);
+    window.electronAPI.launchMinecraft(currentUser, selectedVersion, javaPath, selectedLoader, autoOptimization, `${maxMemoryGB}G`, authData, quickConnectTarget);
+    quickConnectTarget = null; // Reset after launch
   } else {
     let progress = 0;
     const statuses = ['Fetching manifest...', 'Downloading assets...', 'Finalizing...'];
@@ -1055,8 +1488,11 @@ function mpRenderList() {
     const el = document.createElement('div');
     el.className = 'modpack-item' + (mp.id === activeModpackId ? ' active' : '');
     const total = (mp.mods?.length || 0) + (mp.resourcepacks?.length || 0) + (mp.shaders?.length || 0);
+    const iconHtml = mp.iconUrl 
+      ? `<img src="${mp.iconUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<svg width=\`20\` height=\`20\` viewBox=\`0 0 24 24\` fill=\`none\` stroke=\`currentColor\` stroke-width=\`2\`><path d=\`M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\`></path></svg>'" />`
+      : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
     el.innerHTML = `
-      <div class="mp-item-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>
+      <div class="mp-item-icon" style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(255,255,255,0.05);flex-shrink:0;border:1px solid rgba(255,255,255,0.08);">${iconHtml}</div>
       <div class="mp-item-info"><strong>${mp.name}</strong><span>${mp.mcVersion} · ${mp.loader}</span></div>
       <span class="mp-item-count">${total}</span>`;
     el.addEventListener('click', () => { activeModpackId = mp.id; mpRenderList(); mpRenderDetail(); });
@@ -1106,6 +1542,14 @@ function mpRenderDetail() {
   if (!mp) return;
   document.getElementById('modpack-name-display').innerText = mp.name;
   document.getElementById('modpack-meta-display').innerText = `MC ${mp.mcVersion} · ${mp.loader}`;
+
+  const iconDisplay = document.getElementById('modpack-icon-display');
+  if (iconDisplay) {
+    iconDisplay.innerHTML = mp.iconUrl 
+      ? `<img src="${mp.iconUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<svg width=\`24\` height=\`24\` viewBox=\`0 0 24 24\` fill=\`none\` stroke=\`currentColor\` stroke-width=\`2\` style=\`opacity:0.5;\`><path d=\`M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\`></path></svg>'" />`
+      : `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
+  }
+
   document.getElementById('mod-count').innerText = mp.mods?.length || 0;
   document.getElementById('rp-count').innerText = mp.resourcepacks?.length || 0;
   document.getElementById('shader-count').innerText = mp.shaders?.length || 0;
@@ -1163,6 +1607,178 @@ document.getElementById('btn-delete-modpack').addEventListener('click', () => {
   if (confirm(`Delete "${mp.name}"? Files on disk are kept.`)) {
     modpacks = modpacks.filter(m => m.id !== activeModpackId);
     activeModpackId = null; mpSave(); mpRenderList(); mpRenderDetail();
+  }
+});
+
+// --- Import Modpack (.zip) ---
+document.getElementById('btn-import-modpack').addEventListener('click', async () => {
+  if (!window.electronAPI) {
+    showWarningToast('Only available in the desktop app.');
+    return;
+  }
+  const zipPath = await window.electronAPI.selectModpackZip();
+  if (!zipPath) return;
+
+  const overlay = document.getElementById('launch-overlay');
+  const launchStatus = document.getElementById('launch-status');
+  const launchFill = document.getElementById('launch-fill');
+
+  try {
+    overlay.classList.add('active');
+    launchStatus.innerText = 'Extracting local modpack archive...';
+    launchFill.style.width = '5%';
+
+    const importRes = await window.electronAPI.unzipCurseforge({ filePath: zipPath });
+    if (!importRes.success) throw new Error(importRes.error || 'Import failed');
+
+    const manifest = importRes.manifest;
+    const rawLoaderId = manifest.minecraft?.modLoaders?.[0]?.id || '';
+    const loaderStr = rawLoaderId.toLowerCase();
+    const loader = loaderStr.includes('fabric') ? 'Fabric' : loaderStr.includes('forge') ? 'Forge' : loaderStr.includes('neoforge') ? 'NeoForge' : 'Vanilla';
+    const loaderVerMatch = rawLoaderId.match(/^[a-z]+-(.+)$/i);
+    const loaderVersion = loaderVerMatch ? loaderVerMatch[1] : '';
+    const mcVersion = manifest.minecraft?.version || '1.20.4';
+
+    // Parse modpack name from zip filename
+    const zipName = zipPath.split(/[\\/]/).pop().replace(/\.zip$/i, '');
+    const mpName = manifest.name || zipName || 'Imported Modpack';
+
+    const newMp = { 
+      id: importRes.modpackId, 
+      name: mpName, 
+      iconUrl: '', 
+      mcVersion, 
+      loader, 
+      loaderVersion, 
+      mods: [], 
+      resourcepacks: [], 
+      shaders: [] 
+    };
+
+    // First save the modpack base structure to localStorage so it registers
+    const mpData = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
+    mpData.push(newMp);
+    localStorage.setItem('idk_modpacks', JSON.stringify(mpData));
+    modpacks.push(newMp);
+    activeModpackId = newMp.id;
+    mpRenderList(); mpRenderDetail();
+
+    const manifestFiles = manifest.files || [];
+    let completedCount = 0;
+    const concurrencyLimit = 12; // Download mods in parallel
+
+    const downloadTask = async (f) => {
+      try {
+        const [fRes, projRes] = await Promise.all([
+          fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}/files/${f.fileID}`),
+          fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}`)
+        ]);
+        const fData = await fRes.json();
+        if (!fData.data) return;
+        const mf = fData.data;
+        let mUrl = mf.downloadUrl;
+        if (!mUrl) {
+          const mp1 = Math.floor(mf.id/1000), mp2 = (mf.id%1000).toString().padStart(3,'0');
+          mUrl = `https://edge.forgecdn.net/files/${mp1}/${mp2}/${encodeURIComponent(mf.fileName)}`;
+        }
+        let classId = 6;
+        try { const pj = await projRes.json(); classId = pj.data?.classId ?? 6; } catch(_) {}
+
+        if (classId === 12) {
+          newMp.resourcepacks.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.(zip|jar)$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
+          await window.electronAPI.installResourcepack({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
+        } else if (classId === 6552) {
+          newMp.shaders.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.(zip|jar)$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
+          await window.electronAPI.installShader({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
+        } else {
+          newMp.mods.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.jar$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
+          await window.electronAPI.installMod({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
+        }
+      } catch(me) {
+        console.warn('Failed file', f.projectID, me);
+      } finally {
+        completedCount++;
+        launchStatus.innerText = `Downloading file ${completedCount} / ${manifestFiles.length}...`;
+        launchFill.style.width = `${5 + (completedCount / manifestFiles.length) * 90}%`;
+      }
+    };
+
+    if (manifestFiles.length > 0) {
+      const queue = [...manifestFiles];
+      const workers = Array(concurrencyLimit).fill(null).map(async () => {
+        while (queue.length > 0) {
+          const item = queue.shift();
+          if (item) await downloadTask(item);
+        }
+      });
+      await Promise.all(workers);
+    }
+
+    launchStatus.innerText = 'Cataloging overrides...';
+    (importRes.resourcepackFiles || []).forEach(rp => {
+      newMp.resourcepacks.push({ modrinthId: 'override-' + rp.filename, name: rp.name, version: 'bundled', filename: rp.filename, iconUrl: '' });
+    });
+    (importRes.shaderpackFiles || []).forEach(sp => {
+      newMp.shaders.push({ modrinthId: 'override-' + sp.filename, name: sp.name, version: 'bundled', filename: sp.filename, iconUrl: '' });
+    });
+    (importRes.extraModFiles || []).forEach(em => {
+      if (!newMp.mods.find(m => m.filename === em.filename)) {
+        newMp.mods.push({ modrinthId: 'override-' + em.filename, name: em.name, version: 'bundled', filename: em.filename, downloadUrl: '', iconUrl: '' });
+      }
+    });
+
+    const mpData2 = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
+    const idx = mpData2.findIndex(m => m.id === newMp.id);
+    if (idx >= 0) mpData2[idx] = newMp; else mpData2.push(newMp);
+    localStorage.setItem('idk_modpacks', JSON.stringify(mpData2));
+    mpRenderDetail();
+    launchFill.style.width = '100%';
+    overlay.classList.remove('active');
+    showWarningToast(`"${newMp.name}" imported successfully!`);
+  } catch(e) {
+    overlay.classList.remove('active');
+    showWarningToast('Import failed: ' + e.message);
+  }
+});
+
+// --- Export Modpack (.zip) ---
+document.getElementById('btn-export-modpack').addEventListener('click', async () => {
+  const mp = mpGet(); if (!mp) return;
+  if (!window.electronAPI) {
+    showWarningToast('Only available in the desktop app.');
+    return;
+  }
+
+  const defaultName = mp.name.replace(/[^a-zA-Z0-9_\-]/g, '_') + '.zip';
+  const destPath = await window.electronAPI.selectExportZip({ defaultName });
+  if (!destPath) return;
+
+  const overlay = document.getElementById('launch-overlay');
+  const launchStatus = document.getElementById('launch-status');
+  const launchFill = document.getElementById('launch-fill');
+
+  try {
+    overlay.classList.add('active');
+    launchStatus.innerText = 'Packaging modpack archive...';
+    launchFill.style.width = '30%';
+
+    const exportRes = await window.electronAPI.exportModpack({
+      modpackId: mp.id,
+      name: mp.name,
+      mcVersion: mp.mcVersion,
+      loader: mp.loader,
+      loaderVersion: mp.loaderVersion || '',
+      destPath
+    });
+
+    if (!exportRes.success) throw new Error(exportRes.error || 'Export failed');
+
+    launchFill.style.width = '100%';
+    overlay.classList.remove('active');
+    showWarningToast(`Modpack exported to: ${destPath.split(/[\\/]/).pop()}`);
+  } catch (e) {
+    overlay.classList.remove('active');
+    showWarningToast('Export failed: ' + e.message);
   }
 });
 
@@ -1298,10 +1914,10 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       activeModpackId = newMp.id;
       mpRenderList(); mpRenderDetail();
       const manifestFiles = manifest.files || [];
-      for (let i = 0; i < manifestFiles.length; i++) {
-        const f = manifestFiles[i];
-        launchStatus.innerText = `Downloading file ${i+1} / ${manifestFiles.length}...`;
-        launchFill.style.width = `${5 + (i / manifestFiles.length) * 90}`;
+      let completedCount = 0;
+      const concurrencyLimit = 12; // Download 12 mods in parallel
+
+      const downloadTask = async (f) => {
         try {
           // Fetch file metadata + project category in parallel
           const [fRes, projRes] = await Promise.all([
@@ -1309,7 +1925,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
             fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}`)
           ]);
           const fData = await fRes.json();
-          if (!fData.data) continue;
+          if (!fData.data) return;
           const mf = fData.data;
           let mUrl = mf.downloadUrl;
           if (!mUrl) {
@@ -1333,8 +1949,24 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
             newMp.mods.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.jar$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
             await window.electronAPI.installMod({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
           }
-        } catch(me) { console.warn('Failed file', f.projectID, me); }
-      }
+        } catch(me) {
+          console.warn('Failed file', f.projectID, me);
+        } finally {
+          completedCount++;
+          launchStatus.innerText = `Downloading file ${completedCount} / ${manifestFiles.length}...`;
+          launchFill.style.width = `${5 + (completedCount / manifestFiles.length) * 90}%`;
+        }
+      };
+
+      // Process parallel workers
+      const queue = [...manifestFiles];
+      const workers = Array(concurrencyLimit).fill(null).map(async () => {
+        while (queue.length > 0) {
+          const item = queue.shift();
+          if (item) await downloadTask(item);
+        }
+      });
+      await Promise.all(workers);
       // --- Catalog resource packs / shaders / extra mods from overrides -----
       launchStatus.innerText = 'Cataloging overrides...';
       (importRes.resourcepackFiles || []).forEach(rp => {
@@ -1443,7 +2075,7 @@ document.getElementById('btn-play-modpack').addEventListener('click', () => {
   const authData = authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
 
   if (window.electronAPI) {
-    window.electronAPI.launchModpack({ username: currentUser, modpackId: mp.id, mcVersion: mp.mcVersion, loader: mp.loader, loaderVersion: mp.loaderVersion || '', javaPath, maxMemory: `${maxMemoryGB}G`, authData });
+    window.electronAPI.launchModpack({ username: currentUser, modpackId: mp.id, modpackName: mp.name, mcVersion: mp.mcVersion, loader: mp.loader, loaderVersion: mp.loaderVersion || '', javaPath, maxMemory: `${maxMemoryGB}G`, authData });
   }
 });
 
@@ -1508,7 +2140,7 @@ async function fetchTrendingModpacks() {
       const thumb = mp.logo ? mp.logo.thumbnailUrl : '';
       const dl = mp.downloadCount >= 1e6 ? (mp.downloadCount/1e6).toFixed(1)+'M' : mp.downloadCount >= 1000 ? (mp.downloadCount/1000).toFixed(0)+'K' : mp.downloadCount;
       const loader = (mp.categories||[]).find(c => ['Forge','Fabric','NeoForge','Quilt'].includes(c.name))?.name || '';
-      const modObj = JSON.stringify({ project_id: mp.id.toString(), title: mp.name, provider: 'curseforge' }).replace(/"/g,'&quot;');
+      const modObj = JSON.stringify({ project_id: mp.id.toString(), title: mp.name, icon_url: thumb, provider: 'curseforge' }).replace(/"/g,'&quot;');
       grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
         <div class="trending-mp-thumb" style="background-image:url('${thumb}');background-size:cover;background-position:center;"></div>
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
@@ -1517,7 +2149,7 @@ async function fetchTrendingModpacks() {
     });
   } else {
     FALLBACK.forEach(mp => {
-      const modObj = JSON.stringify({ project_id: mp.id, title: mp.name, provider: 'curseforge' }).replace(/"/g,'&quot;');
+      const modObj = JSON.stringify({ project_id: mp.id, title: mp.name, icon_url: mp.thumb, provider: 'curseforge' }).replace(/"/g,'&quot;');
       grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
         <div class="trending-mp-thumb" style="background-image:url('${mp.thumb}');background-size:cover;background-position:center;"></div>
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
@@ -1622,5 +2254,707 @@ document.addEventListener('pointerdown', (e) => {
     target.focus();
   }
 }, true);
+
+
+// ============================================================================
+// === IDK CONNECT - PREMIUM FRIENDS & CLOUDFLARED LAN SHARING CLIENT ENGINE ===
+// ============================================================================
+(function initFriendsSystem() {
+  let IDK_BACKEND_URL = 'https://api.somniac.me';
+  let idkToken = localStorage.getItem('idk_connect_token') || '';
+  let idkUser = JSON.parse(localStorage.getItem('idk_connect_user') || 'null');
+  let idkAuthTab = 'login';
+  let activeTunnelUrl = null;
+  let activeSharePort = null;
+  let presenceInterval = null;
+  let refreshInterval = null;
+  let cloudflaredInstallInProgress = false;
+
+  // DOM Elements
+  const btnToggleSidebar = document.getElementById('btn-friends-toggle');
+  const sidebar = document.getElementById('friends-sidebar');
+  const btnCloseSidebar = document.getElementById('btn-friends-sidebar-close');
+  const badgePending = document.getElementById('friends-pending-badge');
+  
+  const authPanel = document.getElementById('friends-auth-panel');
+  const mainPanel = document.getElementById('friends-main-panel');
+  
+  const tabLogin = document.getElementById('tab-friends-login');
+  const tabRegister = document.getElementById('tab-friends-register');
+  const authError = document.getElementById('friends-auth-error');
+  const inputUsername = document.getElementById('friends-auth-username');
+  const inputPassword = document.getElementById('friends-auth-password');
+  const btnAuthSubmit = document.getElementById('btn-friends-auth-submit');
+  
+  const myUsernameLabel = document.getElementById('friends-my-username');
+  const myAvatarCanvas = document.getElementById('friends-my-avatar');
+  const btnDisconnect = document.getElementById('btn-friends-disconnect');
+  
+  const shareCard = document.getElementById('friends-share-card');
+  const shareInstructions = document.getElementById('friends-share-instructions');
+  const shareInputRow = document.getElementById('friends-share-input-row');
+  const inputSharePort = document.getElementById('friends-share-port');
+  const btnShare = document.getElementById('btn-friends-share');
+  const tunnelLink = document.getElementById('friends-share-tunnel-link');
+  
+  const progressPanel = document.getElementById('cloudflared-progress-panel');
+  const statusText = document.getElementById('cloudflared-status-text');
+  const percentText = document.getElementById('cloudflared-percent-text');
+  const progressFill = document.getElementById('cloudflared-progress-fill');
+  
+  const requestsSection = document.getElementById('friends-requests-section');
+  const requestsList = document.getElementById('friends-requests-list');
+  const inputAddFriend = document.getElementById('friends-add-username');
+  const btnAddFriend = document.getElementById('btn-friends-add');
+  const friendsList = document.getElementById('friends-list');
+
+  // --- SIDEBAR TOGGLE ---
+  if (btnToggleSidebar) {
+    btnToggleSidebar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('active');
+      btnToggleSidebar.classList.toggle('active', sidebar.classList.contains('active'));
+      if (sidebar.classList.contains('active')) {
+        refreshFriendsData();
+      }
+    });
+  }
+
+  if (btnCloseSidebar) {
+    btnCloseSidebar.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+      btnToggleSidebar.classList.remove('active');
+    });
+  }
+
+  // Close sidebar on outer click
+  document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== btnToggleSidebar && !btnToggleSidebar.contains(e.target)) {
+      sidebar.classList.remove('active');
+      btnToggleSidebar.classList.remove('active');
+    }
+  });
+
+  // --- AVATAR RENDERING HELPERS ---
+  function drawSteveFace(canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#3c3c3d';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function renderSkinFaceOnFriendsCanvas(canvas, username) {
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      const scale = img.naturalWidth / 64;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = false;
+      // Head face layer
+      ctx.drawImage(img, 8 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, canvas.width, canvas.height);
+      // Outer accessory layer (hats/masks)
+      ctx.drawImage(img, 40 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, canvas.width, canvas.height);
+    };
+
+    let fallbackStage = 0;
+    img.onerror = () => {
+      fallbackStage++;
+      if (fallbackStage === 1) {
+        // Try official Mojang/Minotar skins next
+        img.src = `https://minotar.net/skin/${username}`;
+      } else {
+        // Draw standard letter avatar
+        ctx.fillStyle = '#16a34a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 12px Inter';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(username.substring(0, 2).toUpperCase(), canvas.width / 2, canvas.height / 2);
+      }
+    };
+
+    // Start by checking Ely.by skins
+    img.src = `https://skinsystem.ely.by/skins/${username}.png`;
+  }
+
+  // --- HTTP BACKEND REQUEST WRAPPER ---
+  async function idkRequest(endpoint, method = 'GET', body = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (idkToken) headers['Authorization'] = `Bearer ${idkToken}`;
+
+    const res = await fetch(`${IDK_BACKEND_URL}${endpoint}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : null
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Server request failed');
+    return json;
+  }
+
+  // --- UI CONTROLLERS ---
+  function updateFriendsAuthUI() {
+    if (idkToken && idkUser) {
+      authPanel.style.display = 'none';
+      mainPanel.style.display = 'block';
+      myUsernameLabel.innerText = idkUser.username;
+      
+      // Draw client avatar
+      renderSkinFaceOnFriendsCanvas(myAvatarCanvas, idkUser.username);
+      
+      // Initialize intervals
+      startHeartbeats();
+      refreshFriendsData();
+    } else {
+      authPanel.style.display = 'block';
+      mainPanel.style.display = 'none';
+      stopHeartbeats();
+    }
+  }
+
+  // --- AUTH PORTAL ACTIONS ---
+  tabLogin.addEventListener('click', () => {
+    idkAuthTab = 'login';
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+    btnAuthSubmit.innerText = 'Connect Account';
+    authError.style.display = 'none';
+  });
+
+  tabRegister.addEventListener('click', () => {
+    idkAuthTab = 'register';
+    tabRegister.classList.add('active');
+    tabLogin.classList.remove('active');
+    btnAuthSubmit.innerText = 'Create Account';
+    authError.style.display = 'none';
+  });
+
+  btnAuthSubmit.addEventListener('click', handleAuth);
+  [inputUsername, inputPassword].forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAuth();
+    });
+  });
+
+  async function handleAuth() {
+    const username = inputUsername.value.trim();
+    const password = inputPassword.value;
+
+    if (!username || !password) {
+      showAuthError("Please fill out all fields.");
+      return;
+    }
+
+    btnAuthSubmit.disabled = true;
+    btnAuthSubmit.innerText = idkAuthTab === 'login' ? 'Connecting...' : 'Registering...';
+    authError.style.display = 'none';
+
+    try {
+      const endpoint = idkAuthTab === 'login' ? '/api/auth/login' : '/api/auth/register';
+      const data = await idkRequest(endpoint, 'POST', { username, password });
+      
+      idkToken = data.token;
+      idkUser = data.user;
+      localStorage.setItem('idk_connect_token', idkToken);
+      localStorage.setItem('idk_connect_user', JSON.stringify(idkUser));
+      
+      inputUsername.value = '';
+      inputPassword.value = '';
+      
+      updateFriendsAuthUI();
+      showWarningToast(`Connected to IDK Network as ${idkUser.username}!`);
+    } catch (err) {
+      showAuthError(err.message);
+    } finally {
+      btnAuthSubmit.disabled = false;
+      btnAuthSubmit.innerText = idkAuthTab === 'login' ? 'Connect Account' : 'Create Account';
+    }
+  }
+
+  function showAuthError(msg) {
+    authError.innerText = msg;
+    authError.style.display = 'block';
+  }
+
+  btnDisconnect.addEventListener('click', () => {
+    if (activeTunnelUrl) {
+      btnShare.click(); // Stop sharing first
+    }
+    if (window.electronAPI) {
+      window.electronAPI.stopCloudflaredAccess();
+    }
+    
+    idkToken = '';
+    idkUser = null;
+    localStorage.removeItem('idk_connect_token');
+    localStorage.removeItem('idk_connect_user');
+    
+    updateFriendsAuthUI();
+    showWarningToast("Disconnected from IDK Network.");
+  });
+
+  // --- CLOUDFLARED MULTIPLAYER SHARING ---
+  btnShare.addEventListener('click', async () => {
+    if (activeTunnelUrl) {
+      // STOP SHARING TUNNEL
+      btnShare.disabled = true;
+      btnShare.innerText = 'Stopping...';
+      try {
+        if (window.electronAPI) {
+          await window.electronAPI.stopCloudflaredTunnel();
+        }
+        activeTunnelUrl = null;
+        activeSharePort = null;
+        
+        // Restore sharing Card elements
+        shareCard.classList.remove('active');
+        shareInstructions.innerText = 'Open your Minecraft singleplayer world, click "Open to LAN", then enter the port below to invite your friends!';
+        shareInputRow.style.display = 'flex';
+        tunnelLink.style.display = 'none';
+        
+        btnShare.innerText = 'Share';
+        btnShare.classList.remove('stop-sharing');
+        
+        // Update presence immediately
+        await sendPresenceHeartbeat();
+        showWarningToast("Multi-player tunnel closed. World is private again.");
+      } catch (err) {
+        showWarningToast("Failed to stop tunnel cleanly.");
+      } finally {
+        btnShare.disabled = false;
+      }
+      return;
+    }
+
+    // START SHARING TUNNEL
+    const portVal = parseInt(inputSharePort.value);
+    if (isNaN(portVal) || portVal < 1024 || portVal > 65535) {
+      showWarningToast("Please enter a valid LAN port (1024-65535)");
+      return;
+    }
+
+    btnShare.disabled = true;
+    btnShare.innerText = 'Starting...';
+    
+    if (!window.electronAPI) {
+      // Fallback/Mock for Web Browsers
+      setTimeout(() => {
+        activeTunnelUrl = `tcp://mock-tunnel-${Math.random().toString(36).substring(3, 8)}.trycloudflare.com:54321`;
+        activeSharePort = portVal;
+        shareCard.classList.add('active');
+        shareInstructions.innerText = 'Sharing Active! Click below to copy your IP Address. Friends can join you now:';
+        shareInputRow.style.display = 'none';
+        
+        tunnelLink.innerText = activeTunnelUrl;
+        tunnelLink.style.display = 'block';
+        btnShare.innerText = 'Stop';
+        btnShare.classList.add('stop-sharing');
+        btnShare.disabled = false;
+        
+        navigator.clipboard.writeText(activeTunnelUrl);
+        sendPresenceHeartbeat();
+        showWarningToast("Mock Tunnel active! Copied IP address to clipboard.");
+      }, 1500);
+      return;
+    }
+
+    try {
+      // 1. Ensure Cloudflared binary exists (downloads if not)
+      progressPanel.style.display = 'block';
+      statusText.innerText = 'Preparing cloudflared.exe...';
+      percentText.innerText = '0%';
+      progressFill.style.width = '0%';
+      
+      const cfStatus = await window.electronAPI.ensureCloudflared();
+      if (!cfStatus.success) {
+        throw new Error(cfStatus.error || "Failed to download cloudflared");
+      }
+      
+      progressPanel.style.display = 'none';
+      
+      // 2. Start Cloudflared TCP tunnel forwarding LAN port
+      statusText.innerText = 'Connecting tunnel...';
+      const tunnelStatus = await window.electronAPI.startCloudflaredTunnel(portVal);
+      if (!tunnelStatus.success) {
+        throw new Error(tunnelStatus.error || "Failed to establish TCP tunnel");
+      }
+      
+      activeTunnelUrl = tunnelStatus.url;
+      activeSharePort = portVal;
+      
+      // Render shared status
+      shareCard.classList.add('active');
+      shareInstructions.innerText = 'Sharing Active! Click below to copy your IP Address. Friends can join you now:';
+      shareInputRow.style.display = 'none';
+      
+      tunnelLink.innerText = activeTunnelUrl;
+      tunnelLink.style.display = 'block';
+      
+      btnShare.innerText = 'Stop';
+      btnShare.classList.add('stop-sharing');
+      
+      navigator.clipboard.writeText(activeTunnelUrl);
+      
+      // Update presence immediately
+      await sendPresenceHeartbeat();
+      showWarningToast("LAN world successfully shared! IP address copied to clipboard.");
+    } catch (err) {
+      showWarningToast(`Tunnel Error: ${err.message}`);
+      progressPanel.style.display = 'none';
+      btnShare.innerText = 'Share';
+    } finally {
+      btnShare.disabled = false;
+    }
+  });
+
+  // Listen to cloudflared download progress
+  if (window.electronAPI) {
+    window.electronAPI.onCloudflaredInstallProgress((data) => {
+      progressPanel.style.display = 'block';
+      statusText.innerText = data.status || 'Downloading...';
+      percentText.innerText = `${data.percent}%`;
+      progressFill.style.width = `${data.percent}%`;
+    });
+
+    window.electronAPI.onCloudflaredTunnelClosed(() => {
+      if (activeTunnelUrl) {
+        // Tunnel closed from outside
+        activeTunnelUrl = null;
+        activeSharePort = null;
+        
+        shareCard.classList.remove('active');
+        shareInstructions.innerText = 'Open your Minecraft singleplayer world, click "Open to LAN", then enter the port below to invite your friends!';
+        shareInputRow.style.display = 'flex';
+        tunnelLink.style.display = 'none';
+        
+        btnShare.innerText = 'Share';
+        btnShare.classList.remove('stop-sharing');
+        sendPresenceHeartbeat();
+        showWarningToast("Tunnel connection closed unexpected.");
+      }
+    });
+  }
+
+  // Copy IP on link click
+  tunnelLink.addEventListener('click', () => {
+    if (activeTunnelUrl) {
+      navigator.clipboard.writeText(activeTunnelUrl);
+      showWarningToast("IP Address copied to clipboard!");
+    }
+  });
+
+  // --- ADD FRIEND ACTION ---
+  btnAddFriend.addEventListener('click', handleAddFriend);
+  inputAddFriend.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleAddFriend();
+  });
+
+  async function handleAddFriend() {
+    const friendName = inputAddFriend.value.trim();
+    if (!friendName) return;
+
+    btnAddFriend.disabled = true;
+    try {
+      const res = await idkRequest('/api/friends/request', 'POST', { username: friendName });
+      inputAddFriend.value = '';
+      showWarningToast(res.message);
+      refreshFriendsData();
+    } catch (err) {
+      showWarningToast(err.message);
+    } finally {
+      btnAddFriend.disabled = false;
+    }
+  }
+
+  // --- HEARTBEATS & SYNC ENGINE ---
+  function startHeartbeats() {
+    stopHeartbeats();
+    
+    // Heartbeat every 10 seconds to update presence
+    sendPresenceHeartbeat(); // Immediate
+    presenceInterval = setInterval(sendPresenceHeartbeat, 10000);
+    
+    // Refresh friends list & pending requests every 7 seconds
+    refreshFriendsData();
+    refreshInterval = setInterval(refreshFriendsData, 7000);
+  }
+
+  function stopHeartbeats() {
+    if (presenceInterval) clearInterval(presenceInterval);
+    if (refreshInterval) clearInterval(refreshInterval);
+    presenceInterval = null;
+    refreshInterval = null;
+  }
+
+  async function sendPresenceHeartbeat() {
+    if (!idkToken) return;
+    
+    // Determine playing state from playBtn class!
+    const isPlaying = playBtn.classList.contains('running');
+    const playingVersion = isPlaying ? `${selectedLoader} ${selectedVersion}` : null;
+
+    try {
+      await idkRequest('/api/presence', 'POST', {
+        status: 'online',
+        playingVersion,
+        cloudflaredUrl: activeTunnelUrl
+      });
+    } catch (err) {
+      console.warn("[IDK Connect] Heartbeat failed", err.message);
+    }
+  }
+
+  // --- REFRESH FRIENDS & RENDER LISTS ---
+  async function refreshFriendsData() {
+    if (!idkToken) return;
+
+    try {
+      // 1. Fetch friend list
+      const friendsData = await idkRequest('/api/friends');
+      renderFriendsList(friendsData.friends);
+
+      // 2. Fetch pending requests
+      const reqData = await idkRequest('/api/friends/requests');
+      renderFriendRequests(reqData.requests);
+      
+      // Update badge count
+      const reqCount = reqData.requests.length;
+      badgePending.innerText = reqCount;
+      badgePending.style.display = reqCount > 0 ? 'flex' : 'none';
+    } catch (err) {
+      console.warn("[IDK Connect] Sync failed", err.message);
+    }
+  }
+
+  function renderFriendRequests(requests) {
+    if (!requests || requests.length === 0) {
+      requestsSection.style.display = 'none';
+      requestsList.innerHTML = '';
+      return;
+    }
+
+    requestsSection.style.display = 'flex';
+    requestsList.innerHTML = '';
+
+    requests.forEach(req => {
+      const card = document.createElement('div');
+      card.className = 'friend-request-card';
+      card.innerHTML = `
+        <div class="friend-request-info">
+          <strong>${req.username}</strong>
+          <span>Wants to be friends</span>
+        </div>
+        <div class="friend-request-actions">
+          <button class="friend-request-btn accept" data-id="${req.requestId}" title="Accept Request">✓</button>
+          <button class="friend-request-btn decline" data-id="${req.requestId}" title="Decline Request">✕</button>
+        </div>
+      `;
+
+      card.querySelector('.accept').onclick = () => handleFriendRequest(req.requestId, true);
+      card.querySelector('.decline').onclick = () => handleFriendRequest(req.requestId, false);
+      requestsList.appendChild(card);
+    });
+  }
+
+  async function handleFriendRequest(requestId, accept) {
+    try {
+      const res = await idkRequest('/api/friends/requests/handle', 'POST', { requestId, accept });
+      showWarningToast(res.message);
+      refreshFriendsData();
+    } catch (err) {
+      showWarningToast(err.message);
+    }
+  }
+
+  function renderFriendsList(friends) {
+    if (!friends || friends.length === 0) {
+      friendsList.innerHTML = '<div class="friends-list-empty">Your friends list is empty.</div>';
+      return;
+    }
+
+    friendsList.innerHTML = '';
+
+    // Sort friends: Hosting first, then Online, then Offline
+    const sorted = [...friends].sort((a, b) => {
+      if (a.cloudflaredUrl && !b.cloudflaredUrl) return -1;
+      if (!a.cloudflaredUrl && b.cloudflaredUrl) return 1;
+      if (a.status !== 'offline' && b.status === 'offline') return -1;
+      if (a.status === 'offline' && b.status !== 'offline') return 1;
+      return a.username.localeCompare(b.username);
+    });
+
+    sorted.forEach(friend => {
+      const card = document.createElement('div');
+      card.className = 'friend-card';
+      
+      const isOnline = friend.status !== 'offline';
+      const isHosting = !!friend.cloudflaredUrl;
+      const isPlaying = !!friend.playingVersion && !isHosting;
+      
+      let statusText = 'Offline';
+      let statusClass = '';
+      if (isHosting) {
+        statusText = `Hosting ${friend.playingVersion || ''}`;
+        statusClass = 'hosting';
+      } else if (isPlaying) {
+        statusText = `Playing ${friend.playingVersion}`;
+        statusClass = 'playing';
+      } else if (isOnline) {
+        statusText = 'Online';
+        statusClass = 'online';
+      }
+
+      card.innerHTML = `
+        <div class="friend-card-left">
+          <div class="friend-avatar ${isOnline ? 'online' : ''}">
+            <canvas id="friend-avatar-${friend.id}" width="28" height="28" style="image-rendering:pixelated;width:100%;height:100%;"></canvas>
+          </div>
+          <div class="friend-info">
+            <strong>${friend.username}</strong>
+            <span class="friend-status-text ${statusClass}">
+              <span class="friend-status-dot ${isOnline ? 'online' : ''}"></span>
+              ${statusText}
+            </span>
+          </div>
+        </div>
+        <div class="friend-card-right">
+          ${isHosting ? `<button class="friend-join-btn" title="Join Friend's LAN game!">JOIN</button>` : ''}
+          <button class="friend-remove-btn" title="Unfriend" data-id="${friend.id}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="17" y1="11" x2="23" y2="11"></line></svg>
+          </button>
+        </div>
+      `;
+
+      // Render canvas face async
+      const canvas = card.querySelector(`#friend-avatar-${friend.id}`);
+      if (canvas) {
+        renderSkinFaceOnFriendsCanvas(canvas, friend.username);
+      }
+
+      // Hook Remove Friend
+      card.querySelector('.friend-remove-btn').onclick = (e) => {
+        e.stopPropagation();
+        if (confirm(`Are you sure you want to remove ${friend.username} as a friend?`)) {
+          unfriend(friend.id);
+        }
+      };
+
+      // Hook Join World
+      if (isHosting) {
+        card.querySelector('.friend-join-btn').onclick = () => joinFriendWorld(friend);
+      }
+
+      friendsList.appendChild(card);
+    });
+  }
+
+  async function unfriend(friendId) {
+    try {
+      const res = await idkRequest(`/api/friends/${friendId}`, 'DELETE');
+      showWarningToast(res.message);
+      refreshFriendsData();
+    } catch (err) {
+      showWarningToast(err.message);
+    }
+  }
+
+  // --- JOIN GAME ACTION ---
+  function joinFriendWorld(friend) {
+    if (!friend.cloudflaredUrl) return;
+
+    let host, port;
+    let connectAddressText;
+
+    if (friend.cloudflaredUrl.startsWith('https://')) {
+      host = '127.0.0.1';
+      port = 25565;
+      connectAddressText = '127.0.0.1:25565';
+      if (window.electronAPI) {
+        window.electronAPI.startCloudflaredAccess(friend.cloudflaredUrl, 25565);
+        showWarningToast("Connecting secure bridge over Cloudflare network...");
+      }
+    } else {
+      const hostPort = friend.cloudflaredUrl.replace('tcp://', '');
+      const parts = hostPort.split(':');
+      host = parts[0];
+      port = parseInt(parts[1]);
+      connectAddressText = hostPort;
+    }
+
+    if (isNaN(port)) {
+      showWarningToast("Failed to parse friend's server port.");
+      return;
+    }
+
+    // Copy IP as fallback
+    navigator.clipboard.writeText(connectAddressText);
+
+    // If game is already running, show a notification that IP is copied
+    if (playBtn.classList.contains('running')) {
+      showWarningToast(`IP copied to clipboard! Paste it in Minecraft Multiplayer Direct Connect to join ${friend.username}.`);
+      return;
+    }
+
+    // Set quickConnectTarget details
+    quickConnectTarget = { host, port };
+
+    // Auto-switch Version & Loader if they mismatch!
+    let mustSwitch = false;
+    let playingVer = friend.playingVersion || '';
+    
+    let friendLoader = selectedLoader;
+    let friendVersion = selectedVersion;
+    
+    if (playingVer) {
+      let parts = playingVer.split(' ');
+      if (parts.length > 1) {
+        friendLoader = parts[0];
+        friendVersion = parts[1];
+      } else {
+        // Fallback for single word playingVersion
+        if (['Vanilla', 'Fabric', 'Forge', 'NeoForge', 'Quilt'].includes(parts[0])) {
+          friendLoader = parts[0];
+        } else {
+          friendVersion = parts[0];
+        }
+      }
+    }
+
+    if (selectedVersion !== friendVersion || selectedLoader !== friendLoader) {
+      mustSwitch = true;
+      
+      // Auto switch loader dropdown selection
+      selectedLoader = friendLoader;
+      const loaderTriggerText = document.getElementById('selected-loader-text');
+      if (loaderTriggerText) {
+        loaderTriggerText.innerHTML = `<span style="display: flex; align-items: center; gap: 8px;">${friendLoader}</span>`;
+      }
+      document.querySelectorAll('#loader-dropdown .custom-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.loader === friendLoader);
+      });
+      
+      // Auto switch version dropdown selection
+      selectedVersion = friendVersion;
+      renderVersions();
+    }
+
+    if (mustSwitch) {
+      showWarningToast(`Auto-switched to ${friendLoader} ${friendVersion} to match ${friend.username}! Launching game...`);
+    } else {
+      showWarningToast(`Launching Minecraft to join ${friend.username}'s world!`);
+    }
+
+    // Programmatically launch the game!
+    setTimeout(() => {
+      playBtn.click();
+    }, 800);
+  }
+
+  // --- INITIAL CHECK ---
+  updateFriendsAuthUI();
+})();
+
 
 
