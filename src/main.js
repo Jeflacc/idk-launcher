@@ -8,12 +8,48 @@ document.querySelector('#app').innerHTML = `
   </div>
   <div class="bg-overlay"></div>
 
+  <!-- TOP TITLE BAR & NAVIGATION -->
   <div class="top-bar">
-    <div class="top-brand">IDK<span>.</span></div>
-    <div class="window-controls">
-      <div class="ctrl minimize">_</div>
-      <div class="ctrl maximize">□</div>
-      <div class="ctrl close">✕</div>
+    <div class="top-bar-left">
+      <div class="top-brand">IDK<span>.</span></div>
+      <div class="header-nav">
+        <div class="brand-title">MINECRAFT: JAVA EDITION</div>
+        <div class="nav-tabs">
+          <div class="nav-tab" data-target="main">Play</div>
+          <div class="nav-tab" data-target="mods">Modpacks</div>
+          <div class="nav-tab" data-target="settings">Settings</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="top-bar-right">
+      <div class="user-profile-wrapper">
+        <div class="user-profile" id="user-profile-btn">
+          <div class="user-avatar">
+            <canvas id="avatar-canvas" width="28" height="28" style="width:100%;height:100%;image-rendering:pixelated;"></canvas>
+          </div>
+          <div class="user-details">
+            <h4 id="display-username">PlayerOne</h4>
+            <p>Offline Account</p>
+          </div>
+        </div>
+        
+        <div class="profile-dropdown" id="profile-dropdown">
+          <div class="profile-dropdown-item" id="btn-dropdown-skin" style="display:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 8a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z"></path></svg>
+            Change Skin (Ely.by)
+          </div>
+          <div class="profile-dropdown-item logout" id="btn-dropdown-logout">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Log Out
+          </div>
+        </div>
+      </div>
+      <div class="window-controls">
+        <div class="ctrl minimize">_</div>
+        <div class="ctrl maximize">□</div>
+        <div class="ctrl close">✕</div>
+      </div>
     </div>
   </div>
 
@@ -48,91 +84,87 @@ document.querySelector('#app').innerHTML = `
 
   <!-- MAIN VIEW -->
   <div id="view-main" class="view">
-    <div class="main-center">
-      <img src="./java.png" alt="Minecraft Java Edition" class="mc-logo" />
-    </div>
+    <div class="main-hero-banner">
+      <video autoplay muted loop playsinline class="hero-video">
+        <source src="./background.mp4" type="video/mp4">
+      </video>
+      <div class="hero-overlay"></div>
+      
+      <!-- Integrated invisible navigation trigger links to keep original JS functional -->
+      <div id="btn-open-mods" style="display:none;"></div>
+      <div id="btn-open-settings" style="display:none;"></div>
 
-    <div class="bottom-bar">
-      <div class="controls-left">
-        <div class="user-profile" id="user-profile-btn">
-          <div class="user-avatar">
-            <img src="https://crafatar.com/avatars/853c80ef3c3749fdaa49938b674adae6?size=64&overlay" id="avatar-img" />
-          </div>
-          <div class="user-details">
-            <h4 id="display-username">PlayerOne</h4>
-            <p>Offline Account</p>
-          </div>
-        </div>
+      <div class="main-center">
+        <img src="./java.png" alt="Minecraft Java Edition" class="mc-logo" />
       </div>
 
-      <div class="controls-right">
-        
-        <div class="custom-select-wrapper">
-          <div class="custom-select" id="version-dropdown">
-            <div class="custom-select-trigger">
-              <span id="selected-version-text">Loading versions...</span>
-              <svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l5 5 5-5"/></svg>
-            </div>
-            <div class="custom-options">
-              <div class="options-filters">
-                <label class="toggle-switch">
-                  <input type="checkbox" id="show-snapshots" />
-                  <div class="switch"></div>
-                  Snapshots
-                </label>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="show-historical" />
-                  <div class="switch"></div>
-                  Historical
-                </label>
+      <div class="bottom-bar">
+        <div class="controls-left">
+          <div class="custom-select-wrapper">
+            <div class="custom-select" id="version-dropdown">
+              <div class="custom-select-trigger">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                  <svg class="grass-icon" viewBox="0 0 24 24" width="16" height="16"><path d="M2 2h20v4H2z" fill="#5c8e32"/><path d="M2 6h20v16H2z" fill="#866043"/><path d="M2 6l3 3 3-3 3 3 3-3 3 3 3-3 3 3v2l-3-3-3 3-3-3-3 3-3-3-3 3-3-3z" fill="#4d7729"/></svg>
+                  <span id="selected-version-text">Loading versions...</span>
+                </span>
+                <svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l5 5 5-5"/></svg>
               </div>
-              <div class="options-list" id="options-list">
-                <!-- Injected via JS -->
+              <div class="custom-options">
+                <div class="options-filters">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="show-snapshots" />
+                    <div class="switch"></div>
+                    Snapshots
+                  </label>
+
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="show-historical" />
+                    <div class="switch"></div>
+                    Historical
+                  </label>
+                </div>
+                <div class="options-list" id="options-list">
+                  <!-- Injected via JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="custom-select-wrapper" style="width: 200px;">
+            <div class="custom-select" id="loader-dropdown">
+              <div class="custom-select-trigger" id="loader-trigger">
+                <span id="selected-loader-text" style="display: flex; align-items: center; gap: 8px;">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                  Vanilla
+                </span>
+                <svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l5 5 5-5"/></svg>
+              </div>
+              <div class="custom-options">
+                <div class="options-list">
+                  <div class="custom-option selected" data-loader="Vanilla">
+                    <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg> Vanilla</span>
+                  </div>
+                  <div class="custom-option" data-loader="Forge">
+                    <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> Forge</span>
+                  </div>
+                  <div class="custom-option" data-loader="Fabric">
+                    <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="15"></line></svg> Fabric</span>
+                  </div>
+                  <div class="custom-option" data-loader="NeoForge">
+                    <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> NeoForge</span>
+                  </div>
+                  <div class="custom-option" data-loader="Quilt">
+                    <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Quilt</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="custom-select-wrapper" style="width: 200px;">
-          <div class="custom-select" id="loader-dropdown">
-            <div class="custom-select-trigger" id="loader-trigger">
-              <span id="selected-loader-text" style="display: flex; align-items: center; gap: 8px;">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                Vanilla
-              </span>
-              <svg width="12" height="8" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l5 5 5-5"/></svg>
-            </div>
-            <div class="custom-options">
-              <div class="options-list">
-                <div class="custom-option selected" data-loader="Vanilla">
-                  <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg> Vanilla</span>
-                </div>
-                <div class="custom-option" data-loader="Forge">
-                  <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> Forge</span>
-                </div>
-                <div class="custom-option" data-loader="NeoForge">
-                  <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path><circle cx="19" cy="5" r="2"></circle></svg> NeoForge</span>
-                </div>
-                <div class="custom-option" data-loader="Fabric">
-                  <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="15"></line></svg> Fabric</span>
-                </div>
-                <div class="custom-option" data-loader="Quilt">
-                  <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Quilt</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="controls-right">
+          <button class="play-button" id="play-btn">PLAY</button>
         </div>
-
-
-
-        <div class="settings-btn" id="btn-open-mods" title="Manage Modpacks" style="width: auto; padding: 0 16px; font-family: var(--font-title); letter-spacing: 1px; font-size: 14px;">
-          MODPACKS
-        </div>
-        <div class="settings-btn" id="btn-open-settings">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        </div>
-        <button class="play-button" id="play-btn">PLAY</button>
       </div>
     </div>
     
@@ -146,24 +178,6 @@ document.querySelector('#app').innerHTML = `
             <div class="stat-info">
               <h4>Time Played</h4>
               <h2 id="stat-playtime">0.0h</h2>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon" style="color: #fbbf24; background: rgba(251, 191, 36, 0.1);">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
-            </div>
-            <div class="stat-info">
-              <h4>Achievements</h4>
-              <h2>14 / 85</h2>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon" style="color: #a855f7; background: rgba(168, 85, 247, 0.1);">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            </div>
-            <div class="stat-info">
-              <h4>Rank</h4>
-              <h2>Diamond II</h2>
             </div>
           </div>
         </div>
@@ -182,160 +196,166 @@ document.querySelector('#app').innerHTML = `
 
   <!-- SETTINGS VIEW -->
   <div id="view-settings" class="view">
-    <div class="settings-header">
-      <div class="back-btn" id="btn-close-settings">←</div>
-      <h2>Settings</h2>
-    </div>
+    <div id="btn-close-settings" style="display:none;"></div>
     
-    <div class="settings-section">
-      <h3>Memory Allocation</h3>
-      <p>Set how much RAM Minecraft is allowed to use. More RAM = smoother gameplay, but don't exceed ~80% of your total system RAM.</p>
-      <div class="memory-slider-row">
-        <input type="range" id="memory-slider" min="1" max="16" step="1" value="4" class="memory-slider" />
-        <span class="memory-value-label" id="memory-value-label">4 GB</span>
+    <div class="settings-content-wrapper">
+      <h2 class="view-title">Settings</h2>
+      
+      <div class="settings-grid">
+        <div class="settings-section">
+          <h3>Memory Allocation</h3>
+          <p>Set how much RAM Minecraft is allowed to use. More RAM = smoother gameplay, but don't exceed ~80% of your total system RAM.</p>
+          <div class="memory-slider-row">
+            <input type="range" id="memory-slider" min="1" max="16" step="1" value="4" class="memory-slider" />
+            <span class="memory-value-label" id="memory-value-label">4 GB</span>
+          </div>
+          <div class="memory-presets">
+            <button class="mem-preset-btn" data-gb="2">2 GB</button>
+            <button class="mem-preset-btn" data-gb="4">4 GB</button>
+            <button class="mem-preset-btn" data-gb="6">6 GB</button>
+            <button class="mem-preset-btn" data-gb="8">8 GB</button>
+            <button class="mem-preset-btn" data-gb="12">12 GB</button>
+            <button class="mem-preset-btn" data-gb="16">16 GB</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>Java Executable Path</h3>
+          <p>Provide the absolute path to your javaw.exe file (e.g., C:\\\Program Files\\\Java\\\jdk-17\\\bin\\\javaw.exe). If left blank, the launcher will use the system default Java.</p>
+          <input type="text" class="clean-input" style="text-align: left;" id="java-path" placeholder="&lt;Use System Default&gt;" />
+        </div>
+
+        <div class="settings-section">
+          <h3>Auto Optimization</h3>
+          <p>Automatically download and install Sodium (a performance mod) when launching with Fabric loader.</p>
+          <label class="toggle-switch" style="margin-top: 8px;">
+            <input type="checkbox" id="auto-optimization" />
+            <div class="switch"></div>
+            <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Auto-install Sodium with Fabric</span>
+          </label>
+        </div>
+
+        <div class="settings-section">
+          <h3>Game Directory</h3>
+          <p>Open the folder where your Minecraft game files, mods, and resource packs are stored.</p>
+          <button class="submit-btn" id="btn-open-folder" style="width: auto; padding: 10px 20px;">Open Minecraft Folder</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>Developer Options</h3>
+          <p>Enable the debug console (DevTools) to troubleshoot issues. This is usually only needed for debugging.</p>
+          <button class="submit-btn" id="btn-toggle-devtools" style="width: auto; padding: 10px 20px; background: #4b5563;">Open Debug Console</button>
+        </div>
       </div>
-      <div class="memory-presets">
-        <button class="mem-preset-btn" data-gb="2">2 GB</button>
-        <button class="mem-preset-btn" data-gb="4">4 GB</button>
-        <button class="mem-preset-btn" data-gb="6">6 GB</button>
-        <button class="mem-preset-btn" data-gb="8">8 GB</button>
-        <button class="mem-preset-btn" data-gb="12">12 GB</button>
-        <button class="mem-preset-btn" data-gb="16">16 GB</button>
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <h3>Java Executable Path</h3>
-      <p>Provide the absolute path to your javaw.exe file (e.g., C:\\Program Files\\Java\\jdk-17\\bin\\javaw.exe). If left blank, the launcher will use the system default Java.</p>
-      <input type="text" class="clean-input" style="text-align: left;" id="java-path" placeholder="<Use System Default>" />
-    </div>
-
-    <div class="settings-section">
-      <h3>Auto Optimization</h3>
-      <p>Automatically download and install Sodium (a performance mod) when launching with Fabric loader.</p>
-      <label class="toggle-switch" style="margin-top: 8px;">
-        <input type="checkbox" id="auto-optimization" />
-        <div class="switch"></div>
-        <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Auto-install Sodium with Fabric</span>
-      </label>
-    </div>
-
-    <div class="settings-section">
-      <h3>Game Directory</h3>
-      <p>Open the folder where your Minecraft game files, mods, and resource packs are stored.</p>
-      <button class="submit-btn" id="btn-open-folder" style="width: auto; padding: 10px 20px;">Open Minecraft Folder</button>
-    </div>
-
-    <div class="settings-section">
-      <h3>Developer Options</h3>
-      <p>Enable the debug console (DevTools) to troubleshoot issues. This is usually only needed for debugging.</p>
-      <button class="submit-btn" id="btn-toggle-devtools" style="width: auto; padding: 10px 20px; background: #4b5563;">Open Debug Console</button>
     </div>
   </div>
 
   <!-- MODS VIEW -->
   <div id="view-mods" class="view">
-    <div class="mods-page-header">
-      <div class="back-btn" id="btn-close-mods">←</div>
-      <h2>Modpack Manager</h2>
-      <button class="create-modpack-btn" id="btn-new-modpack">+ New Modpack</button>
-    </div>
-    <div class="mods-container">
-      <div class="modpacks-sidebar">
-        <p class="sidebar-label">YOUR MODPACKS</p>
-        <div class="modpacks-list" id="modpacks-list"></div>
+    <div id="btn-close-mods" style="display:none;"></div>
+    
+    <div class="mods-content-wrapper">
+      <div class="mods-page-header">
+        <h2 class="view-title">Modpack Manager</h2>
+        <div style="display:flex; gap:10px;">
+          <button class="create-modpack-btn" id="btn-browse-modpacks" style="background:#4b5563;">Browse Modpacks</button>
+          <button class="create-modpack-btn" id="btn-new-modpack">+ New Modpack</button>
+        </div>
       </div>
-      <div class="modpack-detail" id="modpack-detail">
-        <div class="no-modpack-msg" id="no-modpack-msg">
-          <div style="text-align:center; padding: 40px 0;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-            <p style="font-size:18px; font-family:var(--font-title);">Select or create a modpack to get started</p>
-          </div>
-          <div class="news-section" style="padding: 0 40px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-              <h2 class="section-title" style="margin-bottom:0;">Trending Modpacks</h2>
-              <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
-                CurseForge
-              </span>
+      <div class="mods-container">
+        <div class="modpacks-sidebar">
+          <p class="sidebar-label">YOUR MODPACKS</p>
+          <div class="modpacks-list" id="modpacks-list"></div>
+        </div>
+        <div class="modpack-detail" id="modpack-detail">
+          <div class="no-modpack-msg" id="no-modpack-msg">
+            <div style="text-align:center; padding: 40px 0;">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+              <p style="font-size:18px; font-family:var(--font-title);">Select or create a modpack to get started</p>
             </div>
-            <div class="trending-modpacks-grid" id="trending-mods-grid">
-              <div style="padding: 40px; text-align: center; color: var(--text-muted); width: 100%;">Loading modpacks...</div>
+            <div class="news-section" style="padding: 0 40px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <h2 class="section-title" style="margin-bottom:0;">Trending Modpacks</h2>
+                <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
+                  CurseForge
+                </span>
+              </div>
+              <div class="trending-modpacks-grid" id="trending-mods-grid">
+                <div style="padding: 40px; text-align: center; color: var(--text-muted); width: 100%;">Loading modpacks...</div>
+              </div>
+            </div>
+          </div>
+          <div class="modpack-content" id="modpack-content">
+            <div class="modpack-content-header">
+              <div style="display:flex;align-items:center;gap:16px;">
+                <div id="modpack-icon-display" title="Click to change icon" style="width:64px;height:64px;border-radius:12px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;border:1px solid rgba(255,255,255,0.1);transition:border 0.2s;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                </div>
+                <div><h3 id="modpack-name-display">Modpack</h3><p id="modpack-meta-display">MC 1.20.4 · Fabric</p></div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;">
+                <button class="mp-action-btn play" id="btn-play-modpack">▶ Play</button>
+                <button class="mp-action-btn delete" id="btn-delete-modpack" title="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg></button>
+              </div>
+            </div>
+            <div class="mp-tabs">
+              <button class="mp-tab active" data-tab="mods">🧩 Mods <span class="mp-tab-count" id="mod-count">0</span></button>
+              <button class="mp-tab" data-tab="resourcepacks">🎨 Resource Packs <span class="mp-tab-count" id="rp-count">0</span></button>
+              <button class="mp-tab" data-tab="shaders">✨ Shaders <span class="mp-tab-count" id="shader-count">0</span></button>
+            </div>
+            <div class="mp-tab-content active" id="tab-mods">
+              <div class="mp-tab-toolbar"><button class="mp-action-btn browse" id="btn-browse-mods">+ Add Mods</button></div>
+              <div class="mods-grid" id="installed-mods-list"></div>
+            </div>
+            <div class="mp-tab-content" id="tab-resourcepacks">
+              <div class="mp-tab-toolbar"><button class="mp-action-btn browse" id="btn-browse-rp">+ Add Resource Packs</button></div>
+              <div class="mods-grid" id="installed-rp-list"></div>
+            </div>
+            <div class="mp-tab-content" id="tab-shaders">
+              <div class="mp-tab-toolbar">
+                <button class="mp-action-btn browse" id="btn-browse-shaders">+ Add Shaders</button>
+                <span class="shader-note">⚠ Requires Fabric + Iris Shaders mod</span>
+              </div>
+              <div class="mods-grid" id="installed-shaders-list"></div>
             </div>
           </div>
         </div>
-        <div class="modpack-content" id="modpack-content">
-          <div class="modpack-content-header">
-            <div><h3 id="modpack-name-display">Modpack</h3><p id="modpack-meta-display">MC 1.20.4 · Fabric</p></div>
-            <div style="display:flex;gap:10px;align-items:center;">
-              <button class="mp-action-btn play" id="btn-play-modpack">▶ Play</button>
-              <button class="mp-action-btn delete" id="btn-delete-modpack" title="Delete"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg></button>
-            </div>
-          </div>
-          <div class="mp-tabs">
-            <button class="mp-tab active" data-tab="mods">🧩 Mods <span class="mp-tab-count" id="mod-count">0</span></button>
-            <button class="mp-tab" data-tab="resourcepacks">🎨 Resource Packs <span class="mp-tab-count" id="rp-count">0</span></button>
-            <button class="mp-tab" data-tab="shaders">✨ Shaders <span class="mp-tab-count" id="shader-count">0</span></button>
-          </div>
-          <div class="mp-tab-content active" id="tab-mods">
-            <div class="mp-tab-toolbar"><button class="mp-action-btn browse" id="btn-browse-mods">+ Add Mods</button></div>
-            <div class="mods-grid" id="installed-mods-list"></div>
-          </div>
-          <div class="mp-tab-content" id="tab-resourcepacks">
-            <div class="mp-tab-toolbar"><button class="mp-action-btn browse" id="btn-browse-rp">+ Add Resource Packs</button></div>
-            <div class="mods-grid" id="installed-rp-list"></div>
-          </div>
-          <div class="mp-tab-content" id="tab-shaders">
-            <div class="mp-tab-toolbar">
-              <button class="mp-action-btn browse" id="btn-browse-shaders">+ Add Shaders</button>
-              <span class="shader-note">⚠ Requires Fabric + Iris Shaders mod</span>
-            </div>
-            <div class="mods-grid" id="installed-shaders-list"></div>
+      </div>
+      <div class="mod-browser" id="mod-browser">
+        <div class="mod-browser-header">
+          <h3 id="browser-title">Browse Mods</h3>
+          <button class="mod-browser-close" id="btn-close-browser">✕</button>
+        </div>
+        <div style="padding: 0 24px 12px; display:flex; align-items:center; gap:10px;">
+          <div class="provider-pill-group" id="provider-pill-group">
+            <button class="provider-pill active" data-provider="modrinth" id="pill-modrinth">Modrinth</button>
+            <button class="provider-pill" data-provider="curseforge" id="pill-curseforge">CurseForge</button>
           </div>
         </div>
+        <input type="text" class="clean-input" id="mod-search" placeholder="Search..." style="margin:0 24px 16px;width:calc(100% - 48px);" />
+        <div class="mod-browser-results" id="mod-browser-results"></div>
       </div>
-    </div>
-    <div class="mod-browser" id="mod-browser">
-      <div class="mod-browser-header">
-        <h3 id="browser-title">Browse Mods</h3>
-        <button class="mod-browser-close" id="btn-close-browser">✕</button>
-      </div>
-      <div style="padding: 0 24px 12px; display:flex; align-items:center; gap:10px;">
-        <div class="provider-pill-group" id="provider-pill-group">
-          <button class="provider-pill active" data-provider="modrinth" id="pill-modrinth">Modrinth</button>
-          <button class="provider-pill" data-provider="curseforge" id="pill-curseforge">CurseForge</button>
-        </div>
-      </div>
-      <input type="text" class="clean-input" id="mod-search" placeholder="Search..." style="margin:0 24px 16px;width:calc(100% - 48px);" />
-      <div class="mod-browser-results" id="mod-browser-results"></div>
-    </div>
-    <div class="mp-create-modal" id="mp-create-modal">
-      <div class="mp-create-box">
-        <h3>New Modpack</h3>
-        <input class="clean-input" id="new-mp-name" placeholder="Modpack name..." style="text-align:left;" />
-        <div style="display:flex;gap:12px;">
-          <select class="clean-select" id="new-mp-version"></select>
-          <select class="clean-select" id="new-mp-loader">
-            <option value="Vanilla">Vanilla</option>
-            <option value="Forge">Forge</option>
-            <option value="NeoForge">NeoForge</option>
-            <option value="Fabric" selected>Fabric</option>
-            <option value="Quilt">Quilt</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:10px;">
-          <button class="submit-btn" id="btn-confirm-create-mp" style="flex:1;">Create</button>
-          <button class="modal-btn" id="btn-cancel-create-mp" style="flex:1;">Cancel</button>
+      <div class="mp-create-modal" id="mp-create-modal">
+        <div class="mp-create-box">
+          <h3>New Modpack</h3>
+          <input class="clean-input" id="new-mp-name" placeholder="Modpack name..." style="text-align:left;" />
+          <div style="display:flex;gap:12px;">
+            <select class="clean-select" id="new-mp-version"></select>
+            <select class="clean-select" id="new-mp-loader"><option value="Fabric">Fabric</option><option value="Forge">Forge</option><option value="NeoForge">NeoForge</option><option value="Quilt">Quilt</option><option value="Vanilla">Vanilla</option></select>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="submit-btn" id="btn-confirm-create-mp" style="flex:1;">Create</button>
+            <button class="modal-btn" id="btn-cancel-create-mp" style="flex:1;">Cancel</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-
-
   <!-- LAUNCH OVERLAY -->
   <div class="launch-overlay" id="launch-overlay">
-    <div class="launch-spinner"></div>
+    <img src="./loading.gif" class="launch-spinner-gif" alt="Loading...">
     <div class="launch-status" id="launch-status">Preparing game...</div>
     <div class="launch-bar">
       <div class="launch-fill" id="launch-fill"></div>
@@ -358,6 +378,24 @@ document.querySelector('#app').innerHTML = `
   <div class="warning-toast" id="warning-toast">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
     <span id="warning-toast-msg"></span>
+  </div>
+
+  <!-- UPDATE MODAL -->
+  <div class="custom-modal" id="update-modal">
+    <div class="modal-content update-box">
+      <div class="modal-icon update-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+      </div>
+      <h3>New Update Available!</h3>
+      <p id="update-version-info">A new update is available.</p>
+      <div class="update-notes-container" id="update-notes">
+        <!-- Injected release notes -->
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;width:100%;">
+        <button class="submit-btn" id="btn-download-update" style="flex:1;">Get Update</button>
+        <button class="modal-btn" id="btn-ignore-update" style="flex:1;">Later</button>
+      </div>
+    </div>
   </div>
 `;
 
@@ -477,20 +515,130 @@ btnSubmitElyby.addEventListener('click', async () => {
   btnSubmitElyby.innerText = 'Login via Ely.by';
 });
 
+function renderSkinFaceOnCanvas(skinUrl, fallbackUrl) {
+  const canvas = document.getElementById('avatar-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  // No crossOrigin here — we only draw TO the canvas, never read pixels back,
+  // so taint protection isn't needed. crossOrigin='anonymous' silently blocks
+  // loading when the remote server doesn't send CORS headers.
+  img.onload = () => {
+    const scale = img.naturalWidth / 64; // handles both 64x64 and 64x32 skins
+    ctx.clearRect(0, 0, 28, 28);
+    ctx.imageSmoothingEnabled = false;
+    // Face layer: x=8,y=8,w=8,h=8 on the skin sheet
+    ctx.drawImage(img, 8 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, 28, 28);
+    // Hat/outer layer: x=40,y=8,w=8,h=8 on the skin sheet
+    ctx.drawImage(img, 40 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, 28, 28);
+  };
+  img.onerror = () => {
+    if (fallbackUrl && img.src !== fallbackUrl) {
+      img.src = fallbackUrl;
+    } else if (img.src !== 'https://minotar.net/skin/Steve') {
+      img.src = 'https://minotar.net/skin/Steve';
+    } else {
+      ctx.fillStyle = '#3c3c3d';
+      ctx.fillRect(0, 0, 28, 28);
+    }
+  };
+  img.src = skinUrl;
+}
+
+async function loadElybyAvatar(name) {
+  // Try IPC route first (Node.js, no CORS)
+  if (window.electronAPI && window.electronAPI.fetchElybyProfile) {
+    try {
+      const res = await window.electronAPI.fetchElybyProfile(name);
+      if (res.ok && res.data) {
+        const textureProp = res.data?.properties?.find(p => p.name === 'textures');
+        if (textureProp) {
+          const decoded = JSON.parse(atob(textureProp.value));
+          const skinUrl = decoded?.textures?.SKIN?.url;
+          if (skinUrl) {
+            renderSkinFaceOnCanvas(skinUrl, `https://skinsystem.ely.by/skins/${name}.png`);
+            return;
+          } else {
+            // The profile returned successfully, but textures are empty (user has no skin on Ely.by).
+            // Fall back directly to premium Mojang or Steve to avoid querying skinsystem and throwing a 404!
+            renderSkinFaceOnCanvas(
+              `https://minotar.net/skin/${name}`,
+              `https://minotar.net/skin/Steve`
+            );
+            return;
+          }
+        }
+      }
+    } catch(_) {}
+  }
+
+  // Fallback: render Ely.by skin directly, with Minotar and Steve as progressive fallbacks
+  renderSkinFaceOnCanvas(
+    `https://skinsystem.ely.by/skins/${name}.png`,
+    `https://minotar.net/skin/${name}`
+  );
+}
+
 function updateUserDisplay(name) {
   document.getElementById('display-username').innerText = name;
   document.getElementById('display-username').nextElementSibling.innerText = authMode === 'elyby' ? 'Ely.by Account' : 'Offline Account';
   
-  // Use Minotar for the launcher avatar to ensure a clean 2D face (Ely.by raw skin URLs are full 64x64 maps and 404 if no custom skin exists).
-  // The actual in-game skin will still use Ely.by because of authlib-injector!
-  const avatarImg = document.getElementById('avatar-img');
-  avatarImg.src = `https://minotar.net/helm/${name}/64.png`;
-  avatarImg.onerror = () => { avatarImg.src = 'https://minotar.net/helm/Steve/64.png'; };
+  const skinBtn = document.getElementById('btn-dropdown-skin');
+  if (skinBtn) {
+    skinBtn.style.display = authMode === 'elyby' ? 'flex' : 'none';
+  }
+
+  if (authMode === 'elyby') {
+    // Show a placeholder immediately, then replace once the real skin loads
+    const canvas = document.getElementById('avatar-canvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#2d2d2e';
+      ctx.fillRect(0, 0, 28, 28);
+    }
+    loadElybyAvatar(name);
+  } else {
+    renderSkinFaceOnCanvas(
+      `https://minotar.net/skin/${name}`,
+      `https://minotar.net/skin/Steve`
+    );
+  }
 }
 
-// Logout 
-document.getElementById('user-profile-btn').addEventListener('click', () => {
-  if(confirm("Log out?")) {
+// User Profile Dropdown Triggers
+const userProfileBtn = document.getElementById('user-profile-btn');
+const profileDropdown = document.getElementById('profile-dropdown');
+const btnDropdownSkin = document.getElementById('btn-dropdown-skin');
+const btnDropdownLogout = document.getElementById('btn-dropdown-logout');
+
+// Toggle dropdown menu on click
+userProfileBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  profileDropdown.classList.toggle('active');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', () => {
+  profileDropdown.classList.remove('active');
+});
+
+// "Change Skin" behavior: forwards user to Ely.by profile dashboard in their system browser!
+btnDropdownSkin.addEventListener('click', (e) => {
+  e.stopPropagation();
+  profileDropdown.classList.remove('active');
+  const targetUrl = 'https://ely.by/profile';
+  if (window.electronAPI && window.electronAPI.openExternal) {
+    window.electronAPI.openExternal(targetUrl);
+  } else {
+    window.open(targetUrl, '_blank');
+  }
+});
+
+// Logout click behavior
+btnDropdownLogout.addEventListener('click', (e) => {
+  e.stopPropagation();
+  profileDropdown.classList.remove('active');
+  if (confirm("Log out?")) {
     currentUser = '';
     localStorage.removeItem('craftlaunch_username');
     switchView('login');
@@ -699,13 +847,57 @@ const overlay = document.getElementById('launch-overlay');
 const launchStatus = document.getElementById('launch-status');
 const launchFill = document.getElementById('launch-fill');
 
+const mcFunStatuses = [
+  "Waking up the Iron Golems...",
+  "Feeding the Baby Turtles...",
+  "Polishing Diamond Chestplates...",
+  "Distracting the Creepers...",
+  "Taming a pack of Wolves...",
+  "Avoiding the Warden's gaze...",
+  "Brewing Swiftness potions...",
+  "Trading emeralds with Villagers...",
+  "Mining straight down (don't!)...",
+  "Spawning Herobrine...",
+  "Placing redstone repeaters...",
+  "Dodging skeleton arrows...",
+  "Shearing pink sheep...",
+  "Crafting a Netherite Hoe...",
+  "Polishing smooth stone...",
+  "Charging the Respawn Anchor...",
+  "Watering the Nether Warts...",
+  "Chasing Endermen away...",
+  "Cleaning up the inventory...",
+  "Smelting ancient debris...",
+  "Befriending the Allays...",
+  "Collecting dragon breath..."
+];
+
+let activeFunStatus = "";
+
+function getFunStatus(status) {
+  if (!status) return "";
+  const s = status.toLowerCase();
+  if (s.includes('downloading assets') || 
+      s.includes('downloading file') || 
+      s.includes('fetching manifest') || 
+      s.includes('preparing') || 
+      s.includes('asset')) {
+    if (!activeFunStatus) {
+      activeFunStatus = mcFunStatuses[Math.floor(Math.random() * mcFunStatuses.length)];
+    }
+    return activeFunStatus;
+  }
+  activeFunStatus = "";
+  return status;
+}
+
 // Register ALL IPC listeners ONCE at startup — NOT inside click handlers.
 // This is the fix for modpack play getting stuck: the listeners exist for both
 // regular play AND modpack play without needing to be re-registered each time.
 if (window.electronAPI) {
   window.electronAPI.onLaunchProgress((data) => {
     if (data.percent !== undefined) launchFill.style.width = `${data.percent}%`;
-    if (data.status) launchStatus.innerText = data.status;
+    if (data.status) launchStatus.innerText = getFunStatus(data.status);
   });
   window.electronAPI.onGameLaunched(() => {
     launchFill.style.width = '100%';
@@ -764,7 +956,7 @@ playBtn.addEventListener('click', () => {
       if (progress >= 100) progress = 100;
       launchFill.style.width = `${progress}%`;
       if (progress > (statusIdx + 1) * 33 && statusIdx < statuses.length - 1) {
-        statusIdx++; launchStatus.innerText = statuses[statusIdx];
+        statusIdx++; launchStatus.innerText = getFunStatus(statuses[statusIdx]);
       }
       if (progress === 100) {
         clearInterval(interval);
@@ -944,7 +1136,7 @@ async function mpRemoveItem(item, type, apiMethod) {
 document.getElementById('btn-new-modpack').addEventListener('click', () => {
   const sel = document.getElementById('new-mp-version');
   if (sel.options.length === 0 && allVersions.length > 0) {
-    allVersions.filter(v => v.type === 'release').slice(0, 50).forEach(v => {
+    allVersions.filter(v => v.type === 'release').slice(0, 30).forEach(v => {
       const o = document.createElement('option'); o.value = v.id; o.textContent = v.id; sel.appendChild(o);
     });
   }
@@ -978,9 +1170,19 @@ document.getElementById('btn-delete-modpack').addEventListener('click', () => {
 function openBrowser(mode) {
   browserMode = mode;
   const titles = { mod: 'Browse Mods', resourcepack: 'Browse Resource Packs', shader: 'Browse Shaders', modpack: 'Browse Modpacks' };
-  const placeholders = { mod: 'Search mods...', resourcepack: 'Search resource packs...', shader: 'Search shaders...' };
+  const placeholders = { mod: 'Search mods...', resourcepack: 'Search resource packs...', shader: 'Search shaders...', modpack: 'Search modpacks...' };
   document.getElementById('browser-title').innerText = titles[mode];
-  document.getElementById('mod-search').placeholder = placeholders[mode];
+  document.getElementById('mod-search').placeholder = placeholders[mode] || 'Search...';
+  
+  if (mode === 'modpack') {
+    currentProvider = 'curseforge';
+    document.querySelectorAll('.provider-pill').forEach(p => p.classList.remove('active'));
+    document.getElementById('pill-curseforge').classList.add('active');
+    document.getElementById('pill-modrinth').style.display = 'none';
+  } else {
+    document.getElementById('pill-modrinth').style.display = 'inline-block';
+  }
+
   document.getElementById('mod-browser').classList.add('active');
   document.getElementById('mod-search').value = '';
   mpBrowse('');
@@ -988,6 +1190,7 @@ function openBrowser(mode) {
 document.getElementById('btn-browse-mods').addEventListener('click', () => openBrowser('mod'));
 document.getElementById('btn-browse-rp').addEventListener('click', () => openBrowser('resourcepack'));
 document.getElementById('btn-browse-shaders').addEventListener('click', () => openBrowser('shader'));
+document.getElementById('btn-browse-modpacks').addEventListener('click', () => openBrowser('modpack'));
 document.getElementById('btn-close-browser').addEventListener('click', () => document.getElementById('mod-browser').classList.remove('active'));
 
 // Provider pill switching
@@ -1007,40 +1210,34 @@ document.getElementById('mod-search').addEventListener('input', e => {
 });
 
 async function mpBrowse(query) {
-  const mp = mpGet(); if (!mp) return;
+  const mp = mpGet();
+  if (!mp && browserMode !== 'modpack') return;
   const results = document.getElementById('mod-browser-results');
-  results.innerHTML = `<div class="mp-loading"><div class="launch-spinner" style="width:32px;height:32px;margin:0 auto 12px;"></div>Searching Modrinth...</div>`;
+  results.innerHTML = `<div class="mp-loading"><div class="launch-spinner" style="width:32px;height:32px;margin:0 auto 12px;"></div>Searching ${currentProvider === 'modrinth' ? 'Modrinth' : 'CurseForge'}...</div>`;
   try {
-    let facets;
-    if (browserMode === 'mod') {
-      // Modrinth uses 'neoforge' for NeoForge and 'quilt' for Quilt; map display names to API slugs
-      const loaderSlugMap = { vanilla: 'vanilla', forge: 'forge', neoforge: 'neoforge', fabric: 'fabric', quilt: 'quilt' };
-      const loaderSlug = loaderSlugMap[mp.loader.toLowerCase()] || mp.loader.toLowerCase();
-      // Quilt is compatible with Fabric mods; include both in the search (inner array = OR condition)
-      const loaderFacets = loaderSlug === 'quilt'
-        ? [[`categories:quilt`, `categories:fabric`]]
-        : [[`categories:${loaderSlug}`]];
-      
-      // NeoForge can also run Forge mods on 1.20.1-; add forge as fallback (inner array = OR condition)
-      const facetArr = loaderSlug === 'neoforge'
-        ? [[`categories:neoforge`, `categories:forge`], [`versions:${mp.mcVersion}`], [`project_type:mod`]]
-        : [...loaderFacets, [`versions:${mp.mcVersion}`], [`project_type:mod`]];
-      facets = encodeURIComponent(JSON.stringify(facetArr));
-    } else if (browserMode === 'resourcepack') {
-      facets = encodeURIComponent(JSON.stringify([[`versions:${mp.mcVersion}`],[`project_type:resourcepack`]]));
+    let hits = [];
+    if (currentProvider === 'modrinth') {
+      let facets;
+      if (browserMode === 'mod') facets = encodeURIComponent(JSON.stringify([[`categories:${mp.loader.toLowerCase()}`],[`versions:${mp.mcVersion}`],[`project_type:mod`]]));
+      else if (browserMode === 'resourcepack') facets = encodeURIComponent(JSON.stringify([[`versions:${mp.mcVersion}`],[`project_type:resourcepack`]]));
+      else facets = encodeURIComponent(JSON.stringify([[`project_type:shader`]]));
+      const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=20`);
+      const data = await res.json();
+      hits = (data.hits || []).map(m => ({ project_id: m.project_id, title: m.title, description: m.description, icon_url: m.icon_url, downloads: m.downloads, follows: m.follows, provider: 'modrinth' }));
     } else {
-      facets = encodeURIComponent(JSON.stringify([[`project_type:shader`]]));
+      let classId = 6;
+      if (browserMode === 'resourcepack') classId = 12;
+      else if (browserMode === 'shader') classId = 6552;
+      else if (browserMode === 'modpack') classId = 4471;
+      const gameVerStr = (mp && browserMode !== 'modpack') ? `&gameVersion=${mp.mcVersion}` : '';
+      const res = await fetch(`https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=${classId}&searchFilter=${encodeURIComponent(query)}${gameVerStr}&sortField=2&sortOrder=desc&pageSize=20`);
+      const data = await res.json();
+      hits = (data.data || []).map(m => ({ project_id: m.id.toString(), title: m.name, description: m.summary, icon_url: m.logo ? m.logo.thumbnailUrl : '', downloads: m.downloadCount, follows: 0, provider: 'curseforge' }));
     }
-    const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=20`);
-    const data = await res.json();
     results.innerHTML = '';
-    if (!data.hits || data.hits.length === 0) {
-      results.innerHTML = `<div class="mp-loading">No results found for "${query}"</div>`; return;
-    }
-    const installedIds = browserMode === 'mod' ? (mp.mods||[]).map(m=>m.modrinthId)
-      : browserMode === 'resourcepack' ? (mp.resourcepacks||[]).map(r=>r.modrinthId)
-      : (mp.shaders||[]).map(s=>s.modrinthId);
-    data.hits.forEach(mod => {
+    if (!hits.length) { results.innerHTML = `<div class="mp-loading">No results found for "${query}" | Debug: classId ${classId}, provider ${currentProvider}</div>`; return; }
+    const installedIds = browserMode === 'modpack' ? [] : (browserMode === 'mod' ? (mp.mods||[]).map(m=>m.modrinthId) : browserMode === 'resourcepack' ? (mp.resourcepacks||[]).map(r=>r.modrinthId) : (mp.shaders||[]).map(s=>s.modrinthId));
+    hits.forEach(mod => {
       const installed = installedIds.includes(mod.project_id);
       const el = document.createElement('div');
       el.className = 'mod-result-card';
@@ -1048,14 +1245,14 @@ async function mpBrowse(query) {
         ${mod.icon_url ? `<img class="mod-result-icon" src="${mod.icon_url}" onerror="this.style.display='none'" />` : `<div class="mod-result-icon mod-icon-placeholder" style="width:48px;height:48px;border-radius:10px;"></div>`}
         <div class="mod-result-info">
           <strong>${mod.title}</strong><span>${mod.description}</span>
-          <div class="mod-result-meta"><span>⬇ ${mod.downloads>=1000?(mod.downloads/1000).toFixed(0)+'K':mod.downloads}</span><span>👥 ${mod.follows}</span></div>
+          <div class="mod-result-meta"><span>⬇ ${mod.downloads>=1000?(mod.downloads/1000).toFixed(0)+'K':mod.downloads}</span></div>
         </div>
-        <button class="add-mod-btn ${installed?'installed':''}" ${installed?'disabled':''}>${installed?'✓ Added':'+ Add'}</button>`;
+        <button class="add-mod-btn ${installed?'installed':''}" ${installed?'disabled':''}>${installed?'✓ Added':(browserMode==='modpack'?'+ Import':'+ Add')}</button>`;
       if (!installed) el.querySelector('.add-mod-btn').addEventListener('click', () => mpAddItem(mod, el.querySelector('.add-mod-btn')));
       results.appendChild(el);
     });
   } catch(e) {
-    results.innerHTML = `<div class="mp-loading">Failed to fetch. Check your internet.</div>`;
+    results.innerHTML = `<div class="mp-loading" style="color:red;font-size:12px;">Error: ${e.message} <br/> ${e.stack}</div>`;
   }
 }
 
@@ -1086,10 +1283,14 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       const importRes = await window.electronAPI.downloadCurseforgeModpack({ downloadUrl: dlUrl });
       if (!importRes.success) throw new Error(importRes.error || 'Import failed');
       const manifest = importRes.manifest;
-      const loaderStr = (manifest.minecraft?.modLoaders?.[0]?.id || '').toLowerCase();
+      const rawLoaderId = manifest.minecraft?.modLoaders?.[0]?.id || '';
+      const loaderStr = rawLoaderId.toLowerCase();
       const loader = loaderStr.includes('fabric') ? 'Fabric' : loaderStr.includes('forge') ? 'Forge' : loaderStr.includes('neoforge') ? 'NeoForge' : 'Vanilla';
+      // Extract pinned version: 'forge-14.23.5.2860' → '14.23.5.2860', 'fabric-0.15.11' → '0.15.11'
+      const loaderVerMatch = rawLoaderId.match(/^[a-z]+-(.+)$/i);
+      const loaderVersion = loaderVerMatch ? loaderVerMatch[1] : '';
       const mcVersion = manifest.minecraft?.version || '1.20.4';
-      const newMp = { id: importRes.modpackId, name: manifest.name || modName, mcVersion, loader, mods: [], resourcepacks: [], shaders: [] };
+      const newMp = { id: importRes.modpackId, name: manifest.name || modName, iconUrl: mod.icon_url || '', mcVersion, loader, loaderVersion, mods: [], resourcepacks: [], shaders: [] };
       const mpData = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
       mpData.push(newMp);
       localStorage.setItem('idk_modpacks', JSON.stringify(mpData));
@@ -1099,10 +1300,14 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       const manifestFiles = manifest.files || [];
       for (let i = 0; i < manifestFiles.length; i++) {
         const f = manifestFiles[i];
-        launchStatus.innerText = `Downloading mod ${i+1} / ${manifestFiles.length}...`;
+        launchStatus.innerText = `Downloading file ${i+1} / ${manifestFiles.length}...`;
         launchFill.style.width = `${5 + (i / manifestFiles.length) * 90}`;
         try {
-          const fRes = await fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}/files/${f.fileID}`);
+          // Fetch file metadata + project category in parallel
+          const [fRes, projRes] = await Promise.all([
+            fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}/files/${f.fileID}`),
+            fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}`)
+          ]);
           const fData = await fRes.json();
           if (!fData.data) continue;
           const mf = fData.data;
@@ -1111,10 +1316,39 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
             const mp1 = Math.floor(mf.id/1000), mp2 = (mf.id%1000).toString().padStart(3,'0');
             mUrl = `https://edge.forgecdn.net/files/${mp1}/${mp2}/${encodeURIComponent(mf.fileName)}`;
           }
-          newMp.mods.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.jar$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
-          await window.electronAPI.installMod({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
-        } catch(me) { console.warn('Failed mod', f.projectID, me); }
+          // Determine type from classId: 6=Mod, 12=ResourcePack, 6552=Shader
+          let classId = 6;
+          try { const pj = await projRes.json(); classId = pj.data?.classId ?? 6; } catch(_) {}
+
+          if (classId === 12) {
+            // Resource Pack
+            newMp.resourcepacks.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.(zip|jar)$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
+            await window.electronAPI.installResourcepack({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
+          } else if (classId === 6552) {
+            // Shader Pack
+            newMp.shaders.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.(zip|jar)$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
+            await window.electronAPI.installShader({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
+          } else {
+            // Default: Mod
+            newMp.mods.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.jar$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
+            await window.electronAPI.installMod({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
+          }
+        } catch(me) { console.warn('Failed file', f.projectID, me); }
       }
+      // --- Catalog resource packs / shaders / extra mods from overrides -----
+      launchStatus.innerText = 'Cataloging overrides...';
+      (importRes.resourcepackFiles || []).forEach(rp => {
+        newMp.resourcepacks.push({ modrinthId: 'override-' + rp.filename, name: rp.name, version: 'bundled', filename: rp.filename, iconUrl: '' });
+      });
+      (importRes.shaderpackFiles || []).forEach(sp => {
+        newMp.shaders.push({ modrinthId: 'override-' + sp.filename, name: sp.name, version: 'bundled', filename: sp.filename, iconUrl: '' });
+      });
+      (importRes.extraModFiles || []).forEach(em => {
+        if (!newMp.mods.find(m => m.filename === em.filename)) {
+          newMp.mods.push({ modrinthId: 'override-' + em.filename, name: em.name, version: 'bundled', filename: em.filename, downloadUrl: '', iconUrl: '' });
+        }
+      });
+      // -----------------------------------------------------------------------
       const mpData2 = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
       const idx = mpData2.findIndex(m => m.id === newMp.id);
       if (idx >= 0) mpData2[idx] = newMp; else mpData2.push(newMp);
@@ -1145,146 +1379,26 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
         return;
       }
-
-      // --- Recursive dependency resolver ---
-      // visited: shared Set to prevent installing the same dep twice
-      const visitedDeps = passedMp ? (mpAddItem._visited || new Set()) : new Set();
-      mpAddItem._visited = visitedDeps;
-      const autoInstalledLibs = [];
-
-      /**
-       * Recursively resolves & installs a mod and all its required dependencies.
-       * Returns the display name of the installed mod, or null if skipped.
-       */
-      async function resolveModWithDeps(pid, title, iconUrl, depth) {
-        if (visitedDeps.has(pid)) return null; // already queued/installed
-        visitedDeps.add(pid);
-
-        // Already installed in this modpack?
-        if (mp.mods.find(m => m.modrinthId === pid)) return null;
-
-        // Build loader slug list to try (in order of preference)
-        const rawLoader = mp.loader.toLowerCase();
-        const loaderSlugsToTry = rawLoader === 'neoforge'
-          ? ['neoforge', 'forge']       // NeoForge is mostly Forge-compatible
-          : rawLoader === 'quilt'
-          ? ['quilt', 'fabric']          // Quilt runs Fabric mods
-          : [rawLoader];
-
-        // Fetch compatible versions — try each loader slug until we find a match
-        let verData = [];
-        for (const slug of loaderSlugsToTry) {
-          const r = await fetch(
-            `https://api.modrinth.com/v2/project/${pid}/version` +
-            `?loaders=${encodeURIComponent(JSON.stringify([slug]))}` +
-            `&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`
-          );
-          verData = await r.json();
-          if (Array.isArray(verData) && verData.length > 0) break;
-        }
-
-        // If strict match fails, try without loader filter (some libs are loader-agnostic)
-        if (!Array.isArray(verData) || verData.length === 0) {
-          const r = await fetch(
-            `https://api.modrinth.com/v2/project/${pid}/version` +
-            `?game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`
-          );
-          verData = await r.json();
-        }
-
-        if (!Array.isArray(verData) || verData.length === 0) {
-          console.warn(`[DepResolver] No compatible version found for ${pid} (${title})`);
-          return null;
-        }
-
-        const vObj = verData[0];
-        const fObj = vObj.files.find(f => f.primary) || vObj.files[0];
-        const displayName = title && title !== 'Dependency'
-          ? title
-          : (vObj.name || fObj.filename.replace(/[-_][0-9].*\.jar$/, ''));
-
-        const depEntry = {
-          modrinthId: pid,
-          name: displayName,
-          version: vObj.version_number,
-          filename: fObj.filename,
-          downloadUrl: fObj.url,
-          iconUrl: iconUrl || ''
-        };
-        mp.mods.push(depEntry);
-        mpSave();
-        if (window.electronAPI) {
-          await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: fObj.url, filename: fObj.filename });
-        }
-
-        // Recurse into this dep's own required dependencies
-        if (vObj.dependencies) {
-          for (const child of vObj.dependencies) {
-            if (child.dependency_type === 'required' && child.project_id) {
-              await resolveModWithDeps(child.project_id, 'Dependency', '', depth + 1);
-            }
-          }
-        }
-
-        return displayName;
+      
+      const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?loaders=${encodeURIComponent(JSON.stringify([mp.loader.toLowerCase()]))}&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
+      versions = await res.json();
+      if (!versions.length) { 
+        if(btn) { showWarningToast(`${modTitle} has no version for MC ${mp.mcVersion} + ${mp.loader}`); btn.textContent='+ Add'; btn.disabled=false; }
+        return; 
       }
-
-      // --- Install the main mod ---
-      const mainRes = await fetch(
-        `https://api.modrinth.com/v2/project/${projectId}/version` +
-        `?loaders=${encodeURIComponent(JSON.stringify([mp.loader.toLowerCase()]))}` +
-        `&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`
-      );
-      versions = await mainRes.json();
-
-      // Fallback: try compatible loaders for NeoForge / Quilt
-      if (!Array.isArray(versions) || versions.length === 0) {
-        const rawL = mp.loader.toLowerCase();
-        const fallbacks = rawL === 'neoforge' ? ['forge'] : rawL === 'quilt' ? ['fabric'] : [];
-        for (const slug of fallbacks) {
-          const r = await fetch(
-            `https://api.modrinth.com/v2/project/${projectId}/version` +
-            `?loaders=${encodeURIComponent(JSON.stringify([slug]))}` +
-            `&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`
-          );
-          versions = await r.json();
-          if (Array.isArray(versions) && versions.length > 0) break;
-        }
-      }
-
-      if (!Array.isArray(versions) || !versions.length) {
-        if (btn) { showWarningToast(`${modTitle} has no compatible version for MC ${mp.mcVersion} + ${mp.loader}`); btn.textContent = '+ Add'; btn.disabled = false; }
-        mpAddItem._visited = null;
-        return;
-      }
-
       const versionObj = versions[0];
-      fileObj = versionObj.files.find(f => f.primary) || versionObj.files[0];
-      entry = { modrinthId: projectId, name: modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
-
-      // Mark main mod as visited before recursing into deps
-      visitedDeps.add(projectId);
-      mp.mods.push(entry); mpSave();
-      if (btn) btn.textContent = '⬇ Installing...';
+      fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
+      entry = { modrinthId: projectId, name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
+      mp.mods.push(entry); mpSave(); 
+      if (btn) btn.textContent='⬇ Installing...';
       if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
-
-      // --- Resolve all required dependencies recursively ---
+      
       if (versionObj.dependencies) {
         for (const dep of versionObj.dependencies) {
           if (dep.dependency_type === 'required' && dep.project_id) {
-            if (btn) btn.textContent = '📦 Resolving deps...';
-            const libName = await resolveModWithDeps(dep.project_id, 'Dependency', '', 0);
-            if (libName) autoInstalledLibs.push(libName);
+            await mpAddItem(dep.project_id, null, true, mp);
           }
         }
-      }
-
-      // Clean up shared visited set after top-level call
-      if (!passedMp) mpAddItem._visited = null;
-
-      // Notify user about auto-installed libraries
-      if (autoInstalledLibs.length > 0) {
-        showWarningToast(`📦 Auto-installed ${autoInstalledLibs.length} required librar${autoInstalledLibs.length === 1 ? 'y' : 'ies'}: ${autoInstalledLibs.join(', ')}`);
       }
     } else if (browserMode === 'resourcepack') {
       const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
@@ -1329,7 +1443,7 @@ document.getElementById('btn-play-modpack').addEventListener('click', () => {
   const authData = authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
 
   if (window.electronAPI) {
-    window.electronAPI.launchModpack({ username: currentUser, modpackId: mp.id, mcVersion: mp.mcVersion, loader: mp.loader, javaPath, maxMemory: `${maxMemoryGB}G`, authData });
+    window.electronAPI.launchModpack({ username: currentUser, modpackId: mp.id, mcVersion: mp.mcVersion, loader: mp.loader, loaderVersion: mp.loaderVersion || '', javaPath, maxMemory: `${maxMemoryGB}G`, authData });
   }
 });
 
@@ -1398,7 +1512,7 @@ async function fetchTrendingModpacks() {
       grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
         <div class="trending-mp-thumb" style="background-image:url('${thumb}');background-size:cover;background-position:center;"></div>
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
-          <div class="trending-mp-meta"><span>&#11015; ${dl}</span>${loader?'<span class="trending-mp-tag">'+loader+'</span>':''}</div>
+          <div class="trending-mp-meta"><span>⬇ ${dl}</span>${loader?'<span class="trending-mp-tag">'+loader+'</span>':''}</div>
         </div></div>`;
     });
   } else {
@@ -1407,12 +1521,106 @@ async function fetchTrendingModpacks() {
       grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
         <div class="trending-mp-thumb" style="background-image:url('${mp.thumb}');background-size:cover;background-position:center;"></div>
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
-          <div class="trending-mp-meta"><span>&#11015; ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>
+          <div class="trending-mp-meta"><span>⬇ ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>
         </div></div>`;
     });
+  }
+}
+
+// Check for Updates
+async function initUpdateChecker() {
+  if (window.electronAPI && window.electronAPI.checkForUpdates) {
+    try {
+      const res = await window.electronAPI.checkForUpdates();
+      if (res && res.updateAvailable) {
+        const modal = document.getElementById('update-modal');
+        const verInfo = document.getElementById('update-version-info');
+        const notesContainer = document.getElementById('update-notes');
+        
+        verInfo.textContent = `Version v${res.latestVersion} is now available (you have v${res.currentVersion}).`;
+        
+        // Escape HTML to prevent XSS and convert markdown elements to stylized HTML
+        const htmlNotes = res.releaseNotes
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\n/g, '<br>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>')
+          .replace(/## (.*?)(<br>|$)/g, '<h4 style="margin:10px 0 5px;color:white;font-family:var(--font-title);">$1</h4>')
+          .replace(/- (.*?)(<br>|$)/g, '<div style="margin-left:8px;display:flex;gap:6px;margin-bottom:4px;"><span style="color:#60a5fa;">•</span><span>$1</span></div>');
+          
+        notesContainer.innerHTML = htmlNotes || '<p style="color:var(--text-muted);">No release notes provided.</p>';
+        modal.classList.add('active');
+        
+        document.getElementById('btn-download-update').onclick = () => {
+          window.electronAPI.openExternal(res.releaseUrl);
+          modal.classList.remove('active');
+        };
+        
+        document.getElementById('btn-ignore-update').onclick = () => {
+          modal.classList.remove('active');
+        };
+      }
+    } catch(e) {
+      console.warn('Update check failed:', e);
+    }
   }
 }
 
 // Initialize on load
 fetchMojangNews();
 fetchTrendingModpacks();
+initUpdateChecker();
+
+// Seamless tab transitions helper
+document.querySelectorAll('.nav-tab[data-target]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.target;
+    if (target === 'main') {
+      const closeMods = document.getElementById('btn-close-mods');
+      const closeSettings = document.getElementById('btn-close-settings');
+      if (document.getElementById('view-mods').classList.contains('active') && closeMods) closeMods.click();
+      else if (document.getElementById('view-settings').classList.contains('active') && closeSettings) closeSettings.click();
+    } else if (target === 'mods') {
+      const openMods = document.getElementById('btn-open-mods');
+      const closeSettings = document.getElementById('btn-close-settings');
+      if (document.getElementById('view-settings').classList.contains('active') && closeSettings) {
+        closeSettings.click();
+        setTimeout(() => { if (openMods) openMods.click(); }, 50);
+      } else if (openMods) {
+        openMods.click();
+      }
+    } else if (target === 'settings') {
+      const openSettings = document.getElementById('btn-open-settings');
+      const closeMods = document.getElementById('btn-close-mods');
+      if (document.getElementById('view-mods').classList.contains('active') && closeMods) {
+        closeMods.click();
+        setTimeout(() => { if (openSettings) openSettings.click(); }, 50);
+      } else if (openSettings) {
+        openSettings.click();
+      }
+    }
+  });
+});
+
+// ==========================================
+// Electron Click-Through & Focus Healer
+// ==========================================
+// Instantly restores input focus and typing capability when switching back to the app,
+// bypassing the native Chromium click-through activation limits on frameless windows.
+window.addEventListener('focus', () => {
+  const hoveredInput = document.querySelector('input:hover, textarea:hover');
+  if (hoveredInput) {
+    hoveredInput.focus();
+  }
+});
+
+document.addEventListener('pointerdown', (e) => {
+  const target = e.target;
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+    target.focus();
+  }
+}, true);
+
+

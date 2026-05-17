@@ -218,8 +218,21 @@ ipcMain.handle('download-curseforge-modpack', async (event, { downloadUrl }) => 
     
     fs.rmSync(tempExt, { recursive: true, force: true });
     fs.unlinkSync(tempZip);
-    
-    return { success: true, manifest, modpackId };
+
+    // Scan profile for resourcepacks and shaderpacks placed by overrides
+    const scanDir = (subdir) => {
+      const dir = path.join(profilePath, subdir);
+      if (!fs.existsSync(dir)) return [];
+      return fs.readdirSync(dir)
+        .filter(f => fs.statSync(path.join(dir, f)).isFile())
+        .map(f => ({ filename: f, name: f.replace(/\.(zip|jar)$/i, '') }));
+    };
+
+    const resourcepackFiles = scanDir('resourcepacks');
+    const shaderpackFiles   = scanDir('shaderpacks');
+    const extraModFiles     = scanDir('mods'); // mods bundled in overrides (not in manifest)
+
+    return { success: true, manifest, modpackId, resourcepackFiles, shaderpackFiles, extraModFiles };
   } catch (e) {
     return { success: false, error: e.message };
   }
@@ -249,8 +262,78 @@ ipcMain.handle('elyby-authenticate', async (event, { username, password, clientT
   });
 });
 
+// Fetch Ely.by session profile (skin URL) via Node.js to bypass browser CORS
+ipcMain.handle('fetch-elyby-profile', async (event, username) => {
+  return new Promise((resolve) => {
+    const url = `https://skinsystem.ely.by/profile/${username}?unsigned=false`;
+    console.log('[Avatar IPC] Fetching skinsystem:', url);
+    https.get(url, { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        console.log('[Avatar IPC] Status:', res.statusCode, '| Body:', data.slice(0, 300));
+        try { resolve({ ok: res.statusCode === 200, data: JSON.parse(data) }); }
+        catch (e) { resolve({ ok: false, data: null }); }
+      });
+    }).on('error', (e) => {
+      console.log('[Avatar IPC] Network error:', e.message);
+      resolve({ ok: false, data: null });
+    });
+  });
+});
+
+// Auto Update Check (query latest GitHub release)
+ipcMain.handle('check-for-updates', async () => {
+  return new Promise((resolve) => {
+    const currentVersion = app.getVersion();
+    const repo = 'Jeflacc/idk-launcher-landing';
+    const url = `https://api.github.com/repos/${repo}/releases/latest`;
+    
+    https.get(url, { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          if (res.statusCode !== 200) {
+            return resolve({ updateAvailable: false, error: 'Status ' + res.statusCode });
+          }
+          const json = JSON.parse(data);
+          const latestVersion = json.tag_name.replace(/^v/, '');
+          const cleanCurrent = currentVersion.replace(/^v/, '');
+          
+          const updateAvailable = isNewerVersion(cleanCurrent, latestVersion);
+          
+          resolve({
+            updateAvailable,
+            currentVersion: cleanCurrent,
+            latestVersion,
+            releaseUrl: json.html_url,
+            releaseNotes: json.body || ''
+          });
+        } catch (e) {
+          resolve({ updateAvailable: false, error: e.message });
+        }
+      });
+    }).on('error', (e) => {
+      resolve({ updateAvailable: false, error: e.message });
+    });
+  });
+});
+
+function isNewerVersion(current, latest) {
+  const cParts = current.split('.').map(Number);
+  const lParts = latest.split('.').map(Number);
+  for (let i = 0; i < Math.max(cParts.length, lParts.length); i++) {
+    const cNum = cParts[i] || 0;
+    const lNum = lParts[i] || 0;
+    if (lNum > cNum) return true;
+    if (lNum < cNum) return false;
+  }
+  return false;
+}
+
 ipcMain.on('launch-modpack', async (event, args) => {
-  const { username, modpackId, mcVersion, loader, javaPath, maxMemory, authData } = args;
+  const { username, modpackId, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData } = args;
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
   const profilePath = path.join(rootPath, 'profiles', `modpack-${modpackId}`);
   if (!fs.existsSync(profilePath)) fs.mkdirSync(profilePath, { recursive: true });
@@ -311,7 +394,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
   if (loaderLC === 'fabric') {
     try {
       event.sender.send('launch-progress', { status: 'Setting up Fabric...', percent: 10 });
-      const fabricVersion = await installFabric(mcVersion, rootPath);
+      const fabricVersion = await installFabric(mcVersion, rootPath, loaderVersion || null);
       opts.version.custom = fabricVersion;
     } catch (err) {
       event.sender.send('launch-error', 'Failed to install Fabric: ' + err);
@@ -320,7 +403,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
   } else if (loaderLC === 'forge') {
     try {
       event.sender.send('launch-progress', { status: 'Installing Forge (this may take a moment)...', percent: 10 });
-      const forgeVersionId = await installForge(mcVersion, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
+      const forgeVersionId = await installForge(mcVersion, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p), loaderVersion || null);
       opts.version.custom = forgeVersionId;
     } catch (err) {
       event.sender.send('launch-error', 'Failed to install Forge: ' + err.message);
@@ -547,7 +630,32 @@ async function ensureAuthlibInjector(rootPath) {
   const libPath = path.join(rootPath, 'authlib-injector.jar');
   if (fs.existsSync(libPath)) return libPath;
   
+  if (!fs.existsSync(rootPath)) {
+    fs.mkdirSync(rootPath, { recursive: true });
+  }
+
+  // Try direct download URLs first to bypass GitHub API rate-limiting completely!
+  const directUrls = [
+    'https://github.com/yushijinhun/authlib-injector/releases/download/v1.2.7/authlib-injector-1.2.7.jar',
+    'https://github.com/yushijinhun/authlib-injector/releases/download/v1.2.5/authlib-injector-1.2.5.jar'
+  ];
+
+  for (const url of directUrls) {
+    try {
+      console.log(`[Injector] Trying direct download: ${url}`);
+      await new Promise((resolve, reject) => {
+        downloadFile(url, libPath, resolve, reject);
+      });
+      console.log(`[Injector] Direct download successful: ${url}`);
+      return libPath;
+    } catch (err) {
+      console.warn(`[Injector] Direct download failed for ${url}:`, err.message);
+    }
+  }
+
+  // Fallback to GitHub API if direct links fail
   return new Promise((resolve, reject) => {
+    console.log('[Injector] Falling back to GitHub API...');
     https.get('https://api.github.com/repos/yushijinhun/authlib-injector/releases/latest', { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
       let data = '';
       res.on('data', c => data += c);
@@ -727,22 +835,28 @@ async function ensureVanillaClient(mcVersion, rootPath, progressCallback) {
 // ============================================================
 // === FORGE INSTALLER =========================================
 // ============================================================
-async function installForge(mcVersion, rootPath, javaExe, progressCallback) {
+async function installForge(mcVersion, rootPath, javaExe, progressCallback, pinnedVersion = null) {
   const { spawn } = require('child_process');
 
-  // 1. Use promotions_slim.json — the authoritative source for recommended/latest Forge builds
-  const promoData = await new Promise((resolve, reject) => {
-    https.get('https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json',
-      { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
-      let d = '';
-      res.on('data', c => d += c);
-      res.on('end', () => { try { resolve(JSON.parse(d)); } catch(e) { reject(e); } });
-    }).on('error', reject);
-  });
-
-  const promos = promoData.promos || {};
-  const forgeVersion = promos[`${mcVersion}-recommended`] || promos[`${mcVersion}-latest`];
-  if (!forgeVersion) throw new Error(`No Forge builds found for MC ${mcVersion}. This version may not have a Forge release.`);
+  let forgeVersion;
+  if (pinnedVersion) {
+    // Use the exact version from the modpack manifest (e.g. '14.23.5.2860')
+    forgeVersion = pinnedVersion;
+    console.log(`[Forge] Using pinned version: ${forgeVersion}`);
+  } else {
+    // Fall back to promotions_slim.json for the recommended/latest build
+    const promoData = await new Promise((resolve, reject) => {
+      https.get('https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json',
+        { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
+        let d = '';
+        res.on('data', c => d += c);
+        res.on('end', () => { try { resolve(JSON.parse(d)); } catch(e) { reject(e); } });
+      }).on('error', reject);
+    });
+    const promos = promoData.promos || {};
+    forgeVersion = promos[`${mcVersion}-recommended`] || promos[`${mcVersion}-latest`];
+    if (!forgeVersion) throw new Error(`No Forge builds found for MC ${mcVersion}. This version may not have a Forge release.`);
+  }
 
   const forgeFullId = `${mcVersion}-${forgeVersion}`;
   const versionId   = `${mcVersion}-forge-${forgeVersion}`;
@@ -988,7 +1102,7 @@ function installQuilt(version, rootPath) {
   });
 }
 
-function installFabric(version, rootPath) {
+function installFabric(version, rootPath, pinnedLoaderVersion = null) {
   return new Promise((resolve, reject) => {
     https.get(`https://meta.fabricmc.net/v2/versions/loader/${version}`, (res) => {
       let data = '';
@@ -996,8 +1110,9 @@ function installFabric(version, rootPath) {
       res.on('end', () => {
         try {
           const json = JSON.parse(data);
-          if(json.length === 0) return reject("Fabric not available for this version.");
-          const loaderVersion = json[0].loader.version;
+          if(json.length === 0) return reject('Fabric not available for this version.');
+          // Use pinned version from manifest, or fall back to latest
+          const loaderVersion = pinnedLoaderVersion || json[0].loader.version;
           const jarName = `fabric-loader-${loaderVersion}-${version}`;
           
           const versionsPath = path.join(rootPath, 'versions', jarName);
@@ -1010,7 +1125,7 @@ function installFabric(version, rootPath) {
               if (fs.statSync(dummyJarPath).size === 0) {
                 fs.unlinkSync(dummyJarPath);
               }
-            } catch (e) { console.error("Failed to delete dummy jar", e); }
+            } catch (e) { console.error('Failed to delete dummy jar', e); }
           }
 
           // Fetch only the JSON instead of the full ZIP, bypassing the dummy jar completely!

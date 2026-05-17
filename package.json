@@ -1,6 +1,6 @@
 {
   "name": "idk-launcher",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "main": "electron-main.cjs",
@@ -10,7 +10,11 @@
     "preview": "vite preview",
     "electron": "wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
     "dev:electron": "concurrently \"npm run dev\" \"npm run electron\"",
-    "dist": "npm run build && electron-builder --win"
+    "dist": "npm run build && electron-builder --win",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "dist:all": "npm run build && electron-builder --win --mac --linux"
   },
   "build": {
     "appId": "com.vathir.idklauncher",
@@ -30,6 +34,25 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
+    },
+    "mac": {
+      "icon": "logo.png",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "icon": "logo.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Jeflacc",
+      "repo": "idk-launcher-landing"
     },
     "files": [
       "dist/**/*",

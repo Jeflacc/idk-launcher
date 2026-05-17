@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openMinecraftFolder: () => ipcRenderer.send('open-minecraft-folder'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
+  fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
 
   // Mod / resourcepack / shader management
   installMod:          (data) => ipcRenderer.invoke('install-mod',         data),

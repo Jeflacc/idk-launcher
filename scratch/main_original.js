@@ -113,6 +113,12 @@ document.querySelector('#app').innerHTML = `
                 <div class="custom-option" data-loader="Fabric">
                   <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="15"></line></svg> Fabric</span>
                 </div>
+                <div class="custom-option" data-loader="NeoForge">
+                  <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> NeoForge</span>
+                </div>
+                <div class="custom-option" data-loader="Quilt">
+                  <span style="display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Quilt</span>
+                </div>
               </div>
             </div>
           </div>
@@ -297,7 +303,7 @@ document.querySelector('#app').innerHTML = `
         <input class="clean-input" id="new-mp-name" placeholder="Modpack name..." style="text-align:left;" />
         <div style="display:flex;gap:12px;">
           <select class="clean-select" id="new-mp-version"></select>
-          <select class="clean-select" id="new-mp-loader"><option value="Fabric">Fabric</option><option value="Vanilla">Vanilla</option></select>
+          <select class="clean-select" id="new-mp-loader"><option value="Fabric">Fabric</option><option value="Forge">Forge</option><option value="NeoForge">NeoForge</option><option value="Quilt">Quilt</option><option value="Vanilla">Vanilla</option></select>
         </div>
         <div style="display:flex;gap:10px;">
           <button class="submit-btn" id="btn-confirm-create-mp" style="flex:1;">Create</button>
