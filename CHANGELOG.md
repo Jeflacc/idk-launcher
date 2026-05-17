@@ -2,48 +2,42 @@
 
 ## 🎮 IDK Launcher v1.2.0-preview.26w20c Changelog
 
-Welcome to the Minecraft snapshot **v1.2.0-preview.26w20c** unstable preview revision! This update introduces a full-fledged Discord Rich Presence (DRP) integration, enabling automated game invite cards, customizable branding, real-time activity tracking, and dynamic metadata syncing for mod loaders and modpacks.
+Halo semuanya! Versi preview **v1.2.0-preview.26w20c** kini hadir dengan fitur super seru yang paling ditunggu-tunggu: **Integrasi Discord Rich Presence!** Sekarang, teman-teman Anda di Discord bisa melihat aktivitas game Anda secara langsung dengan tampilan yang sangat premium.
 
 ---
 
-### 🚀 New Features
+### 🚀 Fitur Baru & Keren
 
-* **👾 Dynamic Discord Rich Presence (DRP) System**
-  - Fully integrated the official `discord-rpc` client-side API to communicate directly with local Discord desktop clients.
-  - Automatically transitions between states: **Idle in Launcher**, **Launching game/modpack**, and **Active Playtime** with a counting live-timer showing play duration.
+* **👾 Status Bermain di Discord (Discord Rich Presence)**
+  - Status profil Discord Anda akan otomatis berubah mengikuti apa yang sedang Anda lakukan di launcher: **Idle di Launcher**, **Sedang Menyiapkan Game**, atau **Sedang Asik Bermain**.
+  - Dilengkapi penghitung waktu bermain (*playtime timer*) agar Anda tahu sudah berapa lama Anda berpetualang di Minecraft.
 
-* **📬 Native Game Invite Cards & "Join" Buttons (Multiplayer integration)**
-  - Activated the `instance: true` protocol to support native Discord multiplayer lobby sharing.
-  - Generates secure, dynamic `partyId` groups and `joinSecret` session keys uniquely matched to active player usernames.
-  - Enables players to click `+` in Discord text channels to broadcast beautiful, interactive game invitations complete with a **Join** button and player count slots (e.g., `1 of 10` slots).
+* **📬 Kirim Undangan Bermain & Tombol "Join" Langsung di Chat Discord**
+  - Sekarang Anda bisa pamer status bermain di chat Discord! Cukup klik tombol `+` di Discord Anda untuk membagikan kartu undangan bermain yang keren.
+  - Kartu undangan ini lengkap dengan tombol putih **"Join"** dan info sisa slot bermain (*contoh: 1 dari 10 pemain*).
 
-* **👑 Official "Indkingdom Launcher" Branding & Custom Assets**
-  - Standardized connection via Client ID `1505559083929964554` to establish a dedicated, localized Discord presence card.
-  - Configured the large image asset key to target the custom-uploaded `'icon'` asset, rendering your beautiful custom launcher cherry blossom landscape art as the invite card's header banner.
-  - Updated all state metadata tooltips, text overlays, and labels to proudly display the official **Indkingdom Launcher** brand.
+* **👑 Nama & Logo Kustom "Indkingdom Launcher"**
+  - Menggunakan logo utama resmi launcher Anda sendiri untuk mempercantik kartu undangan dan profil Discord.
+  - Semua nama, status, dan teks detail di profil Discord Anda sekarang tertulis rapi sebagai **Indkingdom Launcher**.
 
-* **🌀 Dynamic Modpack & Mod Loader Metadata Syncing**
-  - Synchronized loader properties (`smallImageKey`) to dynamically map selected frameworks (e.g., `'fabric'`, `'forge'`, `'neoforge'`, `'quilt'`, `'vanilla'`) with high-fidelity small icons.
-  - Hooked into renderer click handlers (`launchModpack`) to dynamically sync the active modpack name (e.g., showing *Playing Modpack: [Name]* on Discord profile status feeds).
+* **🌀 Deteksi Modpack & Mod Loader Otomatis**
+  - Discord Anda akan otomatis menampilkan ikon kecil loader yang sedang Anda pakai seperti **Fabric**, **Forge**, **NeoForge**, **Quilt**, atau **Vanilla**.
+  - Jika Anda memainkan Modpack kustom, judul Modpack Anda juga akan muncul di status profil Discord!
 
 ---
 
-### 🔧 Robust Performance & Exception Handling
+### 🔧 Perbaikan & Peningkatan Kenyamanan
 
-* **🩹 Auto-Reconnect & Self-Healing Connection Loop**
-  - Implemented an elegant, non-blocking asynchronous reconnection routine that runs in the background. If Discord is launched *after* the launcher or is closed, the connection automatically heals every 15 seconds without freezing the UI.
-  - Registered listener hooks for `'join'` and `'joinRequest'` events in the background, keeping the IPC socket robust and error-free when users test clicking the join button.
-
-* **🧼 Automatic Lifecycle Cleanup**
-  - Hooked into the Minecraft process `close` and launch failure loops to instantly reset the active presence state back to "Idle in Launcher" (Main Menu) and release playtime counters.
+* **🩹 Anti-Lag & Auto-Connect Tangguh**
+  - Launcher sekarang sangat pintar! Jika Anda membuka Discord setelah launcher menyala, status Anda akan otomatis terhubung kembali di latar belakang tanpa membuat launcher Anda macet (*freeze*).
+  - Status bermain akan langsung terhapus dan kembali menjadi "Idle" secara otomatis saat Anda menutup game Minecraft.
 
 ---
 
-### 📦 Build Specifications
-* **Version:** `1.2.0-preview.26w20c` (Minecraft Snapshot Style)
-* **Release Channel:** Preview / Unstable Release
-* **Platform:** Windows x64 NSIS Standalone Installer, macOS DMG/ZIP, Linux AppImage/Debian.
-* **Build Signature:** Compiled and packaged with `electron-builder` utilizing automated Vite frontend builds.
+### 📦 Informasi Build
+* **Versi:** `1.2.0-preview.26w20c`
+* **Status:** Preview / Unstable Release
+* **Platform:** Windows, macOS, Linux
 
 ---
 
