@@ -192,7 +192,8 @@ document.querySelector('#app').innerHTML = `
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <!-- Minecraft-style sword icon for Time Played -->
+              <img src="/playtime.png" alt="Time Played" style="width:28px;height:28px;image-rendering:pixelated;" />
             </div>
             <div class="stat-info">
               <h4>Time Played</h4>
@@ -467,7 +468,13 @@ document.querySelector('#app').innerHTML = `
         <!-- Share LAN World Card -->
         <div class="friends-share-card" id="friends-share-card">
           <h4>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <!-- Minecraft-style signal/antenna icon for LAN hosting -->
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+              <line x1="12" y1="20" x2="12.01" y2="20"></line>
+            </svg>
             Host LAN World
           </h4>
           <p id="friends-share-instructions">Open your Minecraft singleplayer world, click "Open to LAN", then enter the port below to invite your friends!</p>
@@ -507,7 +514,13 @@ document.querySelector('#app').innerHTML = `
           <div class="friends-add-row">
             <input type="text" class="clean-input" id="friends-add-username" placeholder="Friend's username..." />
             <button class="friends-add-btn" id="btn-friends-add" title="Send Friend Request">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+              <!-- Minecraft-style add player icon -->
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+                <line x1="19" y1="8" x2="19" y2="14"></line>
+                <line x1="22" y1="11" x2="16" y2="11"></line>
+              </svg>
             </button>
           </div>
         </div>
@@ -1465,15 +1478,121 @@ modpacks = modpacks.filter(mp => {
   return n !== 'default modpack' && n !== 'modpack' && n !== 'new modpack';
 });
 modpacks = modpacks.map(mp => ({ mods: [], resourcepacks: [], shaders: [], ...mp }));
+
+// Fix IDs that were incorrectly stored with the 'modpack-' prefix
+// The id should be the raw part (e.g. 'mp9qv96i3i3uqistkjd'), not 'modpack-mp9qv96...'
+modpacks = modpacks.map(mp => ({
+  ...mp,
+  id: mp.id.startsWith('modpack-') ? mp.id.replace(/^modpack-/, '') : mp.id
+}));
+
+// Remove any entries whose id still contains 'modpack-' after stripping (double-nested duplicates)
+modpacks = modpacks.filter(mp => !mp.id.startsWith('modpack-'));
+
 // Save immediately if we filtered anything out to prevent it from coming back
 if (modpacks.length !== originalCount) {
   localStorage.setItem('idk_modpacks', JSON.stringify(modpacks));
 }
+
+// Scan profiles directory on disk and merge with localStorage
+async function loadProfilesFromDisk() {
+  console.log('[Modpacks] loadProfilesFromDisk called');
+  if (!window.electronAPI?.scanProfiles) {
+    console.log('[Modpacks] scanProfiles API not available');
+    return;
+  }
+  
+  try {
+    console.log('[Modpacks] Calling scanProfiles...');
+    const result = await window.electronAPI.scanProfiles();
+    console.log('[Modpacks] scanProfiles result:', result);
+    if (result.success && result.profiles.length > 0) {
+      // Merge profiles from disk with localStorage
+      const diskProfiles = result.profiles;
+      
+      // Create a map of existing modpacks by ID for quick lookup
+      const existingMap = new Map(modpacks.map(mp => [mp.id, mp]));
+      
+      // Add new profiles from disk that aren't in localStorage
+      // Also update existing ones if they had Unknown version/loader
+      for (const diskMp of diskProfiles) {
+        if (!existingMap.has(diskMp.id)) {
+          modpacks.push({
+            id: diskMp.id,
+            name: diskMp.name,
+            mcVersion: diskMp.mcVersion,
+            loader: diskMp.loader,
+            mods: [],
+            resourcepacks: [],
+            shaders: [],
+            iconUrl: diskMp.iconUrl || null,
+            _diskModCount: diskMp.modCount || 0,
+            _diskRpCount:  diskMp.rpCount  || 0,
+            _diskShCount:  diskMp.shCount  || 0,
+          });
+          existingMap.set(diskMp.id, modpacks[modpacks.length - 1]);
+        } else {
+          // Always trust disk profile.json over localStorage — disk is source of truth
+          const existing = existingMap.get(diskMp.id);
+          if (diskMp.mcVersion && diskMp.mcVersion !== 'Unknown') existing.mcVersion = diskMp.mcVersion;
+          if (diskMp.loader    && diskMp.loader    !== 'Vanilla')  existing.loader   = diskMp.loader;
+          if (diskMp.name      && !diskMp.name.startsWith('Modpack (')) existing.name = diskMp.name;
+          // Always update counts from disk — they reflect actual files
+          if (diskMp.modCount !== undefined) existing._diskModCount = diskMp.modCount;
+          if (diskMp.rpCount  !== undefined) existing._diskRpCount  = diskMp.rpCount;
+          if (diskMp.shCount  !== undefined) existing._diskShCount  = diskMp.shCount;
+        }
+      }
+      
+      // Update localStorage with merged list
+      localStorage.setItem('idk_modpacks', JSON.stringify(modpacks));
+      console.log(`[Modpacks] Loaded ${diskProfiles.length} profiles from disk, total: ${modpacks.length}`);
+      // Re-render so the user sees the updated names/versions
+      mpRenderList();
+      mpRenderDetail();
+    }
+  } catch (e) {
+    console.error('[Modpacks] Failed to scan profiles:', e);
+  }
+}
+
+// Load profiles from disk on startup
+setTimeout(() => {
+  console.log('[Modpacks] Calling loadProfilesFromDisk after delay');
+  loadProfilesFromDisk();
+}, 500);
+
 let activeModpackId = null;
 let browserMode = 'mod'; // 'mod' | 'resourcepack' | 'shader' | 'modpack'
 let currentProvider = 'modrinth';
 
-function mpSave() { localStorage.setItem('idk_modpacks', JSON.stringify(modpacks)); }
+function mpSave() { 
+  localStorage.setItem('idk_modpacks', JSON.stringify(modpacks)); 
+  // Also save profile metadata to disk for each modpack
+  saveModpacksToDisk();
+}
+
+async function saveModpacksToDisk() {
+  if (!window.electronAPI?.scanProfiles) return;
+  
+  try {
+    const userDataPath = await window.electronAPI.getUserDataPath();
+    const path = window.require('path');
+    const fs = window.require('fs');
+    
+    for (const mp of modpacks) {
+      const rootPath = path.join(userDataPath, 'minecraft-data', 'profiles', `modpack-${mp.id}`);
+      if (!fs.existsSync(rootPath)) fs.mkdirSync(rootPath, { recursive: true });
+      fs.writeFileSync(path.join(rootPath, 'profile.json'), JSON.stringify({
+        name: mp.name,
+        mcVersion: mp.mcVersion,
+        loader: mp.loader
+      }, null, 2));
+    }
+  } catch (e) {
+    console.warn('[Modpacks] Failed to save modpacks to disk:', e);
+  }
+}
 function mpGet() { return modpacks.find(m => m.id === activeModpackId) || null; }
 
 function mpRenderList() {
@@ -1487,7 +1606,11 @@ function mpRenderList() {
   modpacks.forEach(mp => {
     const el = document.createElement('div');
     el.className = 'modpack-item' + (mp.id === activeModpackId ? ' active' : '');
-    const total = (mp.mods?.length || 0) + (mp.resourcepacks?.length || 0) + (mp.shaders?.length || 0);
+    // Use array lengths if available, otherwise fall back to disk counts
+    const modCount = (mp.mods?.length > 0) ? mp.mods.length : (mp._diskModCount || 0);
+    const rpCount = (mp.resourcepacks?.length > 0) ? mp.resourcepacks.length : (mp._diskRpCount || 0);
+    const shCount = (mp.shaders?.length > 0) ? mp.shaders.length : (mp._diskShCount || 0);
+    const total = modCount + rpCount + shCount;
     const iconHtml = mp.iconUrl 
       ? `<img src="${mp.iconUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<svg width=\`20\` height=\`20\` viewBox=\`0 0 24 24\` fill=\`none\` stroke=\`currentColor\` stroke-width=\`2\`><path d=\`M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\`></path></svg>'" />`
       : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
@@ -1540,7 +1663,21 @@ function mpRenderDetail() {
   if (mpContent) mpContent.style.setProperty('display', mp ? 'block' : 'none', 'important');
   
   if (!mp) return;
-  document.getElementById('modpack-name-display').innerText = mp.name;
+
+  const nameEl = document.getElementById('modpack-name-display');
+  nameEl.innerText = mp.name;
+  nameEl.title = 'Double-click to rename';
+  nameEl.style.cursor = 'pointer';
+  nameEl.ondblclick = () => {
+    const newName = prompt('Rename modpack:', mp.name);
+    if (newName && newName.trim() && newName.trim() !== mp.name) {
+      mp.name = newName.trim();
+      mpSave();
+      mpRenderList();
+      mpRenderDetail();
+    }
+  };
+
   document.getElementById('modpack-meta-display').innerText = `MC ${mp.mcVersion} · ${mp.loader}`;
 
   const iconDisplay = document.getElementById('modpack-icon-display');
@@ -1550,9 +1687,9 @@ function mpRenderDetail() {
       : `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
   }
 
-  document.getElementById('mod-count').innerText = mp.mods?.length || 0;
-  document.getElementById('rp-count').innerText = mp.resourcepacks?.length || 0;
-  document.getElementById('shader-count').innerText = mp.shaders?.length || 0;
+  document.getElementById('mod-count').innerText    = mp.mods?.length    || mp._diskModCount || 0;
+  document.getElementById('rp-count').innerText     = mp.resourcepacks?.length || mp._diskRpCount  || 0;
+  document.getElementById('shader-count').innerText = mp.shaders?.length  || mp._diskShCount || 0;
   mpRenderInstalledList('mods');
   mpRenderInstalledList('resourcepacks');
   mpRenderInstalledList('shaders');
@@ -1588,13 +1725,32 @@ document.getElementById('btn-new-modpack').addEventListener('click', () => {
   document.getElementById('new-mp-name').focus();
 });
 document.getElementById('btn-cancel-create-mp').addEventListener('click', () => document.getElementById('mp-create-modal').classList.remove('active'));
-document.getElementById('btn-confirm-create-mp').addEventListener('click', () => {
+document.getElementById('btn-confirm-create-mp').addEventListener('click', async () => {
   const name = document.getElementById('new-mp-name').value.trim();
   const mcVersion = document.getElementById('new-mp-version').value;
   const loader = document.getElementById('new-mp-loader').value;
   if (!name || !mcVersion) return;
   const newMp = { id: Date.now().toString(36) + Math.random().toString(36).slice(2), name, mcVersion, loader, mods: [], resourcepacks: [], shaders: [] };
   modpacks.push(newMp); mpSave();
+  
+  // Save profile metadata to disk
+  if (window.electronAPI?.scanProfiles) {
+    try {
+      const userDataPath = await window.electronAPI.getUserDataPath();
+      const path = window.require('path');
+      const fs = window.require('fs');
+      const rootPath = path.join(userDataPath, 'minecraft-data', 'profiles', `modpack-${newMp.id}`);
+      if (!fs.existsSync(rootPath)) fs.mkdirSync(rootPath, { recursive: true });
+      fs.writeFileSync(path.join(rootPath, 'profile.json'), JSON.stringify({
+        name: newMp.name,
+        mcVersion: newMp.mcVersion,
+        loader: newMp.loader
+      }, null, 2));
+    } catch (e) {
+      console.warn('[Modpacks] Failed to save profile metadata to disk:', e);
+    }
+  }
+  
   document.getElementById('mp-create-modal').classList.remove('active');
   document.getElementById('new-mp-name').value = '';
   activeModpackId = newMp.id;
@@ -1602,11 +1758,28 @@ document.getElementById('btn-confirm-create-mp').addEventListener('click', () =>
 });
 
 // --- Delete Modpack ---
-document.getElementById('btn-delete-modpack').addEventListener('click', () => {
+document.getElementById('btn-delete-modpack').addEventListener('click', async () => {
   const mp = mpGet(); if (!mp) return;
   if (confirm(`Delete "${mp.name}"? Files on disk are kept.`)) {
     modpacks = modpacks.filter(m => m.id !== activeModpackId);
     activeModpackId = null; mpSave(); mpRenderList(); mpRenderDetail();
+    
+    // Remove profile metadata from disk
+    if (window.electronAPI?.scanProfiles) {
+      try {
+        const userDataPath = await window.electronAPI.getUserDataPath();
+        const path = window.require('path');
+        const fs = window.require('fs');
+        const profilePath = path.join(userDataPath, 'minecraft-data', 'profiles', `modpack-${mp.id}`);
+        const profileJsonPath = path.join(profilePath, 'profile.json');
+        if (fs.existsSync(profileJsonPath)) {
+          fs.unlinkSync(profileJsonPath);
+          console.log(`[Modpacks] Removed profile metadata for ${mp.name}`);
+        }
+      } catch (e) {
+        console.warn('[Modpacks] Failed to remove profile metadata from disk:', e);
+      }
+    }
   }
 });
 
@@ -1913,6 +2086,25 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       modpacks.push(newMp);
       activeModpackId = newMp.id;
       mpRenderList(); mpRenderDetail();
+      
+      // Save profile metadata to disk
+      if (window.electronAPI?.scanProfiles) {
+        try {
+          const userDataPath = await window.electronAPI.getUserDataPath();
+          const path = window.require('path');
+          const fs = window.require('fs');
+          const rootPath = path.join(userDataPath, 'minecraft-data', 'profiles', `modpack-${newMp.id}`);
+          if (!fs.existsSync(rootPath)) fs.mkdirSync(rootPath, { recursive: true });
+          fs.writeFileSync(path.join(rootPath, 'profile.json'), JSON.stringify({
+            name: newMp.name,
+            mcVersion: newMp.mcVersion,
+            loader: newMp.loader
+          }, null, 2));
+        } catch (e) {
+          console.warn('[Modpacks] Failed to save profile metadata to disk:', e);
+        }
+      }
+      
       const manifestFiles = manifest.files || [];
       let completedCount = 0;
       const concurrencyLimit = 12; // Download 12 mods in parallel

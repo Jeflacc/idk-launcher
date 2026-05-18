@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   openMinecraftFolder: () => ipcRenderer.send('open-minecraft-folder'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
+  getUserDataPath: () => ipcRenderer.invoke('get-user-data-path'),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
@@ -38,6 +39,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   launchModpack: (args) => ipcRenderer.send('launch-modpack', args),
   toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
+  scanProfiles: () => ipcRenderer.invoke('scan-profiles'),
 
   // Cloudflared Multiplayer Tunneling
   ensureCloudflared: () => ipcRenderer.invoke('ensure-cloudflared'),
