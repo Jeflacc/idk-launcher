@@ -29,3 +29,4 @@ release
 *.sln
 *.sw?
 node_modules
+.kiro/*
