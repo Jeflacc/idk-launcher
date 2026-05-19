@@ -308,10 +308,10 @@ document.querySelector('#app').innerHTML = `
         <div class="modpacks-sidebar">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:6px;">
             <p class="sidebar-label">YOUR MODPACKS</p>
-            <button class="mp-action-btn icon-btn" id="btn-refresh-profiles" title="Refresh all profiles from disk" style="padding:4px 6px;flex-shrink:0;">
+            <button class="mp-action-btn back" id="btn-refresh-profiles" title="Refresh all profiles from disk">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </button>
-            <button class="mp-action-btn back" id="btn-back-modpacks" title="Back to Modpacks" style="padding:4px 8px;font-size:11px;">← Back</button>
+            <button class="mp-action-btn back" id="btn-back-modpacks" title="Back to Modpacks">← Back</button>
           </div>
           <div class="modpacks-list" id="modpacks-list"></div>
         </div>
@@ -1920,6 +1920,108 @@ function mpRenderList() {
   });
 }
 
+// Extract icon from mod JAR - uses disk cache (like ModMenu)
+async function extractAndCacheModIcon(modpackId, typeDir, filename) {
+  try {
+    const result = await window.electronAPI?.extractModIcon?.({
+      modId: filename,
+      modpackId,
+      typeDir,
+      filename
+    });
+    if (result?.success && result.iconUrl) {
+      console.log(`[IconExtractor] Got icon for ${filename}`);
+      return result.iconUrl;
+    } else {
+      console.warn(`[IconExtractor] Failed to extract icon for ${filename}:`, result?.reason);
+    }
+  } catch (e) {
+    console.error('[IconExtractor] Failed to extract icon for', filename, ':', e);
+  }
+  return null;
+}
+
+// Extract version from mod filename (fallback if metadata not available)
+function extractVersionFromFilename(filename) {
+  // Common patterns: modname-1.20.4-1.0.0.jar, modname-1.0.0+1.20.4.jar, etc.
+  const patterns = [
+    /([0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?)\+/,  // 1.0.0+ pattern
+    /\-([0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?)(?:\-|\.jar)/,  // -1.0.0- or -1.0.0.jar
+    /\-([0-9]+\.[0-9]+(?:\.[0-9]+)?)(?:\-|\.jar)/,  // -1.0 or -1.0.0
+  ];
+  
+  for (const pattern of patterns) {
+    const match = filename.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return null;
+}
+
+// Batch extract icons for all items in a modpack (for legacy profiles)
+async function batchExtractIconsForModpack(modpackId) {
+  try {
+    console.log(`[IconBatch] Starting batch extraction for modpack ${modpackId}`);
+    const result = await window.electronAPI?.extractAllIcons?.({ modpackId });
+    
+    if (result?.success) {
+      console.log(`[IconBatch] Extracted ${result.extracted} icons, ${result.failed} failed`);
+      
+      // Update modpack data with extracted icons
+      const mp = modpacks.find(m => m.id === modpackId);
+      if (!mp) return;
+
+      // Process mods
+      if (result.mods && result.mods.length > 0) {
+        result.mods.forEach(({ filename, iconUrl }) => {
+          const item = mp.mods?.find(m => m.filename === filename);
+          if (item) {
+            item.iconUrl = iconUrl;
+            if (!item.version || item.version === 'Unknown') {
+              item.version = extractVersionFromFilename(filename) || 'Unknown';
+            }
+          }
+        });
+      }
+
+      // Process resource packs
+      if (result.resourcepacks && result.resourcepacks.length > 0) {
+        result.resourcepacks.forEach(({ filename, iconUrl }) => {
+          const item = mp.resourcepacks?.find(m => m.filename === filename);
+          if (item) {
+            item.iconUrl = iconUrl;
+            if (!item.version || item.version === 'Unknown') {
+              item.version = extractVersionFromFilename(filename) || 'Unknown';
+            }
+          }
+        });
+      }
+
+      // Process shaders
+      if (result.shaders && result.shaders.length > 0) {
+        result.shaders.forEach(({ filename, iconUrl }) => {
+          const item = mp.shaders?.find(m => m.filename === filename);
+          if (item) {
+            item.iconUrl = iconUrl;
+            if (!item.version || item.version === 'Unknown') {
+              item.version = extractVersionFromFilename(filename) || 'Unknown';
+            }
+          }
+        });
+      }
+
+      mpSave();
+      
+      // Re-render to show new icons
+      mpRenderInstalledList('mods');
+      mpRenderInstalledList('resourcepacks');
+      mpRenderInstalledList('shaders');
+    }
+  } catch (e) {
+    console.error('[IconBatch] Batch extraction failed:', e);
+  }
+}
+
 // Initial Render
 setTimeout(() => { mpRenderList(); mpRenderDetail(); }, 100);
 
@@ -1935,19 +2037,62 @@ function mpRenderInstalledList(type) {
   };
   grid.innerHTML = '';
   if (items.length === 0) { grid.innerHTML = `<div class="mp-empty" style="padding:40px 0;">${emptyMsgs[type]}</div>`; return; }
-  items.forEach(item => {
+  
+  const typeDir = type === 'mods' ? 'mods' : type === 'resourcepacks' ? 'resourcepacks' : 'shaderpacks';
+  
+  items.forEach((item, index) => {
     const el = document.createElement('div');
     el.className = 'installed-mod-card';
+    el.id = `item-${type}-${index}`;
+    
+    // Get version - use stored version or extract from filename
+    const version = item.version || extractVersionFromFilename(item.filename) || 'Unknown';
+    
+    // Create icon element
+    const iconHtml = item.iconUrl 
+      ? `<img src="${item.iconUrl}" class="mod-icon" onerror="this.style.display='none'" />`
+      : `<div class="mod-icon-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>`;
+    
     el.innerHTML = `
-      ${item.iconUrl ? `<img src="${item.iconUrl}" onerror="this.style.display='none'" />` : `<div class="mod-icon-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>`}
-      <div class="installed-mod-info"><strong>${item.name}</strong><span>${item.version}</span></div>
+      ${iconHtml}
+      <div class="installed-mod-info"><strong>${item.name}</strong><span>${version}</span></div>
       <button class="remove-mod-btn" title="Remove">✕</button>`;
+    
     el.querySelector('.remove-mod-btn').addEventListener('click', () => {
       if (type === 'mods') mpRemoveItem(item, 'mods', 'removeMod');
       else if (type === 'resourcepacks') mpRemoveItem(item, 'resourcepacks', 'removeResourcepack');
       else mpRemoveItem(item, 'shaders', 'removeShader');
     });
     grid.appendChild(el);
+    
+    // Extract icon asynchronously if not already present
+    if (!item.iconUrl) {
+      extractAndCacheModIcon(mp.id, typeDir, item.filename).then(iconUrl => {
+        if (iconUrl) {
+          item.iconUrl = iconUrl;
+          mpSave(); // Save updated item with icon
+          
+          // Update the card's image
+          const cardEl = document.getElementById(`item-${type}-${index}`);
+          if (cardEl) {
+            const imgEl = cardEl.querySelector('img');
+            if (imgEl) {
+              imgEl.src = iconUrl;
+              imgEl.style.display = 'block';
+            } else {
+              const placeholder = cardEl.querySelector('.mod-icon-placeholder');
+              if (placeholder) {
+                const img = document.createElement('img');
+                img.src = iconUrl;
+                img.className = 'mod-icon';
+                img.onerror = () => img.style.display = 'none';
+                placeholder.replaceWith(img);
+              }
+            }
+          }
+        }
+      });
+    }
   });
 }
 
@@ -2010,6 +2155,13 @@ function mpRenderDetail() {
   document.getElementById('mod-count').innerText    = mp.mods?.length    || 0;
   document.getElementById('rp-count').innerText     = mp.resourcepacks?.length || 0;
   document.getElementById('shader-count').innerText = mp.shaders?.length  || 0;
+  
+  // Check if any items are missing icons and show batch extraction button if needed
+  const hasItemsWithoutIcons = 
+    (mp.mods?.some(m => !m.iconUrl) || false) ||
+    (mp.resourcepacks?.some(r => !r.iconUrl) || false) ||
+    (mp.shaders?.some(s => !s.iconUrl) || false);
+  
   mpRenderInstalledList('mods');
   mpRenderInstalledList('resourcepacks');
   mpRenderInstalledList('shaders');
@@ -2209,16 +2361,39 @@ document.getElementById('btn-import-modpack').addEventListener('click', async ()
           fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}/files/${f.fileID}`),
           fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}`)
         ]);
+        
+        if (!fRes.ok) {
+          console.warn(`[CurseForge] Failed to fetch file ${f.fileID}: ${fRes.status}`);
+          return;
+        }
+        
         const fData = await fRes.json();
         if (!fData.data) return;
         const mf = fData.data;
+        
+        // Check if file loader matches modpack loader
+        const fileName = mf.fileName.toLowerCase();
+        const expectedLoader = newMp.loader.toLowerCase();
+        const hasExpectedLoader = fileName.includes(expectedLoader);
+        
+        if (!hasExpectedLoader && (fileName.includes('fabric') || fileName.includes('forge') || fileName.includes('neoforge') || fileName.includes('quilt'))) {
+          console.warn(`[CurseForge] WARNING: File ${mf.fileName} is for a different loader than ${newMp.loader}. Expected ${expectedLoader} but got ${fileName}`);
+        }
+        
         let mUrl = mf.downloadUrl;
         if (!mUrl) {
           const mp1 = Math.floor(mf.id/1000), mp2 = (mf.id%1000).toString().padStart(3,'0');
           mUrl = `https://edge.forgecdn.net/files/${mp1}/${mp2}/${encodeURIComponent(mf.fileName)}`;
         }
         let classId = 6;
-        try { const pj = await projRes.json(); classId = pj.data?.classId ?? 6; } catch(_) {}
+        try { 
+          if (projRes.ok) {
+            const pj = await projRes.json(); 
+            classId = pj.data?.classId ?? 6; 
+          }
+        } catch(e) { 
+          console.warn('[CurseForge] Error parsing project data:', e);
+        }
 
         if (classId === 12) {
           newMp.resourcepacks.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.(zip|jar)$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
@@ -2375,6 +2550,7 @@ async function mpBrowse(query) {
       else if (browserMode === 'shader') facets = encodeURIComponent(JSON.stringify([[`project_type:shader`]]));
       else if (browserMode === 'modpack') facets = encodeURIComponent(JSON.stringify([[`project_type:modpack`]]));
       const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=20`);
+      if (!res.ok) throw new Error(`Modrinth API error: ${res.status}`);
       const data = await res.json();
       hits = (data.hits || []).map(m => ({ project_id: m.project_id, title: m.title, description: m.description, icon_url: m.icon_url, downloads: m.downloads, follows: m.follows, provider: 'modrinth' }));
     } else {
@@ -2384,6 +2560,7 @@ async function mpBrowse(query) {
       else if (browserMode === 'modpack') classId = 4471;
       const gameVerStr = (mp && browserMode !== 'modpack') ? `&gameVersion=${mp.mcVersion}` : '';
       const res = await fetch(`https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=${classId}&searchFilter=${encodeURIComponent(query)}${gameVerStr}&sortField=2&sortOrder=desc&pageSize=20`);
+      if (!res.ok) throw new Error(`CurseForge API error: ${res.status}`);
       const data = await res.json();
       hits = (data.data || []).map(m => ({ project_id: m.id.toString(), title: m.name, description: m.summary, icon_url: m.logo ? m.logo.thumbnailUrl : '', downloads: m.downloadCount, follows: 0, provider: 'curseforge' }));
     }
@@ -2416,6 +2593,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
     try {
       const projectId = typeof mod === 'string' ? mod : mod.project_id;
       const modName = typeof mod === 'string' ? 'Modpack' : mod.title;
+      const provider = typeof mod === 'string' ? 'modrinth' : (mod.provider || 'modrinth');
       
       // Fetch modpack details to get icon
       let modpackIcon = '';
@@ -2696,53 +2874,186 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
     const projectId = typeof mod === 'string' ? mod : mod.project_id;
     const modTitle = typeof mod === 'string' ? 'Dependency' : mod.title;
     const modIcon = typeof mod === 'string' ? '' : (mod.icon_url || '');
+    const provider = typeof mod === 'string' ? 'modrinth' : (mod.provider || 'modrinth');
 
-    if (browserMode === 'mod' || isDependency) {
-      if (mp.mods.find(m => m.modrinthId === projectId)) {
-        if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
-        return;
-      }
-      
-      const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?loaders=${encodeURIComponent(JSON.stringify([mp.loader.toLowerCase()]))}&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
-      versions = await res.json();
-      if (!versions.length) { 
-        if(btn) { showWarningToast(`${modTitle} has no version for MC ${mp.mcVersion} + ${mp.loader}`); btn.textContent='+ Add'; btn.disabled=false; }
-        return; 
-      }
-      const versionObj = versions[0];
-      fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
-      entry = { modrinthId: projectId, name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
-      mp.mods.push(entry); mpSave(); 
-      if (btn) btn.textContent='⬇ Installing...';
-      if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
-      
-      if (versionObj.dependencies) {
-        for (const dep of versionObj.dependencies) {
-          if (dep.dependency_type === 'required' && dep.project_id) {
-            await mpAddItem(dep.project_id, null, true, mp);
+    // ---- CURSEFORGE FLOW ----
+    if (provider === 'curseforge') {
+      if (browserMode === 'mod') {
+        if (mp.mods.find(m => m.modrinthId === projectId)) {
+          if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+          return;
+        }
+        
+        const filesRes = await fetch(`https://api.curse.tools/v1/cf/mods/${projectId}/files`);
+        if (!filesRes.ok) throw new Error(`CurseForge API error: ${filesRes.status}`);
+        const filesData = await filesRes.json();
+        
+        let files = filesData.data || [];
+        files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
+        
+        console.log(`[CurseForge] Fetching ${modTitle} for MC ${mp.mcVersion} + ${mp.loader}`);
+        console.log(`[CurseForge] Found ${files.length} files`);
+        
+        // Normalize loader name for comparison
+        const loaderName = mp.loader.toLowerCase();
+        
+        // Filter by MC version AND loader (check filename for loader)
+        let compatibleFile = files.find(f => {
+          const hasVersion = f.gameVersions?.includes(mp.mcVersion);
+          const fileName = f.fileName.toLowerCase();
+          const hasLoader = fileName.includes(loaderName);
+          console.log(`[CurseForge] Checking: ${f.fileName} - Version: ${hasVersion}, Loader: ${hasLoader}`);
+          return hasVersion && hasLoader;
+        });
+        
+        if (compatibleFile) {
+          console.log(`[CurseForge] ✓ Found exact match: ${compatibleFile.fileName}`);
+        } else {
+          console.log(`[CurseForge] No exact match found, trying fallbacks...`);
+          
+          // If no exact match with loader, try just MC version
+          compatibleFile = files.find(f => f.gameVersions?.includes(mp.mcVersion));
+          if (compatibleFile) {
+            console.log(`[CurseForge] Found version match (no loader): ${compatibleFile.fileName}`);
           }
         }
+        
+        if (!compatibleFile) {
+          // If no exact match, try to find any file for the same major version
+          const majorVersion = mp.mcVersion.split('.').slice(0, 2).join('.');
+          compatibleFile = files.find(f => f.gameVersions?.some(v => v.startsWith(majorVersion)));
+          if (compatibleFile) {
+            console.log(`[CurseForge] Found major version match: ${compatibleFile.fileName}`);
+          }
+        }
+        
+        if (!compatibleFile) {
+          console.log(`[CurseForge] No version match, using latest file`);
+          compatibleFile = files[0];
+        }
+        
+        if (!compatibleFile) {
+          if(btn) { showWarningToast(`${modTitle} has no downloadable version`); btn.textContent='+ Add'; btn.disabled=false; }
+          return;
+        }
+        
+        console.log(`[CurseForge] Selected file: ${compatibleFile.fileName}`);
+        entry = { modrinthId: projectId, name: modTitle, version: compatibleFile.displayName, filename: compatibleFile.fileName, downloadUrl: compatibleFile.downloadUrl, iconUrl: modIcon };
+        mp.mods.push(entry); mpSave();
+        if (btn) btn.textContent='⬇ Installing...';
+        if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: compatibleFile.downloadUrl, filename: compatibleFile.fileName });
+      } else if (browserMode === 'resourcepack') {
+        if (mp.resourcepacks.find(r => r.modrinthId === projectId)) {
+          if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+          return;
+        }
+        
+        const filesRes = await fetch(`https://api.curse.tools/v1/cf/mods/${projectId}/files`);
+        if (!filesRes.ok) throw new Error(`CurseForge API error: ${filesRes.status}`);
+        const filesData = await filesRes.json();
+        
+        let files = filesData.data || [];
+        files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
+        
+        // Try to find exact version match
+        let compatibleFile = files.find(f => f.gameVersions?.includes(mp.mcVersion));
+        
+        // If no exact match, try to find any file for the same major version
+        if (!compatibleFile) {
+          const majorVersion = mp.mcVersion.split('.').slice(0, 2).join('.');
+          compatibleFile = files.find(f => f.gameVersions?.some(v => v.startsWith(majorVersion)));
+        }
+        
+        // If still no match, just use the latest file
+        if (!compatibleFile) {
+          compatibleFile = files[0];
+        }
+        
+        if (!compatibleFile) {
+          if(btn) { showWarningToast(`${modTitle} has no downloadable version`); btn.textContent='+ Add'; btn.disabled=false; }
+          return;
+        }
+        
+        entry = { modrinthId: projectId, name: modTitle, version: compatibleFile.displayName, filename: compatibleFile.fileName, downloadUrl: compatibleFile.downloadUrl, iconUrl: modIcon };
+        mp.resourcepacks.push(entry); mpSave();
+        if (btn) btn.textContent='⬇ Installing...';
+        if (window.electronAPI) await window.electronAPI.installResourcepack({ modpackId: mp.id, downloadUrl: compatibleFile.downloadUrl, filename: compatibleFile.fileName });
+      } else if (browserMode === 'shader') {
+        if (mp.shaders.find(s => s.modrinthId === projectId)) {
+          if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+          return;
+        }
+        
+        const filesRes = await fetch(`https://api.curse.tools/v1/cf/mods/${projectId}/files`);
+        if (!filesRes.ok) throw new Error(`CurseForge API error: ${filesRes.status}`);
+        const filesData = await filesRes.json();
+        
+        let files = filesData.data || [];
+        files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
+        
+        const compatibleFile = files[0]; // Shaders might not have version filtering
+        if (!compatibleFile) {
+          if(btn) { showWarningToast(`${modTitle} has no downloadable version`); btn.textContent='+ Add'; btn.disabled=false; }
+          return;
+        }
+        
+        entry = { modrinthId: projectId, name: modTitle, version: compatibleFile.displayName, filename: compatibleFile.fileName, downloadUrl: compatibleFile.downloadUrl, iconUrl: modIcon };
+        mp.shaders.push(entry); mpSave();
+        if (btn) btn.textContent='⬇ Installing...';
+        if (window.electronAPI) await window.electronAPI.installShader({ modpackId: mp.id, downloadUrl: compatibleFile.downloadUrl, filename: compatibleFile.fileName });
       }
-    } else if (browserMode === 'resourcepack') {
-      const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
-      versions = await res.json();
-      if (!versions.length) { showWarningToast(`${modTitle} has no version for MC ${mp.mcVersion}`); if(btn){btn.textContent='+ Add'; btn.disabled=false;} return; }
-      const versionObj = versions[0];
-      fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
-      entry = { modrinthId: projectId, name: modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
-      mp.resourcepacks.push(entry); mpSave(); 
-      if(btn) btn.textContent='⬇ Installing...';
-      if (window.electronAPI) await window.electronAPI.installResourcepack({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
     } else {
-      const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`);
-      versions = await res.json();
-      if (!versions.length) { showWarningToast(`${modTitle} has no downloadable version.`); if(btn){btn.textContent='+ Add'; btn.disabled=false;} return; }
-      const versionObj = versions[0];
-      fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
-      entry = { modrinthId: projectId, name: modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
-      mp.shaders.push(entry); mpSave(); 
-      if(btn) btn.textContent='⬇ Installing...';
-      if (window.electronAPI) await window.electronAPI.installShader({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
+      // ---- MODRINTH FLOW ----
+      if (browserMode === 'mod' || isDependency) {
+        if (mp.mods.find(m => m.modrinthId === projectId)) {
+          if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+          return;
+        }
+        
+        const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?loaders=${encodeURIComponent(JSON.stringify([mp.loader.toLowerCase()]))}&game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
+        if (!res.ok) throw new Error(`Modrinth API error: ${res.status} ${res.statusText}`);
+        versions = await res.json();
+        if (!versions.length) { 
+          if(btn) { showWarningToast(`${modTitle} has no version for MC ${mp.mcVersion} + ${mp.loader}`); btn.textContent='+ Add'; btn.disabled=false; }
+          return; 
+        }
+        const versionObj = versions[0];
+        fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
+        entry = { modrinthId: projectId, name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
+        mp.mods.push(entry); mpSave(); 
+        if (btn) btn.textContent='⬇ Installing...';
+        if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
+        
+        if (versionObj.dependencies) {
+          for (const dep of versionObj.dependencies) {
+            if (dep.dependency_type === 'required' && dep.project_id) {
+              await mpAddItem(dep.project_id, null, true, mp);
+            }
+          }
+        }
+      } else if (browserMode === 'resourcepack') {
+        const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version?game_versions=${encodeURIComponent(JSON.stringify([mp.mcVersion]))}`);
+        if (!res.ok) throw new Error(`Modrinth API error: ${res.status} ${res.statusText}`);
+        versions = await res.json();
+        if (!versions.length) { showWarningToast(`${modTitle} has no version for MC ${mp.mcVersion}`); if(btn){btn.textContent='+ Add'; btn.disabled=false;} return; }
+        const versionObj = versions[0];
+        fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
+        entry = { modrinthId: projectId, name: modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
+        mp.resourcepacks.push(entry); mpSave(); 
+        if(btn) btn.textContent='⬇ Installing...';
+        if (window.electronAPI) await window.electronAPI.installResourcepack({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
+      } else {
+        const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`);
+        if (!res.ok) throw new Error(`Modrinth API error: ${res.status} ${res.statusText}`);
+        versions = await res.json();
+        if (!versions.length) { showWarningToast(`${modTitle} has no downloadable version.`); if(btn){btn.textContent='+ Add'; btn.disabled=false;} return; }
+        const versionObj = versions[0];
+        fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
+        entry = { modrinthId: projectId, name: modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
+        mp.shaders.push(entry); mpSave(); 
+        if(btn) btn.textContent='⬇ Installing...';
+        if (window.electronAPI) await window.electronAPI.installShader({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
+      }
     }
     if (btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
     mpRenderDetail(); mpRenderList();

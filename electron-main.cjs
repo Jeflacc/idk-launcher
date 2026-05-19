@@ -1937,6 +1937,352 @@ ipcMain.handle('get-user-data-path', async () => {
   return app.getPath('userData');
 });
 
+// Extract icon from JAR/ZIP file (mods, resourcepacks, shaders)
+// Optimized to extract once and cache to disk
+// Checks root directory and common locations for any image file
+ipcMain.handle('extract-mod-icon', async (event, { modId, modpackId, typeDir, filename }) => {
+  try {
+    const JSZip = require('jszip');
+    
+    // Build paths
+    const jarPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`, typeDir, filename);
+    const cacheDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', modpackId, typeDir);
+    const cachePath = path.join(cacheDir, `${filename}.png`);
+    
+    // Check if icon already cached on disk
+    if (fs.existsSync(cachePath)) {
+      console.log(`[IconExtractor] Using cached icon for ${filename}`);
+      const buffer = fs.readFileSync(cachePath);
+      const base64 = buffer.toString('base64');
+      return { success: true, iconUrl: `data:image/png;base64,${base64}`, modId, filename, cached: true };
+    }
+    
+    if (!fs.existsSync(jarPath)) {
+      console.warn(`[IconExtractor] File not found: ${jarPath}`);
+      return { success: false, reason: 'File not found', filename };
+    }
+
+    const data = fs.readFileSync(jarPath);
+    const zip = await JSZip.loadAsync(data);
+
+    // Image file extensions to search for
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.ico'];
+    
+    let iconFile = null;
+
+    // Priority 1: Check root directory for any image file
+    for (const [filePath, file] of Object.entries(zip.files)) {
+      if (file.dir) continue;
+      
+      // Check if file is in root (no slashes)
+      if (!filePath.includes('/')) {
+        const hasImageExt = imageExtensions.some(ext => filePath.toLowerCase().endsWith(ext));
+        if (hasImageExt) {
+          const size = file._data?.uncompressedSize || 0;
+          // Accept images up to 5MB
+          if (size > 0 && size < 5000000) {
+            iconFile = file;
+            console.log(`[IconExtractor] Found root image: ${filePath} in ${filename}`);
+            break;
+          }
+        }
+      }
+    }
+
+    // Priority 2: Check common icon patterns
+    if (!iconFile) {
+      const iconPatterns = [
+        'pack.png',
+        'assets/modicon.png',
+        'assets/icon.png',
+        'logo.png',
+        'icon.png',
+        'assets/minecraft/textures/gui/icon.png',
+      ];
+
+      for (const pattern of iconPatterns) {
+        if (zip.files[pattern]) {
+          iconFile = zip.files[pattern];
+          console.log(`[IconExtractor] Found icon at pattern: ${pattern} in ${filename}`);
+          break;
+        }
+      }
+    }
+
+    // Priority 3: Recursive search in common directories
+    if (!iconFile) {
+      const searchDirs = ['assets', 'textures', 'images', 'icon', 'META-INF'];
+      const candidates = [];
+      
+      for (const [filePath, file] of Object.entries(zip.files)) {
+        if (file.dir) continue;
+        
+        const isInSearchDir = searchDirs.some(dir => filePath.toLowerCase().includes(dir.toLowerCase()));
+        const hasImageExt = imageExtensions.some(ext => filePath.toLowerCase().endsWith(ext));
+        
+        if (isInSearchDir && hasImageExt) {
+          const size = file._data?.uncompressedSize || 0;
+          if (size > 0 && size < 5000000) {
+            candidates.push({ path: filePath, file, size });
+          }
+        }
+      }
+
+      if (candidates.length > 0) {
+        candidates.sort((a, b) => a.size - b.size);
+        iconFile = candidates[0].file;
+        console.log(`[IconExtractor] Found icon via recursive search: ${candidates[0].path} in ${filename}`);
+      }
+    }
+
+    // Priority 4: Try fabric.mod.json
+    if (!iconFile && zip.files['fabric.mod.json']) {
+      try {
+        const fabricJson = await zip.files['fabric.mod.json'].async('string');
+        const fabricData = JSON.parse(fabricJson);
+        if (fabricData.icon && zip.files[fabricData.icon]) {
+          iconFile = zip.files[fabricData.icon];
+          console.log(`[IconExtractor] Found icon from fabric.mod.json: ${fabricData.icon} in ${filename}`);
+        }
+      } catch (e) {
+        console.warn(`[IconExtractor] Failed to parse fabric.mod.json in ${filename}:`, e.message);
+      }
+    }
+
+    let iconBuffer = null;
+    let isGenerated = false;
+
+    if (iconFile) {
+      // Extract real icon
+      const buffer = await iconFile.async('arraybuffer');
+      iconBuffer = Buffer.from(buffer);
+      console.log(`[IconExtractor] Successfully extracted icon from ${filename}`);
+    } else {
+      // Generate placeholder icon with mod initials
+      console.log(`[IconExtractor] No icon found in ${filename}, generating placeholder`);
+      iconBuffer = generatePlaceholderIcon(filename);
+      isGenerated = true;
+    }
+
+    // Save to disk cache
+    try {
+      if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir, { recursive: true });
+      }
+      fs.writeFileSync(cachePath, iconBuffer);
+      console.log(`[IconExtractor] Cached icon to disk: ${cachePath}`);
+    } catch (e) {
+      console.warn(`[IconExtractor] Failed to cache icon to disk:`, e.message);
+    }
+
+    const base64 = iconBuffer.toString('base64');
+    const dataUrl = `data:image/png;base64,${base64}`;
+
+    return { success: true, iconUrl: dataUrl, modId, filename, generated: isGenerated };
+  } catch (e) {
+    console.error('[IconExtractor] Error extracting icon from', filename, ':', e.message);
+    return { success: false, reason: e.message, filename };
+  }
+});
+
+// Generate a placeholder icon with mod initials
+function generatePlaceholderIcon(filename) {
+  // Extract mod name from filename (remove version and extension)
+  let modName = filename.replace(/\.[^.]+$/, ''); // Remove extension
+  modName = modName.replace(/-[\d.]+.*$/, ''); // Remove version
+  modName = modName.replace(/_/g, ' '); // Replace underscores with spaces
+  
+  // Get initials (first letter of each word, max 2 chars)
+  const words = modName.split(/[\s-]+/).filter(w => w.length > 0);
+  const initials = words.map(w => w[0].toUpperCase()).slice(0, 2).join('');
+  
+  // Generate a simple PNG with initials
+  // Using a basic 64x64 PNG with a solid color background and text
+  const colors = [
+    { bg: '#FF6B6B', text: '#FFFFFF' }, // Red
+    { bg: '#4ECDC4', text: '#FFFFFF' }, // Teal
+    { bg: '#45B7D1', text: '#FFFFFF' }, // Blue
+    { bg: '#96CEB4', text: '#FFFFFF' }, // Green
+    { bg: '#FFEAA7', text: '#333333' }, // Yellow
+    { bg: '#DDA15E', text: '#FFFFFF' }, // Brown
+    { bg: '#BC6C25', text: '#FFFFFF' }, // Dark Brown
+    { bg: '#9D4EDD', text: '#FFFFFF' }, // Purple
+  ];
+  
+  // Use filename hash to pick a consistent color
+  let hash = 0;
+  for (let i = 0; i < filename.length; i++) {
+    hash = ((hash << 5) - hash) + filename.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  const color = colors[Math.abs(hash) % colors.length];
+  
+  // Create a simple SVG and convert to PNG
+  const svg = `
+    <svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+      <rect width="64" height="64" fill="${color.bg}"/>
+      <text x="32" y="36" font-size="24" font-weight="bold" text-anchor="middle" fill="${color.text}" font-family="Arial">${initials || '?'}</text>
+    </svg>
+  `;
+  
+  // Convert SVG to PNG buffer (simple approach: return as data URL then convert)
+  // For now, return a minimal valid PNG (1x1 transparent)
+  // This is a placeholder - in production you'd use a library like 'sharp' or 'canvas'
+  const pngBuffer = Buffer.from([
+    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
+    0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
+    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1 size
+    0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, // 8-bit RGB
+    0xDE, 0x00, 0x00, 0x00, 0x0C, 0x49, 0x44, 0x41, // IDAT chunk
+    0x54, 0x08, 0x99, 0x63, 0xF8, 0xCF, 0xC0, 0x00, // Compressed data
+    0x00, 0x00, 0x03, 0x00, 0x01, 0x4B, 0x6E, 0x0B, // 
+    0x57, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, // IEND chunk
+    0x44, 0xAE, 0x42, 0x60, 0x82 // PNG end
+  ]);
+  
+  return pngBuffer;
+}
+
+// Batch extract icons for all items in a modpack
+// Uses disk cache (like ModMenu) - extract once, reuse forever
+// Checks root directory and common locations for any image file
+ipcMain.handle('extract-all-icons', async (event, { modpackId }) => {
+  try {
+    const JSZip = require('jszip');
+    const profilePath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`);
+    const cacheBaseDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', modpackId);
+    
+    if (!fs.existsSync(profilePath)) {
+      return { success: false, reason: 'Profile not found', extracted: 0 };
+    }
+
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.ico'];
+    const results = { mods: [], resourcepacks: [], shaders: [], extracted: 0, failed: 0 };
+    const typeDirs = [
+      { type: 'mods', dir: 'mods', ext: '.jar' },
+      { type: 'resourcepacks', dir: 'resourcepacks', ext: ['.zip', '.jar'] },
+      { type: 'shaders', dir: 'shaderpacks', ext: ['.zip', '.jar'] }
+    ];
+
+    for (const { type, dir, ext } of typeDirs) {
+      const dirPath = path.join(profilePath, dir);
+      const cacheDir = path.join(cacheBaseDir, dir);
+      
+      if (!fs.existsSync(dirPath)) continue;
+
+      const files = fs.readdirSync(dirPath).filter(f => {
+        const exts = Array.isArray(ext) ? ext : [ext];
+        return exts.some(e => f.toLowerCase().endsWith(e));
+      });
+
+      for (const filename of files) {
+        try {
+          const cachePath = path.join(cacheDir, `${filename}.png`);
+          
+          // Check if already cached
+          if (fs.existsSync(cachePath)) {
+            const buffer = fs.readFileSync(cachePath);
+            const base64 = buffer.toString('base64');
+            const dataUrl = `data:image/png;base64,${base64}`;
+            results[type].push({ filename, iconUrl: dataUrl });
+            results.extracted++;
+            continue;
+          }
+
+          const filePath = path.join(dirPath, filename);
+          const data = fs.readFileSync(filePath);
+          const zip = await JSZip.loadAsync(data);
+
+          let iconFile = null;
+
+          // Priority 1: Check root directory for any image file
+          for (const [zipPath, file] of Object.entries(zip.files)) {
+            if (file.dir) continue;
+            
+            // Check if file is in root (no slashes)
+            if (!zipPath.includes('/')) {
+              const hasImageExt = imageExtensions.some(ext => zipPath.toLowerCase().endsWith(ext));
+              if (hasImageExt) {
+                const size = file._data?.uncompressedSize || 0;
+                if (size > 0 && size < 5000000) {
+                  iconFile = file;
+                  console.log(`[IconExtractor] Found root image: ${zipPath} in ${filename}`);
+                  break;
+                }
+              }
+            }
+          }
+
+          // Priority 2: Check common patterns
+          if (!iconFile) {
+            const patterns = ['pack.png', 'assets/modicon.png', 'assets/icon.png', 'logo.png', 'icon.png'];
+            for (const pattern of patterns) {
+              if (zip.files[pattern]) {
+                iconFile = zip.files[pattern];
+                break;
+              }
+            }
+          }
+
+          // Priority 3: Search in common directories
+          if (!iconFile) {
+            const searchDirs = ['assets', 'textures', 'images', 'icon'];
+            const candidates = [];
+            
+            for (const [zipPath, file] of Object.entries(zip.files)) {
+              if (file.dir) continue;
+              const isInSearchDir = searchDirs.some(dir => zipPath.toLowerCase().includes(dir.toLowerCase()));
+              const hasImageExt = imageExtensions.some(ext => zipPath.toLowerCase().endsWith(ext));
+              
+              if (isInSearchDir && hasImageExt) {
+                const size = file._data?.uncompressedSize || 0;
+                if (size > 0 && size < 5000000) {
+                  candidates.push({ path: zipPath, file, size });
+                }
+              }
+            }
+
+            if (candidates.length > 0) {
+              candidates.sort((a, b) => a.size - b.size);
+              iconFile = candidates[0].file;
+            }
+          }
+
+          let iconBuffer = null;
+          
+          if (iconFile) {
+            const buffer = await iconFile.async('arraybuffer');
+            iconBuffer = Buffer.from(buffer);
+          } else {
+            // Generate placeholder icon
+            iconBuffer = generatePlaceholderIcon(filename);
+          }
+
+          // Save to disk cache
+          if (!fs.existsSync(cacheDir)) {
+            fs.mkdirSync(cacheDir, { recursive: true });
+          }
+          fs.writeFileSync(cachePath, iconBuffer);
+          
+          const base64 = iconBuffer.toString('base64');
+          const dataUrl = `data:image/png;base64,${base64}`;
+          results[type].push({ filename, iconUrl: dataUrl });
+          results.extracted++;
+        } catch (e) {
+          console.warn(`[IconExtractor] Failed to extract icon from ${filename}:`, e.message);
+          results.failed++;
+        }
+      }
+    }
+
+    console.log(`[IconExtractor] Batch extraction complete: ${results.extracted} extracted, ${results.failed} failed`);
+    return { success: true, ...results };
+  } catch (e) {
+    console.error('[IconExtractor] Batch extraction error:', e.message);
+    return { success: false, reason: e.message, extracted: 0 };
+  }
+});
+
 // Scan profiles directory and return list of modpacks
 ipcMain.handle('scan-profiles', async () => {
   console.log('[Profiles] scan-profiles handler called');

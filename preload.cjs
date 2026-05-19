@@ -57,6 +57,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMissingDependencies: (cb) => ipcRenderer.on('missing-dependencies', (_e, data) => cb(data)),
   autoInstallDependencies: (data) => ipcRenderer.invoke('auto-install-dependencies', data),
 
+  // Extract icon from mod/RP/shader JAR file
+  extractModIcon: (data) => ipcRenderer.invoke('extract-mod-icon', data),
+  
+  // Batch extract all icons for a modpack (for legacy profiles)
+  extractAllIcons: (data) => ipcRenderer.invoke('extract-all-icons', data),
+
   // Debug: forward renderer logs to terminal
   rendererLog: (msg) => ipcRenderer.send('renderer-log', msg),
 });
