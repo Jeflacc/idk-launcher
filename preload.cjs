@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   openMinecraftFolder: () => ipcRenderer.send('open-minecraft-folder'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
+  getUserDataPath: () => ipcRenderer.invoke('get-user-data-path'),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
@@ -38,6 +39,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   launchModpack: (args) => ipcRenderer.send('launch-modpack', args),
   toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
+  scanProfiles: () => ipcRenderer.invoke('scan-profiles'),
 
   // Overlay System IPC Bridge
   setIdkConnectData: (data) => ipcRenderer.send('set-idk-connect-data', data),
@@ -57,5 +59,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   startCloudflaredAccess: (url, localPort) => ipcRenderer.invoke('start-cloudflared-access', { url, localPort }),
   stopCloudflaredAccess: () => ipcRenderer.invoke('stop-cloudflared-access'),
   onCloudflaredAccessClosed: (cb) => ipcRenderer.on('cloudflared-access-closed', () => cb()),
+
+  // Missing mod dependencies (crash report auto-detection)
+  onMissingDependencies: (cb) => ipcRenderer.on('missing-dependencies', (_e, data) => cb(data)),
+  autoInstallDependencies: (data) => ipcRenderer.invoke('auto-install-dependencies', data),
+
+  // Debug: forward renderer logs to terminal
+  rendererLog: (msg) => ipcRenderer.send('renderer-log', msg),
 });
 
