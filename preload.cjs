@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   launchModpack: (args) => ipcRenderer.send('launch-modpack', args),
   toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
   scanProfiles: () => ipcRenderer.invoke('scan-profiles'),
+  deleteModpackFolder: (data) => ipcRenderer.invoke('delete-modpack-folder', data),
 
   // Overlay System IPC Bridge
   setIdkConnectData: (data) => ipcRenderer.send('set-idk-connect-data', data),

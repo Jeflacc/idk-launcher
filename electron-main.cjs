@@ -1986,6 +1986,30 @@ ipcMain.handle('get-user-data-path', async () => {
   return app.getPath('userData');
 });
 
+// Delete modpack folder recursively from local storage
+ipcMain.handle('delete-modpack-folder', async (event, { modpackId }) => {
+  console.log(`[Profiles] delete-modpack-folder handler called for: ${modpackId}`);
+  try {
+    if (!modpackId || typeof modpackId !== 'string') {
+      throw new Error('Invalid modpackId');
+    }
+    const safeModpackId = path.basename(modpackId);
+    const targetPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${safeModpackId}`);
+    
+    if (fs.existsSync(targetPath)) {
+      fs.rmSync(targetPath, { recursive: true, force: true });
+      console.log(`[Profiles] Deleted modpack folder recursively: ${targetPath}`);
+      return { success: true };
+    } else {
+      console.log(`[Profiles] Modpack folder not found: ${targetPath}`);
+      return { success: true };
+    }
+  } catch (e) {
+    console.error(`[Profiles] Failed to delete modpack folder for ${modpackId}:`, e.message);
+    return { success: false, error: e.message };
+  }
+});
+
 // Scan profiles directory and return list of modpacks
 ipcMain.handle('scan-profiles', async () => {
   console.log('[Profiles] scan-profiles handler called');

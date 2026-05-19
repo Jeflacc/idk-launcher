@@ -2123,24 +2123,23 @@ document.getElementById('btn-save-mp-settings').addEventListener('click', () => 
 // --- Delete Modpack ---
 document.getElementById('btn-delete-modpack').addEventListener('click', async () => {
   const mp = mpGet(); if (!mp) return;
-  if (confirm(`Delete "${mp.name}"? Files on disk are kept.`)) {
+  if (confirm(`Delete "${mp.name}"? This will permanently delete the modpack and all its files from your local storage.`)) {
+    const deletingId = activeModpackId;
     modpacks = modpacks.filter(m => m.id !== activeModpackId);
-    activeModpackId = null; mpSave(); mpRenderList(); mpRenderDetail();
+    activeModpackId = null; 
     
-    // Remove profile metadata from disk
-    if (window.electronAPI?.scanProfiles) {
+    // Save state immediately
+    localStorage.setItem('idk_modpacks', JSON.stringify(modpacks));
+    mpRenderList(); 
+    mpRenderDetail();
+    
+    // Remove profile metadata and folder from disk
+    if (window.electronAPI?.deleteModpackFolder) {
       try {
-        const userDataPath = await window.electronAPI.getUserDataPath();
-        const path = window.require('path');
-        const fs = window.require('fs');
-        const profilePath = path.join(userDataPath, 'minecraft-data', 'profiles', `modpack-${mp.id}`);
-        const profileJsonPath = path.join(profilePath, 'profile.json');
-        if (fs.existsSync(profileJsonPath)) {
-          fs.unlinkSync(profileJsonPath);
-          console.log(`[Modpacks] Removed profile metadata for ${mp.name}`);
-        }
+        await window.electronAPI.deleteModpackFolder({ modpackId: deletingId });
+        console.log(`[Modpacks] Requested deletion of folder for ${mp.name} (${deletingId})`);
       } catch (e) {
-        console.warn('[Modpacks] Failed to remove profile metadata from disk:', e);
+        console.warn('[Modpacks] Failed to request folder deletion:', e);
       }
     }
   }
