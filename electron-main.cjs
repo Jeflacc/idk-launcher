@@ -843,6 +843,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
       overlayWindow.showInactive();
       overlayWindow.setIgnoreMouseEvents(true, { forward: true });
       overlayWindow.webContents.send('show-startup-notification', { session: activeGameSession });
+      startOverlayTracking();
     }
     updateDiscordPresence(
       `Playing Modpack: ${mpName}`,
@@ -1131,6 +1132,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
       overlayWindow.showInactive();
       overlayWindow.setIgnoreMouseEvents(true, { forward: true });
       overlayWindow.webContents.send('show-startup-notification', { session: activeGameSession });
+      startOverlayTracking();
     }
     updateDiscordPresence(
       `Playing Minecraft ${version}`,
@@ -2275,7 +2277,7 @@ function startOverlayTracking() {
   if (overlayTrackerInterval) clearInterval(overlayTrackerInterval);
 
   overlayTrackerInterval = setInterval(async () => {
-    if (!overlayWindow || !activeGameSession || !isOverlayActive) {
+    if (!overlayWindow || !activeGameSession || !overlayWindow.isVisible()) {
       stopOverlayTracking();
       return;
     }
