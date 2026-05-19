@@ -220,6 +220,9 @@ ipcMain.on('open-external', (event, url) => {
   shell.openExternal(url);
 });
 
+// Forward renderer console.log to terminal
+ipcMain.on('renderer-log', (_e, msg) => console.log('[Renderer]', msg));
+
 ipcMain.on('toggle-devtools', () => {
   if (mainWindow) {
     if (mainWindow.webContents.isDevToolsOpened()) {
@@ -239,6 +242,46 @@ ipcMain.handle('install-mod', async (event, { modpackId, downloadUrl, filename }
   return new Promise((resolve, reject) => {
     downloadFile(downloadUrl, jarPath, () => resolve({ success: true }), (e) => reject(e));
   });
+});
+
+// Auto-install missing mod dependencies detected from crash reports
+ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, mcVersion }) => {
+  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const modsPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods');
+  if (!fs.existsSync(modsPath)) fs.mkdirSync(modsPath, { recursive: true });
+
+  const results = [];
+  for (const dep of missing) {
+    try {
+      // Search Modrinth for the dependency mod
+      const searchUrl = `https://api.modrinth.com/v2/search?query=${encodeURIComponent(dep.modId)}&facets=${encodeURIComponent(JSON.stringify([["project_type:mod"],["versions:" + mcVersion]]))}}&limit=5`;
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
+      const hit = searchData.hits && searchData.hits[0];
+      if (!hit) { results.push({ modId: dep.modId, success: false, reason: 'Not found on Modrinth' }); continue; }
+
+      // Get versions for this project
+      const versionsUrl = `https://api.modrinth.com/v2/project/${hit.project_id}/version?game_versions=${encodeURIComponent(JSON.stringify([mcVersion]))}&loaders=${encodeURIComponent(JSON.stringify(['forge','fabric','neoforge','quilt']))}`;
+      const versionsRes = await fetch(versionsUrl);
+      const versions = await versionsRes.json();
+      if (!Array.isArray(versions) || versions.length === 0) { results.push({ modId: dep.modId, success: false, reason: 'No compatible version found' }); continue; }
+
+      const latest = versions[0];
+      const file = latest.files && latest.files.find(f => f.primary) || latest.files[0];
+      if (!file) { results.push({ modId: dep.modId, success: false, reason: 'No file found' }); continue; }
+
+      const destPath = path.join(modsPath, file.filename);
+      if (!fs.existsSync(destPath)) {
+        await new Promise((resolve, reject) => {
+          downloadFile(file.url, destPath, resolve, reject);
+        });
+      }
+      results.push({ modId: dep.modId, success: true, filename: file.filename, name: hit.title });
+    } catch (e) {
+      results.push({ modId: dep.modId, success: false, reason: e.message });
+    }
+  }
+  return results;
 });
 
 ipcMain.handle('remove-mod', async (event, { modpackId, filename }) => {
@@ -723,7 +766,11 @@ ipcMain.on('launch-modpack', async (event, args) => {
       const forgeVersionId = await installForge(mcVersion, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p), loaderVersion || null);
       opts.version.custom = forgeVersionId;
     } catch (err) {
-      event.sender.send('launch-error', 'Failed to install Forge: ' + err.message);
+      const isNetwork = err.message.includes('ENOTFOUND') || err.message.includes('ECONNREFUSED') || err.message.includes('ETIMEDOUT') || err.message.includes('network');
+      const msg = isNetwork
+        ? 'Failed to install Forge: No internet connection or Mojang servers are unreachable. Check your connection and try again.'
+        : 'Failed to install Forge: ' + err.message;
+      event.sender.send('launch-error', msg);
       return;
     }
   } else if (loaderLC === 'neoforge') {
@@ -888,9 +935,18 @@ ipcMain.on('launch-minecraft', async (event, args) => {
         }
       }
     } else if (loaderNameLC === 'forge') {
-      event.sender.send('launch-progress', { status: 'Installing Forge (this may take a moment)...', percent: 10 });
-      const forgeVersionId = await installForge(version, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
-      opts.version.custom = forgeVersionId;
+      try {
+        event.sender.send('launch-progress', { status: 'Installing Forge (this may take a moment)...', percent: 10 });
+        const forgeVersionId = await installForge(version, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
+        opts.version.custom = forgeVersionId;
+      } catch (err) {
+        const isNetwork = err.message.includes('ENOTFOUND') || err.message.includes('ECONNREFUSED') || err.message.includes('ETIMEDOUT');
+        const msg = isNetwork
+          ? 'Failed to install Forge: No internet connection or Mojang servers are unreachable. Check your connection and try again.'
+          : 'Failed to install Forge: ' + err.message;
+        event.sender.send('launch-error', msg);
+        return;
+      }
     } else if (loaderNameLC === 'neoforge') {
       event.sender.send('launch-progress', { status: 'Installing NeoForge (this may take a moment)...', percent: 10 });
       const neoVersionId = await installNeoForge(version, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
@@ -968,6 +1024,44 @@ ipcMain.on('launch-minecraft', async (event, args) => {
 
   launchClient.on('close', () => {
     console.log('Game closed');
+
+    // --- Crash Report Parser: detect missing mod dependencies ---
+    try {
+      const crashDir = path.join(profilePath, 'crash-reports');
+      if (fs.existsSync(crashDir)) {
+        const files = fs.readdirSync(crashDir)
+          .filter(f => f.endsWith('.txt'))
+          .map(f => ({ name: f, time: fs.statSync(path.join(crashDir, f)).mtimeMs }))
+          .sort((a, b) => b.time - a.time);
+
+        if (files.length > 0) {
+          const latest = path.join(crashDir, files[0].name);
+          const report = fs.readFileSync(latest, 'utf8');
+
+          // Only parse if it's a mod loading error
+          if (report.includes('Mod Loading has failed') || report.includes('Mod loading error has occurred')) {
+            const missing = [];
+            // Match lines like: "Mod X requires Y Z or above\nCurrently, Y is not installed"
+            const regex = /Mod (\S+) requires (\S+) ([\d.+\-]+) or above\s+Currently, (\S+) is not installed/g;
+            let m;
+            while ((m = regex.exec(report)) !== null) {
+              const dep = m[2]; // dependency mod id
+              if (!missing.find(x => x.modId === dep)) {
+                missing.push({ modId: dep, requiredBy: m[1], version: m[3] });
+              }
+            }
+
+            if (missing.length > 0) {
+              event.sender.send('missing-dependencies', { missing, mcVersion });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[CrashParser] Failed to parse crash report:', e);
+    }
+    // --- End Crash Report Parser ---
+
     event.sender.send('launch-closed');
     updateDiscordPresence('In Main Menu', 'Idle in Launcher');
   });
@@ -1994,20 +2088,32 @@ ipcMain.handle('scan-profiles', async () => {
           || 'Vanilla';
       }
 
-      // Count files in each category
-      const countFiles = (dir) => {
+      // Count files AND build file lists for each category
+      const scanDir = (dir, exts) => {
         const dirPath = path.join(profilePath, dir);
-        if (!fs.existsSync(dirPath)) return 0;
+        if (!fs.existsSync(dirPath)) return [];
         try {
-          return fs.readdirSync(dirPath).filter(f => {
-            try { return fs.statSync(path.join(dirPath, f)).isFile(); } catch { return false; }
-          }).length;
-        } catch { return 0; }
+          return fs.readdirSync(dirPath)
+            .filter(f => {
+              try {
+                if (!fs.statSync(path.join(dirPath, f)).isFile()) return false;
+                if (exts) return exts.some(e => f.toLowerCase().endsWith(e));
+                return true;
+              } catch { return false; }
+            })
+            .map(f => ({ filename: f }));
+        } catch { return []; }
       };
 
-      const modCount = countFiles('mods');
-      const rpCount  = countFiles('resourcepacks');
-      const shCount  = countFiles('shaderpacks');
+      const diskMods         = scanDir('mods', ['.jar']);
+      const diskResourcepacks = scanDir('resourcepacks', ['.zip', '.jar']);
+      const diskShaders       = scanDir('shaderpacks', ['.zip', '.jar']);
+
+      console.log(`[Profiles] ${entry.name}: mods=${diskMods.length} rp=${diskResourcepacks.length} sh=${diskShaders.length} path=${profilePath}`);
+
+      const modCount = diskMods.length;
+      const rpCount  = diskResourcepacks.length;
+      const shCount  = diskShaders.length;
 
       // Build a friendly name from profile.json or folder name
       let name = profileData.name;
@@ -2018,23 +2124,29 @@ ipcMain.handle('scan-profiles', async () => {
 
       // Only write back to profile.json if we actually auto-detected something new
       const needsWrite = (!profileData.mcVersion || profileData.mcVersion === 'Unknown') ||
-                         (!profileData.loader    || profileData.loader    === 'Vanilla');
+                         (!profileData.loader    || profileData.loader    === 'Vanilla') ||
+                         (!profileData.id); // also write if id is missing
       if (needsWrite) {
+        const folderId = entry.name.replace(/^modpack-/, '');
         try {
-          const json = JSON.stringify({ ...profileData, name, mcVersion, loader }, null, 2);
+          const json = JSON.stringify({ ...profileData, id: folderId, name, mcVersion, loader }, null, 2);
           fs.writeFileSync(profileDataPath, Buffer.from(json, 'utf8'));
         } catch (e) { /* non-fatal */ }
       }
 
       profiles.push({
-        id: entry.name.replace(/^modpack-/, ''),  // strip the 'modpack-' prefix — folder is always modpack-{id}
+        id: entry.name.replace(/^modpack-/, ''),
         name,
         mcVersion,
         loader,
         modCount,
         rpCount,
         shCount,
-        iconUrl: profileData.iconUrl || null
+        iconUrl: profileData.iconUrl || null,
+        diskMods,
+        diskResourcepacks,
+        diskShaders,
+        lastPlayed: profileData.lastPlayed || null,
       });
     }
 

@@ -52,5 +52,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   startCloudflaredAccess: (url, localPort) => ipcRenderer.invoke('start-cloudflared-access', { url, localPort }),
   stopCloudflaredAccess: () => ipcRenderer.invoke('stop-cloudflared-access'),
   onCloudflaredAccessClosed: (cb) => ipcRenderer.on('cloudflared-access-closed', () => cb()),
+
+  // Missing mod dependencies (crash report auto-detection)
+  onMissingDependencies: (cb) => ipcRenderer.on('missing-dependencies', (_e, data) => cb(data)),
+  autoInstallDependencies: (data) => ipcRenderer.invoke('auto-install-dependencies', data),
+
+  // Debug: forward renderer logs to terminal
+  rendererLog: (msg) => ipcRenderer.send('renderer-log', msg),
 });
 

@@ -1064,6 +1064,11 @@ input[type="checkbox"]:checked + .switch::after {
   50% { transform: translateY(-6px); }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 .news-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -3233,7 +3238,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 
 /* =========================================================
-   RESPONSIVE DESIGN
+    RESPONSIVE DESIGN
    ========================================================= */
 
 @media (max-width: 1200px) {

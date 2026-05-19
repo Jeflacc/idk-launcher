@@ -306,8 +306,11 @@ document.querySelector('#app').innerHTML = `
       </div>
       <div class="mods-container">
         <div class="modpacks-sidebar">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:6px;">
             <p class="sidebar-label">YOUR MODPACKS</p>
+            <button class="mp-action-btn icon-btn" id="btn-refresh-profiles" title="Refresh all profiles from disk" style="padding:4px 6px;flex-shrink:0;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            </button>
             <button class="mp-action-btn back" id="btn-back-modpacks" title="Back to Modpacks" style="padding:4px 8px;font-size:11px;">← Back</button>
           </div>
           <div class="modpacks-list" id="modpacks-list"></div>
@@ -1518,6 +1521,13 @@ if (window.electronAPI) {
     playBtn.disabled = false;
   });
   window.electronAPI.onLaunchWarning((msg) => showWarningToast(msg));
+
+  // Missing mod dependencies detected from crash report
+  if (window.electronAPI.onMissingDependencies) {
+    window.electronAPI.onMissingDependencies(({ missing, mcVersion }) => {
+      showMissingDepsModal(missing, mcVersion);
+    });
+  }
   window.electronAPI.onClearJavaPath(() => {
     localStorage.removeItem('craftlaunch_javaPath');
     javaPath = '';
@@ -1569,6 +1579,103 @@ playBtn.addEventListener('click', () => {
 document.getElementById('btn-close-modal').addEventListener('click', () => {
   document.getElementById('error-modal').classList.remove('active');
 });
+
+// Missing Dependencies Modal
+function showMissingDepsModal(missing, mcVersion) {
+  // Remove existing modal if any
+  const existing = document.getElementById('missing-deps-modal');
+  if (existing) existing.remove();
+
+  const mp = mpGet();
+  const modpackId = mp ? mp.id : null;
+
+  const modal = document.createElement('div');
+  modal.id = 'missing-deps-modal';
+  modal.style.cssText = `
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.75);z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+  `;
+
+  const list = missing.map(d =>
+    `<li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;">
+      <strong style="color:#4cb837;">${d.modId}</strong>
+      <span style="color:#888;font-size:11px;margin-left:8px;">required by ${d.requiredBy}</span>
+    </li>`
+  ).join('');
+
+  modal.innerHTML = `
+    <div style="background:#1a1a1b;border:2px solid #4cb837;border-radius:8px;padding:32px;max-width:480px;width:90%;font-family:var(--font-title);">
+      <div style="text-align:center;margin-bottom:20px;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="margin-bottom:12px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <h2 style="font-size:20px;color:white;margin:0 0 8px;">Missing Dependencies</h2>
+        <p style="color:#888;font-size:13px;margin:0;">The game crashed because these required mods are missing:</p>
+      </div>
+      <ul style="list-style:none;padding:0;margin:0 0 24px;max-height:200px;overflow-y:auto;">${list}</ul>
+      <div style="display:flex;gap:10px;">
+        <button id="btn-auto-install-deps" style="flex:1;background:#4cb837;border:none;border-radius:4px;padding:12px;color:white;font-family:var(--font-title);font-size:13px;font-weight:700;cursor:pointer;">
+          Auto-Install All
+        </button>
+        <button id="btn-dismiss-deps" style="flex:1;background:#3a3a3b;border:none;border-radius:4px;padding:12px;color:white;font-family:var(--font-title);font-size:13px;font-weight:700;cursor:pointer;">
+          Dismiss
+        </button>
+      </div>
+      <div id="deps-install-status" style="margin-top:12px;font-size:12px;color:#888;text-align:center;"></div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document.getElementById('btn-dismiss-deps').onclick = () => modal.remove();
+
+  document.getElementById('btn-auto-install-deps').onclick = async () => {
+    if (!modpackId || !window.electronAPI) {
+      document.getElementById('deps-install-status').innerText = 'Cannot auto-install: no active modpack.';
+      return;
+    }
+    const btn = document.getElementById('btn-auto-install-deps');
+    btn.disabled = true;
+    btn.innerText = 'Installing...';
+    const status = document.getElementById('deps-install-status');
+    status.innerText = 'Searching Modrinth for dependencies...';
+
+    try {
+      const results = await window.electronAPI.autoInstallDependencies({ modpackId, missing, mcVersion });
+      const succeeded = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
+
+      // Add installed mods to the modpack profile
+      if (succeeded.length > 0) {
+        const mp = mpGet();
+        if (mp) {
+          succeeded.forEach(r => {
+            if (!mp.mods.find(m => m.filename === r.filename)) {
+              mp.mods.push({ name: r.name || r.modId, filename: r.filename, modrinthId: r.modId, version: '', iconUrl: '' });
+            }
+          });
+          mpSave();
+          mpRenderDetail();
+          mpRenderList();
+        }
+      }
+
+      if (failed.length === 0) {
+        status.style.color = '#4cb837';
+        status.innerText = `✓ Installed ${succeeded.length} dependencies. Launch the game again!`;
+        btn.innerText = 'Done!';
+      } else {
+        status.style.color = '#f59e0b';
+        status.innerText = `Installed ${succeeded.length}, failed ${failed.length}: ${failed.map(f => f.modId).join(', ')}`;
+        btn.innerText = 'Partial Install';
+      }
+    } catch (e) {
+      status.style.color = '#ef4444';
+      status.innerText = 'Error: ' + e.message;
+      btn.disabled = false;
+      btn.innerText = 'Retry';
+    }
+  };
+}
 
 // Warning Toast Logic
 let toastTimeout = null;
@@ -1660,54 +1767,83 @@ async function loadProfilesFromDisk() {
   try {
     console.log('[Modpacks] Calling scanProfiles...');
     const result = await window.electronAPI.scanProfiles();
+    // Log to main process via IPC so it shows in terminal
+    const summary = result.profiles?.map(p => `${p.name}:mods=${p.diskMods?.length}rp=${p.diskResourcepacks?.length}sh=${p.diskShaders?.length}`).join(' | ');
+    const logMsg = `scanProfiles returned: success=${result.success} profiles=${result.profiles?.length} | ${summary}`;
+    console.log('[Modpacks]', logMsg);
+    window.electronAPI?.rendererLog?.('[Modpacks] ' + logMsg);
     console.log('[Modpacks] scanProfiles result:', result);
     if (result.success && result.profiles.length > 0) {
-      // Merge profiles from disk with localStorage
+      try {
       const diskProfiles = result.profiles;
-      
-      // Create a map of existing modpacks by ID for quick lookup
-      const existingMap = new Map(modpacks.map(mp => [mp.id, mp]));
-      
-      // Add new profiles from disk that aren't in localStorage
-      // Also update existing ones if they had Unknown version/loader
-      for (const diskMp of diskProfiles) {
-        if (!existingMap.has(diskMp.id)) {
-          modpacks.push({
-            id: diskMp.id,
-            name: diskMp.name,
-            mcVersion: diskMp.mcVersion,
-            loader: diskMp.loader,
-            mods: [],
-            resourcepacks: [],
-            shaders: [],
-            iconUrl: diskMp.iconUrl || null,
-            _diskModCount: diskMp.modCount || 0,
-            _diskRpCount:  diskMp.rpCount  || 0,
-            _diskShCount:  diskMp.shCount  || 0,
-          });
-          existingMap.set(diskMp.id, modpacks[modpacks.length - 1]);
-        } else {
-          // Always trust disk profile.json over localStorage — disk is source of truth
-          const existing = existingMap.get(diskMp.id);
-          if (diskMp.mcVersion && diskMp.mcVersion !== 'Unknown') existing.mcVersion = diskMp.mcVersion;
-          if (diskMp.loader    && diskMp.loader    !== 'Vanilla')  existing.loader   = diskMp.loader;
-          if (diskMp.name      && !diskMp.name.startsWith('Modpack (')) existing.name = diskMp.name;
-          // Always update counts from disk — they reflect actual files
-          if (diskMp.modCount !== undefined) existing._diskModCount = diskMp.modCount;
-          if (diskMp.rpCount  !== undefined) existing._diskRpCount  = diskMp.rpCount;
-          if (diskMp.shCount  !== undefined) existing._diskShCount  = diskMp.shCount;
-        }
+      // Debug: log what disk returned
+      diskProfiles.forEach(p => {
+        console.log(`[Modpacks] Disk profile: ${p.name} (${p.id}) — mods:${p.diskMods?.length || 0} rp:${p.diskResourcepacks?.length || 0} sh:${p.diskShaders?.length || 0}`);
+      });
+
+      // Helper: merge disk file list with stored metadata
+      const mergeFiles = (diskFiles, storedFiles) => {
+        // storedFiles might be an object or non-array — normalize it
+        const storedArr = Array.isArray(storedFiles) ? storedFiles : [];
+        const storedMap = new Map(storedArr.map(f => [f.filename, f]));
+        return (diskFiles || []).map(df => {
+          const stored = storedMap.get(df.filename);
+          return stored
+            ? stored
+            : { filename: df.filename, name: df.filename.replace(/\.jar$|\.zip$/, ''), modrinthId: '', version: '', iconUrl: '' };
+        });
+      };
+
+      // Build lookup maps — by ID and by name (for legacy matching)
+      const existingById   = new Map(modpacks.map(mp => [mp.id, mp]));
+      const existingByName = new Map(modpacks.map(mp => [mp.name?.toLowerCase().trim(), mp]));
+
+      console.log('[Modpacks] localStorage IDs:', modpacks.map(mp => `${mp.id}="${mp.name}"`).join(', '));
+      console.log('[Modpacks] Disk IDs:', diskProfiles.map(p => `${p.id}="${p.name}"`).join(', '));
+
+      // Build a new modpacks array entirely from disk — disk is the source of truth
+      // Preserve metadata (iconUrl, lastPlayed, modrinthId per file) from localStorage
+      const newModpacks = diskProfiles.map(diskMp => {
+        // Try to find existing entry by ID, then by name
+        const existing = existingById.get(diskMp.id) 
+          || existingByName.get(diskMp.name?.toLowerCase().trim());
+
+        return {
+          id:            diskMp.id,
+          name:          (existing?.name && !existing.name.startsWith('Modpack (')) ? existing.name : diskMp.name,
+          mcVersion:     diskMp.mcVersion !== 'Unknown' ? diskMp.mcVersion : (existing?.mcVersion || diskMp.mcVersion),
+          loader:        diskMp.loader    !== 'Vanilla'  ? diskMp.loader   : (existing?.loader    || diskMp.loader),
+          iconUrl:       existing?.iconUrl    || diskMp.iconUrl    || null,
+          lastPlayed:    existing?.lastPlayed || diskMp.lastPlayed || null,
+          mods:          mergeFiles(diskMp.diskMods          || [], existing?.mods          || []),
+          resourcepacks: mergeFiles(diskMp.diskResourcepacks  || [], existing?.resourcepacks || []),
+          shaders:       mergeFiles(diskMp.diskShaders        || [], existing?.shaders       || []),
+        };
+      });
+
+      modpacks = newModpacks;
+      const rebuildMsg = 'After rebuild: ' + modpacks.map(m => `${m.name}: mods=${m.mods?.length} rp=${m.resourcepacks?.length} sh=${m.shaders?.length}`).join(' | ');
+      console.log('[Modpacks]', rebuildMsg);
+      window.electronAPI?.rendererLog?.('[Modpacks] ' + rebuildMsg);
+      // Keep activeModpackId pointing to a valid modpack
+      // The ID may have changed (legacy fix) — try to find by old ID first, then keep first
+      if (activeModpackId && !modpacks.find(m => m.id === activeModpackId)) {
+        // Try to find by name match from old localStorage
+        const oldMp = [...(new Map(modpacks.map(m => [m.id, m]))).values()][0];
+        activeModpackId = oldMp?.id || null;
       }
-      
-      // Update localStorage with merged list
+
       localStorage.setItem('idk_modpacks', JSON.stringify(modpacks));
-      console.log(`[Modpacks] Loaded ${diskProfiles.length} profiles from disk, total: ${modpacks.length}`);
-      // Re-render so the user sees the updated names/versions
+      console.log(`[Modpacks] Synced ${diskProfiles.length} profiles from disk`);
       mpRenderList();
       mpRenderDetail();
+      } catch (innerErr) {
+        window.electronAPI?.rendererLog?.('[Modpacks] INNER ERROR: ' + innerErr.message + ' | stack: ' + innerErr.stack?.split('\n').slice(0,3).join(' | '));
+      }
     }
   } catch (e) {
     console.error('[Modpacks] Failed to scan profiles:', e);
+    window.electronAPI?.rendererLog?.('[Modpacks] OUTER ERROR: ' + e.message);
   }
 }
 
@@ -1762,9 +1898,9 @@ function mpRenderList() {
     const el = document.createElement('div');
     el.className = 'modpack-item' + (mp.id === activeModpackId ? ' active' : '');
     // Use array lengths if available, otherwise fall back to disk counts
-    const modCount = (mp.mods?.length > 0) ? mp.mods.length : (mp._diskModCount || 0);
-    const rpCount = (mp.resourcepacks?.length > 0) ? mp.resourcepacks.length : (mp._diskRpCount || 0);
-    const shCount = (mp.shaders?.length > 0) ? mp.shaders.length : (mp._diskShCount || 0);
+    const modCount = mp.mods?.length || 0;
+    const rpCount = mp.resourcepacks?.length || 0;
+    const shCount = mp.shaders?.length || 0;
     const total = modCount + rpCount + shCount;
     const iconHtml = mp.iconUrl 
       ? `<img src="${mp.iconUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<svg width=\`20\` height=\`20\` viewBox=\`0 0 24 24\` fill=\`none\` stroke=\`currentColor\` stroke-width=\`2\`><path d=\`M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\`></path></svg>'" />`
@@ -1773,7 +1909,13 @@ function mpRenderList() {
       <div class="mp-item-icon" style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(255,255,255,0.05);flex-shrink:0;border:1px solid rgba(255,255,255,0.08);">${iconHtml}</div>
       <div class="mp-item-info"><strong>${mp.name}</strong><span>${mp.mcVersion} · ${mp.loader}</span></div>
       <span class="mp-item-count">${total}</span>`;
-    el.addEventListener('click', () => { activeModpackId = mp.id; mpRenderList(); mpRenderDetail(); });
+    el.addEventListener('click', async () => { 
+      activeModpackId = mp.id; 
+      mpRenderList(); 
+      mpRenderDetail();
+      // Rescan disk in background — don't await so UI shows immediately
+      loadProfilesFromDisk();
+    });
     list.appendChild(el);
   });
 }
@@ -1865,9 +2007,9 @@ function mpRenderDetail() {
     playtimeEl.innerText = 'Never Played';
   }
 
-  document.getElementById('mod-count').innerText    = mp.mods?.length    || mp._diskModCount || 0;
-  document.getElementById('rp-count').innerText     = mp.resourcepacks?.length || mp._diskRpCount  || 0;
-  document.getElementById('shader-count').innerText = mp.shaders?.length  || mp._diskShCount || 0;
+  document.getElementById('mod-count').innerText    = mp.mods?.length    || 0;
+  document.getElementById('rp-count').innerText     = mp.resourcepacks?.length || 0;
+  document.getElementById('shader-count').innerText = mp.shaders?.length  || 0;
   mpRenderInstalledList('mods');
   mpRenderInstalledList('resourcepacks');
   mpRenderInstalledList('shaders');
@@ -2633,6 +2775,20 @@ document.getElementById('btn-back-modpacks').addEventListener('click', () => {
   activeModpackId = null;
   mpRenderList();
   mpRenderDetail();
+});
+
+// --- Refresh Profiles ---
+document.getElementById('btn-refresh-profiles').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-refresh-profiles');
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
+  // Rotate icon
+  btn.querySelector('svg').style.animation = 'spin 0.8s linear infinite';
+  await loadProfilesFromDisk();
+  btn.style.opacity = '';
+  btn.style.pointerEvents = '';
+  btn.querySelector('svg').style.animation = '';
+  showWarningToast('Profiles refreshed from disk!');
 });
 
 // =========================================================
