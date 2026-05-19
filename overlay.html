@@ -205,6 +205,7 @@
       gap: 16px;
       position: relative;
       overflow: hidden;
+      flex-shrink: 0; /* Protect against layout squeeze on small window height */
     }
 
     .game-session-card::before {
@@ -291,6 +292,7 @@
       flex-direction: column;
       gap: 12px;
       margin-top: auto;
+      flex-shrink: 0; /* Protect against layout squeeze on small window height */
     }
 
     .quick-action-btn {
@@ -359,6 +361,7 @@
 
     .friends-search-container {
       position: relative;
+      flex-shrink: 0; /* Protect against layout squeeze on small window height */
     }
 
     .friends-search-input {
@@ -531,6 +534,7 @@
       border-top: 1px solid var(--border-color);
       padding-top: 16px;
       margin-top: auto;
+      flex-shrink: 0; /* Protect against layout squeeze on small window height */
     }
 
     .friends-add-input {
@@ -798,13 +802,13 @@
           </div>
           
           <!-- Custom statistics/decorations to look premium -->
-          <div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); border-radius: 16px; padding: 20px; font-size: 13px; line-height: 1.5; color: var(--text-muted);">
+          <div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); border-radius: 16px; padding: 20px; font-size: 13px; line-height: 1.5; color: var(--text-muted); flex-shrink: 0;">
             <h4 style="font-family: var(--font-title); color: white; margin-bottom: 6px; font-weight: 700;">Overlay Layering Active</h4>
             Always-on-top rendering is active at system level `'screen-saver'`. Inputs are successfully layered. Your game performance is protected.
           </div>
 
           <!-- Startup Notification Option -->
-          <div style="display: flex; align-items: center; gap: 10px; padding: 4px 6px; margin-top: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 4px 6px; margin-top: 10px; flex-shrink: 0;">
             <input type="checkbox" id="chk-show-startup-notification" style="width: 16px; height: 16px; accent-color: var(--accent-green); cursor: pointer;">
             <label for="chk-show-startup-notification" style="font-size: 13px; color: var(--text-muted); cursor: pointer; user-select: none;">
               Show "Shift+Tab" hint at startup
