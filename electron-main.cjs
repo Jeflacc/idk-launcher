@@ -52,13 +52,21 @@ function initDiscordRPC() {
   });
 
   rpcClient.on('disconnected', () => {
-    console.log('[Discord RPC] Disconnected from Discord.');
+    // Only log disconnection if we were previously connected (actual disconnect, not initial failure)
+    if (rpcConnected) {
+      console.log('[Discord RPC] Disconnected from Discord.');
+    }
     rpcConnected = false;
     scheduleRPCReconnect();
   });
 
   rpcClient.login({ clientId: DISCORD_CLIENT_ID }).catch(err => {
-    console.warn('[Discord RPC] Login failed:', err.message);
+    // Only log if Discord is actually running (connection refused means Discord isn't running)
+    if (err.message.includes('Could not connect')) {
+      console.log('[Discord RPC] Discord not running - Rich Presence disabled');
+    } else {
+      console.warn('[Discord RPC] Login failed:', err.message);
+    }
     rpcConnected = false;
     scheduleRPCReconnect();
   });
@@ -66,7 +74,8 @@ function initDiscordRPC() {
 
 function scheduleRPCReconnect() {
   if (reconnectTimeout) return;
-  console.log('[Discord RPC] Reconnection scheduled in 15 seconds...');
+  // Only log reconnection attempts if we're not in a known "Discord not running" state
+  // This prevents spam when Discord is simply not open
   reconnectTimeout = setTimeout(() => {
     reconnectTimeout = null;
     initDiscordRPC();
@@ -133,7 +142,10 @@ function createWindow() {
     width: 1050,
     height: 650,
     frame: false,
-    resizable: false,
+    resizable: true,
+    maximizable: true,
+    minimizable: true,
+    closable: true,
     show: false, // Don't show immediately
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -151,10 +163,21 @@ function createWindow() {
 
   // Once main window is ready to show, wait a bit for splash animation then swap
   mainWindow.once('ready-to-show', () => {
+    console.log('[Window] ready-to-show event fired');
     setTimeout(() => {
+      console.log('[Window] Closing splash, showing main window');
       splashWindow.close();
       mainWindow.show();
     }, 3000); // 3 second splash minimum
+  });
+
+  mainWindow.on('closed', () => {
+    console.log('[Window] Main window closed');
+    mainWindow = null;
+  });
+
+  mainWindow.on('close', (e) => {
+    console.log('[Window] Main window close event');
   });
 }
 
@@ -197,6 +220,9 @@ ipcMain.on('open-external', (event, url) => {
   shell.openExternal(url);
 });
 
+// Forward renderer console.log to terminal
+ipcMain.on('renderer-log', (_e, msg) => console.log('[Renderer]', msg));
+
 ipcMain.on('toggle-devtools', () => {
   if (mainWindow) {
     if (mainWindow.webContents.isDevToolsOpened()) {
@@ -216,6 +242,46 @@ ipcMain.handle('install-mod', async (event, { modpackId, downloadUrl, filename }
   return new Promise((resolve, reject) => {
     downloadFile(downloadUrl, jarPath, () => resolve({ success: true }), (e) => reject(e));
   });
+});
+
+// Auto-install missing mod dependencies detected from crash reports
+ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, mcVersion }) => {
+  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const modsPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods');
+  if (!fs.existsSync(modsPath)) fs.mkdirSync(modsPath, { recursive: true });
+
+  const results = [];
+  for (const dep of missing) {
+    try {
+      // Search Modrinth for the dependency mod
+      const searchUrl = `https://api.modrinth.com/v2/search?query=${encodeURIComponent(dep.modId)}&facets=${encodeURIComponent(JSON.stringify([["project_type:mod"],["versions:" + mcVersion]]))}}&limit=5`;
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
+      const hit = searchData.hits && searchData.hits[0];
+      if (!hit) { results.push({ modId: dep.modId, success: false, reason: 'Not found on Modrinth' }); continue; }
+
+      // Get versions for this project
+      const versionsUrl = `https://api.modrinth.com/v2/project/${hit.project_id}/version?game_versions=${encodeURIComponent(JSON.stringify([mcVersion]))}&loaders=${encodeURIComponent(JSON.stringify(['forge','fabric','neoforge','quilt']))}`;
+      const versionsRes = await fetch(versionsUrl);
+      const versions = await versionsRes.json();
+      if (!Array.isArray(versions) || versions.length === 0) { results.push({ modId: dep.modId, success: false, reason: 'No compatible version found' }); continue; }
+
+      const latest = versions[0];
+      const file = latest.files && latest.files.find(f => f.primary) || latest.files[0];
+      if (!file) { results.push({ modId: dep.modId, success: false, reason: 'No file found' }); continue; }
+
+      const destPath = path.join(modsPath, file.filename);
+      if (!fs.existsSync(destPath)) {
+        await new Promise((resolve, reject) => {
+          downloadFile(file.url, destPath, resolve, reject);
+        });
+      }
+      results.push({ modId: dep.modId, success: true, filename: file.filename, name: hit.title });
+    } catch (e) {
+      results.push({ modId: dep.modId, success: false, reason: e.message });
+    }
+  }
+  return results;
 });
 
 ipcMain.handle('remove-mod', async (event, { modpackId, filename }) => {
@@ -575,7 +641,29 @@ function isModernVersion(ver) {
 }
 
 ipcMain.on('launch-modpack', async (event, args) => {
-  const { username, modpackId, modpackName, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData, quickConnect } = args;
+  let { username, modpackId, modpackName, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData, quickConnect } = args;
+
+  // Always read mcVersion and loader from profile.json on disk — it's the source of truth.
+  // This prevents stale localStorage values from causing wrong-version launches.
+  const profileJsonPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`, 'profile.json');
+  if (fs.existsSync(profileJsonPath)) {
+    try {
+      let raw = fs.readFileSync(profileJsonPath, 'utf8');
+      if (raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1); // strip BOM
+      const profileData = JSON.parse(raw);
+      if (profileData.mcVersion && profileData.mcVersion !== 'Unknown') {
+        if (profileData.mcVersion !== mcVersion) {
+          console.log(`[Launch] Overriding mcVersion from localStorage (${mcVersion}) with profile.json value (${profileData.mcVersion})`);
+          mcVersion = profileData.mcVersion;
+        }
+      }
+      if (profileData.loader && profileData.loader !== 'Vanilla') {
+        loader = profileData.loader;
+      }
+    } catch (e) {
+      console.warn('[Launch] Could not read profile.json, using frontend-provided values:', e.message);
+    }
+  }
 
   if (username) lastActiveUsername = username;
   const mpName = modpackName || 'Modpack';
@@ -678,7 +766,11 @@ ipcMain.on('launch-modpack', async (event, args) => {
       const forgeVersionId = await installForge(mcVersion, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p), loaderVersion || null);
       opts.version.custom = forgeVersionId;
     } catch (err) {
-      event.sender.send('launch-error', 'Failed to install Forge: ' + err.message);
+      const isNetwork = err.message.includes('ENOTFOUND') || err.message.includes('ECONNREFUSED') || err.message.includes('ETIMEDOUT') || err.message.includes('network');
+      const msg = isNetwork
+        ? 'Failed to install Forge: No internet connection or Mojang servers are unreachable. Check your connection and try again.'
+        : 'Failed to install Forge: ' + err.message;
+      event.sender.send('launch-error', msg);
       return;
     }
   } else if (loaderLC === 'neoforge') {
@@ -714,9 +806,10 @@ ipcMain.on('launch-modpack', async (event, args) => {
   launchClient.on('debug', (e) => console.log('[MC Debug]', e));
   try {
     event.sender.send('launch-progress', { percent: 0, status: 'Initializing...' });
-    // Clean empty files to prevent ZipException corruption
+    // Clean empty files and corrupt Fabric jars to prevent ZipException corruption
     cleanEmptyFiles(path.join(rootPath, 'libraries'));
     cleanEmptyFiles(path.join(rootPath, 'versions'));
+    cleanCorruptFabricJars(path.join(rootPath, 'versions'));
     await launchClient.launch(opts);
     // Game process is now running — tell renderer to hide overlay
     event.sender.send('game-launched');
@@ -842,9 +935,18 @@ ipcMain.on('launch-minecraft', async (event, args) => {
         }
       }
     } else if (loaderNameLC === 'forge') {
-      event.sender.send('launch-progress', { status: 'Installing Forge (this may take a moment)...', percent: 10 });
-      const forgeVersionId = await installForge(version, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
-      opts.version.custom = forgeVersionId;
+      try {
+        event.sender.send('launch-progress', { status: 'Installing Forge (this may take a moment)...', percent: 10 });
+        const forgeVersionId = await installForge(version, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
+        opts.version.custom = forgeVersionId;
+      } catch (err) {
+        const isNetwork = err.message.includes('ENOTFOUND') || err.message.includes('ECONNREFUSED') || err.message.includes('ETIMEDOUT');
+        const msg = isNetwork
+          ? 'Failed to install Forge: No internet connection or Mojang servers are unreachable. Check your connection and try again.'
+          : 'Failed to install Forge: ' + err.message;
+        event.sender.send('launch-error', msg);
+        return;
+      }
     } else if (loaderNameLC === 'neoforge') {
       event.sender.send('launch-progress', { status: 'Installing NeoForge (this may take a moment)...', percent: 10 });
       const neoVersionId = await installNeoForge(version, rootPath, opts.javaPath, (p) => event.sender.send('launch-progress', p));
@@ -922,15 +1024,54 @@ ipcMain.on('launch-minecraft', async (event, args) => {
 
   launchClient.on('close', () => {
     console.log('Game closed');
+
+    // --- Crash Report Parser: detect missing mod dependencies ---
+    try {
+      const crashDir = path.join(profilePath, 'crash-reports');
+      if (fs.existsSync(crashDir)) {
+        const files = fs.readdirSync(crashDir)
+          .filter(f => f.endsWith('.txt'))
+          .map(f => ({ name: f, time: fs.statSync(path.join(crashDir, f)).mtimeMs }))
+          .sort((a, b) => b.time - a.time);
+
+        if (files.length > 0) {
+          const latest = path.join(crashDir, files[0].name);
+          const report = fs.readFileSync(latest, 'utf8');
+
+          // Only parse if it's a mod loading error
+          if (report.includes('Mod Loading has failed') || report.includes('Mod loading error has occurred')) {
+            const missing = [];
+            // Match lines like: "Mod X requires Y Z or above\nCurrently, Y is not installed"
+            const regex = /Mod (\S+) requires (\S+) ([\d.+\-]+) or above\s+Currently, (\S+) is not installed/g;
+            let m;
+            while ((m = regex.exec(report)) !== null) {
+              const dep = m[2]; // dependency mod id
+              if (!missing.find(x => x.modId === dep)) {
+                missing.push({ modId: dep, requiredBy: m[1], version: m[3] });
+              }
+            }
+
+            if (missing.length > 0) {
+              event.sender.send('missing-dependencies', { missing, mcVersion });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[CrashParser] Failed to parse crash report:', e);
+    }
+    // --- End Crash Report Parser ---
+
     event.sender.send('launch-closed');
     updateDiscordPresence('In Main Menu', 'Idle in Launcher');
   });
 
   try {
     event.sender.send('launch-progress', { percent: 0, status: 'Initializing...' });
-    // Clean empty files to prevent ZipException corruption
+    // Clean empty files and corrupt Fabric jars to prevent ZipException corruption
     cleanEmptyFiles(path.join(rootPath, 'libraries'));
     cleanEmptyFiles(path.join(rootPath, 'versions'));
+    cleanCorruptFabricJars(path.join(rootPath, 'versions'));
     await launchClient.launch(opts);
     // Game process is now running — tell renderer to hide the overlay
     event.sender.send('game-launched');
@@ -1096,6 +1237,22 @@ function cleanEmptyFiles(dir) {
     } else if (stat.isFile() && stat.size === 0) {
       console.log(`[Cleaner] Deleting empty file: ${fullPath}`);
       try { fs.unlinkSync(fullPath); } catch (e) { }
+    }
+  }
+}
+
+// Remove corrupt .jar files from Fabric version folders.
+// Fabric versions only need a .json — the .jar should never exist there.
+// If one does exist and is not a valid ZIP, it will crash the game.
+function cleanCorruptFabricJars(versionsDir) {
+  if (!fs.existsSync(versionsDir)) return;
+  const entries = fs.readdirSync(versionsDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory() || !entry.name.startsWith('fabric-loader-')) continue;
+    const jarPath = path.join(versionsDir, entry.name, `${entry.name}.jar`);
+    if (fs.existsSync(jarPath)) {
+      console.log(`[Cleaner] Removing corrupt Fabric jar: ${jarPath}`);
+      try { fs.unlinkSync(jarPath); } catch (e) { }
     }
   }
 }
@@ -1429,6 +1586,17 @@ function installQuilt(version, rootPath) {
 
 function installFabric(version, rootPath, pinnedLoaderVersion = null) {
   return new Promise((resolve, reject) => {
+    // If we have a pinned version, check the cache before making any network request
+    if (pinnedLoaderVersion) {
+      const jarName = `fabric-loader-${pinnedLoaderVersion}-${version}`;
+      const versionsPath = path.join(rootPath, 'versions', jarName);
+      const jsonPath = path.join(versionsPath, `${jarName}.json`);
+      if (fs.existsSync(jsonPath) && fs.statSync(jsonPath).size > 0) {
+        console.log(`[Fabric] Already installed (cached): ${jarName}`);
+        return resolve(jarName);
+      }
+    }
+
     https.get(`https://meta.fabricmc.net/v2/versions/loader/${version}`, (res) => {
       let data = '';
       res.on('data', c => data += c);
@@ -1453,9 +1621,16 @@ function installFabric(version, rootPath, pinnedLoaderVersion = null) {
             } catch (e) { console.error('Failed to delete dummy jar', e); }
           }
 
+          // If the JSON already exists and is non-empty, skip the download entirely
+          const jsonPath = path.join(versionsPath, `${jarName}.json`);
+          if (fs.existsSync(jsonPath) && fs.statSync(jsonPath).size > 0) {
+            console.log(`[Fabric] Already installed: ${jarName}`);
+            return resolve(jarName);
+          }
+
           // Fetch only the JSON instead of the full ZIP, bypassing the dummy jar completely!
           const jsonUrl = `https://meta.fabricmc.net/v2/versions/loader/${version}/${loaderVersion}/profile/json`;
-          const file = fs.createWriteStream(path.join(versionsPath, `${jarName}.json`));
+          const file = fs.createWriteStream(jsonPath);
 
           https.get(jsonUrl, (r) => {
             r.pipe(file);
@@ -1755,6 +1930,232 @@ ipcMain.handle('stop-cloudflared-access', async () => {
     return { success: true };
   }
   return { success: false, error: 'No active access bridge running' };
+});
+
+// Get userData path for frontend
+ipcMain.handle('get-user-data-path', async () => {
+  return app.getPath('userData');
+});
+
+// Scan profiles directory and return list of modpacks
+ipcMain.handle('scan-profiles', async () => {
+  console.log('[Profiles] scan-profiles handler called');
+  try {
+    const rootPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles');
+    const versionsPath = path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+    const profiles = [];
+    console.log('[Profiles] Scanning:', rootPath);
+
+    if (!fs.existsSync(rootPath)) {
+      console.log('[Profiles] Profiles directory does not exist');
+      return { success: true, profiles: [] };
+    }
+
+    // Get installed versions for cross-referencing
+    let installedVersions = [];
+    if (fs.existsSync(versionsPath)) {
+      installedVersions = fs.readdirSync(versionsPath, { withFileTypes: true })
+        .filter(e => e.isDirectory())
+        .map(e => e.name);
+    }
+
+    // Detect loader from installed versions list
+    function detectLoaderFromVersions(versionId) {
+      for (const v of installedVersions) {
+        const vl = v.toLowerCase();
+        if (vl.includes(versionId)) {
+          if (vl.includes('fabric')) return 'Fabric';
+          if (vl.includes('forge')) return 'Forge';
+          if (vl.includes('neoforge')) return 'NeoForge';
+          if (vl.includes('quilt')) return 'Quilt';
+        }
+      }
+      return null;
+    }
+
+    // Detect MC version from mod filenames (e.g. "sodium-fabric-mc1.20.4-..." or "fabric-api-0.91.0+1.20.4")
+    function detectVersionFromMods(modsPath) {
+      if (!fs.existsSync(modsPath)) return null;
+      const mods = fs.readdirSync(modsPath).filter(f => f.endsWith('.jar'));
+      const versionPatterns = [
+        /[_\-+]mc([0-9]+\.[0-9]+(?:\.[0-9]+)?)/i,   // mc1.20.4 or mc26.1.2
+        /[_\-+]([0-9]+\.[0-9]+\.[0-9]+)[_\-+.]/,     // -1.20.4- or -26.1.2-
+        /[_\-+]([0-9]+\.[0-9]+\.[0-9]+)$/i,           // ends with -26.1.2
+        /[_\-+]([0-9]+\.[0-9]+)[_\-+]/,               // -1.20- (fallback, less specific)
+      ];
+      const versionCounts = {};
+      for (const mod of mods) {
+        for (const pattern of versionPatterns) {
+          const m = mod.match(pattern);
+          if (m) {
+            const v = m[1];
+            versionCounts[v] = (versionCounts[v] || 0) + 1;
+            break;
+          }
+        }
+      }
+
+      if (Object.keys(versionCounts).length === 0) return null;
+
+      // Group versions: if both "26.1" and "26.1.2" exist, the shorter one is
+      // just a prefix of the longer — always prefer the more specific (longer) version.
+      const versions = Object.keys(versionCounts);
+      const filtered = versions.filter(v => {
+        // Keep v only if no other version starts with v + '.'
+        return !versions.some(other => other !== v && other.startsWith(v + '.'));
+      });
+
+      // Among the remaining specific versions, pick the most common
+      const sorted = filtered
+        .map(v => [v, versionCounts[v]])
+        .sort((a, b) => b[1] - a[1]);
+
+      return sorted.length > 0 ? sorted[0][0] : null;
+    }
+
+    // Detect loader from mod filenames
+    function detectLoaderFromMods(modsPath) {
+      if (!fs.existsSync(modsPath)) return null;
+      const mods = fs.readdirSync(modsPath).filter(f => f.endsWith('.jar'));
+      let fabric = 0, forge = 0, neoforge = 0, quilt = 0;
+      for (const mod of mods) {
+        const ml = mod.toLowerCase();
+        if (ml.includes('fabric')) fabric++;
+        if (ml.includes('neoforge')) neoforge++;
+        else if (ml.includes('forge')) forge++;
+        if (ml.includes('quilt')) quilt++;
+      }
+      // Also check for .fabric folder (definitive Fabric indicator)
+      const fabricDir = path.join(path.dirname(modsPath), '.fabric');
+      if (fs.existsSync(fabricDir)) return 'Fabric';
+      const max = Math.max(fabric, forge, neoforge, quilt);
+      if (max === 0) return null;
+      if (neoforge >= max) return 'NeoForge';
+      if (forge >= max) return 'Forge';
+      if (fabric >= max) return 'Fabric';
+      if (quilt >= max) return 'Quilt';
+      return null;
+    }
+
+    const entries = fs.readdirSync(rootPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (!entry.isDirectory() || !entry.name.startsWith('modpack-')) continue;
+
+      // Skip and clean up double-prefixed duplicates created by a previous bug
+      if (entry.name.startsWith('modpack-modpack-')) {
+        const dupPath = path.join(rootPath, entry.name);
+        // Only delete if it's empty (no mods) — safety check
+        const dupMods = path.join(dupPath, 'mods');
+        const dupModCount = fs.existsSync(dupMods)
+          ? fs.readdirSync(dupMods).filter(f => f.endsWith('.jar')).length
+          : 0;
+        if (dupModCount === 0) {
+          console.log(`[Profiles] Removing empty duplicate folder: ${entry.name}`);
+          try { fs.rmSync(dupPath, { recursive: true, force: true }); } catch (e) { /* non-fatal */ }
+        }
+        continue;
+      }
+
+      const profilePath = path.join(rootPath, entry.name);
+      const profileDataPath = path.join(profilePath, 'profile.json');
+
+      // Try reading saved profile.json first
+      let profileData = {};
+      if (fs.existsSync(profileDataPath)) {
+        try {
+          // Strip UTF-8 BOM if present before parsing
+          let raw = fs.readFileSync(profileDataPath, 'utf8');
+          if (raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1);
+          profileData = JSON.parse(raw);
+        } catch (e) {
+          console.warn(`[Profiles] Failed to read profile.json for ${entry.name}:`, e.message);
+        }
+      }
+
+      const modsPath = path.join(profilePath, 'mods');
+
+      // Auto-detect version and loader if not in profile.json
+      let mcVersion = profileData.mcVersion;
+      let loader = profileData.loader;
+
+      if (!mcVersion || mcVersion === 'Unknown') {
+        mcVersion = detectVersionFromMods(modsPath) || 'Unknown';
+      }
+      if (!loader || loader === 'Vanilla') {
+        loader = detectLoaderFromMods(modsPath)
+          || detectLoaderFromVersions(mcVersion)
+          || 'Vanilla';
+      }
+
+      // Count files AND build file lists for each category
+      const scanDir = (dir, exts) => {
+        const dirPath = path.join(profilePath, dir);
+        if (!fs.existsSync(dirPath)) return [];
+        try {
+          return fs.readdirSync(dirPath)
+            .filter(f => {
+              try {
+                if (!fs.statSync(path.join(dirPath, f)).isFile()) return false;
+                if (exts) return exts.some(e => f.toLowerCase().endsWith(e));
+                return true;
+              } catch { return false; }
+            })
+            .map(f => ({ filename: f }));
+        } catch { return []; }
+      };
+
+      const diskMods         = scanDir('mods', ['.jar']);
+      const diskResourcepacks = scanDir('resourcepacks', ['.zip', '.jar']);
+      const diskShaders       = scanDir('shaderpacks', ['.zip', '.jar']);
+
+      console.log(`[Profiles] ${entry.name}: mods=${diskMods.length} rp=${diskResourcepacks.length} sh=${diskShaders.length} path=${profilePath}`);
+
+      const modCount = diskMods.length;
+      const rpCount  = diskResourcepacks.length;
+      const shCount  = diskShaders.length;
+
+      // Build a friendly name from profile.json or folder name
+      let name = profileData.name;
+      // Only generate a name if there isn't one, or it was previously auto-generated with wrong version
+      if (!name || name === `Modpack (${profileData.mcVersion} · ${profileData.loader})`) {
+        name = `Modpack (${mcVersion} · ${loader})`;
+      }
+
+      // Only write back to profile.json if we actually auto-detected something new
+      const needsWrite = (!profileData.mcVersion || profileData.mcVersion === 'Unknown') ||
+                         (!profileData.loader    || profileData.loader    === 'Vanilla') ||
+                         (!profileData.id); // also write if id is missing
+      if (needsWrite) {
+        const folderId = entry.name.replace(/^modpack-/, '');
+        try {
+          const json = JSON.stringify({ ...profileData, id: folderId, name, mcVersion, loader }, null, 2);
+          fs.writeFileSync(profileDataPath, Buffer.from(json, 'utf8'));
+        } catch (e) { /* non-fatal */ }
+      }
+
+      profiles.push({
+        id: entry.name.replace(/^modpack-/, ''),
+        name,
+        mcVersion,
+        loader,
+        modCount,
+        rpCount,
+        shCount,
+        iconUrl: profileData.iconUrl || null,
+        diskMods,
+        diskResourcepacks,
+        diskShaders,
+        lastPlayed: profileData.lastPlayed || null,
+      });
+    }
+
+    console.log(`[Profiles] Found ${profiles.length} modpacks`);
+    return { success: true, profiles: profiles.sort((a, b) => a.name.localeCompare(b.name)) };
+  } catch (e) {
+    console.error('[Profiles] Scan failed:', e.message);
+    return { success: false, error: e.message, profiles: [] };
+  }
 });
 
 app.on('will-quit', () => {
