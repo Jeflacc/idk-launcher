@@ -838,13 +838,8 @@ ipcMain.on('launch-modpack', async (event, args) => {
       username: username,
       startTime: Date.now()
     };
-    // Show overlay window inactive (click-through) to show the startup notification
-    if (overlayWindow) {
-      overlayWindow.showInactive();
-      overlayWindow.setIgnoreMouseEvents(true, { forward: true });
-      overlayWindow.webContents.send('show-startup-notification', { session: activeGameSession });
-      startOverlayTracking();
-    }
+    // Wait for the Minecraft window to load, then display the startup notification
+    waitForMinecraftWindowAndShowNotification();
     updateDiscordPresence(
       `Playing Modpack: ${mpName}`,
       `Minecraft ${mcVersion} (${loaderName})`,
@@ -1127,13 +1122,8 @@ ipcMain.on('launch-minecraft', async (event, args) => {
       username: username,
       startTime: Date.now()
     };
-    // Show overlay window inactive (click-through) to show the startup notification
-    if (overlayWindow) {
-      overlayWindow.showInactive();
-      overlayWindow.setIgnoreMouseEvents(true, { forward: true });
-      overlayWindow.webContents.send('show-startup-notification', { session: activeGameSession });
-      startOverlayTracking();
-    }
+    // Wait for the Minecraft window to load, then display the startup notification
+    waitForMinecraftWindowAndShowNotification();
     updateDiscordPresence(
       `Playing Minecraft ${version}`,
       `Mod Loader: ${loaderName}`,
@@ -2271,6 +2261,37 @@ function getMinecraftWindowRect(pid) {
       }
     });
   });
+}
+
+function waitForMinecraftWindowAndShowNotification() {
+  if (!activeMinecraftProcess || !activeMinecraftProcess.pid) return;
+
+  const pid = activeMinecraftProcess.pid;
+  let attempts = 0;
+
+  const interval = setInterval(async () => {
+    attempts++;
+    // Stop if session is ended, window is destroyed, or after 60 attempts (30 seconds)
+    if (!activeGameSession || attempts > 60 || !overlayWindow) {
+      clearInterval(interval);
+      return;
+    }
+
+    const rect = await getMinecraftWindowRect(pid);
+    if (rect) {
+      clearInterval(interval);
+      console.log(`[Overlay] Minecraft window detected for PID ${pid}. Displaying startup notification.`);
+
+      // Position overlay window over Minecraft
+      overlayWindow.setBounds(rect);
+      overlayWindow.showInactive();
+      overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+      overlayWindow.webContents.send('show-startup-notification', { session: activeGameSession });
+
+      // Start continuous bounds tracking
+      startOverlayTracking();
+    }
+  }, 500);
 }
 
 function startOverlayTracking() {
