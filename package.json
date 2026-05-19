@@ -61,6 +61,7 @@
       "electron-main.cjs",
       "preload.cjs",
       "splash.html",
+      "overlay.html",
       "logo.png",
       "public/**/*"
     ]

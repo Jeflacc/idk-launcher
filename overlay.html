@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IDK CONNECT OVERLAY</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: rgba(9, 9, 11, 0.5);
+      --panel-bg: rgba(20, 20, 23, 0.65);
+      --card-bg: rgba(30, 30, 35, 0.5);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-green: #22c55e;
+      --accent-green-glow: rgba(34, 197, 94, 0.4);
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --font-title: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: transparent;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Outer Wrapper with Backdrop Blur */
+    .overlay-backdrop {
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg-dark);
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
+      transition: backdrop-filter 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s;
+      display: flex;
+      flex-direction: column;
+      padding: 40px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .overlay-backdrop.active {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(9, 9, 11, 0.65);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Top Navigation bar */
+    .overlay-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      transform: translateY(-20px);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .overlay-backdrop.active .overlay-header {
+      transform: translateY(0);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      font-family: var(--font-title);
+      font-weight: 900;
+      font-size: 28px;
+      letter-spacing: 1px;
+      color: white;
+    }
+
+    .brand-logo span {
+      color: var(--accent-green);
+      text-shadow: 0 0 10px var(--accent-green-glow);
+    }
+
+    .brand-badge {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid var(--accent-green);
+      color: var(--accent-green);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .digital-clock {
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 24px;
+      letter-spacing: 1px;
+      color: white;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      padding: 6px 16px;
+      border-radius: 12px;
+    }
+
+    .close-help {
+      color: var(--text-muted);
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    .close-help kbd {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: inherit;
+      font-weight: 600;
+      color: white;
+    }
+
+    /* Grid Layout */
+    .overlay-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 30px;
+      flex: 1;
+      min-height: 0;
+      transform: translateY(20px);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .overlay-backdrop.active .overlay-grid {
+      transform: translateY(0);
+    }
+
+    /* Glass Panels */
+    .overlay-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-header h2 {
+      font-family: var(--font-title);
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-content {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Game Session Card */
+    .game-session-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-session-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+    }
+
+    .game-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .game-logo-box {
+      width: 54px;
+      height: 54px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .game-logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .game-title-info h3 {
+      font-family: var(--font-title);
+      font-weight: 800;
+      font-size: 20px;
+      color: white;
+      margin-bottom: 2px;
+    }
+
+    .game-title-info span {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .session-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .session-stat-box {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      padding: 14px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .session-stat-box span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .session-stat-box strong {
+      font-family: var(--font-title);
+      font-size: 18px;
+      color: white;
+    }
+
+    .quick-actions-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .quick-action-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .quick-action-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .quick-action-btn.danger {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .quick-action-btn.danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+
+    /* Friends Sidebar */
+    .friends-header-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      padding: 10px 16px;
+      border-radius: 14px;
+    }
+
+    .friends-header-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .friends-header-info h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .friends-header-info span {
+      font-size: 11px;
+      color: var(--accent-green);
+      font-weight: 500;
+    }
+
+    .friends-search-container {
+      position: relative;
+    }
+
+    .friends-search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 12px;
+      outline: none;
+      font-size: 13px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .friends-search-input:focus {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .friends-list-container {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .friends-list-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin: 8px 0 4px;
+    }
+
+    /* Friend Card */
+    .friend-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 12px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+
+    .friend-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .friend-card-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .friend-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+
+    .friend-avatar.online {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green-glow);
+    }
+
+    .friend-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .friend-info strong {
+      font-size: 14px;
+      color: white;
+      font-weight: 600;
+    }
+
+    .friend-status-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .friend-status-text.online {
+      color: #93c5fd;
+    }
+
+    .friend-status-text.playing {
+      color: #c084fc;
+    }
+
+    .friend-status-text.hosting {
+      color: var(--accent-green);
+      font-weight: 500;
+    }
+
+    .friend-status-dot {
+      width: 5px;
+      height: 5px;
+      background: #4b5563;
+      border-radius: 50%;
+    }
+
+    .friend-status-dot.online {
+      background: var(--accent-green);
+      box-shadow: 0 0 6px var(--accent-green);
+    }
+
+    .friend-join-btn {
+      background: var(--accent-green);
+      border: none;
+      color: black;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+      transition: all 0.2s;
+    }
+
+    .friend-join-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(34, 197, 94, 0.45);
+    }
+
+    .friend-join-btn:active {
+      transform: translateY(0);
+    }
+
+    .friends-list-empty {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-muted);
+      font-size: 13px;
+      border: 1px dashed var(--border-color);
+      border-radius: 16px;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Friend Requests Sub-Section */
+    .friends-add-form {
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+      margin-top: auto;
+    }
+
+    .friends-add-input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 12px;
+      outline: none;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .friends-add-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 0 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .friends-add-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Toast Notification */
+    .toast-notification {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(24, 24, 27, 0.9);
+      border: 1px solid var(--accent-green);
+      border-radius: 16px;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: white;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 197, 94, 0.15);
+      z-index: 10000;
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
+      pointer-events: none;
+    }
+
+    .toast-notification.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast-icon {
+      color: var(--accent-green);
+      display: flex;
+      align-items: center;
+    }
+
+    /* Auth Required Screen */
+    .auth-required-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+      gap: 16px;
+      height: 100%;
+    }
+
+    .auth-required-box h3 {
+      font-family: var(--font-title);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .auth-required-box p {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 280px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Overlay container -->
+  <div class="overlay-backdrop" id="overlay-backdrop">
+    
+    <!-- Top bar -->
+    <div class="overlay-header">
+      <div class="header-brand">
+        <div class="brand-logo">IDK<span>.</span>CONNECT</div>
+        <div class="brand-badge">OVERLAY SYSTEM</div>
+      </div>
+      
+      <div class="header-info">
+        <div class="digital-clock" id="digital-clock">00:00:00</div>
+        <div class="close-help">Press <kbd>Shift + Tab</kbd> or <kbd>Shift + F1</kbd> to exit overlay</div>
+      </div>
+    </div>
+    
+    <!-- Grid -->
+    <div class="overlay-grid">
+      
+      <!-- Left side: Session Info -->
+      <div class="overlay-panel">
+        <div class="panel-header">
+          <h2>Active Session</h2>
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;" id="session-launcher-version">IDK Launcher v1.3.0</span>
+        </div>
+        
+        <div class="panel-content">
+          <div class="game-session-card">
+            <div class="game-meta-row">
+              <div class="game-logo-box" id="game-logo-box">
+                <img src="./logo.png" alt="Minecraft">
+              </div>
+              <div class="game-title-info">
+                <h3 id="session-game-title">Minecraft</h3>
+                <span id="session-loader-text">Loading session info...</span>
+              </div>
+            </div>
+            
+            <div class="session-stats-grid">
+              <div class="session-stat-box">
+                <span>Play Time</span>
+                <strong id="session-playtime">00m 00s</strong>
+              </div>
+              <div class="session-stat-box">
+                <span>Target Server</span>
+                <strong id="session-server">Singleplayer</strong>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Custom statistics/decorations to look premium -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); border-radius: 16px; padding: 20px; font-size: 13px; line-height: 1.5; color: var(--text-muted);">
+            <h4 style="font-family: var(--font-title); color: white; margin-bottom: 6px; font-weight: 700;">Overlay Layering Active</h4>
+            Always-on-top rendering is active at system level `'screen-saver'`. Inputs are successfully layered. Your game performance is protected.
+          </div>
+
+          <div class="quick-actions-panel">
+            <button class="quick-action-btn" id="btn-open-folder-overlay">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              Open Game Directory
+            </button>
+            <button class="quick-action-btn danger" id="btn-close-overlay-action">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              Resume Game (Exit Overlay)
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right side: Friends List -->
+      <div class="overlay-panel">
+        <div class="panel-header">
+          <h2>Friends & Social</h2>
+          
+          <div id="friends-header-user-panel" style="display: none;">
+            <div class="friends-header-user">
+              <div class="friends-header-avatar">
+                <canvas id="my-overlay-avatar" width="28" height="28" style="image-rendering:pixelated; width:100%; height:100%;"></canvas>
+              </div>
+              <div class="friends-header-info">
+                <h4 id="my-overlay-username">Gamer</h4>
+                <span>Connected</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="panel-content">
+          <!-- Auth needed fallback -->
+          <div id="overlay-auth-fallback" class="auth-required-box">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <h3>Connect to IDK Network</h3>
+            <p>Go to the launcher's friends sidebar and sign in to connect with friends while inside Minecraft!</p>
+          </div>
+          
+          <!-- Friends display panel -->
+          <div id="overlay-friends-panel" style="display: none; flex-direction: column; height: 100%; gap: 16px;">
+            <div class="friends-search-container">
+              <input type="text" class="friends-search-input" id="friends-overlay-search" placeholder="Search friends...">
+            </div>
+            
+            <div class="friends-list-container" id="friends-overlay-list">
+              <!-- Rendered dynamically -->
+            </div>
+            
+            <div class="friends-add-form">
+              <input type="text" class="friends-add-input" id="friends-overlay-add-input" placeholder="Friend's username...">
+              <button class="friends-add-btn" id="btn-friends-overlay-add">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- Toast Toast notifications -->
+  <div class="toast-notification" id="toast">
+    <div class="toast-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+    </div>
+    <span id="toast-text">IP Address copied!</span>
+  </div>
+
+  <script>
+    const BACKEND_URL = 'https://api.somniac.me';
+    let currentToken = '';
+    let currentUser = null;
+    let playTimerInterval = null;
+    let friendsInterval = null;
+    let searchFilter = '';
+    let gameStartTime = 0;
+
+    // DOM References
+    const backdrop = document.getElementById('overlay-backdrop');
+    const clockEl = document.getElementById('digital-clock');
+    
+    // Session DOM
+    const sessionGameTitle = document.getElementById('session-game-title');
+    const sessionLoaderText = document.getElementById('session-loader-text');
+    const sessionPlaytime = document.getElementById('session-playtime');
+    const sessionServer = document.getElementById('session-server');
+    const gameLogoBox = document.getElementById('game-logo-box');
+    
+    // Friends DOM
+    const authFallback = document.getElementById('overlay-auth-fallback');
+    const friendsPanel = document.getElementById('overlay-friends-panel');
+    const headerUserPanel = document.getElementById('friends-header-user-panel');
+    const myUsernameLabel = document.getElementById('my-overlay-username');
+    const myAvatarCanvas = document.getElementById('my-overlay-avatar');
+    const friendsList = document.getElementById('friends-overlay-list');
+    const searchInput = document.getElementById('friends-overlay-search');
+    const addInput = document.getElementById('friends-overlay-add-input');
+    const addBtn = document.getElementById('btn-friends-overlay-add');
+    
+    // Quick Actions
+    const btnOpenFolder = document.getElementById('btn-open-folder-overlay');
+    const btnCloseOverlay = document.getElementById('btn-close-overlay-action');
+
+    // Toast Reference
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toast-text');
+
+    function showToast(text) {
+      toastText.innerText = text;
+      toast.classList.add('visible');
+      setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 5000);
+    }
+
+    // --- REALTIME CLOCK ---
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      clockEl.innerText = `${h}:${m}:${s}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // --- CANVAS SKIN DRAWING ---
+    function renderSkinFaceOnCanvas(canvas, username) {
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        const scale = img.naturalWidth / 64;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = false;
+        // Draw base head face layer (8x8 at x=8, y=8 on skin sheet)
+        ctx.drawImage(img, 8 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, canvas.width, canvas.height);
+        // Draw accessory layer (8x8 at x=40, y=8 on skin sheet)
+        ctx.drawImage(img, 40 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, canvas.width, canvas.height);
+      };
+
+      let fallbackStage = 0;
+      img.onerror = () => {
+        fallbackStage++;
+        if (fallbackStage === 1) {
+          img.src = `https://minotar.net/skin/${username}`;
+        } else {
+          ctx.fillStyle = '#16a34a';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 12px Inter';
+          ctx.textBaseline = 'middle';
+          ctx.textAlign = 'center';
+          ctx.fillText(username.substring(0, 2).toUpperCase(), canvas.width / 2, canvas.height / 2);
+        }
+      };
+
+      img.src = `https://skinsystem.ely.by/skins/${username}.png`;
+    }
+
+    // --- PLAY TIME COUNTER ---
+    function startPlayTimer(startTime) {
+      if (playTimerInterval) clearInterval(playTimerInterval);
+      gameStartTime = startTime || Date.now();
+      
+      function updateTimer() {
+        const diffMs = Date.now() - gameStartTime;
+        const totalSecs = Math.floor(diffMs / 1000);
+        const mins = Math.floor(totalSecs / 60);
+        const secs = totalSecs % 60;
+        
+        if (mins >= 60) {
+          const hrs = Math.floor(mins / 60);
+          const remMins = mins % 60;
+          sessionPlaytime.innerText = `${hrs}h ${remMins}m ${secs}s`;
+        } else {
+          sessionPlaytime.innerText = `${mins}m ${secs}s`;
+        }
+      }
+      updateTimer();
+      playTimerInterval = setInterval(updateTimer, 1000);
+    }
+
+    // --- FETCH FRIENDS AND COMMUNITY ---
+    async function apiRequest(endpoint, method = 'GET', body = null) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentToken) headers['Authorization'] = `Bearer ${currentToken}`;
+
+      const res = await fetch(`${BACKEND_URL}${endpoint}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : null
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Request failed');
+      return json;
+    }
+
+    async function syncFriends() {
+      if (!currentToken) return;
+
+      try {
+        const data = await apiRequest('/api/friends');
+        renderFriends(data.friends);
+      } catch (err) {
+        console.error('[Overlay Friends] Fetch failed:', err);
+      }
+    }
+
+    function renderFriends(friends) {
+      if (!friends || friends.length === 0) {
+        friendsList.innerHTML = '<div class="friends-list-empty">Friends list is empty.</div>';
+        return;
+      }
+
+      friendsList.innerHTML = '';
+
+      // Filter by search
+      const filtered = friends.filter(f => 
+        f.username.toLowerCase().includes(searchFilter.toLowerCase())
+      );
+
+      if (filtered.length === 0) {
+        friendsList.innerHTML = '<div class="friends-list-empty">No matching friends found.</div>';
+        return;
+      }
+
+      // Sort: Hosting -> Online -> Offline
+      const sorted = [...filtered].sort((a, b) => {
+        if (a.cloudflaredUrl && !b.cloudflaredUrl) return -1;
+        if (!a.cloudflaredUrl && b.cloudflaredUrl) return 1;
+        if (a.status !== 'offline' && b.status === 'offline') return -1;
+        if (a.status === 'offline' && b.status !== 'offline') return 1;
+        return a.username.localeCompare(b.username);
+      });
+
+      sorted.forEach(friend => {
+        const card = document.createElement('div');
+        card.className = 'friend-card';
+
+        const isOnline = friend.status !== 'offline';
+        const isHosting = !!friend.cloudflaredUrl;
+        const isPlaying = !!friend.playingVersion && !isHosting;
+
+        let statusText = 'Offline';
+        let statusClass = '';
+        if (isHosting) {
+          statusText = `Hosting ${friend.playingVersion || ''}`;
+          statusClass = 'hosting';
+        } else if (isPlaying) {
+          statusText = `Playing ${friend.playingVersion}`;
+          statusClass = 'playing';
+        } else if (isOnline) {
+          statusText = 'Online';
+          statusClass = 'online';
+        }
+
+        card.innerHTML = `
+          <div class="friend-card-left">
+            <div class="friend-avatar ${isOnline ? 'online' : ''}">
+              <canvas id="friend-avatar-${friend.id}" width="36" height="36" style="image-rendering:pixelated; width:100%; height:100%;"></canvas>
+            </div>
+            <div class="friend-info">
+              <strong>${friend.username}</strong>
+              <span class="friend-status-text ${statusClass}">
+                <span class="friend-status-dot ${isOnline ? 'online' : ''}"></span>
+                ${statusText}
+              </span>
+            </div>
+          </div>
+          <div class="friend-card-right">
+            ${isHosting ? `<button class="friend-join-btn">JOIN</button>` : ''}
+          </div>
+        `;
+
+        // Render Canvas skin face asynchronously
+        const canvas = card.querySelector(`#friend-avatar-${friend.id}`);
+        if (canvas) {
+          renderSkinFaceOnCanvas(canvas, friend.username);
+        }
+
+        // Host direct copy link
+        if (isHosting) {
+          card.querySelector('.friend-join-btn').onclick = () => {
+            const urlText = friend.cloudflaredUrl.startsWith('https://') 
+              ? '127.0.0.1:25565' 
+              : friend.cloudflaredUrl.replace('tcp://', '');
+            
+            navigator.clipboard.writeText(urlText).then(() => {
+              showToast(`IP copied! Paste in Multiplayer Direct Connect to join ${friend.username}!`);
+            });
+          };
+        }
+
+        friendsList.appendChild(card);
+      });
+    }
+
+    // --- ADD FRIEND ACTION ---
+    addBtn.addEventListener('click', handleAddFriend);
+    addInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAddFriend();
+    });
+
+    async function handleAddFriend() {
+      const name = addInput.value.trim();
+      if (!name) return;
+
+      addBtn.disabled = true;
+      try {
+        const res = await apiRequest('/api/friends/request', 'POST', { username: name });
+        addInput.value = '';
+        showToast(res.message);
+        syncFriends();
+      } catch (err) {
+        showToast(err.message);
+      } finally {
+        addBtn.disabled = false;
+      }
+    }
+
+    // --- SEARCH FILTER FRIEND ---
+    searchInput.addEventListener('input', (e) => {
+      searchFilter = e.target.value;
+      syncFriends();
+    });
+
+    // --- INITIAL REFRESH OR STATE TRIGGER ---
+    async function loadStateAndSync() {
+      if (!window.electronAPI) {
+        console.warn('Electron API unavailable, mock mode active.');
+        return;
+      }
+
+      try {
+        const data = await window.electronAPI.getOverlayData();
+        console.log('[Overlay] Fetched initial main state:', data);
+        
+        // Sync active session
+        updateGameSessionUI(data.session);
+
+        // Sync auth state
+        currentToken = data.token || '';
+        currentUser = data.user || null;
+
+        updateAuthAndFriendsUI();
+      } catch (e) {
+        console.error('[Overlay State Load] Failed:', e);
+      }
+    }
+
+    function updateGameSessionUI(session) {
+      if (!session) {
+        sessionGameTitle.innerText = 'Minecraft';
+        sessionLoaderText.innerText = 'Idle in menu';
+        sessionPlaytime.innerText = '00m 00s';
+        sessionServer.innerText = 'Offline';
+        if (playTimerInterval) clearInterval(playTimerInterval);
+        return;
+      }
+
+      const loaderStr = session.loader || 'Vanilla';
+      const versionStr = session.version || 'Latest';
+      sessionGameTitle.innerText = session.name || 'Minecraft';
+      sessionLoaderText.innerText = `Minecraft ${versionStr} (${loaderStr})`;
+      
+      // Select appropriate icon
+      const loaderLC = loaderStr.toLowerCase();
+      if (loaderLC.includes('fabric')) {
+        gameLogoBox.innerHTML = '<img src="./fabric.png" alt="Fabric" onerror="this.src=\'./logo.png\'">';
+      } else if (loaderLC.includes('forge') || loaderLC.includes('neo')) {
+        gameLogoBox.innerHTML = '<img src="./Forge.webp" alt="Forge" onerror="this.src=\'./logo.png\'">';
+      } else if (loaderLC.includes('quilt')) {
+        gameLogoBox.innerHTML = '<img src="./quilt.png" alt="Quilt" onerror="this.src=\'./logo.png\'">';
+      } else {
+        gameLogoBox.innerHTML = '<img src="./logo.png" alt="Minecraft">';
+      }
+
+      // If multiplayer connect details exist
+      if (session.quickConnect) {
+        sessionServer.innerText = `${session.quickConnect.host}:${session.quickConnect.port}`;
+      } else {
+        sessionServer.innerText = 'Singleplayer / LAN';
+      }
+
+      // Start timer from start time
+      startPlayTimer(session.startTime);
+    }
+
+    function updateAuthAndFriendsUI() {
+      if (currentToken && currentUser) {
+        authFallback.style.display = 'none';
+        friendsPanel.style.display = 'flex';
+        headerUserPanel.style.display = 'block';
+        myUsernameLabel.innerText = currentUser.username;
+        renderSkinFaceOnCanvas(myAvatarCanvas, currentUser.username);
+
+        syncFriends();
+        if (friendsInterval) clearInterval(friendsInterval);
+        friendsInterval = setInterval(syncFriends, 5000);
+      } else {
+        authFallback.style.display = 'flex';
+        friendsPanel.style.display = 'none';
+        headerUserPanel.style.display = 'none';
+        if (friendsInterval) clearInterval(friendsInterval);
+      }
+    }
+
+    // --- QUICK ACTION HANDLERS ---
+    if (window.electronAPI) {
+      btnOpenFolder.onclick = () => window.electronAPI.openMinecraftFolder();
+      btnCloseOverlay.onclick = () => window.electronAPI.closeOverlay();
+    }
+
+    // --- LISTENING TO IPC TOGGLES ---
+    if (window.electronAPI) {
+      window.electronAPI.onOverlayToggle((data) => {
+        console.log('[Overlay IPC] Received toggle active:', data.active, data.session);
+        if (data.active) {
+          backdrop.classList.add('active');
+          updateGameSessionUI(data.session);
+          
+          // Re-load connect state to ensure we stay synced
+          loadStateAndSync();
+        } else {
+          backdrop.classList.remove('active');
+          if (playTimerInterval) clearInterval(playTimerInterval);
+          if (friendsInterval) clearInterval(friendsInterval);
+        }
+      });
+
+      // Handle real-time user auth sync notifications sent from main process
+      window.electronAPI.onOverlaySyncConnect((data) => {
+        currentToken = data.token || '';
+        currentUser = data.user || null;
+        updateAuthAndFriendsUI();
+      });
+    }
+
+    // Keyboard handlers (Escape closes overlay)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (window.electronAPI) {
+          window.electronAPI.closeOverlay();
+        }
+      }
+    });
+
+    // Start loading state immediately on startup
+    loadStateAndSync();
+  </script>
+</body>
+</html>

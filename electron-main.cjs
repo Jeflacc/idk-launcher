@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, screen } = require('electron');
 const path = require('path');
 const { Client } = require('minecraft-launcher-core');
 const fs = require('fs');
@@ -160,10 +160,14 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+  createOverlayWindow();
   initDiscordRPC(); // Initialize Discord Rich Presence on startup
 
   app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+      if (!overlayWindow) createOverlayWindow();
+    }
   });
 });
 
@@ -708,6 +712,17 @@ ipcMain.on('launch-modpack', async (event, args) => {
   });
   launchClient.on('close', () => {
     event.sender.send('launch-closed');
+    activeGameSession = null;
+    activeMinecraftProcess = null;
+    stopOverlayTracking();
+    if (isOverlayActive && overlayWindow) {
+      isOverlayActive = false;
+      try {
+        overlayWindow.webContents.send('overlay-toggle', { active: false });
+        overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+        overlayWindow.hide();
+      } catch (err) {}
+    }
     updateDiscordPresence('In Main Menu', 'Idle in Launcher');
   });
   launchClient.on('data', (e) => console.log('[MC Process]', e));
@@ -717,9 +732,19 @@ ipcMain.on('launch-modpack', async (event, args) => {
     // Clean empty files to prevent ZipException corruption
     cleanEmptyFiles(path.join(rootPath, 'libraries'));
     cleanEmptyFiles(path.join(rootPath, 'versions'));
-    await launchClient.launch(opts);
+    const child = await launchClient.launch(opts);
+    activeMinecraftProcess = child;
     // Game process is now running — tell renderer to hide overlay
     event.sender.send('game-launched');
+    activeGameSession = {
+      type: 'modpack',
+      name: mpName,
+      version: mcVersion,
+      loader: loaderName,
+      loaderVersion: loaderVersion || 'latest',
+      username: username,
+      startTime: Date.now()
+    };
     updateDiscordPresence(
       `Playing Modpack: ${mpName}`,
       `Minecraft ${mcVersion} (${loaderName})`,
@@ -923,6 +948,17 @@ ipcMain.on('launch-minecraft', async (event, args) => {
   launchClient.on('close', () => {
     console.log('Game closed');
     event.sender.send('launch-closed');
+    activeGameSession = null;
+    activeMinecraftProcess = null;
+    stopOverlayTracking();
+    if (isOverlayActive && overlayWindow) {
+      isOverlayActive = false;
+      try {
+        overlayWindow.webContents.send('overlay-toggle', { active: false });
+        overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+        overlayWindow.hide();
+      } catch (err) {}
+    }
     updateDiscordPresence('In Main Menu', 'Idle in Launcher');
   });
 
@@ -931,9 +967,18 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     // Clean empty files to prevent ZipException corruption
     cleanEmptyFiles(path.join(rootPath, 'libraries'));
     cleanEmptyFiles(path.join(rootPath, 'versions'));
-    await launchClient.launch(opts);
+    const child = await launchClient.launch(opts);
+    activeMinecraftProcess = child;
     // Game process is now running — tell renderer to hide the overlay
     event.sender.send('game-launched');
+    activeGameSession = {
+      type: 'vanilla',
+      name: `Minecraft ${version}`,
+      version: version,
+      loader: loaderName,
+      username: username,
+      startTime: Date.now()
+    };
     updateDiscordPresence(
       `Playing Minecraft ${version}`,
       `Mod Loader: ${loaderName}`,
@@ -1763,6 +1808,206 @@ app.on('will-quit', () => {
   }
   if (activeAccessProcess) {
     try { activeAccessProcess.kill(); } catch (e) { }
+  }
+  // Unregister all global shortcuts to be clean
+  try {
+    globalShortcut.unregisterAll();
+  } catch (e) {}
+});
+
+// ==========================================
+// --- STEAM-LIKE OVERLAY STATE & LOGIC ---
+// ==========================================
+let overlayWindow = null;
+let isOverlayActive = false;
+let activeGameSession = null;
+let activeMinecraftProcess = null; // Reference to Minecraft child process
+let idkToken = '';
+let idkUser = null;
+let overlayTrackerInterval = null;
+
+function getMinecraftWindowRect(pid) {
+  return new Promise((resolve) => {
+    if (process.platform !== 'win32' || !pid) {
+      return resolve(null);
+    }
+
+    const psCommand = `powershell -NoProfile -Command "Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class Win32 { [DllImport(\\\"user32.dll\\\")] [return: MarshalAs(UnmanagedType.Bool)] public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect); [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left; public int Top; public int Right; public int Bottom; } }'; $proc = Get-Process -Id ${pid} -ErrorAction SilentlyContinue; if ($proc -and $proc.MainWindowHandle -ne 0) { $r = New-Object Win32+RECT; if ([Win32]::GetWindowRect($proc.MainWindowHandle, [ref]$r)) { Write-Output \\\"$($r.Left),$($r.Top),$($r.Right),$($r.Bottom)\\\" } }"`;
+
+    const { exec } = require('child_process');
+    exec(psCommand, (err, stdout) => {
+      if (err || !stdout.trim()) {
+        return resolve(null);
+      }
+      const parts = stdout.trim().split(',');
+      if (parts.length === 4) {
+        const left = parseInt(parts[0]);
+        const top = parseInt(parts[1]);
+        const right = parseInt(parts[2]);
+        const bottom = parseInt(parts[3]);
+        resolve({
+          x: left,
+          y: top,
+          width: right - left,
+          height: bottom - top
+        });
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+
+function startOverlayTracking() {
+  if (overlayTrackerInterval) clearInterval(overlayTrackerInterval);
+
+  overlayTrackerInterval = setInterval(async () => {
+    if (!overlayWindow || !activeGameSession || !isOverlayActive) {
+      stopOverlayTracking();
+      return;
+    }
+
+    if (activeMinecraftProcess && activeMinecraftProcess.pid) {
+      const rect = await getMinecraftWindowRect(activeMinecraftProcess.pid);
+      if (rect) {
+        const currentBounds = overlayWindow.getBounds();
+        // 2px threshold filter keeps it smooth and avoids micro-jitter from layout rounding
+        if (Math.abs(currentBounds.x - rect.x) > 2 || Math.abs(currentBounds.y - rect.y) > 2 ||
+            Math.abs(currentBounds.width - rect.width) > 2 || Math.abs(currentBounds.height - rect.height) > 2) {
+          overlayWindow.setBounds(rect);
+        }
+      }
+    }
+  }, 200); // Poll every 200ms only when overlay is visible
+}
+
+function stopOverlayTracking() {
+  if (overlayTrackerInterval) {
+    clearInterval(overlayTrackerInterval);
+    overlayTrackerInterval = null;
+  }
+}
+
+function createOverlayWindow() {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.bounds;
+
+  console.log(`[Overlay] Initializing overlay window with dimensions: ${width}x${height}`);
+
+  overlayWindow = new BrowserWindow({
+    x: 0,
+    y: 0,
+    width: width,
+    height: height,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    resizable: false,
+    show: false,
+    hasShadow: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+
+  // Level 'screen-saver' ensures overlay stays floating even above full-screen Direct3D/OpenGL windows on Windows
+  overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+
+  // Let all mouse actions bypass the overlay by default so Minecraft gets full input focus
+  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+
+  overlayWindow.loadFile(path.join(__dirname, 'overlay.html'));
+
+  overlayWindow.on('closed', () => {
+    overlayWindow = null;
+  });
+
+  // Register Steam-style overlay toggle shortcuts
+  try {
+    globalShortcut.register('Shift+Tab', toggleOverlay);
+    globalShortcut.register('Shift+F1', toggleOverlay);
+    console.log('[Overlay] Global shortcuts registered (Shift+Tab, Shift+F1)');
+  } catch (err) {
+    console.error('[Overlay] Failed to register global shortcuts:', err);
+  }
+}
+
+async function toggleOverlay() {
+  if (!overlayWindow) {
+    console.warn('[Overlay] Toggle triggered but overlayWindow is null.');
+    return;
+  }
+
+  // Only open overlay if there is an active Minecraft game session running
+  if (!activeGameSession) {
+    console.log('[Overlay] No active Minecraft session. Ignoring toggle shortcut.');
+    return;
+  }
+
+  isOverlayActive = !isOverlayActive;
+  console.log('[Overlay] Toggling overlay active state:', isOverlayActive);
+
+  if (isOverlayActive) {
+    // Perform instant positioning calculation so overlay fits windowed Minecraft perfectly from first frame
+    if (activeMinecraftProcess && activeMinecraftProcess.pid) {
+      const rect = await getMinecraftWindowRect(activeMinecraftProcess.pid);
+      if (rect) {
+        overlayWindow.setBounds(rect);
+      }
+    }
+
+    overlayWindow.show();
+    overlayWindow.focus();
+    // Enable input focus & mouse events so user can interact with friends list/mods list
+    overlayWindow.setIgnoreMouseEvents(false);
+    overlayWindow.webContents.send('overlay-toggle', { active: true, session: activeGameSession });
+
+    // Start active window-following tracker
+    startOverlayTracking();
+  } else {
+    // Stop tracking immediately on close to eliminate polling CPU overhead
+    stopOverlayTracking();
+
+    // Notify overlay renderer to run slideOut/fadeOut animations
+    overlayWindow.webContents.send('overlay-toggle', { active: false });
+    // Instantly return click-through ability to let clicks go directly to Minecraft
+    overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+
+    // Hide window after animations finish (300ms)
+    setTimeout(() => {
+      if (!isOverlayActive && overlayWindow) {
+        overlayWindow.hide();
+      }
+    }, 300);
+  }
+}
+
+// IPC Handlers for overlay synchronization
+ipcMain.on('set-idk-connect-data', (event, data) => {
+  idkToken = data?.token || '';
+  idkUser = data?.user || null;
+  console.log('[Overlay IPC] Synced Connect Account info for:', idkUser?.username || 'Guest');
+  
+  // Forward instantly to overlay window if it exists, keeping it up to date
+  if (overlayWindow) {
+    overlayWindow.webContents.send('overlay-sync-connect', { token: idkToken, user: idkUser });
+  }
+});
+
+ipcMain.handle('get-overlay-data', () => {
+  return {
+    session: activeGameSession,
+    token: idkToken,
+    user: idkUser
+  };
+});
+
+ipcMain.on('close-overlay', () => {
+  if (isOverlayActive) {
+    toggleOverlay();
   }
 });
 

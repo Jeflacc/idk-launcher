@@ -39,6 +39,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   launchModpack: (args) => ipcRenderer.send('launch-modpack', args),
   toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
 
+  // Overlay System IPC Bridge
+  setIdkConnectData: (data) => ipcRenderer.send('set-idk-connect-data', data),
+  getOverlayData: () => ipcRenderer.invoke('get-overlay-data'),
+  closeOverlay: () => ipcRenderer.send('close-overlay'),
+  onOverlayToggle: (cb) => ipcRenderer.on('overlay-toggle', (_e, data) => cb(data)),
+  onOverlaySyncConnect: (cb) => ipcRenderer.on('overlay-sync-connect', (_e, data) => cb(data)),
+
   // Cloudflared Multiplayer Tunneling
   ensureCloudflared: () => ipcRenderer.invoke('ensure-cloudflared'),
   startCloudflaredTunnel: (port) => ipcRenderer.invoke('start-cloudflared-tunnel', { port }),

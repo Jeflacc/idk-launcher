@@ -2464,6 +2464,9 @@ document.addEventListener('pointerdown', (e) => {
       inputPassword.value = '';
       
       updateFriendsAuthUI();
+      if (window.electronAPI && window.electronAPI.setIdkConnectData) {
+        window.electronAPI.setIdkConnectData({ token: idkToken, user: idkUser });
+      }
       showWarningToast(`Connected to IDK Network as ${idkUser.username}!`);
     } catch (err) {
       showAuthError(err.message);
@@ -2492,6 +2495,9 @@ document.addEventListener('pointerdown', (e) => {
     localStorage.removeItem('idk_connect_user');
     
     updateFriendsAuthUI();
+    if (window.electronAPI && window.electronAPI.setIdkConnectData) {
+      window.electronAPI.setIdkConnectData({ token: idkToken, user: idkUser });
+    }
     showWarningToast("Disconnected from IDK Network.");
   });
 
@@ -2954,6 +2960,9 @@ document.addEventListener('pointerdown', (e) => {
 
   // --- INITIAL CHECK ---
   updateFriendsAuthUI();
+  if (window.electronAPI && window.electronAPI.setIdkConnectData) {
+    window.electronAPI.setIdkConnectData({ token: idkToken, user: idkUser });
+  }
 })();
 
 
