@@ -47,6 +47,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeOverlay: () => ipcRenderer.send('close-overlay'),
   onOverlayToggle: (cb) => ipcRenderer.on('overlay-toggle', (_e, data) => cb(data)),
   onOverlaySyncConnect: (cb) => ipcRenderer.on('overlay-sync-connect', (_e, data) => cb(data)),
+  onShowStartupNotification: (cb) => ipcRenderer.on('show-startup-notification', (_e, data) => cb(data)),
+  hideOverlayWindow: () => ipcRenderer.send('hide-overlay-window'),
 
   // Cloudflared Multiplayer Tunneling
   ensureCloudflared: () => ipcRenderer.invoke('ensure-cloudflared'),

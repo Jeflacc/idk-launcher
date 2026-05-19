@@ -838,6 +838,12 @@ ipcMain.on('launch-modpack', async (event, args) => {
       username: username,
       startTime: Date.now()
     };
+    // Show overlay window inactive (click-through) to show the startup notification
+    if (overlayWindow) {
+      overlayWindow.showInactive();
+      overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+      overlayWindow.webContents.send('show-startup-notification', { session: activeGameSession });
+    }
     updateDiscordPresence(
       `Playing Modpack: ${mpName}`,
       `Minecraft ${mcVersion} (${loaderName})`,
@@ -1120,6 +1126,12 @@ ipcMain.on('launch-minecraft', async (event, args) => {
       username: username,
       startTime: Date.now()
     };
+    // Show overlay window inactive (click-through) to show the startup notification
+    if (overlayWindow) {
+      overlayWindow.showInactive();
+      overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+      overlayWindow.webContents.send('show-startup-notification', { session: activeGameSession });
+    }
     updateDiscordPresence(
       `Playing Minecraft ${version}`,
       `Mod Loader: ${loaderName}`,
@@ -2409,6 +2421,12 @@ ipcMain.handle('get-overlay-data', () => {
 ipcMain.on('close-overlay', () => {
   if (isOverlayActive) {
     toggleOverlay();
+  }
+});
+
+ipcMain.on('hide-overlay-window', () => {
+  if (!isOverlayActive && overlayWindow) {
+    overlayWindow.hide();
   }
 });
 

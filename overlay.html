@@ -618,6 +618,120 @@
       max-width: 280px;
       line-height: 1.4;
     }
+
+    /* Discord-Style Startup Notification */
+    .startup-notification {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: rgba(15, 15, 18, 0.9);
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      border: 1px solid rgba(34, 197, 94, 0.35); /* green outline matching theme */
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      color: white;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(34, 197, 94, 0.15);
+      z-index: 10001;
+      width: 320px;
+      pointer-events: none; /* Initially click-through when overlay is inactive */
+      transform: translateX(150%);
+      opacity: 0;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s, border-color 0.3s;
+    }
+
+    .startup-notification.visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    /* When overlay is active, the notification becomes interactive */
+    .overlay-backdrop.active ~ .startup-notification,
+    .startup-notification.interactive {
+      pointer-events: auto;
+    }
+
+    .startup-notification-icon {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--accent-green);
+      padding: 10px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+    }
+
+    .startup-notification-content {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .startup-notification-title {
+      font-family: var(--font-title);
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.8px;
+      color: var(--accent-green);
+      text-transform: uppercase;
+    }
+
+    .startup-notification-body {
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+    .startup-notification-body kbd {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 11px;
+      color: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .startup-notification-action {
+      margin-top: 6px;
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+      transition: opacity 0.3s, height 0.3s, margin-top 0.3s;
+    }
+
+    /* Show action button ONLY when the overlay is active (so user can hover/click it!) */
+    .overlay-backdrop.active ~ .startup-notification .startup-notification-action,
+    .startup-notification.interactive .startup-notification-action {
+      opacity: 1;
+      height: auto;
+      margin-top: 6px;
+    }
+
+    .startup-notification-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 2px 0;
+      text-align: left;
+      transition: color 0.2s;
+    }
+
+    .startup-notification-btn:hover {
+      color: #ef4444; /* red emphasis for never show again action */
+    }
   </style>
 </head>
 <body>
@@ -676,6 +790,14 @@
           <div style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); border-radius: 16px; padding: 20px; font-size: 13px; line-height: 1.5; color: var(--text-muted);">
             <h4 style="font-family: var(--font-title); color: white; margin-bottom: 6px; font-weight: 700;">Overlay Layering Active</h4>
             Always-on-top rendering is active at system level `'screen-saver'`. Inputs are successfully layered. Your game performance is protected.
+          </div>
+
+          <!-- Startup Notification Option -->
+          <div style="display: flex; align-items: center; gap: 10px; padding: 4px 6px; margin-top: 10px;">
+            <input type="checkbox" id="chk-show-startup-notification" style="width: 16px; height: 16px; accent-color: var(--accent-green); cursor: pointer;">
+            <label for="chk-show-startup-notification" style="font-size: 13px; color: var(--text-muted); cursor: pointer; user-select: none;">
+              Show "Shift+Tab" hint at startup
+            </label>
           </div>
 
           <div class="quick-actions-panel">
@@ -744,6 +866,22 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
     </div>
     <span id="toast-text">IP Address copied!</span>
+  </div>
+
+  <!-- Startup notification pop-up -->
+  <div class="startup-notification" id="startup-notification">
+    <div class="startup-notification-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+    </div>
+    <div class="startup-notification-content">
+      <div class="startup-notification-title">IDK CONNECT OVERLAY ACTIVE</div>
+      <div class="startup-notification-body">Press <kbd>Shift + Tab</kbd> to open</div>
+      <div class="startup-notification-action" id="startup-notification-dismiss-wrapper">
+        <button class="startup-notification-btn" id="btn-dont-show-again">Do not show this again</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -1101,10 +1239,17 @@
           backdrop.classList.add('active');
           updateGameSessionUI(data.session);
           
+          // Make sure notification remains visible / interactive while overlay is open
+          if (startupNotification.classList.contains('visible')) {
+            startupNotification.classList.add('interactive');
+          }
+
           // Re-load connect state to ensure we stay synced
           loadStateAndSync();
         } else {
           backdrop.classList.remove('active');
+          startupNotification.classList.remove('visible');
+          startupNotification.classList.remove('interactive');
           if (playTimerInterval) clearInterval(playTimerInterval);
           if (friendsInterval) clearInterval(friendsInterval);
         }
@@ -1126,6 +1271,64 @@
         }
       }
     });
+
+    // --- STARTUP NOTIFICATION LOGIC ---
+    const startupNotification = document.getElementById('startup-notification');
+    const chkShowStartupNotification = document.getElementById('chk-show-startup-notification');
+    const btnDontShowAgain = document.getElementById('btn-dont-show-again');
+    let notificationTimeout = null;
+
+    // Load initial startup notification checkbox state
+    const hideStartupNotif = localStorage.getItem('hideOverlayNotification') === 'true';
+    chkShowStartupNotification.checked = !hideStartupNotif;
+
+    chkShowStartupNotification.onchange = (e) => {
+      localStorage.setItem('hideOverlayNotification', (!e.target.checked).toString());
+    };
+
+    if (window.electronAPI) {
+      window.electronAPI.onShowStartupNotification((data) => {
+        console.log('[Overlay] Received show-startup-notification event', data);
+        
+        // If user set to hide overlay notification, do not display it
+        if (localStorage.getItem('hideOverlayNotification') === 'true') {
+          // Tell main process to hide overlay window instantly
+          window.electronAPI.hideOverlayWindow();
+          return;
+        }
+
+        // Show the notification
+        startupNotification.classList.add('visible');
+
+        // Clear any existing timeout
+        if (notificationTimeout) clearTimeout(notificationTimeout);
+
+        // Hide after 5 seconds
+        notificationTimeout = setTimeout(() => {
+          // Only auto-hide if overlay is not currently active
+          if (!backdrop.classList.contains('active')) {
+            startupNotification.classList.remove('visible');
+            setTimeout(() => {
+              window.electronAPI.hideOverlayWindow();
+            }, 500); // Wait for transition to finish
+          }
+        }, 5000);
+      });
+    }
+
+    btnDontShowAgain.onclick = () => {
+      localStorage.setItem('hideOverlayNotification', 'true');
+      chkShowStartupNotification.checked = false;
+      startupNotification.classList.remove('visible');
+      showToast('Startup notification disabled!');
+      
+      // If overlay is not open, hide window
+      if (!backdrop.classList.contains('active')) {
+        setTimeout(() => {
+          window.electronAPI.hideOverlayWindow();
+        }, 500);
+      }
+    };
 
     // Start loading state immediately on startup
     loadStateAndSync();
