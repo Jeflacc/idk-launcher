@@ -1975,6 +1975,53 @@ ipcMain.handle('get-user-data-path', async () => {
   return app.getPath('userData');
 });
 
+// Get versions path for frontend
+ipcMain.handle('get-versions-path', async () => {
+  return path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+});
+
+// Scan for downloaded versions
+ipcMain.handle('scan-downloaded-versions', async () => {
+  try {
+    const versionsPath = path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+    
+    if (!fs.existsSync(versionsPath)) {
+      console.log('[Versions] Versions directory does not exist yet');
+      return { success: true, versions: [] };
+    }
+    
+    const entries = fs.readdirSync(versionsPath, { withFileTypes: true });
+    const downloadedVersions = [];
+    
+    entries.forEach(entry => {
+      if (entry.isDirectory()) {
+        const versionId = entry.name;
+        const versionJsonPath = path.join(versionsPath, versionId, `${versionId}.json`);
+        
+        if (fs.existsSync(versionJsonPath)) {
+          // Extract the actual game version from the directory name
+          let gameVersion = versionId;
+          
+          // Try to extract game version from loader format
+          const loaderMatch = versionId.match(/-([\d.]+)$/);
+          if (loaderMatch) {
+            gameVersion = loaderMatch[1];
+          }
+          
+          downloadedVersions.push(gameVersion);
+          console.log(`[Versions] Found downloaded version: ${gameVersion} (dir: ${versionId})`);
+        }
+      }
+    });
+    
+    console.log(`[Versions] Scanned ${downloadedVersions.length} downloaded versions:`, downloadedVersions);
+    return { success: true, versions: downloadedVersions };
+  } catch (e) {
+    console.error('[Versions] Failed to scan downloaded versions:', e);
+    return { success: false, error: e.message, versions: [] };
+  }
+});
+
 // Extract icon from JAR/ZIP file (mods, resourcepacks, shaders)
 // Optimized to extract once and cache to disk
 // Checks root directory and common locations for any image file

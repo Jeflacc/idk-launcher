@@ -161,6 +161,10 @@ export function renderAppShell() {
             </div>
           </div>
 
+          <button class="refresh-versions-btn" id="btn-refresh-versions" title="Refresh downloaded versions">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          </button>
+
           <div class="custom-select-wrapper" style="width: 200px;">
             <div class="custom-select" id="loader-dropdown">
               <div class="custom-select-trigger" id="loader-trigger">
@@ -266,6 +270,27 @@ export function renderAppShell() {
         </div>
 
         <div class="settings-section">
+          <h3>Global Java Arguments</h3>
+          <p>Advanced JVM arguments applied to all modpacks. Example: -XX:+UseG1GC -XX:+ParallelRefProcEnabled</p>
+          <input type="text" class="clean-input" style="text-align: left; font-size:11px;" id="global-java-args" placeholder="Leave empty for defaults" />
+        </div>
+
+        <div class="settings-section">
+          <h3>Default Game Window Size</h3>
+          <p>Set the default window resolution when launching Minecraft.</p>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="number" class="clean-input" id="default-window-width" placeholder="Width" style="text-align:center; flex:1;" value="1024" />
+            <span style="color:var(--text-muted);">×</span>
+            <input type="number" class="clean-input" id="default-window-height" placeholder="Height" style="text-align:center; flex:1;" value="768" />
+            <label class="toggle-switch" style="margin:0;">
+              <input type="checkbox" id="fullscreen-toggle" />
+              <div class="switch"></div>
+              <span style="color: var(--text-main); font-size: 12px; margin-left: 4px;">Fullscreen</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
           <h3>Performance Boost Pack</h3>
           <p>For Fabric launches, install a compatible optimization pack when available: Sodium, Lithium, FerriteCore, and EntityCulling.</p>
           <label class="toggle-switch" style="margin-top: 8px;">
@@ -301,6 +326,12 @@ export function renderAppShell() {
         </div>
 
         <div class="settings-section">
+          <h3>Launcher Updates</h3>
+          <p>Check for new versions of the IDK Launcher and stay up to date with the latest features.</p>
+          <button class="submit-btn" id="btn-check-updates" style="width: auto; padding: 10px 20px;">Check for Updates</button>
+        </div>
+
+        <div class="settings-section">
           <h3>Developer Options</h3>
           <p>Enable the debug console (DevTools) to troubleshoot issues. This is usually only needed for debugging.</p>
           <button class="submit-btn" id="btn-toggle-devtools" style="width: auto; padding: 10px 20px; background: #4b5563;">Open Debug Console</button>
@@ -317,8 +348,8 @@ export function renderAppShell() {
       <div class="mods-page-header">
         <h2 class="view-title">Modpack Manager</h2>
         <div style="display:flex; gap:10px;">
-          <button class="create-modpack-btn" id="btn-browse-modpacks" style="background:#4b5563;">Browse Modpacks</button>
-          <button class="create-modpack-btn" id="btn-import-modpack" style="background:#10b981;">Import Zip</button>
+          <button class="create-modpack-btn" id="btn-browse-modpacks">Browse Modpacks</button>
+          <button class="create-modpack-btn" id="btn-import-modpack">Import Zip</button>
           <button class="create-modpack-btn" id="btn-new-modpack">+ New Modpack</button>
         </div>
       </div>
@@ -462,10 +493,17 @@ export function renderAppShell() {
               <label>Modpack Name</label>
               <input type="text" class="clean-input" id="mp-settings-name" placeholder="Modpack name..." style="text-align:left;" />
             </div>
+            
+            <div class="mp-settings-section">
+              <label>Description</label>
+              <textarea class="clean-input" id="mp-settings-description" placeholder="Add a description for this modpack..." style="text-align:left; min-height:80px; resize:vertical;"></textarea>
+            </div>
+            
             <div class="mp-settings-section">
               <label>Minecraft Version</label>
               <select class="clean-select" id="mp-settings-version"></select>
             </div>
+            
             <div class="mp-settings-section">
               <label>Mod Loader</label>
               <select class="clean-select" id="mp-settings-loader">
@@ -476,10 +514,27 @@ export function renderAppShell() {
                 <option value="Quilt">Quilt</option>
               </select>
             </div>
+            
             <div class="mp-settings-section">
               <label>Loader Version</label>
               <input type="text" class="clean-input" id="mp-settings-loader-version" placeholder="Auto-detected" style="text-align:left;" />
             </div>
+            
+            <div class="mp-settings-section">
+              <label>Java Arguments</label>
+              <input type="text" class="clean-input" id="mp-settings-java-args" placeholder="e.g., -XX:+UseG1GC -XX:+ParallelRefProcEnabled" style="text-align:left; font-size:11px;" />
+              <small style="color:var(--text-muted); display:block; margin-top:4px;">Advanced JVM arguments for this modpack</small>
+            </div>
+            
+            <div class="mp-settings-section">
+              <label>Game Window Size</label>
+              <div style="display:flex; gap:8px;">
+                <input type="number" class="clean-input" id="mp-settings-width" placeholder="Width" style="text-align:center; flex:1;" />
+                <span style="display:flex; align-items:center; color:var(--text-muted);">×</span>
+                <input type="number" class="clean-input" id="mp-settings-height" placeholder="Height" style="text-align:center; flex:1;" />
+              </div>
+            </div>
+            
             <div class="mp-settings-actions">
               <button class="submit-btn" id="btn-save-mp-settings" style="flex:1;">Save Changes</button>
               <button class="modal-btn" id="btn-cancel-mp-settings" style="flex:1;">Cancel</button>

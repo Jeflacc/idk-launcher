@@ -562,9 +562,13 @@ document.getElementById('btn-modpack-settings').addEventListener('click', () => 
   
   // Populate settings form
   document.getElementById('mp-settings-name').value = mp.name;
+  document.getElementById('mp-settings-description').value = mp.description || '';
   document.getElementById('mp-settings-version').value = mp.mcVersion || '';
   document.getElementById('mp-settings-loader').value = mp.loader || 'Vanilla';
   document.getElementById('mp-settings-loader-version').value = mp.loaderVersion || '';
+  document.getElementById('mp-settings-java-args').value = mp.javaArgs || '';
+  document.getElementById('mp-settings-width').value = mp.windowWidth || '1024';
+  document.getElementById('mp-settings-height').value = mp.windowHeight || '768';
   
   // Show modal
   document.getElementById('mp-settings-modal').classList.add('active');
@@ -583,9 +587,13 @@ document.getElementById('btn-save-mp-settings').addEventListener('click', () => 
   if (!mp) return;
   
   mp.name = document.getElementById('mp-settings-name').value.trim() || mp.name;
+  mp.description = document.getElementById('mp-settings-description').value.trim();
   mp.mcVersion = document.getElementById('mp-settings-version').value;
   mp.loader = document.getElementById('mp-settings-loader').value;
   mp.loaderVersion = document.getElementById('mp-settings-loader-version').value;
+  mp.javaArgs = document.getElementById('mp-settings-java-args').value.trim();
+  mp.windowWidth = parseInt(document.getElementById('mp-settings-width').value) || 1024;
+  mp.windowHeight = parseInt(document.getElementById('mp-settings-height').value) || 768;
   
   mpSave();
   mpRenderList();

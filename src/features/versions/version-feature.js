@@ -72,12 +72,34 @@ if (savedLoader) {
 updateLoaderUI(state.selectedLoader);
 
 state.sodiumSupportedVersions = new Set();
-state.downloadedVersions = JSON.parse(localStorage.getItem('idk_downloaded_versions') || '[]');
+state.downloadedVersions = [];
 let currentVersionTab = 'all'; // 'all' or 'downloaded'
 
-// Clear corrupted downloaded versions data on startup
-localStorage.removeItem('idk_downloaded_versions');
-state.downloadedVersions = [];
+// Scan the versions directory to detect downloaded versions
+async function scanDownloadedVersions() {
+  try {
+    console.log('[Versions] Starting scan for downloaded versions...');
+    
+    const result = await window.electronAPI?.scanDownloadedVersions?.();
+    if (!result || !result.success) {
+      console.warn('[Versions] Failed to scan downloaded versions:', result?.error);
+      return;
+    }
+    
+    state.downloadedVersions = result.versions || [];
+    console.log(`[Versions] Scanned ${state.downloadedVersions.length} downloaded versions:`, state.downloadedVersions);
+    
+    // Re-render versions if they're already loaded
+    if (state.allVersions && state.allVersions.length > 0) {
+      renderVersions();
+    }
+  } catch (e) {
+    console.warn('[Versions] Failed to scan downloaded versions:', e);
+  }
+}
+
+// Scan on startup
+scanDownloadedVersions();
 
 async function fetchSodiumVersions() {
   try {
@@ -191,6 +213,21 @@ versionTabs.forEach(tab => {
 
 fetchVersions();
 
+// Refresh versions button handler - use setTimeout to ensure DOM is ready
+setTimeout(() => {
+  const refreshBtn = document.getElementById('btn-refresh-versions');
+  if (refreshBtn) {
+    console.log('[Versions] Refresh button found, attaching handler');
+    refreshBtn.addEventListener('click', async () => {
+      console.log('[Versions] Refresh button clicked');
+      refreshBtn.classList.add('loading');
+      await scanDownloadedVersions();
+      refreshBtn.classList.remove('loading');
+    });
+  } else {
+    console.warn('[Versions] Refresh button not found in DOM');
+  }
+}, 100);
 
 
   Object.assign(actions, { renderVersions, updateLoaderUI });

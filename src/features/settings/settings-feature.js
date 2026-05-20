@@ -10,6 +10,38 @@ javaPathInput.addEventListener('input', (e) => {
   localStorage.setItem('craftlaunch_javaPath', state.javaPath);
 });
 
+// Global Java Arguments
+const globalJavaArgsInput = document.getElementById('global-java-args');
+globalJavaArgsInput.value = state.globalJavaArgs || '';
+globalJavaArgsInput.addEventListener('input', (e) => {
+  state.globalJavaArgs = e.target.value;
+  localStorage.setItem('idk_global_java_args', state.globalJavaArgs);
+});
+
+// Default Window Size
+const defaultWidthInput = document.getElementById('default-window-width');
+const defaultHeightInput = document.getElementById('default-window-height');
+const fullscreenToggle = document.getElementById('fullscreen-toggle');
+
+defaultWidthInput.value = state.defaultWindowWidth || 1024;
+defaultHeightInput.value = state.defaultWindowHeight || 768;
+fullscreenToggle.checked = state.defaultFullscreen || false;
+
+defaultWidthInput.addEventListener('input', (e) => {
+  state.defaultWindowWidth = parseInt(e.target.value) || 1024;
+  localStorage.setItem('idk_default_window_width', state.defaultWindowWidth);
+});
+
+defaultHeightInput.addEventListener('input', (e) => {
+  state.defaultWindowHeight = parseInt(e.target.value) || 768;
+  localStorage.setItem('idk_default_window_height', state.defaultWindowHeight);
+});
+
+fullscreenToggle.addEventListener('change', (e) => {
+  state.defaultFullscreen = e.target.checked;
+  localStorage.setItem('idk_default_fullscreen', state.defaultFullscreen);
+});
+
 // Memory slider
 const memSlider = document.getElementById('memory-slider');
 const memLabel  = document.getElementById('memory-value-label');
@@ -65,6 +97,33 @@ document.getElementById('btn-open-folder').addEventListener('click', () => {
     window.electronAPI.openMinecraftFolder();
   } else {
     alert("This feature is only available in the desktop app.");
+  }
+});
+
+document.getElementById('btn-check-updates').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-check-updates');
+  const originalText = btn.innerText;
+  btn.innerText = 'Checking...';
+  btn.disabled = true;
+  
+  try {
+    if (window.electronAPI?.checkForUpdates) {
+      const result = await window.electronAPI.checkForUpdates();
+      if (result.updateAvailable) {
+        actions.showWarningToast(`Update available: ${result.latestVersion}`);
+        if (confirm(`A new version (${result.latestVersion}) is available. Open the release page?`)) {
+          window.electronAPI.openExternal(result.releaseUrl);
+        }
+      } else {
+        actions.showWarningToast('You are running the latest version!');
+      }
+    }
+  } catch (e) {
+    console.error('Failed to check for updates:', e);
+    actions.showWarningToast('Failed to check for updates');
+  } finally {
+    btn.innerText = originalText;
+    btn.disabled = false;
   }
 });
 
