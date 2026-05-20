@@ -5064,3 +5064,73 @@ input:focus-visible,
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+/* ===== LAUNCHER PERFORMANCE MODE ===== */
+
+.performance-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.performance-mode-card {
+  min-height: 86px;
+  padding: 14px;
+  background: rgba(17, 17, 18, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.performance-mode-card strong {
+  color: white;
+  font-family: var(--font-title);
+  font-size: 13px;
+}
+
+.performance-mode-card span {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.performance-mode-card:hover {
+  border-color: rgba(76, 184, 55, 0.45);
+  background: rgba(25, 34, 22, 0.88);
+}
+
+.performance-mode-card.active {
+  border-color: var(--accent-green);
+  background: rgba(76, 184, 55, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(76, 184, 55, 0.14);
+}
+
+body[data-launcher-performance="eco"] .bg-video,
+body[data-launcher-performance="eco"] .hero-video {
+  display: none;
+}
+
+body[data-launcher-performance="eco"] .mc-logo,
+body[data-launcher-performance="eco"] .launch-spinner-gif {
+  animation: none !important;
+}
+
+body[data-launcher-performance="eco"] .background-slider {
+  opacity: 0;
+}
+
+body[data-launcher-performance="balanced"] .background-slider {
+  opacity: 0.08;
+}
+
+body[data-launcher-performance="balanced"] .mc-logo {
+  animation-duration: 7s;
+}
