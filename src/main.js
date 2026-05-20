@@ -1,4 +1,8 @@
 import './style.css';
+import { downloadProgressTracker } from './components/download-progress.js';
+import { accessibilityManager } from './components/accessibility-manager.js';
+import { errorDisplay } from './components/error-display.js';
+import SettingsUI from './components/settings-ui.js';
 
 document.querySelector('#app').innerHTML = `
   <div class="background-slider">
@@ -1782,6 +1786,7 @@ async function loadProfilesFromDisk() {
       });
 
       // Helper: merge disk file list with stored metadata
+      // IMPORTANT: Preserve existing iconUrl from API (Modrinth/CurseForge) to avoid unnecessary JAR extraction
       const mergeFiles = (diskFiles, storedFiles) => {
         // storedFiles might be an object or non-array — normalize it
         const storedArr = Array.isArray(storedFiles) ? storedFiles : [];
@@ -1789,7 +1794,11 @@ async function loadProfilesFromDisk() {
         return (diskFiles || []).map(df => {
           const stored = storedMap.get(df.filename);
           return stored
-            ? stored
+            ? {
+                // Preserve all metadata from stored item, especially iconUrl from API
+                ...stored,
+                filename: df.filename // Ensure filename is current
+              }
             : { filename: df.filename, name: df.filename.replace(/\.jar$|\.zip$/, ''), modrinthId: '', version: '', iconUrl: '' };
         });
       };
@@ -1959,6 +1968,7 @@ function extractVersionFromFilename(filename) {
 }
 
 // Batch extract icons for all items in a modpack (for legacy profiles)
+// OPTIMIZED: Only extract icons for items that don't already have them (from API)
 async function batchExtractIconsForModpack(modpackId) {
   try {
     console.log(`[IconBatch] Starting batch extraction for modpack ${modpackId}`);
@@ -1971,11 +1981,11 @@ async function batchExtractIconsForModpack(modpackId) {
       const mp = modpacks.find(m => m.id === modpackId);
       if (!mp) return;
 
-      // Process mods
+      // Process mods - only update if item doesn't already have an icon
       if (result.mods && result.mods.length > 0) {
         result.mods.forEach(({ filename, iconUrl }) => {
           const item = mp.mods?.find(m => m.filename === filename);
-          if (item) {
+          if (item && !item.iconUrl) {
             item.iconUrl = iconUrl;
             if (!item.version || item.version === 'Unknown') {
               item.version = extractVersionFromFilename(filename) || 'Unknown';
@@ -1984,11 +1994,11 @@ async function batchExtractIconsForModpack(modpackId) {
         });
       }
 
-      // Process resource packs
+      // Process resource packs - only update if item doesn't already have an icon
       if (result.resourcepacks && result.resourcepacks.length > 0) {
         result.resourcepacks.forEach(({ filename, iconUrl }) => {
           const item = mp.resourcepacks?.find(m => m.filename === filename);
-          if (item) {
+          if (item && !item.iconUrl) {
             item.iconUrl = iconUrl;
             if (!item.version || item.version === 'Unknown') {
               item.version = extractVersionFromFilename(filename) || 'Unknown';
@@ -1997,11 +2007,11 @@ async function batchExtractIconsForModpack(modpackId) {
         });
       }
 
-      // Process shaders
+      // Process shaders - only update if item doesn't already have an icon
       if (result.shaders && result.shaders.length > 0) {
         result.shaders.forEach(({ filename, iconUrl }) => {
           const item = mp.shaders?.find(m => m.filename === filename);
-          if (item) {
+          if (item && !item.iconUrl) {
             item.iconUrl = iconUrl;
             if (!item.version || item.version === 'Unknown') {
               item.version = extractVersionFromFilename(filename) || 'Unknown';
@@ -2048,7 +2058,7 @@ function mpRenderInstalledList(type) {
     // Get version - use stored version or extract from filename
     const version = item.version || extractVersionFromFilename(item.filename) || 'Unknown';
     
-    // Create icon element
+    // Create icon element - prioritize existing iconUrl (from Modrinth/CurseForge API)
     const iconHtml = item.iconUrl 
       ? `<img src="${item.iconUrl}" class="mod-icon" onerror="this.style.display='none'" />`
       : `<div class="mod-icon-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>`;
@@ -2065,7 +2075,8 @@ function mpRenderInstalledList(type) {
     });
     grid.appendChild(el);
     
-    // Extract icon asynchronously if not already present
+    // Extract icon from JAR ONLY if not already present (no API icon available)
+    // This prevents unnecessary JAR extraction for items that already have reliable icons
     if (!item.iconUrl) {
       extractAndCacheModIcon(mp.id, typeDir, item.filename).then(iconUrl => {
         if (iconUrl) {
@@ -2275,26 +2286,75 @@ document.getElementById('btn-save-mp-settings').addEventListener('click', () => 
 // --- Delete Modpack ---
 document.getElementById('btn-delete-modpack').addEventListener('click', async () => {
   const mp = mpGet(); if (!mp) return;
-  if (confirm(`Delete "${mp.name}"? Files on disk are kept.`)) {
-    modpacks = modpacks.filter(m => m.id !== activeModpackId);
-    activeModpackId = null; mpSave(); mpRenderList(); mpRenderDetail();
+  
+  // Show delete confirmation modal
+  const modal = document.getElementById('delete-modpack-modal');
+  const checkbox = document.getElementById('delete-files-checkbox');
+  const confirmBtn = document.getElementById('delete-modal-confirm');
+  const cancelBtn = document.getElementById('delete-modal-cancel');
+  const messageEl = document.getElementById('delete-modal-message');
+  
+  // Reset checkbox state
+  checkbox.checked = false;
+  
+  // Update message
+  messageEl.textContent = `Are you sure you want to delete "${mp.name}"? This action cannot be undone.`;
+  
+  // Show modal
+  modal.classList.add('active');
+  
+  // Handle confirm
+  const handleConfirm = async () => {
+    // Only allow deletion if checkbox is checked
+    if (!checkbox.checked) {
+      showWarningToast('Please check the box to confirm deletion.');
+      return;
+    }
     
-    // Remove profile metadata from disk
-    if (window.electronAPI?.scanProfiles) {
+    // Close modal immediately
+    closeModal();
+    
+    // Remove from modpacks list
+    modpacks = modpacks.filter(m => m.id !== activeModpackId);
+    activeModpackId = null;
+    mpSave();
+    mpRenderList();
+    mpRenderDetail();
+    
+    // Delete entire modpack folder from disk using IPC (main process has proper permissions)
+    if (window.electronAPI?.deleteModpackFolder) {
       try {
-        const userDataPath = await window.electronAPI.getUserDataPath();
-        const path = window.require('path');
-        const fs = window.require('fs');
-        const profilePath = path.join(userDataPath, 'minecraft-data', 'profiles', `modpack-${mp.id}`);
-        const profileJsonPath = path.join(profilePath, 'profile.json');
-        if (fs.existsSync(profileJsonPath)) {
-          fs.unlinkSync(profileJsonPath);
-          console.log(`[Modpacks] Removed profile metadata for ${mp.name}`);
+        const result = await window.electronAPI.deleteModpackFolder(mp.id);
+        if (!result.success) {
+          console.warn('[Modpacks] Failed to delete modpack folder:', result.error);
+          showWarningToast('Warning: Could not delete all files from disk.');
+        } else {
+          console.log(`[Modpacks] Deleted modpack folder: modpack-${mp.id}`);
         }
       } catch (e) {
-        console.warn('[Modpacks] Failed to remove profile metadata from disk:', e);
+        console.warn('[Modpacks] IPC error deleting modpack folder:', e);
+        showWarningToast('Warning: Could not delete all files from disk.');
       }
     }
+    
+    showSuccessToast(`Modpack "${mp.name}" deleted successfully.`);
+  };
+  
+  const closeModal = () => {
+    modal.classList.remove('active');
+    // Remove event listeners to prevent duplicates
+    confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+  };
+  
+  confirmBtn.addEventListener('click', handleConfirm);
+  cancelBtn.addEventListener('click', closeModal);
+});
+
+// Close modal when clicking outside
+document.getElementById('delete-modpack-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'delete-modpack-modal') {
+    document.getElementById('delete-modpack-modal').classList.remove('active');
   }
 });
 
@@ -2353,7 +2413,7 @@ document.getElementById('btn-import-modpack').addEventListener('click', async ()
 
     const manifestFiles = manifest.files || [];
     let completedCount = 0;
-    const concurrencyLimit = 12; // Download mods in parallel
+    const concurrencyLimit = 4; // Download mods in parallel (reduced from 12 to prevent memory issues)
 
     const downloadTask = async (f) => {
       try {
@@ -2662,7 +2722,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       
       const manifestFiles = manifest.files || [];
       let completedCount = 0;
-      const concurrencyLimit = 12; // Download 12 mods in parallel
+      const concurrencyLimit = 4; // Download mods in parallel (reduced from 12 to prevent memory issues)
 
       const downloadTask = async (f) => {
         try {
@@ -2681,19 +2741,24 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
           }
           // Determine type from classId: 6=Mod, 12=ResourcePack, 6552=Shader
           let classId = 6;
-          try { const pj = await projRes.json(); classId = pj.data?.classId ?? 6; } catch(_) {}
+          let projectIcon = ''; // Fetch icon from project data
+          try { 
+            const pj = await projRes.json(); 
+            classId = pj.data?.classId ?? 6;
+            projectIcon = pj.data?.logo?.thumbnailUrl || ''; // Get icon from project
+          } catch(_) {}
 
           if (classId === 12) {
             // Resource Pack
-            newMp.resourcepacks.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.(zip|jar)$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
+            newMp.resourcepacks.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.(zip|jar)$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: projectIcon });
             await window.electronAPI.installResourcepack({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
           } else if (classId === 6552) {
             // Shader Pack
-            newMp.shaders.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.(zip|jar)$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
+            newMp.shaders.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.(zip|jar)$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: projectIcon });
             await window.electronAPI.installShader({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
           } else {
             // Default: Mod
-            newMp.mods.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.jar$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: '' });
+            newMp.mods.push({ modrinthId: f.projectID.toString(), name: mf.fileName.replace(/\.jar$/, ''), version: mf.displayName, filename: mf.fileName, downloadUrl: mUrl, iconUrl: projectIcon });
             await window.electronAPI.installMod({ modpackId: newMp.id, downloadUrl: mUrl, filename: mf.fileName });
           }
         } catch(me) {
@@ -2808,7 +2873,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       
       const manifestFiles = manifest.files || [];
       let completedCount = 0;
-      const concurrencyLimit = 12;
+      const concurrencyLimit = 4; // Download mods in parallel (reduced from 12 to prevent memory issues)
 
       const downloadTask = async (f) => {
         try {
@@ -2821,14 +2886,28 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
           
           const filename = f.path?.split('/').pop() || f.filename || 'file.jar';
           
+          // Try to fetch project icon from Modrinth API if we have a project ID
+          let projectIcon = '';
+          if (f.project_id) {
+            try {
+              const projRes = await fetch(`https://api.modrinth.com/v2/project/${f.project_id}`);
+              if (projRes.ok) {
+                const projData = await projRes.json();
+                projectIcon = projData.icon_url || '';
+              }
+            } catch (e) {
+              console.warn(`Failed to fetch icon for project ${f.project_id}:`, e);
+            }
+          }
+          
           if (fileType === 'resourcepack') {
-            newMp.resourcepacks.push({ modrinthId: f.hashes?.sha1 || filename, name: filename.replace(/\.(zip|jar)$/, ''), version: 'bundled', filename, downloadUrl: fUrl, iconUrl: '' });
+            newMp.resourcepacks.push({ modrinthId: f.hashes?.sha1 || filename, name: filename.replace(/\.(zip|jar)$/, ''), version: 'bundled', filename, downloadUrl: fUrl, iconUrl: projectIcon });
             await window.electronAPI.installResourcepack({ modpackId: newMp.id, downloadUrl: fUrl, filename });
           } else if (fileType === 'shader') {
-            newMp.shaders.push({ modrinthId: f.hashes?.sha1 || filename, name: filename.replace(/\.(zip|jar)$/, ''), version: 'bundled', filename, downloadUrl: fUrl, iconUrl: '' });
+            newMp.shaders.push({ modrinthId: f.hashes?.sha1 || filename, name: filename.replace(/\.(zip|jar)$/, ''), version: 'bundled', filename, downloadUrl: fUrl, iconUrl: projectIcon });
             await window.electronAPI.installShader({ modpackId: newMp.id, downloadUrl: fUrl, filename });
           } else {
-            newMp.mods.push({ modrinthId: f.hashes?.sha1 || filename, name: filename.replace(/\.jar$/, ''), version: 'bundled', filename, downloadUrl: fUrl, iconUrl: '' });
+            newMp.mods.push({ modrinthId: f.hashes?.sha1 || filename, name: filename.replace(/\.jar$/, ''), version: 'bundled', filename, downloadUrl: fUrl, iconUrl: projectIcon });
             await window.electronAPI.installMod({ modpackId: newMp.id, downloadUrl: fUrl, filename });
           }
         } catch(me) {

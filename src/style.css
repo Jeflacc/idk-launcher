@@ -3555,3 +3555,1512 @@ input[type="checkbox"]:checked + .switch::after {
     max-width: 100vw;
   }
 }
+
+
+/* =========================================================
+    DOWNLOAD PROGRESS UI
+   ========================================================= */
+
+.download-progress-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 360px;
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid rgba(76, 184, 55, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  font-family: var(--font-body);
+  color: var(--text-main);
+}
+
+.download-progress-container.hidden {
+  display: none !important;
+}
+
+/* Progress bar wrapper */
+.download-progress-bar-wrapper {
+  margin-bottom: 16px;
+}
+
+.progress-bar-background {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(76, 184, 55, 0.2);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4cb837 0%, #3c8527 100%);
+  width: 0%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(76, 184, 55, 0.4);
+}
+
+/* Status text */
+.download-status-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 12px;
+  font-family: var(--font-title);
+  letter-spacing: 0.5px;
+}
+
+/* Progress metrics grid */
+.download-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.download-metric {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(76, 184, 55, 0.15);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.download-metric-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.download-metric-value {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Individual metric texts */
+.download-items-text,
+.download-percent-text,
+.download-current-item-text,
+.download-speed-text,
+.download-eta-text {
+  font-size: 12px;
+  color: var(--text-main);
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.download-current-item-text {
+  color: #4cb837;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+/* Control buttons */
+.download-control-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.download-control-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid rgba(76, 184, 55, 0.3);
+  background: rgba(76, 184, 55, 0.1);
+  color: #4cb837;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.download-control-btn:hover:not(:disabled) {
+  background: rgba(76, 184, 55, 0.2);
+  border-color: #4cb837;
+  box-shadow: 0 0 8px rgba(76, 184, 55, 0.3);
+}
+
+.download-control-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.download-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.download-pause-btn {
+  background: rgba(76, 184, 55, 0.15);
+  border-color: #4cb837;
+}
+
+.download-resume-btn {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.download-resume-btn:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+.download-cancel-btn {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.download-cancel-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #f87171;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Error display */
+.download-error-display {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 12px;
+  color: #f87171;
+  font-size: 12px;
+  display: none;
+}
+
+.download-error-display.visible {
+  display: block;
+}
+
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .download-progress-container {
+    width: calc(100vw - 40px);
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+  }
+  
+  .download-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .download-progress-container {
+    width: calc(100vw - 20px);
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    padding: 16px;
+  }
+  
+  .download-control-btn {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY FEATURES
+   ========================================================= */
+
+/* Focus indicators for keyboard navigation */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #4cb837;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Download UI specific focus indicators */
+.download-control-btn:focus-visible {
+  outline: 3px solid #4cb837;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(76, 184, 55, 0.2);
+}
+
+.progress-bar-fill:focus-visible {
+  outline: 3px solid #4cb837;
+  outline-offset: 2px;
+}
+
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline-width: 4px;
+  }
+
+  .download-control-btn:focus-visible {
+    outline-width: 4px;
+  }
+
+  /* Increase text contrast in high contrast mode */
+  body {
+    --text-main: #ffffff;
+    --text-secondary: #ffffff;
+    --text-muted: #e0e0e0;
+  }
+
+  .download-progress-container {
+    border-color: #ffffff;
+  }
+
+  .progress-bar-fill {
+    background: #4cb837;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Large text support */
+@media (prefers-reduced-motion: no-preference) and (min-width: 0px) {
+  /* Ensure text is scalable */
+  body {
+    font-size: 14px;
+  }
+
+  .download-status-text {
+    font-size: 14px;
+  }
+
+  .download-metrics {
+    font-size: 13px;
+  }
+
+  .download-current-item-text {
+    font-size: 13px;
+  }
+}
+
+/* Ensure buttons are keyboard accessible */
+.download-control-btn {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.download-control-btn:not(:disabled):hover {
+  background-color: rgba(76, 184, 55, 0.2);
+}
+
+.download-control-btn:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+/* Ensure progress bar is accessible */
+.progress-bar-fill {
+  transition: width 0.3s ease;
+}
+
+/* Ensure status text is readable */
+.download-status-text {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Ensure error display is visible */
+.download-error-display {
+  color: #ef4444;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.download-error-display.visible {
+  display: block;
+}
+
+/* Ensure metrics are readable */
+.download-metric-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.download-metric-value {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Ensure current item text is readable */
+.download-current-item-text {
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+/* Ensure buttons have sufficient size for touch targets */
+.download-control-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 16px;
+}
+
+/* Ensure focus is visible on all interactive elements */
+.download-pause-btn:focus-visible,
+.download-resume-btn:focus-visible,
+.download-cancel-btn:focus-visible {
+  outline: 3px solid #4cb837;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(76, 184, 55, 0.2);
+}
+
+/* Ensure progress bar is accessible with keyboard */
+.progress-bar-fill {
+  cursor: pointer;
+}
+
+/* Ensure all text has sufficient color contrast */
+.download-progress-container {
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
+/* Ensure buttons are distinguishable */
+.download-control-btn {
+  border: 1px solid rgba(76, 184, 55, 0.3);
+  background: rgba(76, 184, 55, 0.1);
+  color: var(--text-main);
+}
+
+.download-control-btn:not(:disabled):hover {
+  border-color: #4cb837;
+  background: rgba(76, 184, 55, 0.2);
+}
+
+.download-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Ensure live region announcements are not visible */
+#a11y-live-region {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+
+/* =========================================================
+   DOWNLOAD PROGRESS COMPONENT
+   ========================================================= */
+.download-progress-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 400px;
+  background: rgba(18, 18, 19, 0.95);
+  border: 1px solid rgba(76, 184, 55, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.download-progress-container.hidden {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
+
+.download-status-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4cb837;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.download-progress-bar-wrapper {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(76, 184, 55, 0.2);
+}
+
+.progress-bar-background {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4cb837 0%, #5cc844 100%);
+  width: 0%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(76, 184, 55, 0.4);
+}
+
+.download-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.download-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.download-metric-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.download-metric-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  font-family: 'Courier New', monospace;
+}
+
+.download-current-item-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border-left: 3px solid #4cb837;
+}
+
+.download-error-display {
+  display: none;
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.download-error-display.visible {
+  display: block;
+}
+
+.error-content {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.error-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.error-text {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #fca5a5;
+}
+
+.error-close-btn {
+  background: none;
+  border: none;
+  color: #fca5a5;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.error-close-btn:hover {
+  color: #ef4444;
+}
+
+.download-control-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.download-control-btn {
+  background: #313132;
+  border: 1px solid #4a4a4b;
+  color: #d1d1d2;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.download-control-btn:hover:not(:disabled) {
+  background: #3e3e3f;
+  color: white;
+  border-color: #5c5c5d;
+}
+
+.download-control-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.download-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.download-pause-btn:hover:not(:disabled) {
+  border-color: #f39c12;
+  color: #f39c12;
+}
+
+.download-resume-btn:hover:not(:disabled) {
+  border-color: #4cb837;
+  color: #4cb837;
+}
+
+.download-cancel-btn:hover:not(:disabled) {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .download-progress-container {
+    width: calc(100% - 40px);
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+  }
+}
+
+
+/* ===== ERROR DISPLAY COMPONENT ===== */
+
+.error-display-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  max-width: 400px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+  border: 2px solid #e74c3c;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(231, 76, 60, 0.3), 0 0 20px rgba(231, 76, 60, 0.1);
+  z-index: 10000;
+  animation: slideInUp 0.3s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+.error-display-container.hidden {
+  display: none;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.error-display-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.error-display-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.error-display-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e74c3c;
+  flex-shrink: 0;
+}
+
+.error-display-icon.error-type-network_error {
+  color: #e74c3c;
+}
+
+.error-display-icon.error-type-checksum_mismatch {
+  color: #f39c12;
+}
+
+.error-display-icon.error-type-disk_space {
+  color: #e67e22;
+}
+
+.error-display-icon.error-type-invalid_url {
+  color: #c0392b;
+}
+
+.error-display-icon.error-type-permission_denied {
+  color: #8e44ad;
+}
+
+.error-display-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  font-family: var(--font-title);
+  flex: 1;
+}
+
+.error-display-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.error-display-close:hover {
+  color: #ffffff;
+}
+
+.error-display-message {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.error-display-details {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border-left: 3px solid var(--accent-green);
+  display: none;
+}
+
+.error-display-detail-item {
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+}
+
+.error-display-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.error-action-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-title);
+}
+
+.error-action-btn.primary {
+  background: var(--accent-green);
+  color: #ffffff;
+}
+
+.error-action-btn.primary:hover {
+  background: var(--accent-green-hover);
+  box-shadow: 0 0 12px rgba(76, 184, 55, 0.3);
+}
+
+.error-action-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.error-action-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== DOWNLOAD PROGRESS UI ===== */
+
+.download-progress-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 360px;
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(37, 37, 37, 0.95) 100%);
+  border: 1px solid rgba(76, 184, 55, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(76, 184, 55, 0.1);
+  z-index: 9999;
+  backdrop-filter: blur(10px);
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.download-progress-container.hidden {
+  display: none;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.download-status-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-green);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.download-progress-bar-wrapper {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-bar-background {
+  width: 100%;
+  height: 100%;
+  background: rgba(76, 184, 55, 0.1);
+  border-radius: 3px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-green) 0%, var(--accent-green-hover) 100%);
+  width: 0%;
+  transition: width 0.3s ease;
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(76, 184, 55, 0.5);
+}
+
+.download-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.download-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.download-metric-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 600;
+}
+
+.download-metric-value {
+  font-size: 13px;
+  color: var(--text-main);
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.download-current-item-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 12px;
+}
+
+.download-error-display {
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #ff6b6b;
+  margin-bottom: 12px;
+  display: none;
+}
+
+.download-error-display.visible {
+  display: block;
+}
+
+.download-control-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.download-control-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(76, 184, 55, 0.2);
+  border: 1px solid rgba(76, 184, 55, 0.4);
+  color: var(--accent-green);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.download-control-btn:hover:not(:disabled) {
+  background: rgba(76, 184, 55, 0.3);
+  border-color: rgba(76, 184, 55, 0.6);
+  box-shadow: 0 0 8px rgba(76, 184, 55, 0.2);
+}
+
+.download-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== SETTINGS UI ===== */
+
+.settings-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.settings-panel.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: var(--font-title);
+  margin: 0;
+}
+
+.settings-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.settings-close-btn:hover {
+  color: var(--text-main);
+}
+
+.settings-search-container {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.settings-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.settings-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.settings-sidebar {
+  width: 150px;
+  background: rgba(0, 0, 0, 0.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.settings-category-btn {
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+}
+
+.settings-category-btn:hover {
+  background: rgba(76, 184, 55, 0.1);
+  color: var(--accent-green);
+}
+
+.settings-category-btn.active {
+  background: rgba(76, 184, 55, 0.2);
+  color: var(--accent-green);
+  border-left: 3px solid var(--accent-green);
+}
+
+.settings-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.settings-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-label-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.settings-tooltip-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(76, 184, 55, 0.2);
+  border-radius: 50%;
+  color: var(--accent-green);
+  font-size: 10px;
+  cursor: help;
+  position: relative;
+}
+
+.settings-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 10000;
+  display: none;
+  border: 1px solid rgba(76, 184, 55, 0.3);
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+}
+
+.settings-input {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 8px rgba(76, 184, 55, 0.2);
+}
+
+.settings-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.settings-number {
+  width: 100%;
+}
+
+.settings-description {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.settings-footer {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: flex-end;
+}
+
+.settings-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-title);
+}
+
+.settings-btn-primary {
+  background: var(--accent-green);
+  color: #ffffff;
+}
+
+.settings-btn-primary:hover:not(:disabled) {
+  background: var(--accent-green-hover);
+  box-shadow: 0 0 12px rgba(76, 184, 55, 0.3);
+}
+
+.settings-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.settings-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.settings-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--accent-green);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-contrast: more) {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline-width: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+@media (max-width: 768px) {
+  .download-progress-container {
+    width: calc(100% - 40px);
+    left: 20px;
+    right: 20px;
+  }
+
+  .error-display-container {
+    width: calc(100% - 40px);
+    left: 20px;
+    right: 20px;
+  }
+
+  .settings-panel {
+    padding: 20px;
+  }
+
+  .settings-content {
+    flex-direction: column;
+  }
+
+  .settings-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 8px;
+  }
+
+  .settings-category-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .download-progress-container {
+    width: calc(100% - 20px);
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .error-display-container {
+    width: calc(100% - 20px);
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .download-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .error-display-actions {
+    flex-direction: column;
+  }
+
+  .error-action-btn {
+    width: 100%;
+  }
+}
+
+
+/* Delete Modpack Confirmation Modal */
+.delete-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.delete-modal.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.delete-modal-content {
+  background: linear-gradient(135deg, #1b1b1c 0%, #252525 100%);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 32px;
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 40px rgba(239, 68, 68, 0.1);
+}
+
+.delete-modal-content h3 {
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.delete-modal-content p {
+  font-size: 14px;
+  color: #d1d1d2;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.delete-modal-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-modal-checkbox:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.delete-modal-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #ef4444;
+  flex-shrink: 0;
+}
+
+.delete-modal-checkbox label {
+  font-size: 14px;
+  color: #d1d1d2;
+  cursor: pointer;
+  flex: 1;
+  margin: 0;
+}
+
+.delete-modal-checkbox input[type="checkbox"]:checked + label {
+  color: white;
+  font-weight: 600;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.delete-modal-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-family: var(--font-title);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.delete-modal-btn.cancel {
+  background: #313132;
+  border-color: #4a4a4b;
+  color: #d1d1d2;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.delete-modal-btn.cancel:hover {
+  background: #3e3e3f;
+  border-color: #5c5c5d;
+  color: white;
+}
+
+.delete-modal-btn.cancel:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.3), inset -1px -1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.delete-modal-btn.confirm {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fecaca;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.delete-modal-btn.confirm:hover {
+  background: #991b1b;
+  border-color: #b91c1c;
+  color: white;
+}
+
+.delete-modal-btn.confirm:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.3), inset -1px -1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.delete-modal-btn.confirm:disabled {
+  background: #4a4a4b;
+  border-color: #3c3c3d;
+  color: #727273;
+  cursor: not-allowed;
+  opacity: 0.6;
+}

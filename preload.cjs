@@ -63,7 +63,52 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Batch extract all icons for a modpack (for legacy profiles)
   extractAllIcons: (data) => ipcRenderer.invoke('extract-all-icons', data),
 
+  // Delete modpack folder from disk
+  deleteModpackFolder: (modpackId) => ipcRenderer.invoke('delete-modpack-folder', { modpackId }),
+
   // Debug: forward renderer logs to terminal
   rendererLog: (msg) => ipcRenderer.send('renderer-log', msg),
+
+  // Download progress tracking
+  startDownload: (downloadId, items, downloadPath) => 
+    ipcRenderer.invoke('start-download', { downloadId, items, downloadPath }),
+  pauseDownload: (downloadId) => 
+    ipcRenderer.invoke('pause-download', downloadId),
+  resumeDownload: (downloadId) => 
+    ipcRenderer.invoke('resume-download', downloadId),
+  cancelDownload: (downloadId) => 
+    ipcRenderer.invoke('cancel-download', downloadId),
+  
+  // Download progress event listeners
+  onDownloadProgress: (cb) => 
+    ipcRenderer.on('download-progress', (_e, downloadId, progress) => cb(downloadId, progress)),
+  onDownloadComplete: (cb) => 
+    ipcRenderer.on('download-complete', (_e, downloadId, result) => cb(downloadId, result)),
+  onDownloadError: (cb) => 
+    ipcRenderer.on('download-error', (_e, downloadId, error) => cb(downloadId, error)),
+  onDownloadPaused: (cb) => 
+    ipcRenderer.on('download-paused', (_e, downloadId) => cb(downloadId)),
+  onDownloadResumed: (cb) => 
+    ipcRenderer.on('download-resumed', (_e, downloadId) => cb(downloadId)),
+  onDownloadCancelled: (cb) => 
+    ipcRenderer.on('download-cancelled', (_e, downloadId) => cb(downloadId)),
+
+  // Settings management
+  loadSettings: () => 
+    ipcRenderer.invoke('load-settings'),
+  saveSettings: (settings) => 
+    ipcRenderer.invoke('save-settings', settings),
+  resetSettings: () => 
+    ipcRenderer.invoke('reset-settings'),
+  exportSettings: () => 
+    ipcRenderer.invoke('export-settings'),
+  importSettings: () => 
+    ipcRenderer.invoke('import-settings'),
+  getSettingsByCategory: (category) => 
+    ipcRenderer.invoke('get-settings-by-category', category),
+  searchSettings: (query) => 
+    ipcRenderer.invoke('search-settings', query),
+  getSettingsCategories: () => 
+    ipcRenderer.invoke('get-settings-categories'),
 });
 
