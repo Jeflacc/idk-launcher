@@ -1189,6 +1189,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
     if (mainWindow) {
       if (process.env.VITE_DEV_SERVER_URL) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
       else mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+      mainWindow.show();
     }
 
     event.sender.send('launch-closed');
@@ -1217,6 +1218,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
     
     // Destroy UI to free memory
     if (mainWindow) {
+      mainWindow.hide();
       setTimeout(() => {
         mainWindow.loadURL('about:blank');
         try { if (global.gc) global.gc(); } catch(e){}
@@ -1473,6 +1475,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     if (mainWindow) {
       if (process.env.VITE_DEV_SERVER_URL) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
       else mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+      mainWindow.show();
     }
 
     // --- Crash Report Parser: detect missing mod dependencies ---
@@ -1538,6 +1541,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     
     // Destroy UI to free memory
     if (mainWindow) {
+      mainWindow.hide();
       setTimeout(() => {
         mainWindow.loadURL('about:blank');
         try { if (global.gc) global.gc(); } catch(e){}
