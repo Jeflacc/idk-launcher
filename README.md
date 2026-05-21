@@ -46,17 +46,6 @@
 
 ---
 
-## 🛠️ Cross-Platform Cloud Builds
-
-This repository is equipped with fully automated **GitHub Actions** workflows. Every time a version tag starting with `v` is pushed:
-* 🪟 **Windows:** Natively compiles standalone `.exe` installers.
-* 🍏 **macOS:** Natively compiles Apple Silicon `.dmg` and `.zip` applications.
-* 🐧 **Linux:** Natively compiles `.AppImage` executables and Debian `.deb` packages.
-
-All output packages are automatically compiled and attached to your GitHub Releases draft page.
-
----
-
 ## 💻 Tech Stack
 
 * **Frontend:** [Vite](https://vite.dev/) + Vanilla HTML5/CSS3 (Harmonious Sleek HSL palettes)
