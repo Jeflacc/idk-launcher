@@ -291,6 +291,142 @@ ipcMain.handle('remove-mod', async (event, { modpackId, filename }) => {
   return { success: true };
 });
 
+// Delete entire modpack folder from disk
+ipcMain.handle('delete-modpack-folder', async (event, { modpackId }) => {
+  try {
+    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const profilePath = path.join(rootPath, 'profiles', `modpack-${modpackId}`);
+    
+    if (!fs.existsSync(profilePath)) {
+      console.log(`[Modpacks] Modpack folder not found: ${profilePath}`);
+      return { success: true }; // Already deleted, so return success
+    }
+
+    console.log(`[Modpacks] Starting deletion of: ${profilePath}`);
+
+    // Helper function to recursively delete with proper handle management
+    // Excludes certain folders that may be locked by other processes
+    const deleteRecursiveSync = (dirPath, depth = 0, excludeFolders = ['logs']) => {
+      if (!fs.existsSync(dirPath)) return;
+      
+      let entries;
+      try {
+        entries = fs.readdirSync(dirPath);
+      } catch (e) {
+        console.warn(`[Modpacks] Could not read directory ${dirPath}:`, e.message);
+        return;
+      }
+      
+      for (const entry of entries) {
+        // Skip excluded folders
+        if (excludeFolders.includes(entry)) {
+          console.log(`[Modpacks] Skipping locked folder: ${entry}`);
+          continue;
+        }
+        
+        const fullPath = path.join(dirPath, entry);
+        try {
+          const stat = fs.lstatSync(fullPath);
+          if (stat.isDirectory()) {
+            deleteRecursiveSync(fullPath, depth + 1, excludeFolders);
+          } else {
+            fs.unlinkSync(fullPath);
+          }
+        } catch (e) {
+          console.warn(`[Modpacks] Could not delete ${fullPath}:`, e.message);
+        }
+      }
+      
+      // Try to remove the now-empty directory (but only if it's not the root profile path)
+      if (dirPath !== profilePath) {
+        try {
+          fs.rmdirSync(dirPath);
+        } catch (e) {
+          console.warn(`[Modpacks] Could not remove directory ${dirPath}:`, e.message);
+        }
+      }
+    };
+
+    // Attempt 1: Try standard rmSync
+    try {
+      fs.rmSync(profilePath, { recursive: true, force: true });
+      console.log(`[Modpacks] Successfully deleted modpack folder (rmSync): ${profilePath}`);
+      return { success: true };
+    } catch (e) {
+      console.warn(`[Modpacks] rmSync failed:`, e.message);
+    }
+
+    // Attempt 2: Recursive deletion (excluding locked folders)
+    console.log(`[Modpacks] Attempting recursive deletion (excluding locked folders)...`);
+    deleteRecursiveSync(profilePath);
+
+    // Verify deletion - check if only logs folder remains
+    let remainingItems = [];
+    try {
+      remainingItems = fs.readdirSync(profilePath);
+    } catch (e) {
+      // Directory was deleted
+      console.log(`[Modpacks] Successfully deleted modpack folder (recursive): ${profilePath}`);
+      return { success: true };
+    }
+
+    // If only logs folder remains, that's acceptable
+    if (remainingItems.length === 0 || (remainingItems.length === 1 && remainingItems[0] === 'logs')) {
+      console.log(`[Modpacks] Successfully deleted modpack folder (logs folder may remain): ${profilePath}`);
+      // Try to remove the profile folder itself if it's empty
+      try {
+        fs.rmdirSync(profilePath);
+      } catch (e) {
+        console.log(`[Modpacks] Profile folder still has logs, leaving it: ${e.message}`);
+      }
+      return { success: true };
+    }
+
+    // Attempt 3: Wait and try again
+    console.log(`[Modpacks] Folder still has items: ${remainingItems.join(', ')}, waiting 2 seconds...`);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    try {
+      fs.rmSync(profilePath, { recursive: true, force: true });
+      console.log(`[Modpacks] Successfully deleted modpack folder (after delay): ${profilePath}`);
+      return { success: true };
+    } catch (e) {
+      console.warn(`[Modpacks] Final rmSync attempt failed:`, e.message);
+    }
+
+    // Attempt 4: One more recursive try
+    console.log(`[Modpacks] Final recursive deletion attempt...`);
+    deleteRecursiveSync(profilePath);
+
+    // Final check
+    try {
+      const finalItems = fs.readdirSync(profilePath);
+      if (finalItems.length === 0 || (finalItems.length === 1 && finalItems[0] === 'logs')) {
+        console.log(`[Modpacks] Successfully deleted modpack folder (final attempt): ${profilePath}`);
+        try {
+          fs.rmdirSync(profilePath);
+        } catch (e) {
+          console.log(`[Modpacks] Profile folder still has logs, leaving it`);
+        }
+        return { success: true };
+      }
+    } catch (e) {
+      // Directory was deleted
+      console.log(`[Modpacks] Successfully deleted modpack folder: ${profilePath}`);
+      return { success: true };
+    }
+
+    console.error(`[Modpacks] Could not delete modpack folder after all attempts: ${profilePath}`);
+    return { 
+      success: false, 
+      error: 'Could not delete folder - some files are locked by Java/Minecraft. Close Minecraft and try again.' 
+    };
+  } catch (e) {
+    console.error(`[Modpacks] Unexpected error during deletion:`, e);
+    return { success: false, error: e.message };
+  }
+});
+
 ipcMain.handle('install-resourcepack', async (event, { modpackId, downloadUrl, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
   const rpPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'resourcepacks');
@@ -1597,6 +1733,23 @@ function installFabric(version, rootPath, pinnedLoaderVersion = null) {
       }
     }
 
+    // If no pinned version, check if ANY fabric loader is already installed for this version
+    if (!pinnedLoaderVersion) {
+      const versionsDir = path.join(rootPath, 'versions');
+      if (fs.existsSync(versionsDir)) {
+        const entries = fs.readdirSync(versionsDir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory() && entry.name.startsWith(`fabric-loader-`) && entry.name.endsWith(`-${version}`)) {
+            const jsonPath = path.join(versionsDir, entry.name, `${entry.name}.json`);
+            if (fs.existsSync(jsonPath) && fs.statSync(jsonPath).size > 0) {
+              console.log(`[Fabric] Already installed: ${entry.name}`);
+              return resolve(entry.name);
+            }
+          }
+        }
+      }
+    }
+
     https.get(`https://meta.fabricmc.net/v2/versions/loader/${version}`, (res) => {
       let data = '';
       res.on('data', c => data += c);
@@ -1937,6 +2090,411 @@ ipcMain.handle('get-user-data-path', async () => {
   return app.getPath('userData');
 });
 
+// Get versions path for frontend
+ipcMain.handle('get-versions-path', async () => {
+  return path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+});
+
+// Scan for downloaded versions
+ipcMain.handle('scan-downloaded-versions', async () => {
+  try {
+    const versionsPath = path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+    
+    if (!fs.existsSync(versionsPath)) {
+      console.log('[Versions] Versions directory does not exist yet');
+      return { success: true, versions: [] };
+    }
+    
+    const entries = fs.readdirSync(versionsPath, { withFileTypes: true });
+    const downloadedVersions = [];
+    
+    entries.forEach(entry => {
+      if (entry.isDirectory()) {
+        const versionId = entry.name;
+        const versionJsonPath = path.join(versionsPath, versionId, `${versionId}.json`);
+        
+        if (fs.existsSync(versionJsonPath)) {
+          // Extract the actual game version from the directory name
+          let gameVersion = versionId;
+          
+          // Try to extract game version from loader format
+          const loaderMatch = versionId.match(/-([\d.]+)$/);
+          if (loaderMatch) {
+            gameVersion = loaderMatch[1];
+          }
+          
+          downloadedVersions.push(gameVersion);
+          console.log(`[Versions] Found downloaded version: ${gameVersion} (dir: ${versionId})`);
+        }
+      }
+    });
+    
+    console.log(`[Versions] Scanned ${downloadedVersions.length} downloaded versions:`, downloadedVersions);
+    return { success: true, versions: downloadedVersions };
+  } catch (e) {
+    console.error('[Versions] Failed to scan downloaded versions:', e);
+    return { success: false, error: e.message, versions: [] };
+  }
+});
+
+// Extract icon from JAR/ZIP file (mods, resourcepacks, shaders)
+// Optimized to extract once and cache to disk
+// Checks root directory and common locations for any image file
+ipcMain.handle('extract-mod-icon', async (event, { modId, modpackId, typeDir, filename }) => {
+  try {
+    const JSZip = require('jszip');
+    
+    // Build paths
+    const jarPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`, typeDir, filename);
+    const cacheDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', modpackId, typeDir);
+    const cachePath = path.join(cacheDir, `${filename}.png`);
+    
+    // Check if icon already cached on disk
+    if (fs.existsSync(cachePath)) {
+      console.log(`[IconExtractor] Using cached icon for ${filename}`);
+      // Return file path instead of base64 to avoid loading into memory
+      return { success: true, iconUrl: `file://${cachePath}`, modId, filename, cached: true };
+    }
+    
+    if (!fs.existsSync(jarPath)) {
+      console.warn(`[IconExtractor] File not found: ${jarPath}`);
+      return { success: false, reason: 'File not found', filename };
+    }
+
+    // Read JAR file with size limit to prevent memory issues
+    const stats = fs.statSync(jarPath);
+    if (stats.size > 500 * 1024 * 1024) { // Skip files larger than 500MB
+      console.warn(`[IconExtractor] File too large: ${filename} (${stats.size} bytes)`);
+      return { success: false, reason: 'File too large', filename };
+    }
+
+    const data = fs.readFileSync(jarPath);
+    const zip = await JSZip.loadAsync(data);
+
+    // Image file extensions to search for
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.ico'];
+    
+    let iconFile = null;
+
+    // Priority 1: Check root directory for any image file
+    for (const [filePath, file] of Object.entries(zip.files)) {
+      if (file.dir) continue;
+      
+      // Check if file is in root (no slashes)
+      if (!filePath.includes('/')) {
+        const hasImageExt = imageExtensions.some(ext => filePath.toLowerCase().endsWith(ext));
+        if (hasImageExt) {
+          const size = file._data?.uncompressedSize || 0;
+          // Accept images up to 5MB
+          if (size > 0 && size < 5000000) {
+            iconFile = file;
+            console.log(`[IconExtractor] Found root image: ${filePath} in ${filename}`);
+            break;
+          }
+        }
+      }
+    }
+
+    // Priority 2: Check common icon patterns
+    if (!iconFile) {
+      const iconPatterns = [
+        'pack.png',
+        'assets/modicon.png',
+        'assets/icon.png',
+        'logo.png',
+        'icon.png',
+        'assets/minecraft/textures/gui/icon.png',
+      ];
+
+      for (const pattern of iconPatterns) {
+        if (zip.files[pattern]) {
+          iconFile = zip.files[pattern];
+          console.log(`[IconExtractor] Found icon at pattern: ${pattern} in ${filename}`);
+          break;
+        }
+      }
+    }
+
+    // Priority 3: Recursive search in common directories
+    if (!iconFile) {
+      const searchDirs = ['assets', 'textures', 'images', 'icon', 'META-INF'];
+      const candidates = [];
+      
+      for (const [filePath, file] of Object.entries(zip.files)) {
+        if (file.dir) continue;
+        
+        const isInSearchDir = searchDirs.some(dir => filePath.toLowerCase().includes(dir.toLowerCase()));
+        const hasImageExt = imageExtensions.some(ext => filePath.toLowerCase().endsWith(ext));
+        
+        if (isInSearchDir && hasImageExt) {
+          const size = file._data?.uncompressedSize || 0;
+          if (size > 0 && size < 5000000) {
+            candidates.push({ path: filePath, file, size });
+          }
+        }
+      }
+
+      if (candidates.length > 0) {
+        candidates.sort((a, b) => a.size - b.size);
+        iconFile = candidates[0].file;
+        console.log(`[IconExtractor] Found icon via recursive search: ${candidates[0].path} in ${filename}`);
+      }
+    }
+
+    // Priority 4: Try fabric.mod.json
+    if (!iconFile && zip.files['fabric.mod.json']) {
+      try {
+        const fabricJson = await zip.files['fabric.mod.json'].async('string');
+        const fabricData = JSON.parse(fabricJson);
+        if (fabricData.icon && zip.files[fabricData.icon]) {
+          iconFile = zip.files[fabricData.icon];
+          console.log(`[IconExtractor] Found icon from fabric.mod.json: ${fabricData.icon} in ${filename}`);
+        }
+      } catch (e) {
+        console.warn(`[IconExtractor] Failed to parse fabric.mod.json in ${filename}:`, e.message);
+      }
+    }
+
+    let iconBuffer = null;
+    let isGenerated = false;
+
+    if (iconFile) {
+      // Extract real icon
+      const buffer = await iconFile.async('arraybuffer');
+      iconBuffer = Buffer.from(buffer);
+      console.log(`[IconExtractor] Successfully extracted icon from ${filename}`);
+    } else {
+      // Generate placeholder icon with mod initials
+      console.log(`[IconExtractor] No icon found in ${filename}, generating placeholder`);
+      iconBuffer = generatePlaceholderIcon(filename);
+      isGenerated = true;
+    }
+
+    // Save to disk cache
+    try {
+      if (!fs.existsSync(cacheDir)) {
+        fs.mkdirSync(cacheDir, { recursive: true });
+      }
+      fs.writeFileSync(cachePath, iconBuffer);
+      console.log(`[IconExtractor] Cached icon to disk: ${cachePath}`);
+    } catch (e) {
+      console.warn(`[IconExtractor] Failed to cache icon to disk:`, e.message);
+    }
+
+    // Return file path instead of base64 to avoid memory overhead
+    return { success: true, iconUrl: `file://${cachePath}`, modId, filename, generated: isGenerated };
+  } catch (e) {
+    console.error('[IconExtractor] Error extracting icon from', filename, ':', e.message);
+    return { success: false, reason: e.message, filename };
+  }
+});
+
+// Generate a placeholder icon with mod initials
+function generatePlaceholderIcon(filename) {
+  // Extract mod name from filename (remove version and extension)
+  let modName = filename.replace(/\.[^.]+$/, ''); // Remove extension
+  modName = modName.replace(/-[\d.]+.*$/, ''); // Remove version
+  modName = modName.replace(/_/g, ' '); // Replace underscores with spaces
+  
+  // Get initials (first letter of each word, max 2 chars)
+  const words = modName.split(/[\s-]+/).filter(w => w.length > 0);
+  const initials = words.map(w => w[0].toUpperCase()).slice(0, 2).join('');
+  
+  // Generate a simple PNG with initials
+  // Using a basic 64x64 PNG with a solid color background and text
+  const colors = [
+    { bg: '#FF6B6B', text: '#FFFFFF' }, // Red
+    { bg: '#4ECDC4', text: '#FFFFFF' }, // Teal
+    { bg: '#45B7D1', text: '#FFFFFF' }, // Blue
+    { bg: '#96CEB4', text: '#FFFFFF' }, // Green
+    { bg: '#FFEAA7', text: '#333333' }, // Yellow
+    { bg: '#DDA15E', text: '#FFFFFF' }, // Brown
+    { bg: '#BC6C25', text: '#FFFFFF' }, // Dark Brown
+    { bg: '#9D4EDD', text: '#FFFFFF' }, // Purple
+  ];
+  
+  // Use filename hash to pick a consistent color
+  let hash = 0;
+  for (let i = 0; i < filename.length; i++) {
+    hash = ((hash << 5) - hash) + filename.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  const color = colors[Math.abs(hash) % colors.length];
+  
+  // Create a simple SVG and convert to PNG
+  const svg = `
+    <svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+      <rect width="64" height="64" fill="${color.bg}"/>
+      <text x="32" y="36" font-size="24" font-weight="bold" text-anchor="middle" fill="${color.text}" font-family="Arial">${initials || '?'}</text>
+    </svg>
+  `;
+  
+  // Convert SVG to PNG buffer (simple approach: return as data URL then convert)
+  // For now, return a minimal valid PNG (1x1 transparent)
+  // This is a placeholder - in production you'd use a library like 'sharp' or 'canvas'
+  const pngBuffer = Buffer.from([
+    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
+    0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
+    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1 size
+    0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, // 8-bit RGB
+    0xDE, 0x00, 0x00, 0x00, 0x0C, 0x49, 0x44, 0x41, // IDAT chunk
+    0x54, 0x08, 0x99, 0x63, 0xF8, 0xCF, 0xC0, 0x00, // Compressed data
+    0x00, 0x00, 0x03, 0x00, 0x01, 0x4B, 0x6E, 0x0B, // 
+    0x57, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, // IEND chunk
+    0x44, 0xAE, 0x42, 0x60, 0x82 // PNG end
+  ]);
+  
+  return pngBuffer;
+}
+
+// Batch extract icons for all items in a modpack
+// Uses disk cache (like ModMenu) - extract once, reuse forever
+// Checks root directory and common locations for any image file
+// OPTIMIZED: Skip extraction if icon is already cached on disk, return file:// URLs instead of base64
+ipcMain.handle('extract-all-icons', async (event, { modpackId }) => {
+  try {
+    const JSZip = require('jszip');
+    const profilePath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`);
+    const cacheBaseDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', modpackId);
+    
+    if (!fs.existsSync(profilePath)) {
+      return { success: false, reason: 'Profile not found', extracted: 0 };
+    }
+
+    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.ico'];
+    const results = { mods: [], resourcepacks: [], shaders: [], extracted: 0, failed: 0 };
+    const typeDirs = [
+      { type: 'mods', dir: 'mods', ext: '.jar' },
+      { type: 'resourcepacks', dir: 'resourcepacks', ext: ['.zip', '.jar'] },
+      { type: 'shaders', dir: 'shaderpacks', ext: ['.zip', '.jar'] }
+    ];
+
+    for (const { type, dir, ext } of typeDirs) {
+      const dirPath = path.join(profilePath, dir);
+      const cacheDir = path.join(cacheBaseDir, dir);
+      
+      if (!fs.existsSync(dirPath)) continue;
+
+      const files = fs.readdirSync(dirPath).filter(f => {
+        const exts = Array.isArray(ext) ? ext : [ext];
+        return exts.some(e => f.toLowerCase().endsWith(e));
+      });
+
+      for (const filename of files) {
+        try {
+          const cachePath = path.join(cacheDir, `${filename}.png`);
+          
+          // Check if already cached - skip extraction if cached
+          if (fs.existsSync(cachePath)) {
+            console.log(`[IconExtractor] Using cached icon for ${filename}`);
+            // Return file:// URL instead of base64 to avoid loading into memory
+            results[type].push({ filename, iconUrl: `file://${cachePath}` });
+            results.extracted++;
+            continue;
+          }
+
+          const filePath = path.join(dirPath, filename);
+          
+          // Check file size before loading into memory
+          const stats = fs.statSync(filePath);
+          if (stats.size > 500 * 1024 * 1024) { // Skip files larger than 500MB
+            console.warn(`[IconExtractor] File too large: ${filename} (${stats.size} bytes)`);
+            results.failed++;
+            continue;
+          }
+
+          const data = fs.readFileSync(filePath);
+          const zip = await JSZip.loadAsync(data);
+
+          let iconFile = null;
+
+          // Priority 1: Check root directory for any image file
+          for (const [zipPath, file] of Object.entries(zip.files)) {
+            if (file.dir) continue;
+            
+            // Check if file is in root (no slashes)
+            if (!zipPath.includes('/')) {
+              const hasImageExt = imageExtensions.some(ext => zipPath.toLowerCase().endsWith(ext));
+              if (hasImageExt) {
+                const size = file._data?.uncompressedSize || 0;
+                if (size > 0 && size < 5000000) {
+                  iconFile = file;
+                  console.log(`[IconExtractor] Found root image: ${zipPath} in ${filename}`);
+                  break;
+                }
+              }
+            }
+          }
+
+          // Priority 2: Check common patterns
+          if (!iconFile) {
+            const patterns = ['pack.png', 'assets/modicon.png', 'assets/icon.png', 'logo.png', 'icon.png'];
+            for (const pattern of patterns) {
+              if (zip.files[pattern]) {
+                iconFile = zip.files[pattern];
+                break;
+              }
+            }
+          }
+
+          // Priority 3: Search in common directories
+          if (!iconFile) {
+            const searchDirs = ['assets', 'textures', 'images', 'icon'];
+            const candidates = [];
+            
+            for (const [zipPath, file] of Object.entries(zip.files)) {
+              if (file.dir) continue;
+              const isInSearchDir = searchDirs.some(dir => zipPath.toLowerCase().includes(dir.toLowerCase()));
+              const hasImageExt = imageExtensions.some(ext => zipPath.toLowerCase().endsWith(ext));
+              
+              if (isInSearchDir && hasImageExt) {
+                const size = file._data?.uncompressedSize || 0;
+                if (size > 0 && size < 5000000) {
+                  candidates.push({ path: zipPath, file, size });
+                }
+              }
+            }
+
+            if (candidates.length > 0) {
+              candidates.sort((a, b) => a.size - b.size);
+              iconFile = candidates[0].file;
+            }
+          }
+
+          let iconBuffer = null;
+          
+          if (iconFile) {
+            const buffer = await iconFile.async('arraybuffer');
+            iconBuffer = Buffer.from(buffer);
+          } else {
+            // Generate placeholder icon
+            iconBuffer = generatePlaceholderIcon(filename);
+          }
+
+          // Save to disk cache
+          if (!fs.existsSync(cacheDir)) {
+            fs.mkdirSync(cacheDir, { recursive: true });
+          }
+          fs.writeFileSync(cachePath, iconBuffer);
+          
+          // Return file:// URL instead of base64 to avoid loading into memory
+          results[type].push({ filename, iconUrl: `file://${cachePath}` });
+          results.extracted++;
+        } catch (e) {
+          console.warn(`[IconExtractor] Failed to extract icon from ${filename}:`, e.message);
+          results.failed++;
+        }
+      }
+    }
+
+    console.log(`[IconExtractor] Batch extraction complete: ${results.extracted} extracted, ${results.failed} failed`);
+    return { success: true, ...results };
+  } catch (e) {
+    console.error('[IconExtractor] Batch extraction error:', e.message);
+    return { success: false, reason: e.message, extracted: 0 };
+  }
+});
+
 // Scan profiles directory and return list of modpacks
 ipcMain.handle('scan-profiles', async () => {
   console.log('[Profiles] scan-profiles handler called');
@@ -2158,6 +2716,233 @@ ipcMain.handle('scan-profiles', async () => {
   }
 });
 
+// --- Download Queue Manager IPC Handlers ---
+const DownloadQueueManager = require('./src/backend/download-queue-manager.cjs');
+const IntegrityVerifier = require('./src/backend/integrity-verifier.cjs');
+
+// --- Settings Manager ---
+const SettingsManager = require('./src/backend/settings-manager.cjs');
+
+// Global download manager instance
+let downloadManager = null;
+
+// Global settings manager instance
+let settingsManager = null;
+
+function getDownloadManager() {
+  if (!downloadManager) {
+    downloadManager = new DownloadQueueManager({
+      concurrency: 4,
+      chunkSize: 1048576, // 1MB
+      timeout: 30000,
+      maxRetries: 3,
+      verifyIntegrity: true,
+      resumeEnabled: true,
+      autoRetry: true
+    });
+
+    // Set up event listeners to forward to renderer
+    downloadManager.on('progress', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('download-progress', data.downloadId, data);
+      }
+    });
+
+    downloadManager.on('download-completed', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('download-complete', data.downloadId, { success: true, ...data });
+      }
+    });
+
+    downloadManager.on('download-failed', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('download-error', data.downloadId, {
+          type: 'download-failed',
+          message: `Download failed: ${data.failedItems.length} items failed`,
+          details: data.failedItems
+        });
+      }
+    });
+
+    downloadManager.on('item-failed', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('download-error', data.downloadId, {
+          type: 'item-failed',
+          message: `Failed to download ${data.itemName}: ${data.error}`,
+          itemId: data.itemId,
+          itemName: data.itemName,
+          error: data.error,
+          retryCount: data.retryCount
+        });
+      }
+    });
+
+    downloadManager.on('paused', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('download-paused', data.downloadId);
+      }
+    });
+
+    downloadManager.on('resumed', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('download-resumed', data.downloadId);
+      }
+    });
+
+    downloadManager.on('cancelled', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('download-cancelled', data.downloadId);
+      }
+    });
+
+    // Error handling events
+    downloadManager.on('integrity-verification-failed', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('download-error', data.downloadId, {
+          type: 'integrity-verification-failed',
+          message: `Integrity verification failed: ${data.report.failedItems} files corrupted, ${data.report.missingItems} files missing`,
+          report: data.report,
+          failedItems: data.failedItems
+        });
+      }
+    });
+
+    downloadManager.on('verification-error', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('download-error', data.downloadId, {
+          type: 'verification-error',
+          message: `Verification error: ${data.error}`
+        });
+      }
+    });
+
+    downloadManager.on('finalization-error', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('download-error', data.downloadId, {
+          type: 'finalization-error',
+          message: `Download finalization error: ${data.error}`
+        });
+      }
+    });
+  }
+  return downloadManager;
+}
+
+function getSettingsManager() {
+  if (!settingsManager) {
+    settingsManager = new SettingsManager(app.getPath('userData'));
+  }
+  return settingsManager;
+}
+
+// Global integrity verifier instance
+let integrityVerifier = null;
+
+function getIntegrityVerifier() {
+  if (!integrityVerifier) {
+    integrityVerifier = new IntegrityVerifier({
+      defaultAlgorithm: 'sha256'
+    });
+  }
+  return integrityVerifier;
+}
+
+// IPC Handler: Start download
+ipcMain.handle('start-download', async (event, downloadId, items, downloadPath) => {
+  try {
+    const manager = getDownloadManager();
+    const session = await manager.startDownload(downloadId, items, downloadPath);
+    return { success: true, session };
+  } catch (error) {
+    console.error('[Download IPC] start-download error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Pause download
+ipcMain.handle('pause-download', async (event, downloadId) => {
+  try {
+    const manager = getDownloadManager();
+    await manager.pauseDownload(downloadId);
+    return { success: true };
+  } catch (error) {
+    console.error('[Download IPC] pause-download error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Resume download
+ipcMain.handle('resume-download', async (event, downloadId) => {
+  try {
+    const manager = getDownloadManager();
+    await manager.resumeDownload(downloadId);
+    return { success: true };
+  } catch (error) {
+    console.error('[Download IPC] resume-download error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Cancel download
+ipcMain.handle('cancel-download', async (event, downloadId) => {
+  try {
+    const manager = getDownloadManager();
+    await manager.cancelDownload(downloadId);
+    return { success: true };
+  } catch (error) {
+    console.error('[Download IPC] cancel-download error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Get download status
+ipcMain.handle('get-download-status', async (event, downloadId) => {
+  try {
+    const manager = getDownloadManager();
+    const status = manager.getDownloadStatus(downloadId);
+    return { success: true, status };
+  } catch (error) {
+    console.error('[Download IPC] get-download-status error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Verify download integrity
+ipcMain.handle('verify-download-integrity', async (event, downloadId, items, downloadPath) => {
+  try {
+    const verifier = getIntegrityVerifier();
+    const report = await verifier.verifyDownload(downloadId, items, downloadPath);
+    return { success: true, report };
+  } catch (error) {
+    console.error('[Integrity IPC] verify-download-integrity error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Verify single file checksum
+ipcMain.handle('verify-checksum', async (event, filePath, expectedHash, algorithm) => {
+  try {
+    const verifier = getIntegrityVerifier();
+    const isValid = await verifier.verifyChecksum(filePath, expectedHash, algorithm);
+    return { success: true, isValid };
+  } catch (error) {
+    console.error('[Integrity IPC] verify-checksum error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Detect missing items
+ipcMain.handle('detect-missing-items', async (event, items, downloadPath) => {
+  try {
+    const verifier = getIntegrityVerifier();
+    const missingItems = verifier.detectMissingItems(items, downloadPath);
+    return { success: true, missingItems };
+  } catch (error) {
+    console.error('[Integrity IPC] detect-missing-items error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
 app.on('will-quit', () => {
   if (activeTunnelProcess) {
     try { activeTunnelProcess.kill(); } catch (e) { }
@@ -2167,3 +2952,124 @@ app.on('will-quit', () => {
   }
 });
 
+
+
+// --- Settings Manager IPC Handlers ---
+
+// IPC Handler: Load settings
+ipcMain.handle('load-settings', async (event) => {
+  try {
+    const manager = getSettingsManager();
+    const settings = await manager.loadSettings();
+    const allSettings = manager.getAllSettings();
+    return { success: true, settings, metadata: allSettings };
+  } catch (error) {
+    console.error('[Settings IPC] load-settings error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Save settings
+ipcMain.handle('save-settings', async (event, newSettings) => {
+  try {
+    const manager = getSettingsManager();
+    await manager.saveSettings(newSettings);
+    return { success: true };
+  } catch (error) {
+    console.error('[Settings IPC] save-settings error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Reset to defaults
+ipcMain.handle('reset-settings', async (event) => {
+  try {
+    const manager = getSettingsManager();
+    await manager.resetToDefaults();
+    const settings = await manager.loadSettings();
+    return { success: true, settings };
+  } catch (error) {
+    console.error('[Settings IPC] reset-settings error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Export settings
+ipcMain.handle('export-settings', async (event) => {
+  try {
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Export Settings',
+      defaultPath: 'launcher-settings.json',
+      filters: [{ name: 'JSON File', extensions: ['json'] }]
+    });
+    
+    if (result.canceled || !result.filePath) {
+      return { success: false, error: 'Export cancelled' };
+    }
+    
+    const manager = getSettingsManager();
+    await manager.exportSettings(result.filePath);
+    return { success: true, path: result.filePath };
+  } catch (error) {
+    console.error('[Settings IPC] export-settings error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Import settings
+ipcMain.handle('import-settings', async (event) => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Import Settings',
+      filters: [{ name: 'JSON File', extensions: ['json'] }],
+      properties: ['openFile']
+    });
+    
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false, error: 'Import cancelled' };
+    }
+    
+    const manager = getSettingsManager();
+    const settings = await manager.importSettings(result.filePaths[0]);
+    return { success: true, settings };
+  } catch (error) {
+    console.error('[Settings IPC] import-settings error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Get settings by category
+ipcMain.handle('get-settings-by-category', async (event, category) => {
+  try {
+    const manager = getSettingsManager();
+    const settings = manager.getSettingsByCategory(category);
+    return { success: true, settings };
+  } catch (error) {
+    console.error('[Settings IPC] get-settings-by-category error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Search settings
+ipcMain.handle('search-settings', async (event, query) => {
+  try {
+    const manager = getSettingsManager();
+    const results = manager.searchSettings(query);
+    return { success: true, results };
+  } catch (error) {
+    console.error('[Settings IPC] search-settings error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Get all categories
+ipcMain.handle('get-settings-categories', async (event) => {
+  try {
+    const manager = getSettingsManager();
+    const categories = manager.getCategories();
+    return { success: true, categories };
+  } catch (error) {
+    console.error('[Settings IPC] get-settings-categories error:', error.message);
+    return { success: false, error: error.message };
+  }
+});

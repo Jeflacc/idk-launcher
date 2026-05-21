@@ -11,6 +11,25 @@
   </head>
   <body>
     <div id="app"></div>
+    
+    <!-- Delete Modpack Confirmation Modal -->
+    <div id="delete-modpack-modal" class="delete-modal">
+      <div class="delete-modal-content">
+        <h3>Delete Modpack</h3>
+        <p id="delete-modal-message"></p>
+        
+        <div class="delete-modal-checkbox">
+          <input type="checkbox" id="delete-files-checkbox" />
+          <label for="delete-files-checkbox">Also delete files on disk</label>
+        </div>
+        
+        <div class="delete-modal-actions">
+          <button id="delete-modal-cancel" class="delete-modal-btn cancel">Cancel</button>
+          <button id="delete-modal-confirm" class="delete-modal-btn confirm">Yes, Delete</button>
+        </div>
+      </div>
+    </div>
+    
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
