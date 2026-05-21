@@ -8,6 +8,8 @@ const DiscordRPC = require('discord-rpc');
 const { Worker } = require('worker_threads');
 const crypto = require('crypto');
 
+app.commandLine.appendSwitch('js-flags', '--expose_gc');
+
 protocol.registerSchemesAsPrivileged([
   { scheme: 'idk-cache', privileges: { secure: true, standard: true, supportFetchAPI: true, bypassCSP: true } }
 ]);
@@ -1182,6 +1184,13 @@ ipcMain.on('launch-modpack', async (event, args) => {
     try { require('os').setPriority(require('os').constants.priority.PRIORITY_NORMAL); } catch(e){}
     autoCleanJunkFiles();
     if (overlayWindow) overlayWindow.close();
+    
+    // Restore UI Page
+    if (mainWindow) {
+      if (process.env.VITE_DEV_SERVER_URL) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+      else mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+    }
+
     event.sender.send('launch-closed');
     updateDiscordPresence('In Main Menu', 'Idle in Launcher');
   });
@@ -1205,6 +1214,14 @@ ipcMain.on('launch-modpack', async (event, args) => {
 
     // Game process is now running — tell renderer to hide overlay
     event.sender.send('game-launched');
+    
+    // Destroy UI to free memory
+    if (mainWindow) {
+      setTimeout(() => {
+        mainWindow.loadURL('about:blank');
+        try { if (global.gc) global.gc(); } catch(e){}
+      }, 500);
+    }
     if (windowSize && windowSize.enableOverlay) {
       createOverlayWindow({
         version: `Minecraft ${mcVersion}`,
@@ -1452,6 +1469,12 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     try { require('os').setPriority(require('os').constants.priority.PRIORITY_NORMAL); } catch(e){}
     autoCleanJunkFiles();
 
+    // Restore UI Page
+    if (mainWindow) {
+      if (process.env.VITE_DEV_SERVER_URL) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+      else mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+    }
+
     // --- Crash Report Parser: detect missing mod dependencies ---
     try {
       const crashDir = path.join(profilePath, 'crash-reports');
@@ -1512,6 +1535,14 @@ ipcMain.on('launch-minecraft', async (event, args) => {
 
     // Game process is now running — tell renderer to hide the overlay
     event.sender.send('game-launched');
+    
+    // Destroy UI to free memory
+    if (mainWindow) {
+      setTimeout(() => {
+        mainWindow.loadURL('about:blank');
+        try { if (global.gc) global.gc(); } catch(e){}
+      }, 500);
+    }
     if (windowSize && windowSize.enableOverlay) {
       createOverlayWindow({
         version: `Minecraft ${version}`,
