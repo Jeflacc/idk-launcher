@@ -291,6 +291,16 @@ export function renderAppShell() {
         </div>
 
         <div class="settings-section">
+          <h3>In-Game Overlay</h3>
+          <p>Enable the interactive in-game overlay featuring web browser, friends list, and discord status.</p>
+          <label class="toggle-switch" style="margin-top: 8px;">
+            <input type="checkbox" id="overlay-toggle" />
+            <div class="switch"></div>
+            <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Enable In-Game Overlay (Experimental, please turn on Fullscreen)</span>
+          </label>
+        </div>
+
+        <div class="settings-section">
           <h3>Performance Boost Pack</h3>
           <p>For Fabric launches, install a compatible optimization pack when available: Sodium, Lithium, FerriteCore, and EntityCulling.</p>
           <label class="toggle-switch" style="margin-top: 8px;">

@@ -22,10 +22,12 @@ globalJavaArgsInput.addEventListener('input', (e) => {
 const defaultWidthInput = document.getElementById('default-window-width');
 const defaultHeightInput = document.getElementById('default-window-height');
 const fullscreenToggle = document.getElementById('fullscreen-toggle');
+const overlayToggle = document.getElementById('overlay-toggle');
 
 defaultWidthInput.value = state.defaultWindowWidth || 1024;
 defaultHeightInput.value = state.defaultWindowHeight || 768;
 fullscreenToggle.checked = state.defaultFullscreen || false;
+overlayToggle.checked = state.enableOverlay || false;
 
 defaultWidthInput.addEventListener('input', (e) => {
   state.defaultWindowWidth = parseInt(e.target.value) || 1024;
@@ -40,6 +42,11 @@ defaultHeightInput.addEventListener('input', (e) => {
 fullscreenToggle.addEventListener('change', (e) => {
   state.defaultFullscreen = e.target.checked;
   localStorage.setItem('idk_default_fullscreen', state.defaultFullscreen);
+});
+
+overlayToggle.addEventListener('change', (e) => {
+  state.enableOverlay = e.target.checked;
+  localStorage.setItem('idk_enable_overlay', state.enableOverlay);
 });
 
 // Memory slider

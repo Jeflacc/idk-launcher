@@ -1,12 +1,187 @@
-const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, screen } = require('electron');
 const path = require('path');
 const { Client } = require('minecraft-launcher-core');
 const fs = require('fs');
 const https = require('https');
-const { exec, execSync } = require('child_process');
+const { exec, execSync, spawn } = require('child_process');
 const DiscordRPC = require('discord-rpc');
 
 let mainWindow;
+
+// --- Overlay Window State ---
+let overlayWindow = null;
+let overlayActive = false;
+let overlaySessionData = null;
+
+let boundsTrackerProcess = null;
+
+function createOverlayWindow(sessionData) {
+  if (overlayWindow) return;
+  overlaySessionData = sessionData;
+
+  overlayWindow = new BrowserWindow({
+    transparent: true,
+    frame: false,
+    fullscreen: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    show: false,
+    focusable: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      backgroundThrottling: false,
+      webSecurity: false
+    }
+  });
+
+  overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+  overlayActive = false;
+
+  const isFullscreen = sessionData && sessionData.isFullscreen;
+  const forceBorderlessStr = isFullscreen ? '$true' : '$false';
+
+  // Track window bounds via powershell and apply borderless style if running fullscreen
+  const psScript = `
+$forceBorderless = ${forceBorderlessStr}
+$styled = $false
+
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public class Win32 {
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")]
+    public static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
+    [DllImport("user32.dll")]
+    public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+    [DllImport("user32.dll")]
+    public static extern int GetSystemMetrics(int nIndex);
+    [DllImport("user32.dll")]
+    public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+    [DllImport("user32.dll")]
+    public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+    [DllImport("user32.dll")]
+    public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+}
+"@
+
+$GWL_STYLE = -16
+$WS_POPUP = 0x80000000
+$WS_CAPTION = 0x00C00000
+$WS_THICKFRAME = 0x00040000
+$SWP_FRAMECHANGED = 0x0020
+$SWP_SHOWWINDOW = 0x0040
+
+while($true) {
+    $hwnd = [Win32]::GetForegroundWindow()
+    if ($hwnd -ne [IntPtr]::Zero) {
+        $sb = New-Object System.Text.StringBuilder 256
+        if ([Win32]::GetWindowText($hwnd, $sb, $sb.Capacity) -gt 0) {
+            $title = $sb.ToString()
+            if ($title -match "^Minecraft") {
+                if ($forceBorderless -eq $true -and $styled -eq $false) {
+                    $style = [Win32]::GetWindowLong($hwnd, $GWL_STYLE)
+                    if (($style -band $WS_CAPTION) -ne 0) {
+                        $newStyle = ($style -band (-bnot $WS_CAPTION) -band (-bnot $WS_THICKFRAME)) -bor $WS_POPUP
+                        $null = [Win32]::SetWindowLong($hwnd, $GWL_STYLE, $newStyle)
+                        
+                        $screenWidth = [Win32]::GetSystemMetrics(0)
+                        $screenHeight = [Win32]::GetSystemMetrics(1)
+                        $null = [Win32]::SetWindowPos($hwnd, [IntPtr]::Zero, 0, 0, $screenWidth, $screenHeight, $SWP_FRAMECHANGED -bor $SWP_SHOWWINDOW)
+                        $styled = $true
+                    }
+                }
+
+                $rect = New-Object Win32+RECT
+                if ([Win32]::GetWindowRect($hwnd, [ref]$rect)) {
+                    $w = $rect.Right - $rect.Left
+                    $h = $rect.Bottom - $rect.Top
+                    Write-Output "$($rect.Left),$($rect.Top),$w,$h"
+                }
+            }
+        }
+    }
+    Start-Sleep -Milliseconds 50
+}
+`;
+
+  boundsTrackerProcess = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', psScript]);
+  
+  boundsTrackerProcess.stdout.on('data', (data) => {
+    if (!overlayWindow) return;
+    const lines = data.toString().trim().split('\n');
+    const str = lines[lines.length - 1].trim(); // Get most recent rect
+    if (str) {
+      const parts = str.split(',').map(Number);
+      if (parts.length === 4 && !isNaN(parts[0])) {
+        const [x, y, width, height] = parts;
+        const bounds = overlayWindow.getBounds();
+        if (bounds.x !== x || bounds.y !== y || bounds.width !== width || bounds.height !== height) {
+           overlayWindow.setBounds({ x, y, width, height });
+        }
+      }
+    }
+  });
+
+  if (process.env.VITE_DEV_SERVER_URL) {
+    const baseUrl = process.env.VITE_DEV_SERVER_URL.endsWith('/') ? process.env.VITE_DEV_SERVER_URL : process.env.VITE_DEV_SERVER_URL + '/';
+    overlayWindow.loadURL(baseUrl + 'src/features/overlay/overlay.html');
+  } else {
+    overlayWindow.loadFile(path.join(__dirname, 'dist', 'src', 'features', 'overlay', 'overlay.html'));
+  }
+
+  overlayWindow.once('ready-to-show', () => {
+    // Open DevTools in detached window so we can see overlay console errors
+    overlayWindow.webContents.openDevTools({ mode: 'detach' });
+    const sendData = () => {
+      if (overlayWindow) overlayWindow.webContents.send('overlay-init', overlaySessionData);
+    };
+    sendData();
+    setTimeout(sendData, 1000);
+  });
+
+  globalShortcut.register('Shift+Tab', () => {
+    if (!overlayWindow) return;
+    overlayActive = !overlayActive;
+    if (overlayActive) {
+      overlayWindow.setIgnoreMouseEvents(false);
+      overlayWindow.show();
+      overlayWindow.focus();
+    } else {
+      overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+      overlayWindow.hide();
+    }
+    overlayWindow.webContents.send('toggle-overlay-ui', overlayActive);
+  });
+
+  overlayWindow.on('closed', () => {
+    overlayWindow = null;
+    globalShortcut.unregister('Shift+Tab');
+    if (boundsTrackerProcess) {
+      boundsTrackerProcess.kill();
+      boundsTrackerProcess = null;
+    }
+  });
+}
+
+ipcMain.on('resume-game', () => {
+  if (overlayWindow && overlayActive) {
+    overlayActive = false;
+    overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+    overlayWindow.hide();
+    overlayWindow.webContents.send('toggle-overlay-ui', false);
+  }
+});
+
+// Pull-based overlay data — renderer requests this once it's ready
+ipcMain.handle('get-overlay-data', () => overlaySessionData);
 
 // --- Discord Rich Presence State Management ---
 // The Application ID (Client ID) is public and completely safe to share/commit to repositories.
@@ -777,7 +952,7 @@ function isModernVersion(ver) {
 }
 
 ipcMain.on('launch-modpack', async (event, args) => {
-  let { username, modpackId, modpackName, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData, quickConnect } = args;
+  let { username, modpackId, modpackName, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData, quickConnect, windowSize, globalJavaArgs } = args;
 
   // Always read mcVersion and loader from profile.json on disk — it's the source of truth.
   // This prevents stale localStorage values from causing wrong-version launches.
@@ -836,6 +1011,30 @@ ipcMain.on('launch-modpack', async (event, args) => {
     version: { number: mcVersion, type: 'release' },
     memory: { max: maxMem, min: minMem }
   };
+
+  let isLaunchFullscreen = false;
+  if (windowSize) {
+    if (windowSize.fullscreen) {
+      isLaunchFullscreen = true;
+      const primaryDisplay = screen.getPrimaryDisplay();
+      opts.windowSize = {
+        width: primaryDisplay.bounds.width,
+        height: primaryDisplay.bounds.height
+      };
+    } else if (windowSize.width && windowSize.height) {
+      opts.windowSize = {
+        width: parseInt(windowSize.width),
+        height: parseInt(windowSize.height)
+      };
+    }
+  }
+
+  if (!opts.customArgs) opts.customArgs = [];
+
+  if (globalJavaArgs && globalJavaArgs.trim() !== '') {
+    const extraArgs = globalJavaArgs.split(/\s+/).filter(x => x.trim() !== '');
+    opts.customArgs.push(...extraArgs);
+  }
 
   if (quickConnect) {
     opts.server = {
@@ -935,6 +1134,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
     event.sender.send('launch-progress', { percent: Math.round((e.current / e.total) * 100), status: `Downloading ${e.name}...` });
   });
   launchClient.on('close', () => {
+    if (overlayWindow) overlayWindow.close();
     event.sender.send('launch-closed');
     updateDiscordPresence('In Main Menu', 'Idle in Launcher');
   });
@@ -949,6 +1149,15 @@ ipcMain.on('launch-modpack', async (event, args) => {
     await launchClient.launch(opts);
     // Game process is now running — tell renderer to hide overlay
     event.sender.send('game-launched');
+    if (windowSize && windowSize.enableOverlay) {
+      createOverlayWindow({
+        version: `Minecraft ${mcVersion}`,
+        loader: loaderName,
+        server: quickConnect ? `${quickConnect.host}:${quickConnect.port}` : 'Singleplayer / LAN',
+        username: (authData && authData.selectedProfile) ? authData.selectedProfile.name : (username || 'Player'),
+        isFullscreen: isLaunchFullscreen
+      });
+    }
     updateDiscordPresence(
       `Playing Modpack: ${mpName}`,
       `Minecraft ${mcVersion} (${loaderName})`,
@@ -966,7 +1175,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
 
 // Minecraft Launch IPC
 ipcMain.on('launch-minecraft', async (event, args) => {
-  const { username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect } = args;
+  const { username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect, windowSize, globalJavaArgs } = args;
 
   if (username) lastActiveUsername = username;
   const loaderName = loader || 'Vanilla';
@@ -1005,6 +1214,30 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     version: { number: version, type: 'release' },
     memory: { max: maxMem, min: minMem }
   };
+
+  let isLaunchFullscreen = false;
+  if (windowSize) {
+    if (windowSize.fullscreen) {
+      isLaunchFullscreen = true;
+      const primaryDisplay = screen.getPrimaryDisplay();
+      opts.windowSize = {
+        width: primaryDisplay.bounds.width,
+        height: primaryDisplay.bounds.height
+      };
+    } else if (windowSize.width && windowSize.height) {
+      opts.windowSize = {
+        width: parseInt(windowSize.width),
+        height: parseInt(windowSize.height)
+      };
+    }
+  }
+
+  if (!opts.customArgs) opts.customArgs = [];
+
+  if (globalJavaArgs && globalJavaArgs.trim() !== '') {
+    const extraArgs = globalJavaArgs.split(/\s+/).filter(x => x.trim() !== '');
+    opts.customArgs.push(...extraArgs);
+  }
 
   if (quickConnect) {
     opts.server = {
@@ -1198,6 +1431,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     }
     // --- End Crash Report Parser ---
 
+    if (overlayWindow) overlayWindow.close();
     event.sender.send('launch-closed');
     updateDiscordPresence('In Main Menu', 'Idle in Launcher');
   });
@@ -1211,6 +1445,15 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     await launchClient.launch(opts);
     // Game process is now running — tell renderer to hide the overlay
     event.sender.send('game-launched');
+    if (windowSize && windowSize.enableOverlay) {
+      createOverlayWindow({
+        version: `Minecraft ${version}`,
+        loader: loaderName,
+        server: quickConnect ? `${quickConnect.host}:${quickConnect.port}` : 'Singleplayer / LAN',
+        username: (authData && authData.selectedProfile) ? authData.selectedProfile.name : (username || 'Player'),
+        isFullscreen: isLaunchFullscreen
+      });
+    }
     updateDiscordPresence(
       `Playing Minecraft ${version}`,
       `Mod Loader: ${loaderName}`,

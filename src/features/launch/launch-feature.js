@@ -127,7 +127,24 @@ playBtn.addEventListener('click', () => {
   const authData = state.authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
 
   if (window.electronAPI) {
-    window.electronAPI.launchMinecraft(state.currentUser, state.selectedVersion, state.javaPath, state.selectedLoader, state.autoOptimization, `${state.maxMemoryGB}G`, authData, state.quickConnectTarget);
+    const windowSize = {
+      width: state.defaultWindowWidth,
+      height: state.defaultWindowHeight,
+      fullscreen: state.defaultFullscreen,
+      enableOverlay: state.enableOverlay
+    };
+    window.electronAPI.launchMinecraft(
+      state.currentUser,
+      state.selectedVersion,
+      state.javaPath,
+      state.selectedLoader,
+      state.autoOptimization,
+      `${state.maxMemoryGB}G`,
+      authData,
+      state.quickConnectTarget,
+      windowSize,
+      state.globalJavaArgs
+    );
     state.quickConnectTarget = null; // Reset after launch
   } else {
     let progress = 0;

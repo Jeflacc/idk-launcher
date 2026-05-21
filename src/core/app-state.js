@@ -13,6 +13,7 @@ export const state = {
   defaultWindowWidth: parseInt(localStorage.getItem('idk_default_window_width') || '1024'),
   defaultWindowHeight: parseInt(localStorage.getItem('idk_default_window_height') || '768'),
   defaultFullscreen: localStorage.getItem('idk_default_fullscreen') === 'true',
+  enableOverlay: localStorage.getItem('idk_enable_overlay') === 'true',
   maxMemoryGB: parseInt(localStorage.getItem('craftlaunch_maxMemory') || '4'),
   allVersions: [],
   sodiumSupportedVersions: new Set(),

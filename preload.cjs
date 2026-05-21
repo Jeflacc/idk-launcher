@@ -5,8 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
 
-  launchMinecraft: (username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect) =>
-    ipcRenderer.send('launch-minecraft', { username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect }),
+  launchMinecraft: (username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect, windowSize, globalJavaArgs) =>
+    ipcRenderer.send('launch-minecraft', { username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect, windowSize, globalJavaArgs }),
 
   // All IPC listeners — registered once at startup
   onLaunchProgress:  (cb) => ipcRenderer.on('launch-progress',  (_e, data)  => cb(data)),
@@ -15,6 +15,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onLaunchError:     (cb) => ipcRenderer.on('launch-error',     (_e, error) => cb(error)),
   onLaunchWarning:   (cb) => ipcRenderer.on('launch-warning',   (_e, msg)   => cb(msg)),
   onClearJavaPath:   (cb) => ipcRenderer.on('clear-java-path',  ()          => cb()),
+
+  // Overlay IPC
+  onOverlayInit:     (cb) => ipcRenderer.on('overlay-init',     (_e, data)  => cb(data)),
+  onToggleOverlay:   (cb) => ipcRenderer.on('toggle-overlay-ui',(_e, state) => cb(state)),
+  resumeGame:        ()   => ipcRenderer.send('resume-game'),
+  getOverlayData:    ()   => ipcRenderer.invoke('get-overlay-data'),
 
   openMinecraftFolder: () => ipcRenderer.send('open-minecraft-folder'),
   openExternal: (url) => ipcRenderer.send('open-external', url),

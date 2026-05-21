@@ -1436,7 +1436,24 @@ document.getElementById('btn-play-modpack').addEventListener('click', () => {
   const authData = state.authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
 
   if (window.electronAPI) {
-    window.electronAPI.launchModpack({ username: state.currentUser, modpackId: mp.id, modpackName: mp.name, mcVersion: mp.mcVersion, loader: mp.loader, loaderVersion: mp.loaderVersion || '', javaPath: state.javaPath, maxMemory: `${state.maxMemoryGB}G`, authData });
+    window.electronAPI.launchModpack({
+      username: state.currentUser,
+      modpackId: mp.id,
+      modpackName: mp.name,
+      mcVersion: mp.mcVersion,
+      loader: mp.loader,
+      loaderVersion: mp.loaderVersion || '',
+      javaPath: state.javaPath,
+      maxMemory: `${state.maxMemoryGB}G`,
+      authData,
+      windowSize: {
+        width: state.defaultWindowWidth,
+        height: state.defaultWindowHeight,
+        fullscreen: state.defaultFullscreen,
+        enableOverlay: state.enableOverlay
+      },
+      globalJavaArgs: state.globalJavaArgs
+    });
   }
 });
 
