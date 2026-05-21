@@ -5747,13 +5747,11 @@ body[data-launcher-performance="balanced"] .mc-logo {
   }
 }
 
- / *   U I   O f f l o a d i n g   d u r i n g   g a m e p l a y   * / 
- b o d y . g a m e - r u n n i n g   *   { 
-     a n i m a t i o n :   n o n e   ! i m p o r t a n t ; 
-     t r a n s i t i o n :   n o n e   ! i m p o r t a n t ; 
- } 
-  
- 
+
+
+
+
+
 /* UI Offloading during gameplay */
 body.game-running * {
   animation: none !important;
