@@ -328,7 +328,7 @@ export function renderAppShell() {
         <div class="settings-section">
           <h3>Launcher Updates</h3>
           <p>Check for new versions of the IDK Launcher and stay up to date with the latest features.</p>
-          <button class="submit-btn" id="btn-check-updates" style="width: auto; padding: 10px 20px;">Check for Updates</button>
+          <button class="submit-btn" id="btn-check-launcher-updates" style="width: auto; padding: 10px 20px;">Check for Updates</button>
         </div>
 
         <div class="settings-section">
@@ -392,18 +392,22 @@ export function renderAppShell() {
                 <div style="flex:1;">
                   <h2 id="modpack-name-display" style="font-size:28px;margin-bottom:2px;font-family:var(--font-title);font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);">Modpack</h2>
                   <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 · Fabric</p>
-                  <div style="display:flex;gap:20px;font-size:12px;align-items:center;font-family:var(--font-title);">
+                  <div style="display:flex;gap:20px;font-size:12px;align-items:center;font-family:var(--font-title);flex-wrap:wrap;">
                     <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
                       <span id="mp-stat-version">1.20.4</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle><circle cx="5" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg>
-                      <span id="mp-stat-playtime">Never Played</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"></path></svg>
+                      <span id="mp-stat-playtime">0h played</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                       <span id="mp-stat-loader">Fabric</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                      <span id="mp-stat-achievements">0 Achievements</span>
                     </div>
                   </div>
                 </div>
@@ -431,6 +435,7 @@ export function renderAppShell() {
                 Shaders <span class="mp-tab-count" id="shader-count">0</span>
               </button>
               <div class="mp-tabs-spacer"></div>
+              <button class="mp-action-btn browse" id="btn-check-updates" onclick="window.handleCheckUpdatesClick?.();">Check Updates</button>
               <button class="mp-action-btn browse" id="btn-browse-mods" data-tab="mods">+ Add Mods</button>
               <button class="mp-action-btn browse" id="btn-browse-rp" data-tab="resourcepacks" style="display:none;">+ Add Resource Packs</button>
               <button class="mp-action-btn browse" id="btn-browse-shaders" data-tab="shaders" style="display:none;">+ Add Shaders</button>
@@ -705,5 +710,66 @@ export function renderAppShell() {
       </div>
     </div>
   </div>
+
+  <!-- MOD UPDATE CHECKER MODAL -->
+  <div class="custom-modal" id="mod-updates-modal">
+    <div class="modal-content mod-updates-modal-content">
+      <div class="updates-modal-header">
+        <div>
+          <span class="updates-kicker">Modpack maintenance</span>
+          <h3>Mod Updates</h3>
+        </div>
+        <button class="mp-settings-close" id="btn-close-mod-updates">✕</button>
+      </div>
+      <div id="mod-updates-content">
+        <div class="updates-empty">Checking for updates...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANGELOG VIEWER MODAL -->
+  <div class="custom-modal" id="changelog-modal">
+    <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 id="changelog-title" style="margin: 0; font-size: 18px; font-weight: 700;">Changelog</h3>
+        <button class="mp-settings-close" id="btn-close-changelog">✕</button>
+      </div>
+      <div id="changelog-content" style="color: white;">
+        <div style="text-align: center; padding: 20px; color: #a0a0a0;">Loading changelog...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CRASH LOG ANALYZER MODAL -->
+  <div class="custom-modal" id="crash-analyzer-modal">
+    <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Crash Log Analyzer</h3>
+        <button class="mp-settings-close" id="btn-close-crash-analyzer">✕</button>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #4cb837; text-transform: uppercase;">Paste Crash Log</label>
+        <textarea id="crash-log-input" class="clean-input" placeholder="Paste your crash log here..." style="width: 100%; min-height: 150px; resize: vertical; text-align: left; font-family: monospace; font-size: 11px;"></textarea>
+      </div>
+      <button class="submit-btn" id="btn-analyze-crash" style="width: 100%; margin-bottom: 16px;">Analyze Crash Log</button>
+      <div id="crash-analysis-result" style="color: white;">
+        <!-- Analysis results will be displayed here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPENDENCY RESOLVER MODAL -->
+  <div class="custom-modal" id="dependencies-modal">
+    <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Missing Dependencies</h3>
+        <button class="mp-settings-close" id="btn-close-dependencies">✕</button>
+      </div>
+      <div id="dependencies-content" style="color: white;">
+        <div style="text-align: center; padding: 20px; color: #a0a0a0;">Scanning for dependencies...</div>
+      </div>
+    </div>
+  </div>
+
 `;
 }

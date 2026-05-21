@@ -297,17 +297,132 @@ ipcMain.handle('delete-modpack-folder', async (event, { modpackId }) => {
     const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
     const profilePath = path.join(rootPath, 'profiles', `modpack-${modpackId}`);
     
-    if (fs.existsSync(profilePath)) {
-      // Recursively delete the entire modpack folder with force flag
-      fs.rmSync(profilePath, { recursive: true, force: true });
-      console.log(`[Modpacks] Successfully deleted modpack folder: ${profilePath}`);
-      return { success: true };
-    } else {
+    if (!fs.existsSync(profilePath)) {
       console.log(`[Modpacks] Modpack folder not found: ${profilePath}`);
       return { success: true }; // Already deleted, so return success
     }
+
+    console.log(`[Modpacks] Starting deletion of: ${profilePath}`);
+
+    // Helper function to recursively delete with proper handle management
+    // Excludes certain folders that may be locked by other processes
+    const deleteRecursiveSync = (dirPath, depth = 0, excludeFolders = ['logs']) => {
+      if (!fs.existsSync(dirPath)) return;
+      
+      let entries;
+      try {
+        entries = fs.readdirSync(dirPath);
+      } catch (e) {
+        console.warn(`[Modpacks] Could not read directory ${dirPath}:`, e.message);
+        return;
+      }
+      
+      for (const entry of entries) {
+        // Skip excluded folders
+        if (excludeFolders.includes(entry)) {
+          console.log(`[Modpacks] Skipping locked folder: ${entry}`);
+          continue;
+        }
+        
+        const fullPath = path.join(dirPath, entry);
+        try {
+          const stat = fs.lstatSync(fullPath);
+          if (stat.isDirectory()) {
+            deleteRecursiveSync(fullPath, depth + 1, excludeFolders);
+          } else {
+            fs.unlinkSync(fullPath);
+          }
+        } catch (e) {
+          console.warn(`[Modpacks] Could not delete ${fullPath}:`, e.message);
+        }
+      }
+      
+      // Try to remove the now-empty directory (but only if it's not the root profile path)
+      if (dirPath !== profilePath) {
+        try {
+          fs.rmdirSync(dirPath);
+        } catch (e) {
+          console.warn(`[Modpacks] Could not remove directory ${dirPath}:`, e.message);
+        }
+      }
+    };
+
+    // Attempt 1: Try standard rmSync
+    try {
+      fs.rmSync(profilePath, { recursive: true, force: true });
+      console.log(`[Modpacks] Successfully deleted modpack folder (rmSync): ${profilePath}`);
+      return { success: true };
+    } catch (e) {
+      console.warn(`[Modpacks] rmSync failed:`, e.message);
+    }
+
+    // Attempt 2: Recursive deletion (excluding locked folders)
+    console.log(`[Modpacks] Attempting recursive deletion (excluding locked folders)...`);
+    deleteRecursiveSync(profilePath);
+
+    // Verify deletion - check if only logs folder remains
+    let remainingItems = [];
+    try {
+      remainingItems = fs.readdirSync(profilePath);
+    } catch (e) {
+      // Directory was deleted
+      console.log(`[Modpacks] Successfully deleted modpack folder (recursive): ${profilePath}`);
+      return { success: true };
+    }
+
+    // If only logs folder remains, that's acceptable
+    if (remainingItems.length === 0 || (remainingItems.length === 1 && remainingItems[0] === 'logs')) {
+      console.log(`[Modpacks] Successfully deleted modpack folder (logs folder may remain): ${profilePath}`);
+      // Try to remove the profile folder itself if it's empty
+      try {
+        fs.rmdirSync(profilePath);
+      } catch (e) {
+        console.log(`[Modpacks] Profile folder still has logs, leaving it: ${e.message}`);
+      }
+      return { success: true };
+    }
+
+    // Attempt 3: Wait and try again
+    console.log(`[Modpacks] Folder still has items: ${remainingItems.join(', ')}, waiting 2 seconds...`);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    try {
+      fs.rmSync(profilePath, { recursive: true, force: true });
+      console.log(`[Modpacks] Successfully deleted modpack folder (after delay): ${profilePath}`);
+      return { success: true };
+    } catch (e) {
+      console.warn(`[Modpacks] Final rmSync attempt failed:`, e.message);
+    }
+
+    // Attempt 4: One more recursive try
+    console.log(`[Modpacks] Final recursive deletion attempt...`);
+    deleteRecursiveSync(profilePath);
+
+    // Final check
+    try {
+      const finalItems = fs.readdirSync(profilePath);
+      if (finalItems.length === 0 || (finalItems.length === 1 && finalItems[0] === 'logs')) {
+        console.log(`[Modpacks] Successfully deleted modpack folder (final attempt): ${profilePath}`);
+        try {
+          fs.rmdirSync(profilePath);
+        } catch (e) {
+          console.log(`[Modpacks] Profile folder still has logs, leaving it`);
+        }
+        return { success: true };
+      }
+    } catch (e) {
+      // Directory was deleted
+      console.log(`[Modpacks] Successfully deleted modpack folder: ${profilePath}`);
+      return { success: true };
+    }
+
+    console.error(`[Modpacks] Could not delete modpack folder after all attempts: ${profilePath}`);
+    return { 
+      success: false, 
+      error: 'Could not delete folder - some files are locked by Java/Minecraft. Close Minecraft and try again.' 
+    };
   } catch (e) {
-    console.error(`[Modpacks] Failed to delete modpack folder:`, e);
+    console.error(`[Modpacks] Unexpected error during deletion:`, e);
     return { success: false, error: e.message };
   }
 });

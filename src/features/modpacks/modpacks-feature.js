@@ -33,8 +33,17 @@ if (state.modpacks.length !== originalCount) {
   localStorage.setItem('idk_modpacks', JSON.stringify(state.modpacks));
 }
 
+// Global flag to pause profile scanning during deletion
+let isDeleting = false;
+
 // Scan profiles directory on disk and merge with localStorage
 async function loadProfilesFromDisk() {
+  // Skip if deletion is in progress
+  if (isDeleting) {
+    console.log('[Modpacks] Skipping scan - deletion in progress');
+    return;
+  }
+  
   console.log('[Modpacks] loadProfilesFromDisk called');
   if (!window.electronAPI?.scanProfiles) {
     console.log('[Modpacks] scanProfiles API not available');
@@ -146,26 +155,11 @@ function mpSave() {
 }
 
 async function saveModpacksToDisk() {
-  if (!window.electronAPI?.scanProfiles) return;
-  
-  try {
-    const userDataPath = await window.electronAPI.getUserDataPath();
-    const path = window.require('path');
-    const fs = window.require('fs');
-    
-    for (const mp of state.modpacks) {
-      const rootPath = path.join(userDataPath, 'minecraft-data', 'profiles', `modpack-${mp.id}`);
-      if (!fs.existsSync(rootPath)) fs.mkdirSync(rootPath, { recursive: true });
-      fs.writeFileSync(path.join(rootPath, 'profile.json'), JSON.stringify({
-        name: mp.name,
-        mcVersion: mp.mcVersion,
-        loader: mp.loader
-      }, null, 2));
-    }
-  } catch (e) {
-    console.warn('[Modpacks] Failed to save state.modpacks to disk:', e);
-  }
+  // Profile metadata is managed by the main process via IPC
+  // No need to save to disk here - the main process handles profile.json files
+  // This function is kept for compatibility but does nothing
 }
+
 function mpGet() { return state.modpacks.find(m => m.id === state.activeModpackId) || null; }
 
 function mpRenderList() {
@@ -368,9 +362,10 @@ function mpRenderInstalledList(type) {
     
     // Create icon element - prioritize existing iconUrl (from Modrinth/CurseForge API)
     const renderableIconUrl = getRenderableIconUrl(item.iconUrl);
+    const firstLetter = (item.name || 'M').charAt(0).toUpperCase();
     const iconHtml = renderableIconUrl 
       ? `<img src="${renderableIconUrl}" class="mod-icon" onerror="this.style.display='none'" />`
-      : `<div class="mod-icon-placeholder"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>`;
+      : `<div class="mod-icon-placeholder" style="display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;color:rgba(255,255,255,0.6);">${firstLetter}</div>`;
     
     el.innerHTML = `
       ${iconHtml}
@@ -531,23 +526,8 @@ document.getElementById('btn-confirm-create-mp').addEventListener('click', async
   const newMp = { id: Date.now().toString(36) + Math.random().toString(36).slice(2), name, mcVersion, loader, iconUrl: '', mods: [], resourcepacks: [], shaders: [] };
   state.modpacks.push(newMp); mpSave();
   
-  // Save profile metadata to disk
-  if (window.electronAPI?.scanProfiles) {
-    try {
-      const userDataPath = await window.electronAPI.getUserDataPath();
-      const path = window.require('path');
-      const fs = window.require('fs');
-      const rootPath = path.join(userDataPath, 'minecraft-data', 'profiles', `modpack-${newMp.id}`);
-      if (!fs.existsSync(rootPath)) fs.mkdirSync(rootPath, { recursive: true });
-      fs.writeFileSync(path.join(rootPath, 'profile.json'), JSON.stringify({
-        name: newMp.name,
-        mcVersion: newMp.mcVersion,
-        loader: newMp.loader
-      }, null, 2));
-    } catch (e) {
-      console.warn('[Modpacks] Failed to save profile metadata to disk:', e);
-    }
-  }
+  // Profile metadata is managed by the main process via IPC
+  // No need to save to disk here - the main process handles profile.json files
   
   document.getElementById('mp-create-modal').classList.remove('active');
   document.getElementById('new-mp-name').value = '';
@@ -632,6 +612,9 @@ document.getElementById('btn-delete-modpack').addEventListener('click', async ()
     // Close modal immediately
     closeModal();
     
+    // Set deletion flag to prevent scanner from running
+    isDeleting = true;
+    
     // Remove from state.modpacks list
     state.modpacks = state.modpacks.filter(m => m.id !== state.activeModpackId);
     state.activeModpackId = null;
@@ -654,6 +637,14 @@ document.getElementById('btn-delete-modpack').addEventListener('click', async ()
         actions.showWarningToast('Warning: Could not delete all files from disk.');
       }
     }
+    
+    // Re-enable scanning after deletion
+    isDeleting = false;
+    
+    // Rescan after a delay to ensure files are fully released
+    setTimeout(() => {
+      loadProfilesFromDisk();
+    }, 1000);
     
     actions.showWarningToast(`Modpack "${mp.name}" deleted successfully.`);
   };
@@ -880,12 +871,16 @@ function openBrowser(mode) {
   document.getElementById('mod-search').placeholder = placeholders[mode] || 'Search...';
   
   if (mode === 'modpack') {
-    state.currentProvider = 'curseforge';
+    // For modpacks, show both providers with Modrinth as default
+    state.currentProvider = 'modrinth';
     document.querySelectorAll('.provider-pill').forEach(p => p.classList.remove('active'));
-    document.getElementById('pill-curseforge').classList.add('active');
-    document.getElementById('pill-modrinth').style.display = 'none';
-  } else {
+    document.getElementById('pill-modrinth').classList.add('active');
     document.getElementById('pill-modrinth').style.display = 'inline-block';
+    document.getElementById('pill-curseforge').style.display = 'inline-block';
+  } else {
+    // For mods, only show Modrinth
+    document.getElementById('pill-modrinth').style.display = 'inline-block';
+    document.getElementById('pill-curseforge').style.display = 'none';
   }
 
   document.getElementById('mod-browser').classList.add('active');
@@ -949,8 +944,10 @@ async function mpBrowse(query) {
       const installed = installedIds.includes(mod.project_id);
       const el = document.createElement('div');
       el.className = 'mod-result-card';
+      // Get first letter of title for placeholder
+      const firstLetter = (mod.title || 'M').charAt(0).toUpperCase();
       el.innerHTML = `
-        ${mod.icon_url ? `<img class="mod-result-icon" src="${mod.icon_url}" onerror="this.style.display='none'" />` : `<div class="mod-result-icon mod-icon-placeholder" style="width:48px;height:48px;border-radius:10px;"></div>`}
+        ${mod.icon_url ? `<img class="mod-result-icon" src="${mod.icon_url}" onerror="this.style.display='none'" />` : `<div class="mod-result-icon mod-icon-placeholder" style="width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:20px;color:rgba(255,255,255,0.6);">${firstLetter}</div>`}
         <div class="mod-result-info">
           <strong>${mod.title}</strong><span>${mod.description}</span>
           <div class="mod-result-meta"><span>⬇ ${mod.downloads>=1000?(mod.downloads/1000).toFixed(0)+'K':mod.downloads}</span></div>
@@ -1019,23 +1016,8 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       state.activeModpackId = newMp.id;
       mpRenderList(); mpRenderDetail();
       
-      // Save profile metadata to disk
-      if (window.electronAPI?.scanProfiles) {
-        try {
-          const userDataPath = await window.electronAPI.getUserDataPath();
-          const path = window.require('path');
-          const fs = window.require('fs');
-          const rootPath = path.join(userDataPath, 'minecraft-data', 'profiles', `modpack-${newMp.id}`);
-          if (!fs.existsSync(rootPath)) fs.mkdirSync(rootPath, { recursive: true });
-          fs.writeFileSync(path.join(rootPath, 'profile.json'), JSON.stringify({
-            name: newMp.name,
-            mcVersion: newMp.mcVersion,
-            loader: newMp.loader
-          }, null, 2));
-        } catch (e) {
-          console.warn('[Modpacks] Failed to save profile metadata to disk:', e);
-        }
-      }
+      // Profile metadata is managed by the main process via IPC
+      // No need to save to disk here - the main process handles profile.json files
       
       const manifestFiles = manifest.files || [];
       let completedCount = 0;
@@ -1169,23 +1151,8 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       state.activeModpackId = newMp.id;
       mpRenderList(); mpRenderDetail();
       
-      // Save profile metadata to disk
-      if (window.electronAPI?.scanProfiles) {
-        try {
-          const userDataPath = await window.electronAPI.getUserDataPath();
-          const path = window.require('path');
-          const fs = window.require('fs');
-          const rootPath = path.join(userDataPath, 'minecraft-data', 'profiles', `modpack-${newMp.id}`);
-          if (!fs.existsSync(rootPath)) fs.mkdirSync(rootPath, { recursive: true });
-          fs.writeFileSync(path.join(rootPath, 'profile.json'), JSON.stringify({
-            name: newMp.name,
-            mcVersion: newMp.mcVersion,
-            loader: newMp.loader
-          }, null, 2));
-        } catch (e) {
-          console.warn('[Modpacks] Failed to save profile metadata to disk:', e);
-        }
-      }
+      // Profile metadata is managed by the main process via IPC
+      // No need to save to disk here - the main process handles profile.json files
       
       const manifestFiles = manifest.files || [];
       let completedCount = 0;
