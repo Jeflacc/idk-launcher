@@ -13,8 +13,8 @@ async function fetchMojangNews() {
     
     latestNews.forEach(news => {
       const imageUrl = news.newsPageImage?.url 
-        ? 'https://launchercontent.mojang.com' + news.newsPageImage.url 
-        : (news.playPageImage?.url ? 'https://launchercontent.mojang.com' + news.playPageImage.url : '');
+        ? 'idk-cache://launchercontent.mojang.com' + news.newsPageImage.url 
+        : (news.playPageImage?.url ? 'idk-cache://launchercontent.mojang.com' + news.playPageImage.url : '');
       
       const dateObj = new Date(news.date);
       const dateStr = !isNaN(dateObj) ? dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase() : news.date;
@@ -56,7 +56,7 @@ async function fetchTrendingModpacks() {
   grid.innerHTML = '';
   if (packs) {
     packs.forEach(mp => {
-      const thumb = mp.logo ? mp.logo.thumbnailUrl : '';
+      const thumb = mp.logo ? mp.logo.thumbnailUrl.replace('https://', 'idk-cache://') : '';
       const dl = mp.downloadCount >= 1e6 ? (mp.downloadCount/1e6).toFixed(1)+'M' : mp.downloadCount >= 1000 ? (mp.downloadCount/1000).toFixed(0)+'K' : mp.downloadCount;
       const loader = (mp.categories||[]).find(c => ['Forge','Fabric','NeoForge','Quilt'].includes(c.name))?.name || '';
       const modObj = JSON.stringify({ project_id: mp.id.toString(), title: mp.name, icon_url: thumb, provider: 'curseforge' }).replace(/"/g,'&quot;');
@@ -68,9 +68,10 @@ async function fetchTrendingModpacks() {
     });
   } else {
     FALLBACK.forEach(mp => {
+      const thumbCached = mp.thumb.replace('https://', 'idk-cache://');
       const modObj = JSON.stringify({ project_id: mp.id, title: mp.name, icon_url: mp.thumb, provider: 'curseforge' }).replace(/"/g,'&quot;');
       grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
-        <div class="trending-mp-thumb" style="background-image:url('${mp.thumb}');background-size:cover;background-position:center;"></div>
+        <div class="trending-mp-thumb" style="background-image:url('${thumbCached}');background-size:cover;background-position:center;"></div>
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
           <div class="trending-mp-meta"><span>⬇ ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>
         </div></div>`;
@@ -123,6 +124,11 @@ async function initUpdateChecker() {
 fetchMojangNews();
 fetchTrendingModpacks();
 initUpdateChecker();
+
+window.addEventListener('reload-content', () => {
+  fetchMojangNews();
+  fetchTrendingModpacks();
+});
 
 // Seamless tab transitions helper
 document.querySelectorAll('.nav-tab[data-target]').forEach(tab => {

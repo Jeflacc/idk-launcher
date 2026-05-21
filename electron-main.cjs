@@ -1,10 +1,16 @@
-const { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, screen, protocol, net } = require('electron');
 const path = require('path');
 const { Client } = require('minecraft-launcher-core');
 const fs = require('fs');
 const https = require('https');
 const { exec, execSync, spawn } = require('child_process');
 const DiscordRPC = require('discord-rpc');
+const { Worker } = require('worker_threads');
+const crypto = require('crypto');
+
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'idk-cache', privileges: { secure: true, standard: true, supportFetchAPI: true, bypassCSP: true } }
+]);
 
 let mainWindow;
 
@@ -357,6 +363,45 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  autoCleanJunkFiles();
+  const imageCacheDir = path.join(app.getPath('userData'), 'image-cache');
+  if (!fs.existsSync(imageCacheDir)) fs.mkdirSync(imageCacheDir, { recursive: true });
+
+  const worker = new Worker(path.join(__dirname, 'image-worker.cjs'));
+  const pendingRequests = new Map();
+
+  worker.on('message', (result) => {
+    const { url, cachePath, success } = result;
+    if (pendingRequests.has(url)) {
+      pendingRequests.get(url).forEach(resolve => resolve({ cachePath, success }));
+      pendingRequests.delete(url);
+    }
+  });
+
+  protocol.handle('idk-cache', async (request) => {
+    const originalUrl = request.url.replace('idk-cache://', 'https://');
+    const hash = crypto.createHash('md5').update(originalUrl).digest('hex');
+    const localPath = path.join(imageCacheDir, hash);
+    
+    if (fs.existsSync(localPath)) {
+      return net.fetch('file://' + localPath.replace(/\\/g, '/'));
+    }
+
+    return new Promise((resolve) => {
+      if (!pendingRequests.has(originalUrl)) {
+        pendingRequests.set(originalUrl, []);
+        worker.postMessage({ url: originalUrl, cacheDir: imageCacheDir });
+      }
+      pendingRequests.get(originalUrl).push((result) => {
+        if (result.success && fs.existsSync(result.cachePath)) {
+          resolve(net.fetch('file://' + result.cachePath.replace(/\\/g, '/')));
+        } else {
+          resolve(net.fetch(originalUrl)); // Fallback
+        }
+      });
+    });
+  });
+
   createWindow();
   initDiscordRPC(); // Initialize Discord Rich Presence on startup
 
@@ -1134,6 +1179,8 @@ ipcMain.on('launch-modpack', async (event, args) => {
     event.sender.send('launch-progress', { percent: Math.round((e.current / e.total) * 100), status: `Downloading ${e.name}...` });
   });
   launchClient.on('close', () => {
+    try { require('os').setPriority(require('os').constants.priority.PRIORITY_NORMAL); } catch(e){}
+    autoCleanJunkFiles();
     if (overlayWindow) overlayWindow.close();
     event.sender.send('launch-closed');
     updateDiscordPresence('In Main Menu', 'Idle in Launcher');
@@ -1146,7 +1193,16 @@ ipcMain.on('launch-modpack', async (event, args) => {
     cleanEmptyFiles(path.join(rootPath, 'libraries'));
     cleanEmptyFiles(path.join(rootPath, 'versions'));
     cleanCorruptFabricJars(path.join(rootPath, 'versions'));
-    await launchClient.launch(opts);
+    const mcProcess = await launchClient.launch(opts);
+    
+    // CPU Priority Tuning
+    if (mcProcess && mcProcess.pid) {
+      try {
+        require('os').setPriority(require('os').constants.priority.PRIORITY_LOW);
+        exec(`powershell -Command "(Get-Process -Id ${mcProcess.pid}).PriorityClass = 'High'"`);
+      } catch (e) { console.warn('Failed to set process priority:', e); }
+    }
+
     // Game process is now running — tell renderer to hide overlay
     event.sender.send('game-launched');
     if (windowSize && windowSize.enableOverlay) {
@@ -1393,6 +1449,8 @@ ipcMain.on('launch-minecraft', async (event, args) => {
 
   launchClient.on('close', () => {
     console.log('Game closed');
+    try { require('os').setPriority(require('os').constants.priority.PRIORITY_NORMAL); } catch(e){}
+    autoCleanJunkFiles();
 
     // --- Crash Report Parser: detect missing mod dependencies ---
     try {
@@ -1442,7 +1500,16 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     cleanEmptyFiles(path.join(rootPath, 'libraries'));
     cleanEmptyFiles(path.join(rootPath, 'versions'));
     cleanCorruptFabricJars(path.join(rootPath, 'versions'));
-    await launchClient.launch(opts);
+    const mcProcess = await launchClient.launch(opts);
+    
+    // CPU Priority Tuning
+    if (mcProcess && mcProcess.pid) {
+      try {
+        require('os').setPriority(require('os').constants.priority.PRIORITY_LOW);
+        exec(`powershell -Command "(Get-Process -Id ${mcProcess.pid}).PriorityClass = 'High'"`);
+      } catch (e) { console.warn('Failed to set process priority:', e); }
+    }
+
     // Game process is now running — tell renderer to hide the overlay
     event.sender.send('game-launched');
     if (windowSize && windowSize.enableOverlay) {
@@ -1603,6 +1670,31 @@ async function ensureJava(mcVersion, rootPath, loader, progressCallback) {
   } catch (err) {
     throw new Error(`Extraction failed: ${err.message}`);
   }
+}
+
+function autoCleanJunkFiles() {
+  try {
+    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const pathsToClean = [
+      path.join(rootPath, 'versions'),
+      path.join(app.getPath('userData'), 'temp'),
+      path.join(app.getPath('userData'), 'downloads', 'cache')
+    ];
+    for (const dir of pathsToClean) {
+      if (!fs.existsSync(dir)) continue;
+      const walk = (d) => {
+        for (const file of fs.readdirSync(d)) {
+          const full = path.join(d, file);
+          const stat = fs.statSync(full);
+          if (stat.isDirectory()) walk(full);
+          else if (file.endsWith('.part') || file.endsWith('.tmp')) {
+            try { fs.unlinkSync(full); console.log(`[Cleaner] Purged junk file: ${full}`); } catch(e){}
+          }
+        }
+      };
+      walk(dir);
+    }
+  } catch(e) { console.warn('Cleanup failed:', e); }
 }
 
 function cleanEmptyFiles(dir) {

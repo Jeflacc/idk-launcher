@@ -925,7 +925,7 @@ async function mpBrowse(query) {
       const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=20`);
       if (!res.ok) throw new Error(`Modrinth API error: ${res.status}`);
       const data = await res.json();
-      hits = (data.hits || []).map(m => ({ project_id: m.project_id, title: m.title, description: m.description, icon_url: m.icon_url, downloads: m.downloads, follows: m.follows, provider: 'modrinth' }));
+      hits = (data.hits || []).map(m => ({ project_id: m.project_id, title: m.title, description: m.description, icon_url: m.icon_url ? m.icon_url.replace(/^https?:\/\//i, 'idk-cache://') : '', downloads: m.downloads, follows: m.follows, provider: 'modrinth' }));
     } else {
       let classId = 6;
       if (state.browserMode === 'resourcepack') classId = 12;
@@ -935,7 +935,7 @@ async function mpBrowse(query) {
       const res = await fetch(`https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=${classId}&searchFilter=${encodeURIComponent(query)}${gameVerStr}&sortField=2&sortOrder=desc&pageSize=20`);
       if (!res.ok) throw new Error(`CurseForge API error: ${res.status}`);
       const data = await res.json();
-      hits = (data.data || []).map(m => ({ project_id: m.id.toString(), title: m.name, description: m.summary, icon_url: m.logo ? m.logo.thumbnailUrl : '', downloads: m.downloadCount, follows: 0, provider: 'curseforge' }));
+      hits = (data.data || []).map(m => ({ project_id: m.id.toString(), title: m.name, description: m.summary, icon_url: m.logo && m.logo.thumbnailUrl ? m.logo.thumbnailUrl.replace(/^https?:\/\//i, 'idk-cache://') : '', downloads: m.downloadCount, follows: 0, provider: 'curseforge' }));
     }
     results.innerHTML = '';
     if (!hits.length) { results.innerHTML = `<div class="mp-loading">No results found for "${query}" | Debug: classId ${classId}, provider ${state.currentProvider}</div>`; return; }
