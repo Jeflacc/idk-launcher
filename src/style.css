@@ -1,4 +1,4 @@
-﻿@font-face {
+@font-face {
   font-family: 'Mojang';
   src: url('../fonts/Mojang-Regular.ttf') format('truetype');
   font-weight: normal;
@@ -244,28 +244,13 @@ body:has(#view-settings.active) .nav-tab[data-target="settings"] {
   cursor: pointer;
   height: 42px;
   padding: 0 20px 0 65px;
-  border-radius: 21px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  background-color: #0284c7;
+  background: #0284c7;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
   position: relative;
   overflow: visible;
   transition: border-color 0.25s ease;
-}
-
-.user-profile::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('/clouds.png') no-repeat center;
-  background-size: cover;
-  opacity: 0.4;
-  border-radius: 20px;
-  z-index: 1;
-  pointer-events: none;
 }
 
 .user-profile:hover {
@@ -304,11 +289,6 @@ body:has(#view-settings.active) .nav-tab[data-target="settings"] {
   object-fit: cover;
   image-rendering: pixelated;
   display: block;
-}
-
-.user-details {
-  position: relative;
-  z-index: 2;
 }
 
 .user-details h4 {
@@ -933,6 +913,64 @@ input[type="checkbox"]:checked + .switch::after {
   background: white;
 }
 
+/* The MANAGE MODS button */
+.manage-mods-button {
+  padding: 0;
+  border-radius: 4px;
+  border: 2px solid #2d6b1f;
+  background: linear-gradient(135deg, #5cc844 0%, #4cb837 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  font-family: var(--font-title);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.5px;
+  width: 160px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    inset 0 3px 0 #68c94b,
+    inset 3px 0 0 #68c94b,
+    inset 0 -3px 0 #2d6b1f,
+    inset -3px 0 0 #2d6b1f,
+    0 4px 12px rgba(0, 0, 0, 0.4);
+  text-shadow: 1px 1px 0px #2d6b1f;
+  font-variant: small-caps;
+  text-transform: lowercase;
+}
+
+.manage-mods-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6dd851 0%, #5cc844 100%);
+  box-shadow: 
+    inset 0 3px 0 #75d158,
+    inset 3px 0 0 #75d158,
+    inset 0 -3px 0 #3c8527,
+    inset -3px 0 0 #3c8527,
+    0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.manage-mods-button:active:not(:disabled) {
+  box-shadow: 
+    inset 0 3px 0 #2d6b1f,
+    inset 3px 0 0 #2d6b1f,
+    inset 0 -3px 0 #68c94b,
+    inset -3px 0 0 #68c94b,
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
+}
+
+.manage-mods-button:disabled {
+  background: #2a2a2b !important;
+  border-color: #3c3c3d !important;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
 /* The PLAY button */
 .play-button {
   background: linear-gradient(135deg, #4cb837 0%, #3c8527 100%);
@@ -986,7 +1024,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 /* Subtext & Glowing status dot inspired directly by Lunar Client screenshot! */
 .play-button:not(.running):not(:disabled)::after {
-  content: 'â— Ready to play';
+  content: '● Ready to play';
   font-family: var(--font-main);
   font-size: 9px;
   font-weight: 600;
@@ -1008,6 +1046,43 @@ input[type="checkbox"]:checked + .switch::after {
   cursor: not-allowed;
   transform: none !important;
   height: 52px;
+}
+
+/* Controls layout */
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Modpack list section headers */
+.mp-list-section-header {
+  padding: 12px 16px 8px;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 8px;
+}
+
+.mp-list-section-header:first-child {
+  margin-top: 0;
+}
+
+/* Version items styling */
+.modpack-item.version-item {
+  border-left: 2px solid #4cb837;
+}
+
+.modpack-item.version-item:hover {
+  background: rgba(76, 184, 55, 0.08);
+}
+
+.modpack-item.version-item.active {
+  background: rgba(76, 184, 55, 0.15);
+  border-left-color: #5cc844;
 }
 
 /* =========================================================
@@ -5745,15 +5820,4 @@ body[data-launcher-performance="balanced"] .mc-logo {
   .modal-content h3 {
     font-size: 16px;
   }
-}
-
-
-
-
-
-
-/* UI Offloading during gameplay */
-body.game-running * {
-  animation: none !important;
-  transition: none !important;
 }

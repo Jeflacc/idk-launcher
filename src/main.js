@@ -24,6 +24,7 @@ const [
   { initAuthFeature },
   { initSettingsFeature },
   { initVersionsFeature },
+  { initVersionModsFeature },
   { initLaunchFeature },
   { initModpacksFeature },
   { initContentFeature },
@@ -33,6 +34,7 @@ const [
   import('./features/auth/auth-feature.js'),
   import('./features/settings/settings-feature.js'),
   import('./features/versions/version-feature.js'),
+  import('./features/versions/version-mods-feature.js'),
   import('./features/launch/launch-feature.js'),
   import('./features/modpacks/modpacks-feature.js'),
   import('./features/content/content-feature.js'),
@@ -43,6 +45,7 @@ const [
 initAuthFeature({ switchView });
 initSettingsFeature({ switchView });
 initVersionsFeature();
+initVersionModsFeature({ switchView });
 initLaunchFeature();
 initModpacksFeature({ switchView });
 initContentFeature();
