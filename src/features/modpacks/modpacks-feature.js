@@ -1,4 +1,4 @@
-import { state, actions } from '../../core/app-state.js';
+﻿import { state, actions } from '../../core/app-state.js';
 
 export function initModpacksFeature({ switchView }) {
 // === MODPACK MANAGER =====================================
@@ -1099,7 +1099,26 @@ document.getElementById('mod-search').addEventListener('input', e => {
 });
 
 async function mpBrowse(query) {
-  const mp = mpGet();
+  let mp = mpGet();
+  const isViewingVersion = state.activeVersionForMods && !state.activeModpackId;
+  
+  // Create virtual modpack for version if needed
+  if (!mp && isViewingVersion) {
+    const versionData = state.allVersions?.find(v => v.id === state.activeVersionForMods);
+    const versionSettings = state.versionSettings?.[state.activeVersionForMods] || { loader: 'Vanilla' };
+    
+    mp = {
+      id: `version-${state.activeVersionForMods}`,
+      name: state.activeVersionForMods,
+      mcVersion: state.activeVersionForMods,
+      loader: versionSettings.loader,
+      mods: [],
+      resourcepacks: [],
+      shaders: [],
+      isVersion: true
+    };
+  }
+  
   if (!mp && state.browserMode !== 'modpack') return;
   const results = document.getElementById('mod-browser-results');
   results.innerHTML = `<div class="mp-loading"><div class="launch-spinner" style="width:32px;height:32px;margin:0 auto 12px;"></div>Searching ${state.currentProvider === 'modrinth' ? 'Modrinth' : 'CurseForge'}...</div>`;
