@@ -60,6 +60,14 @@ if (window.electronAPI) {
     if (data.status) launchStatus.innerText = getFunStatus(data.status);
   });
   window.electronAPI.onGameLaunched(() => {
+    // Smart UI Offloading
+    document.body.classList.add('game-running');
+    document.querySelectorAll('video').forEach(v => v.pause());
+    const mojangNewsGrid = document.getElementById('mojang-news-grid');
+    if (mojangNewsGrid) mojangNewsGrid.innerHTML = '';
+    const trendingModsGrid = document.getElementById('trending-mods-grid');
+    if (trendingModsGrid) trendingModsGrid.innerHTML = '';
+
     // Mark the current version as downloaded since the game launched successfully
     if (!state.downloadedVersions.includes(state.selectedVersion)) {
       state.downloadedVersions.push(state.selectedVersion);
@@ -84,6 +92,8 @@ if (window.electronAPI) {
     }, 800);
   });
   window.electronAPI.onLaunchClosed(() => {
+    document.body.classList.remove('game-running');
+    window.dispatchEvent(new Event('reload-content'));
     playBtn.innerText = 'PLAY';
     playBtn.classList.remove('running');
     playBtn.disabled = false;
@@ -127,7 +137,24 @@ playBtn.addEventListener('click', () => {
   const authData = state.authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
 
   if (window.electronAPI) {
-    window.electronAPI.launchMinecraft(state.currentUser, state.selectedVersion, state.javaPath, state.selectedLoader, state.autoOptimization, `${state.maxMemoryGB}G`, authData, state.quickConnectTarget);
+    const windowSize = {
+      width: state.defaultWindowWidth,
+      height: state.defaultWindowHeight,
+      fullscreen: state.defaultFullscreen,
+      enableOverlay: state.enableOverlay
+    };
+    window.electronAPI.launchMinecraft(
+      state.currentUser,
+      state.selectedVersion,
+      state.javaPath,
+      state.selectedLoader,
+      state.autoOptimization,
+      `${state.maxMemoryGB}G`,
+      authData,
+      state.quickConnectTarget,
+      windowSize,
+      state.globalJavaArgs
+    );
     state.quickConnectTarget = null; // Reset after launch
   } else {
     let progress = 0;
