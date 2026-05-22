@@ -44,7 +44,7 @@ async function fetchTrendingModpacks() {
     { id: '389615', name: 'RLCraft',       summary: 'A modpack designed to make Minecraft as hard as possible.',                      thumb: 'https://media.forgecdn.net/avatars/255/644/637285881806441891.png', dl: '12M',  loader: 'Forge'   },
     { id: '35539',  name: 'SkyFactory 4',  summary: 'SkyFactory 4 is a new Skyblock-inspired modpack.',                              thumb: 'https://media.forgecdn.net/avatars/145/866/636730709659626580.png', dl: '20M',  loader: 'Forge'   },
     { id: '497279', name: 'All the Mods 9',summary: 'All the Mods started as a private pack for a friend group.',                    thumb: 'https://media.forgecdn.net/avatars/740/633/638163849529059464.png', dl: '8M',   loader: 'Forge'   },
-    { id: '641528', name: 'Better MC [FABRIC]', summary: 'The Better Minecraft modpack series — now for Fabric.',                   thumb: 'https://media.forgecdn.net/avatars/524/491/637880462219327988.png', dl: '6M',   loader: 'Fabric'  }
+    { id: '641528', name: 'Better MC [FABRIC]', summary: 'The Better Minecraft modpack series \u2014 now for Fabric.',                   thumb: 'https://media.forgecdn.net/avatars/524/491/637880462219327988.png', dl: '6M',   loader: 'Fabric'  }
   ];
   let packs = null;
   try {
@@ -63,7 +63,7 @@ async function fetchTrendingModpacks() {
       grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
         <div class="trending-mp-thumb" style="background-image:url('${thumb}');background-size:cover;background-position:center;"></div>
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
-          <div class="trending-mp-meta"><span>⬇ ${dl}</span>${loader?'<span class="trending-mp-tag">'+loader+'</span>':''}</div>
+          <div class="trending-mp-meta"><span>&#x2B07; ${dl}</span>${loader?'<span class="trending-mp-tag">'+loader+'</span>':''}</div>
         </div></div>`;
     });
   } else {
@@ -73,7 +73,7 @@ async function fetchTrendingModpacks() {
       grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
         <div class="trending-mp-thumb" style="background-image:url('${thumbCached}');background-size:cover;background-position:center;"></div>
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
-          <div class="trending-mp-meta"><span>⬇ ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>
+          <div class="trending-mp-meta"><span>&#x2B07; ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>
         </div></div>`;
     });
   }
@@ -100,7 +100,7 @@ async function initUpdateChecker() {
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\*(.*?)\*/g, '<em>$1</em>')
           .replace(/## (.*?)(<br>|$)/g, '<h4 style="margin:10px 0 5px;color:white;font-family:var(--font-title);">$1</h4>')
-          .replace(/- (.*?)(<br>|$)/g, '<div style="margin-left:8px;display:flex;gap:6px;margin-bottom:4px;"><span style="color:#60a5fa;">•</span><span>$1</span></div>');
+          .replace(/- (.*?)(<br>|$)/g, '<div style="margin-left:8px;display:flex;gap:6px;margin-bottom:4px;"><span style="color:#60a5fa;">&bull;</span><span>$1</span></div>');
           
         notesContainer.innerHTML = htmlNotes || '<p style="color:var(--text-muted);">No release notes provided.</p>';
         modal.classList.add('active');

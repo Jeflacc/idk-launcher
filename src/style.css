@@ -1024,7 +1024,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 /* Subtext & Glowing status dot inspired directly by Lunar Client screenshot! */
 .play-button:not(.running):not(:disabled)::after {
-  content: '● Ready to play';
+  content: '\25CF  Ready to play';
   font-family: var(--font-main);
   font-size: 9px;
   font-weight: 600;

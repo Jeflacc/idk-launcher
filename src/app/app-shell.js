@@ -243,7 +243,7 @@ export function renderAppShell() {
           </div>
           <div class="news-grid" id="mojang-news-grid">
             <div style="padding: 60px 40px; text-align: center; color: var(--text-muted); width: 100%; grid-column: 1 / -1;">
-              <div style="font-size: 48px; margin-bottom: 16px;">≡ƒô░</div>
+              <div style="font-size: 48px; margin-bottom: 16px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></div>
               <div>Loading Mojang news...</div>
             </div>
           </div>
@@ -294,7 +294,7 @@ export function renderAppShell() {
           <p>Set the default window resolution when launching Minecraft.</p>
           <div style="display:flex; gap:8px; align-items:center;">
             <input type="number" class="clean-input" id="default-window-width" placeholder="Width" style="text-align:center; flex:1;" value="1024" />
-            <span style="color:var(--text-muted);">×</span>
+            <span style="color:var(--text-muted);">&times;</span>
             <input type="number" class="clean-input" id="default-window-height" placeholder="Height" style="text-align:center; flex:1;" value="768" />
             <label class="toggle-switch" style="margin:0;">
               <input type="checkbox" id="fullscreen-toggle" />
@@ -421,7 +421,7 @@ export function renderAppShell() {
                 </div>
                 <div style="flex:1;">
                   <h2 id="modpack-name-display" style="font-size:28px;margin-bottom:2px;font-family:var(--font-title);font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);">Modpack</h2>
-                  <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 · Fabric</p>
+                  <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 &middot; Fabric</p>
                   <div style="display:flex;gap:20px;font-size:12px;align-items:center;font-family:var(--font-title);flex-wrap:wrap;">
                     <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
@@ -576,7 +576,7 @@ export function renderAppShell() {
               <label>Game Window Size</label>
               <div style="display:flex; gap:8px;">
                 <input type="number" class="clean-input" id="mp-settings-width" placeholder="Width" style="text-align:center; flex:1;" />
-                <span style="display:flex; align-items:center; color:var(--text-muted);">×</span>
+                <span style="display:flex; align-items:center; color:var(--text-muted);">&times;</span>
                 <input type="number" class="clean-input" id="mp-settings-height" placeholder="Height" style="text-align:center; flex:1;" />
               </div>
             </div>

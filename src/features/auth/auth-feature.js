@@ -93,7 +93,7 @@ function renderSkinFaceOnCanvas(skinUrl, fallbackUrl) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const img = new Image();
-  // No crossOrigin here — we only draw TO the canvas, never read pixels back,
+  // No crossOrigin here -- we only draw TO the canvas, never read pixels back,
   // so taint protection isn't needed. crossOrigin='anonymous' silently blocks
   // loading when the remote server doesn't send CORS headers.
   img.onload = () => {
@@ -353,7 +353,7 @@ function open3dSkinViewer() {
       transition: transform 0.3s ease;
       position: relative;
     ">
-      <div style="position: absolute; top: 24px; right: 24px; cursor: pointer; color: var(--text-muted); font-size: 20px;" id="btn-close-skin-3d">✕</div>
+      <div style="position: absolute; top: 24px; right: 24px; cursor: pointer; color: var(--text-muted); font-size: 20px;" id="btn-close-skin-3d">&times;</div>
       <h3 style="font-family: var(--font-title); font-size: 24px; margin-bottom: 8px; color: white;">3D Character Viewer</h3>
       <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Interact, rotate, and animate your Minecraft skin</p>
       

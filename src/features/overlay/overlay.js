@@ -288,8 +288,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <span>Wants to be friends</span>
         </div>
         <div class="friend-request-actions">
-          <button class="friend-request-btn accept" title="Accept">✓</button>
-          <button class="friend-request-btn decline" title="Decline">✕</button>
+          <button class="friend-request-btn accept" title="Accept">&#x2713;</button>
+          <button class="friend-request-btn decline" title="Decline">&times;</button>
         </div>
       `;
 

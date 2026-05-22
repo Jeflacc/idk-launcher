@@ -64,13 +64,13 @@ async function loadProfilesFromDisk() {
       const diskProfiles = result.profiles;
       // Debug: log what disk returned
       diskProfiles.forEach(p => {
-        console.log(`[Modpacks] Disk profile: ${p.name} (${p.id}) — mods:${p.diskMods?.length || 0} rp:${p.diskResourcepacks?.length || 0} sh:${p.diskShaders?.length || 0}`);
+        console.log(`[Modpacks] Disk profile: ${p.name} (${p.id}) \u2014 mods:${p.diskMods?.length || 0} rp:${p.diskResourcepacks?.length || 0} sh:${p.diskShaders?.length || 0}`);
       });
 
       // Helper: merge disk file list with stored metadata
       // IMPORTANT: Preserve existing iconUrl from API (Modrinth/CurseForge) to avoid unnecessary JAR extraction
       const mergeFiles = (diskFiles, storedFiles) => {
-        // storedFiles might be an object or non-array — normalize it
+        // storedFiles might be an object or non-array \u2014 normalize it
         const storedArr = Array.isArray(storedFiles) ? storedFiles : [];
         const storedMap = new Map(storedArr.map(f => [f.filename, f]));
         return (diskFiles || []).map(df => {
@@ -85,14 +85,14 @@ async function loadProfilesFromDisk() {
         });
       };
 
-      // Build lookup maps — by ID and by name (for legacy matching)
+      // Build lookup maps \u2014 by ID and by name (for legacy matching)
       const existingById   = new Map(state.modpacks.map(mp => [mp.id, mp]));
       const existingByName = new Map(state.modpacks.map(mp => [mp.name?.toLowerCase().trim(), mp]));
 
       console.log('[Modpacks] localStorage IDs:', state.modpacks.map(mp => `${mp.id}="${mp.name}"`).join(', '));
       console.log('[Modpacks] Disk IDs:', diskProfiles.map(p => `${p.id}="${p.name}"`).join(', '));
 
-      // Build a new state.modpacks array entirely from disk — disk is the source of truth
+      // Build a new state.modpacks array entirely from disk \u2014 disk is the source of truth
       // Preserve metadata (iconUrl, lastPlayed, modrinthId per file) from localStorage
       const newModpacks = diskProfiles.map(diskMp => {
         // Try to find existing entry by ID, then by name
@@ -117,7 +117,7 @@ async function loadProfilesFromDisk() {
       console.log('[Modpacks]', rebuildMsg);
       window.electronAPI?.rendererLog?.('[Modpacks] ' + rebuildMsg);
       // Keep state.activeModpackId pointing to a valid modpack
-      // The ID may have changed (legacy fix) — try to find by old ID first, then keep first
+      // The ID may have changed (legacy fix) \u2014 try to find by old ID first, then keep first
       if (state.activeModpackId && !state.modpacks.find(m => m.id === state.activeModpackId)) {
         // Try to find by name match from old localStorage
         const oldMp = [...(new Map(state.modpacks.map(m => [m.id, m]))).values()][0];
@@ -234,7 +234,7 @@ function mpRenderList() {
         : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
       el.innerHTML = `
         <div class="mp-item-icon" style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(255,255,255,0.05);flex-shrink:0;border:1px solid rgba(255,255,255,0.08);">${iconHtml}</div>
-        <div class="mp-item-info"><strong>${mp.name}</strong><span>${mp.mcVersion} · ${mp.loader}</span></div>
+        <div class="mp-item-info"><strong>${mp.name}</strong><span>${mp.mcVersion} \u00B7 ${mp.loader}</span></div>
         <span class="mp-item-count">${total}</span>`;
       el.addEventListener('click', async () => {
         state.activeModpackId = mp.id;
@@ -523,13 +523,13 @@ function mpRenderDetail() {
   
   if (isViewingVersion && versionData) {
     nameEl.innerText = versionData.id;
-    metaEl.innerText = `${versionData.id} · ${versionSettings.loader}`;
+    metaEl.innerText = `${versionData.id} \u00B7 ${versionSettings.loader}`;
     nameEl.title = versionData.id;
     nameEl.style.cursor = 'default';
     nameEl.ondblclick = null;
   } else if (mp) {
     nameEl.innerText = mp.name;
-    metaEl.innerText = `MC ${mp.mcVersion} · ${mp.loader}`;
+    metaEl.innerText = `MC ${mp.mcVersion} \u00B7 ${mp.loader}`;
     nameEl.title = 'Double-click to rename';
     nameEl.style.cursor = 'pointer';
     nameEl.ondblclick = () => {
@@ -1258,7 +1258,7 @@ async function mpBrowse(query, page = 0) {
       // Previous button
       if (state.browserPage > 0) {
         const prevBtn = document.createElement('button');
-        prevBtn.textContent = '← Previous';
+        prevBtn.textContent = '\u2190 Previous';
         prevBtn.style.cssText = 'padding:8px 14px;background:rgba(76,184,55,0.5);border:1px solid rgba(76,184,55,0.9);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;transition:all 0.2s;box-shadow:0 2px 8px rgba(76,184,55,0.3);';
         prevBtn.addEventListener('mouseover', () => prevBtn.style.background = 'rgba(76,184,55,0.8)');
         prevBtn.addEventListener('mouseout', () => prevBtn.style.background = 'rgba(76,184,55,0.5)');
@@ -1275,7 +1275,7 @@ async function mpBrowse(query, page = 0) {
       // Next button
       if (currentPage < totalPages) {
         const nextBtn = document.createElement('button');
-        nextBtn.textContent = 'Next →';
+        nextBtn.textContent = 'Next \u2192';
         nextBtn.style.cssText = 'padding:8px 14px;background:rgba(76,184,55,0.5);border:1px solid rgba(76,184,55,0.9);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;transition:all 0.2s;box-shadow:0 2px 8px rgba(76,184,55,0.3);';
         nextBtn.addEventListener('mouseover', () => nextBtn.style.background = 'rgba(76,184,55,0.8)');
         nextBtn.addEventListener('mouseout', () => nextBtn.style.background = 'rgba(76,184,55,0.5)');
@@ -1315,9 +1315,9 @@ async function mpBrowse(query, page = 0) {
         ${mod.icon_url ? `<img class="mod-result-icon" src="${mod.icon_url}" onerror="this.style.display='none'" />` : `<div class="mod-result-icon mod-icon-placeholder" style="width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:20px;color:rgba(255,255,255,0.6);">${firstLetter}</div>`}
         <div class="mod-result-info">
           <strong>${mod.title}</strong><span>${mod.description}</span>
-          <div class="mod-result-meta"><span>↓ ${mod.downloads>=1000?(mod.downloads/1000).toFixed(0)+'K':mod.downloads}</span></div>
+          <div class="mod-result-meta"><span>\u2193 ${mod.downloads>=1000?(mod.downloads/1000).toFixed(0)+'K':mod.downloads}</span></div>
         </div>
-        <button class="add-mod-btn ${installed?'installed':''}" ${installed?'disabled':''}>${installed?'✓ Added':(state.browserMode==='modpack'?'+ Import':'+ Add')}</button>`;
+        <button class="add-mod-btn ${installed?'installed':''}" ${installed?'disabled':''}>${installed?'\u2713 Added':(state.browserMode==='modpack'?'+ Import':'+ Add')}</button>`;
       if (!installed) el.querySelector('.add-mod-btn').addEventListener('click', () => mpAddItem(mod, el.querySelector('.add-mod-btn')));
       results.appendChild(el);
     });
@@ -1330,7 +1330,7 @@ async function mpBrowse(query, page = 0) {
       // Previous button
       if (state.browserPage > 0) {
         const prevBtn = document.createElement('button');
-        prevBtn.textContent = '← Previous Page';
+        prevBtn.textContent = '\u2190 Previous Page';
         prevBtn.style.cssText = 'padding:8px 16px;background:rgba(76,184,55,0.3);border:1px solid rgba(76,184,55,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;';
         prevBtn.addEventListener('mouseover', () => prevBtn.style.background = 'rgba(76,184,55,0.6)');
         prevBtn.addEventListener('mouseout', () => prevBtn.style.background = 'rgba(76,184,55,0.3)');
@@ -1347,7 +1347,7 @@ async function mpBrowse(query, page = 0) {
       // Next button
       if (currentPage < totalPages) {
         const nextBtn = document.createElement('button');
-        nextBtn.textContent = 'Next Page →';
+        nextBtn.textContent = 'Next Page \u2192';
         nextBtn.style.cssText = 'padding:8px 16px;background:rgba(76,184,55,0.3);border:1px solid rgba(76,184,55,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;';
         nextBtn.addEventListener('mouseover', () => nextBtn.style.background = 'rgba(76,184,55,0.6)');
         nextBtn.addEventListener('mouseout', () => nextBtn.style.background = 'rgba(76,184,55,0.3)');
@@ -1405,7 +1405,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       const rawLoaderId = manifest.minecraft?.modLoaders?.[0]?.id || '';
       const loaderStr = rawLoaderId.toLowerCase();
       const loader = loaderStr.includes('fabric') ? 'Fabric' : loaderStr.includes('forge') ? 'Forge' : loaderStr.includes('neoforge') ? 'NeoForge' : 'Vanilla';
-      // Extract pinned version: 'forge-14.23.5.2860' → '14.23.5.2860', 'fabric-0.15.11' → '0.15.11'
+      // Extract pinned version: 'forge-14.23.5.2860' \u2192 '14.23.5.2860', 'fabric-0.15.11' \u2192 '0.15.11'
       const loaderVerMatch = rawLoaderId.match(/^[a-z]+-(.+)$/i);
       const loaderVersion = loaderVerMatch ? loaderVerMatch[1] : '';
       const mcVersion = manifest.minecraft?.version || '1.20.4';
@@ -1651,7 +1651,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
   }
   
   if (!mp) return;
-  if (btn) { btn.textContent = '↓ Fetching...'; btn.disabled = true; }
+  if (btn) { btn.textContent = '\u2193 Fetching...'; btn.disabled = true; }
   try {
     let versions, fileObj, entry;
     
@@ -1664,7 +1664,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
     if (provider === 'curseforge') {
       if (state.browserMode === 'mod') {
         if (mp.mods.find(m => m.modrinthId === projectId)) {
-          if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+          if(btn) { btn.textContent = '\u2713 Added'; btn.classList.add('installed'); }
           return;
         }
         
@@ -1691,7 +1691,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         });
         
         if (compatibleFile) {
-          console.log(`[CurseForge] ✓ Found exact match: ${compatibleFile.fileName}`);
+          console.log(`[CurseForge] \u2713 Found exact match: ${compatibleFile.fileName}`);
         } else {
           console.log(`[CurseForge] No exact match found, trying fallbacks...`);
           
@@ -1741,7 +1741,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         
         if (mp.isVersion) {
           // For versions, install directly and track in versionSettings
-          if (btn) btn.textContent='↓ Installing...';
+          if (btn) btn.textContent='\u2193 Installing...';
           
           // Initialize versionSettings if needed
           if (!state.versionSettings[state.activeVersionForMods]) {
@@ -1778,12 +1778,12 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
           // For modpacks, save and install
           mp.mods.push(entry); 
           mpSave();
-          if (btn) btn.textContent='↓ Installing...';
+          if (btn) btn.textContent='\u2193 Installing...';
           if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: compatibleFile.downloadUrl, filename: compatibleFile.fileName });
         }
       } else if (state.browserMode === 'resourcepack') {
         if (mp.resourcepacks.find(r => r.modrinthId === projectId)) {
-          if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+          if(btn) { btn.textContent = '\u2713 Added'; btn.classList.add('installed'); }
           return;
         }
         
@@ -1815,11 +1815,11 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         
         entry = { modrinthId: projectId, name: modTitle, version: compatibleFile.displayName, filename: compatibleFile.fileName, downloadUrl: compatibleFile.downloadUrl, iconUrl: modIcon };
         mp.resourcepacks.push(entry); mpSave();
-        if (btn) btn.textContent='↓ Installing...';
+        if (btn) btn.textContent='\u2193 Installing...';
         if (window.electronAPI) await window.electronAPI.installResourcepack({ modpackId: mp.id, downloadUrl: compatibleFile.downloadUrl, filename: compatibleFile.fileName });
       } else if (state.browserMode === 'shader') {
         if (mp.shaders.find(s => s.modrinthId === projectId)) {
-          if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+          if(btn) { btn.textContent = '\u2713 Added'; btn.classList.add('installed'); }
           return;
         }
         
@@ -1838,14 +1838,14 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         
         entry = { modrinthId: projectId, name: modTitle, version: compatibleFile.displayName, filename: compatibleFile.fileName, downloadUrl: compatibleFile.downloadUrl, iconUrl: modIcon };
         mp.shaders.push(entry); mpSave();
-        if (btn) btn.textContent='↓ Installing...';
+        if (btn) btn.textContent='\u2193 Installing...';
         if (window.electronAPI) await window.electronAPI.installShader({ modpackId: mp.id, downloadUrl: compatibleFile.downloadUrl, filename: compatibleFile.fileName });
       }
     } else {
       // ---- MODRINTH FLOW ----
       if (state.browserMode === 'mod' || isDependency) {
         if (mp.mods.find(m => m.modrinthId === projectId)) {
-          if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+          if(btn) { btn.textContent = '\u2713 Added'; btn.classList.add('installed'); }
           return;
         }
         
@@ -1877,7 +1877,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         
         if (mp.isVersion) {
           // For versions, install directly and track in versionSettings
-          if (btn) btn.textContent='↓ Installing...';
+          if (btn) btn.textContent='\u2193 Installing...';
           
           // Initialize versionSettings if needed
           if (!state.versionSettings[state.activeVersionForMods]) {
@@ -1914,7 +1914,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
           // For modpacks, save and install
           mp.mods.push(entry); 
           mpSave(); 
-          if (btn) btn.textContent='↓ Installing...';
+          if (btn) btn.textContent='\u2193 Installing...';
           if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
         }
         
@@ -1934,7 +1934,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
         entry = { modrinthId: projectId, name: modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
         mp.resourcepacks.push(entry); mpSave(); 
-        if(btn) btn.textContent='↓ Installing...';
+        if(btn) btn.textContent='\u2193 Installing...';
         if (window.electronAPI) await window.electronAPI.installResourcepack({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
       } else {
         const res = await fetch(`https://api.modrinth.com/v2/project/${projectId}/version`);
@@ -1945,11 +1945,11 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
         entry = { modrinthId: projectId, name: modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
         mp.shaders.push(entry); mpSave(); 
-        if(btn) btn.textContent='↓ Installing...';
+        if(btn) btn.textContent='\u2193 Installing...';
         if (window.electronAPI) await window.electronAPI.installShader({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
       }
     }
-    if (btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+    if (btn) { btn.textContent = '\u2713 Added'; btn.classList.add('installed'); }
     
     // Reload version mods if viewing a version
     if (mp.isVersion && state.activeVersionForMods) {
@@ -1966,7 +1966,7 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
 }
 
 // --- Play Modpack ---
-// IPC listeners are already registered globally above — no setup needed here.
+// IPC listeners are already registered globally above \u2014 no setup needed here.
 document.getElementById('btn-play-modpack').addEventListener('click', () => {
   const mp = mpGet();
   const isViewingVersion = state.activeVersionForMods && !state.activeModpackId;

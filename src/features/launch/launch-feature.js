@@ -265,7 +265,7 @@ function showMissingDepsModal(missing, mcVersion) {
 
       if (failed.length === 0) {
         status.style.color = '#4cb837';
-        status.innerText = `✓ Installed ${succeeded.length} dependencies. Launch the game again!`;
+        status.innerText = `\u2713 Installed ${succeeded.length} dependencies. Launch the game again!`;
         btn.innerText = 'Done!';
       } else {
         status.style.color = '#f59e0b';

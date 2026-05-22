@@ -132,7 +132,7 @@ async function handleCheckUpdatesClick() {
       return;
       content.innerHTML = `
         <div style="text-align: center; padding: 20px;">
-          <div style="font-size: 14px; color: #4cb837; margin-bottom: 8px;">✓ All mods are up to date</div>
+          <div style="font-size: 14px; color: #4cb837; margin-bottom: 8px;">&#x2713; All mods are up to date</div>
           <div style="font-size: 12px; color: #a0a0a0;">No updates available</div>
         </div>
       `;
@@ -151,7 +151,7 @@ async function handleCheckUpdatesClick() {
             <div>
               <strong style="color: white; font-size: 13px;">${update.name}</strong>
               <div style="font-size: 11px; color: #a0a0a0; margin-top: 2px;">
-                ${update.currentVersion} → <span style="color: #4cb837;">${update.latestVersion}</span>
+                ${update.currentVersion} &rarr; <span style="color: #4cb837;">${update.latestVersion}</span>
               </div>
             </div>
             <button class="submit-btn" style="padding: 6px 12px; font-size: 11px; white-space: nowrap;" onclick="alert('Update feature coming soon')">Update</button>
@@ -429,7 +429,7 @@ export async function checkDependenciesForMod(modpackId, modId) {
         if (result.success) {
           content.innerHTML = `
             <div style="text-align: center; padding: 20px;">
-              <div style="font-size: 14px; color: #4cb837; margin-bottom: 8px;">✓ Dependencies installed</div>
+              <div style="font-size: 14px; color: #4cb837; margin-bottom: 8px;">&#x2713; Dependencies installed</div>
               <div style="font-size: 12px; color: #a0a0a0;">${result.message}</div>
             </div>
           `;

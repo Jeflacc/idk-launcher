@@ -492,8 +492,8 @@ export function initFriendsFeature() {
           <span>Wants to be friends</span>
         </div>
         <div class="friend-request-actions">
-          <button class="friend-request-btn accept" data-id="${req.requestId}" title="Accept Request">✓</button>
-          <button class="friend-request-btn decline" data-id="${req.requestId}" title="Decline Request">✕</button>
+          <button class="friend-request-btn accept" data-id="${req.requestId}" title="Accept Request">&#x2713;</button>
+          <button class="friend-request-btn decline" data-id="${req.requestId}" title="Decline Request">&times;</button>
         </div>
       `;
 
