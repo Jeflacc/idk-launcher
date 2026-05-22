@@ -18,7 +18,9 @@ export const state = {
   sodiumSupportedVersions: new Set(),
   downloadedVersions: [],
   modpacks: JSON.parse(localStorage.getItem('idk_modpacks') || '[]'),
+  versionSettings: JSON.parse(localStorage.getItem('idk_version_settings') || '{}'),
   activeModpackId: null,
+  activeVersionForMods: null,
   browserMode: 'mod',
   currentProvider: 'modrinth',
 };

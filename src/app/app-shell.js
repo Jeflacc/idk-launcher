@@ -199,6 +199,7 @@ export function renderAppShell() {
 
         <div class="controls-right">
           <button class="play-button" id="play-btn">PLAY</button>
+          <button class="manage-mods-button" id="manage-mods-btn" style="display:none;">MANAGE MODS</button>
         </div>
       </div>
     </div>
