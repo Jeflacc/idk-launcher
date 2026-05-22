@@ -394,7 +394,15 @@ function mpRenderInstalledList(type) {
   
   if (!mp && !isViewingVersion) return;
   
-  const items = mp ? (mp[type] || []) : [];
+  // For versions, get mods from versionSettings
+  let items = [];
+  if (isViewingVersion) {
+    const versionSettings = state.versionSettings?.[state.activeVersionForMods];
+    items = versionSettings?.[type] || [];
+  } else {
+    items = mp ? (mp[type] || []) : [];
+  }
+  
   const gridId = type === 'mods' ? 'installed-mods-list' : type === 'resourcepacks' ? 'installed-rp-list' : 'installed-shaders-list';
   const grid = document.getElementById(gridId);
   const emptyMsgs = {
@@ -444,11 +452,19 @@ function mpRenderInstalledList(type) {
     grid.appendChild(el);
     
     // Extract icon from JAR ONLY if not already present (no API icon available)
-    if (!item.iconUrl && mp) {
-      extractAndCacheModIcon(mp.id, typeDir, item.filename).then(iconUrl => {
+    // This is a fallback - icons should come from Modrinth/CurseForge API first
+    if (!item.iconUrl) {
+      // For modpacks, use mp.id; for versions, use version ID
+      const modpackId = isViewingVersion ? `version-${state.activeVersionForMods}` : mp.id;
+      extractAndCacheModIcon(modpackId, typeDir, item.filename).then(iconUrl => {
         if (iconUrl) {
           item.iconUrl = iconUrl;
-          mpSave(); // Save updated item with icon
+          // Save updated item with icon
+          if (isViewingVersion) {
+            localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+          } else {
+            mpSave();
+          }
           
           // Update the card's image
           const cardEl = document.getElementById(`item-${type}-${index}`);
@@ -576,9 +592,58 @@ function mpRenderDetail() {
     document.getElementById('shader-count').innerText = mp.shaders?.length || 0;
   }
   
+  // Load installed mods for versions
+  if (isViewingVersion) {
+    loadVersionMods(state.activeVersionForMods);
+  }
+  
   mpRenderInstalledList('mods');
   mpRenderInstalledList('resourcepacks');
   mpRenderInstalledList('shaders');
+}
+
+// Load installed mods for a version from disk
+async function loadVersionMods(version) {
+  try {
+    const result = await window.electronAPI?.scanVersionMods?.(version);
+    if (result && result.success) {
+      if (!state.versionSettings[version]) {
+        state.versionSettings[version] = {};
+      }
+      
+      // Convert filenames to full mod objects with metadata
+      const diskMods = result.mods || [];
+      const existingMods = state.versionSettings[version].mods || [];
+      
+      // Merge disk mods with existing metadata
+      const mergedMods = diskMods.map(diskMod => {
+        // Try to find existing metadata for this mod
+        const existing = existingMods.find(m => m.filename === diskMod.filename);
+        if (existing) {
+          return existing; // Keep existing metadata
+        }
+        // Create new mod entry from disk
+        return {
+          filename: diskMod.filename,
+          name: diskMod.filename.replace(/\.jar$/, ''),
+          version: 'Unknown',
+          modrinthId: diskMod.filename,
+          iconUrl: ''
+        };
+      });
+      
+      state.versionSettings[version].mods = mergedMods;
+      localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+      
+      // Update counts
+      document.getElementById('mod-count').innerText = mergedMods.length || 0;
+      
+      // Re-render the installed list
+      mpRenderInstalledList('mods');
+    }
+  } catch (e) {
+    console.error('[LoadVersionMods] Error:', e);
+  }
 }
 
 // Tab switching
@@ -1147,7 +1212,28 @@ async function mpBrowse(query) {
     }
     results.innerHTML = '';
     if (!hits.length) { results.innerHTML = `<div class="mp-loading">No results found for "${query}" | Debug: classId ${classId}, provider ${state.currentProvider}</div>`; return; }
-    const installedIds = state.browserMode === 'modpack' ? [] : (mp ? (state.browserMode === 'mod' ? (Array.isArray(mp.mods) ? mp.mods : []).map(m=>m.modrinthId) : state.browserMode === 'resourcepack' ? (Array.isArray(mp.resourcepacks) ? mp.resourcepacks : []).map(r=>r.modrinthId) : (Array.isArray(mp.shaders) ? mp.shaders : []).map(s=>s.modrinthId)) : []);
+    
+    // Get installed mod IDs - handle both modpacks and versions
+    let installedIds = [];
+    if (state.browserMode === 'modpack') {
+      installedIds = [];
+    } else if (mp) {
+      if (mp.isVersion) {
+        // For versions, get from versionSettings
+        const versionMods = state.versionSettings?.[state.activeVersionForMods]?.mods || [];
+        installedIds = versionMods.map(m => m.modrinthId || m.filename);
+      } else {
+        // For modpacks, get from modpack object
+        if (state.browserMode === 'mod') {
+          installedIds = (Array.isArray(mp.mods) ? mp.mods : []).map(m => m.modrinthId);
+        } else if (state.browserMode === 'resourcepack') {
+          installedIds = (Array.isArray(mp.resourcepacks) ? mp.resourcepacks : []).map(r => r.modrinthId);
+        } else {
+          installedIds = (Array.isArray(mp.shaders) ? mp.shaders : []).map(s => s.modrinthId);
+        }
+      }
+    }
+    
     hits.forEach(mod => {
       const installed = installedIds.includes(mod.project_id);
       const el = document.createElement('div');
@@ -1529,11 +1615,51 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         }
         
         console.log(`[CurseForge] Selected file: ${compatibleFile.fileName}`);
-        entry = { modrinthId: projectId, name: modTitle, version: compatibleFile.displayName, filename: compatibleFile.fileName, downloadUrl: compatibleFile.downloadUrl, iconUrl: modIcon };
+        
+        // Fetch project icon from CurseForge API if not already available
+        let projectIcon = modIcon;
+        if (!projectIcon) {
+          try {
+            const projRes = await fetch(`https://api.curse.tools/v1/cf/mods/${projectId}`);
+            if (projRes.ok) {
+              const projData = await projRes.json();
+              projectIcon = projData.data?.logo?.thumbnailUrl || '';
+            }
+          } catch (e) {
+            console.warn('[CurseForge] Failed to fetch project icon:', e);
+          }
+        }
+        
+        entry = { modrinthId: projectId, name: modTitle, version: compatibleFile.displayName, filename: compatibleFile.fileName, downloadUrl: compatibleFile.downloadUrl, iconUrl: projectIcon };
         
         if (mp.isVersion) {
-          // For versions, install directly without saving to modpack
+          // For versions, install directly and track in versionSettings
           if (btn) btn.textContent='↓ Installing...';
+          
+          // Initialize versionSettings if needed
+          if (!state.versionSettings[state.activeVersionForMods]) {
+            state.versionSettings[state.activeVersionForMods] = {};
+          }
+          if (!state.versionSettings[state.activeVersionForMods].mods) {
+            state.versionSettings[state.activeVersionForMods].mods = [];
+          }
+          
+          // Add mod metadata to versionSettings
+          const modEntry = { 
+            modrinthId: projectId, 
+            name: modTitle, 
+            version: compatibleFile.displayName, 
+            filename: compatibleFile.fileName, 
+            downloadUrl: compatibleFile.downloadUrl, 
+            iconUrl: projectIcon 
+          };
+          
+          // Check if already added
+          if (!state.versionSettings[state.activeVersionForMods].mods.find(m => m.filename === compatibleFile.fileName)) {
+            state.versionSettings[state.activeVersionForMods].mods.push(modEntry);
+            localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+          }
+          
           if (window.electronAPI) {
             await window.electronAPI.installModToVersion({ 
               version: state.activeVersionForMods, 
@@ -1625,11 +1751,51 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         }
         const versionObj = versions[0];
         fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
-        entry = { modrinthId: projectId, name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
+        
+        // Fetch project icon from Modrinth API if not already available
+        let projectIcon = modIcon;
+        if (!projectIcon) {
+          try {
+            const projRes = await fetch(`https://api.modrinth.com/v2/project/${projectId}`);
+            if (projRes.ok) {
+              const projData = await projRes.json();
+              projectIcon = projData.icon_url || '';
+            }
+          } catch (e) {
+            console.warn('[Modrinth] Failed to fetch project icon:', e);
+          }
+        }
+        
+        entry = { modrinthId: projectId, name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: projectIcon };
         
         if (mp.isVersion) {
-          // For versions, install directly without saving to modpack
+          // For versions, install directly and track in versionSettings
           if (btn) btn.textContent='↓ Installing...';
+          
+          // Initialize versionSettings if needed
+          if (!state.versionSettings[state.activeVersionForMods]) {
+            state.versionSettings[state.activeVersionForMods] = {};
+          }
+          if (!state.versionSettings[state.activeVersionForMods].mods) {
+            state.versionSettings[state.activeVersionForMods].mods = [];
+          }
+          
+          // Add mod metadata to versionSettings
+          const modEntry = { 
+            modrinthId: projectId, 
+            name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, 
+            version: versionObj.version_number, 
+            filename: fileObj.filename, 
+            downloadUrl: fileObj.url, 
+            iconUrl: projectIcon 
+          };
+          
+          // Check if already added
+          if (!state.versionSettings[state.activeVersionForMods].mods.find(m => m.filename === fileObj.filename)) {
+            state.versionSettings[state.activeVersionForMods].mods.push(modEntry);
+            localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+          }
+          
           if (window.electronAPI) {
             await window.electronAPI.installModToVersion({ 
               version: state.activeVersionForMods, 
@@ -1677,6 +1843,12 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       }
     }
     if (btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+    
+    // Reload version mods if viewing a version
+    if (mp.isVersion && state.activeVersionForMods) {
+      await loadVersionMods(state.activeVersionForMods);
+    }
+    
     mpRenderDetail(); mpRenderList();
   } catch(e) {
     if (btn && !isDependency) {
