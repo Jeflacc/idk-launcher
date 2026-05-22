@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IDK Connect Overlay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/features/overlay/overlay.css" />
+  </head>
+  <body>
+    <div id="overlay-container" class="overlay-container">
+      
+      <div class="overlay-main">
+        <div class="overlay-toolbar" id="overlay-toolbar">
+          <button class="toolbar-btn" id="btn-open-browser" title="Web Browser">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="browser-window" id="browser-window">
+          <div class="browser-header">
+            <div class="browser-controls">
+              <button class="browser-btn" id="btn-browser-back" title="Back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <button class="browser-btn" id="btn-browser-forward" title="Forward">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+              <button class="browser-btn" id="btn-browser-reload" title="Reload">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                </svg>
+              </button>
+              <button class="browser-btn" id="btn-browser-home" title="Home">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+              </button>
+            </div>
+            <div class="browser-address-bar">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" id="browser-url-input" placeholder="Search with Google or type a URL..." />
+            </div>
+            <button class="browser-btn close-view-btn" id="btn-browser-close-view" title="Close Browser View">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="browser-viewport">
+            <iframe id="browser-iframe" src="https://google.com/search?igu=1"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay-sidebar">
+        <div class="sidebar-header">
+          <div class="brand">IDK CONNECT <span class="beta">(Beta)</span></div>
+          <div class="close-container">
+            <span class="close-hint">Shift+Tab to close the overlay</span>
+            <button class="close-btn" id="btn-close-overlay" title="Close Overlay">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <div class="sidebar-content">
+          <!-- Active IDK Connect Panel -->
+          <div id="idk-active-panel" style="display: none;">
+            <!-- User Profile Card -->
+            <div class="user-profile-card">
+              <div class="profile-left">
+                <div class="avatar-container">
+                  <canvas id="overlay-avatar-canvas" width="40" height="40"></canvas>
+                </div>
+                <div class="profile-info">
+                  <div class="username" id="overlay-username">Player</div>
+                  <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    Connected
+                  </div>
+                </div>
+              </div>
+              <button class="logout-btn" id="btn-logout" title="Disconnect Account">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Host LAN World Card -->
+            <div class="lan-card">
+              <div class="lan-header">
+                <svg class="wifi-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                  <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                  <line x1="12" y1="20" x2="12.01" y2="20" stroke-linecap="round"></line>
+                </svg>
+                <h3 class="lan-title">Host LAN World</h3>
+              </div>
+              <p class="lan-description">
+                Open your Minecraft singleplayer world, click "Open to LAN", then enter the port below to invite your friends!
+              </p>
+              
+              <!-- Share Form -->
+              <div class="lan-form" id="lan-share-form">
+                <input type="text" id="lan-port-input" placeholder="LAN Port (e.g. 543)" />
+                <button class="share-btn" id="btn-lan-share">SHARE</button>
+              </div>
+
+              <!-- Sharing Active -->
+              <div class="lan-active-status" id="lan-active-status" style="display: none;">
+                <div class="tunnel-url-wrap">
+                  <span class="status-label">IP Address (Click to copy):</span>
+                  <div class="tunnel-link" id="overlay-tunnel-link">Connecting...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Add Friend Section -->
+            <div class="section-container" style="margin-top: 24px;">
+              <h4 class="section-label">ADD FRIEND</h4>
+              <div class="add-friend-row">
+                <input type="text" id="friends-add-username" placeholder="Friend's username..." />
+                <button id="btn-friends-add" title="Add Friend">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <line x1="19" y1="8" x2="19" y2="14"></line>
+                    <line x1="16" y1="11" x2="22" y2="11"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Requests Section -->
+            <div class="section-container" id="requests-section" style="display: none; margin-top: 24px;">
+              <h4 class="section-label">PENDING REQUESTS</h4>
+              <div class="requests-list" id="requests-list">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- My Friends Section -->
+            <div class="section-container" style="margin-top: 24px;">
+              <h4 class="section-label">MY FRIENDS</h4>
+              <div class="friends-list" id="friends-list">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Logged Out State -->
+          <div id="idk-logged-out" class="logged-out-state" style="display: none;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: #8e8e93; margin-bottom: 16px;">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+            <h3>Not Connected</h3>
+            <p>Please connect your IDK account in the launcher to view your friends list and host LAN games.</p>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script type="module" src="/src/features/overlay/overlay.js"></script>
+  </body>
+</html>
