@@ -1,4 +1,4 @@
-﻿import { state, actions } from '../../core/app-state.js';
+import { state, actions } from '../../core/app-state.js';
 
 export function initModpacksFeature({ switchView }) {
 // === MODPACK MANAGER =====================================

@@ -1,4 +1,4 @@
-﻿export function renderAppShell() {
+export function renderAppShell() {
   document.querySelector('#app').innerHTML = `
   <div class="background-slider">
     <video autoplay muted loop playsinline class="bg-video">
