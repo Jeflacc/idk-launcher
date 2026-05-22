@@ -466,6 +466,34 @@ ipcMain.handle('install-mod', async (event, { modpackId, downloadUrl, filename }
   });
 });
 
+// Install mod directly to a version's mods folder
+ipcMain.handle('install-mod-to-version', async (event, { version, downloadUrl, filename }) => {
+  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const versionsPath = path.join(rootPath, 'versions');
+  
+  // Find the version directory (it might have loader prefix like "fabric-loader-0.19.2-1.16.4")
+  const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name)
+    .filter(name => name.endsWith(`-${version}`) || name === version);
+  
+  if (versionDirs.length === 0) {
+    throw new Error(`Version ${version} not found`);
+  }
+  
+  const versionDir = versionDirs[0];
+  const modsPath = path.join(versionsPath, versionDir, 'mods');
+  
+  if (!fs.existsSync(modsPath)) fs.mkdirSync(modsPath, { recursive: true });
+  const jarPath = path.join(modsPath, filename);
+  if (fs.existsSync(jarPath)) return { success: true, cached: true };
+  
+  console.log(`[InstallMod] Installing ${filename} to version ${version} (${versionDir})`);
+  return new Promise((resolve, reject) => {
+    downloadFile(downloadUrl, jarPath, () => resolve({ success: true }), (e) => reject(e));
+  });
+});
+
 // Auto-install missing mod dependencies detected from crash reports
 ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, mcVersion }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');

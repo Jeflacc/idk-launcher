@@ -1417,7 +1417,28 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
   }
 
   // ---- NORMAL MOD/RP/SHADER FLOW ----
-  const mp = passedMp || mpGet(); if (!mp) return;
+  // Get modpack OR create a virtual modpack for version
+  let mp = passedMp || mpGet();
+  const isViewingVersion = state.activeVersionForMods && !state.activeModpackId;
+  
+  if (!mp && isViewingVersion) {
+    // Create a virtual modpack object for the version
+    const versionData = state.allVersions?.find(v => v.id === state.activeVersionForMods);
+    const versionSettings = state.versionSettings?.[state.activeVersionForMods] || { loader: 'Vanilla' };
+    
+    mp = {
+      id: `version-${state.activeVersionForMods}`,
+      name: state.activeVersionForMods,
+      mcVersion: state.activeVersionForMods,
+      loader: versionSettings.loader,
+      mods: [],
+      resourcepacks: [],
+      shaders: [],
+      isVersion: true // Flag to indicate this is a version, not a real modpack
+    };
+  }
+  
+  if (!mp) return;
   if (btn) { btn.textContent = '↓ Fetching...'; btn.disabled = true; }
   try {
     let versions, fileObj, entry;
@@ -1490,9 +1511,24 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         
         console.log(`[CurseForge] Selected file: ${compatibleFile.fileName}`);
         entry = { modrinthId: projectId, name: modTitle, version: compatibleFile.displayName, filename: compatibleFile.fileName, downloadUrl: compatibleFile.downloadUrl, iconUrl: modIcon };
-        mp.mods.push(entry); mpSave();
-        if (btn) btn.textContent='↓ Installing...';
-        if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: compatibleFile.downloadUrl, filename: compatibleFile.fileName });
+        
+        if (mp.isVersion) {
+          // For versions, install directly without saving to modpack
+          if (btn) btn.textContent='↓ Installing...';
+          if (window.electronAPI) {
+            await window.electronAPI.installModToVersion({ 
+              version: state.activeVersionForMods, 
+              downloadUrl: compatibleFile.downloadUrl, 
+              filename: compatibleFile.fileName 
+            });
+          }
+        } else {
+          // For modpacks, save and install
+          mp.mods.push(entry); 
+          mpSave();
+          if (btn) btn.textContent='↓ Installing...';
+          if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: compatibleFile.downloadUrl, filename: compatibleFile.fileName });
+        }
       } else if (state.browserMode === 'resourcepack') {
         if (mp.resourcepacks.find(r => r.modrinthId === projectId)) {
           if(btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
@@ -1571,9 +1607,24 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         const versionObj = versions[0];
         fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
         entry = { modrinthId: projectId, name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
-        mp.mods.push(entry); mpSave(); 
-        if (btn) btn.textContent='↓ Installing...';
-        if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
+        
+        if (mp.isVersion) {
+          // For versions, install directly without saving to modpack
+          if (btn) btn.textContent='↓ Installing...';
+          if (window.electronAPI) {
+            await window.electronAPI.installModToVersion({ 
+              version: state.activeVersionForMods, 
+              downloadUrl: fileObj.url, 
+              filename: fileObj.filename 
+            });
+          }
+        } else {
+          // For modpacks, save and install
+          mp.mods.push(entry); 
+          mpSave(); 
+          if (btn) btn.textContent='↓ Installing...';
+          if (window.electronAPI) await window.electronAPI.installMod({ modpackId: mp.id, downloadUrl: fileObj.url, filename: fileObj.filename });
+        }
         
         if (versionObj.dependencies) {
           for (const dep of versionObj.dependencies) {
