@@ -1,4 +1,4 @@
-export function renderAppShell() {
+﻿export function renderAppShell() {
   document.querySelector('#app').innerHTML = `
   <div class="background-slider">
     <video autoplay muted loop playsinline class="bg-video">
@@ -74,8 +74,8 @@ export function renderAppShell() {
       </div>
       <div class="window-controls">
         <div class="ctrl minimize">_</div>
-        <div class="ctrl maximize">□</div>
-        <div class="ctrl close">✕</div>
+        <div class="ctrl maximize">Γûí</div>
+        <div class="ctrl close">Γ£ò</div>
       </div>
     </div>
   </div>
@@ -199,7 +199,7 @@ export function renderAppShell() {
 
         <div class="controls-right">
           <button class="play-button" id="play-btn">PLAY</button>
-          <button class="manage-mods-button" id="manage-mods-btn" style="display:none;">MANAGE MODS</button>
+          <button class="manage-mods-button" id="manage-mods-btn" style="display: none;">MANAGE MODS</button>
         </div>
       </div>
     </div>
@@ -230,7 +230,7 @@ export function renderAppShell() {
           </div>
           <div class="news-grid" id="mojang-news-grid">
             <div style="padding: 60px 40px; text-align: center; color: var(--text-muted); width: 100%; grid-column: 1 / -1;">
-              <div style="font-size: 48px; margin-bottom: 16px;">📰</div>
+              <div style="font-size: 48px; margin-bottom: 16px;">≡ƒô░</div>
               <div>Loading Mojang news...</div>
             </div>
           </div>
@@ -281,7 +281,7 @@ export function renderAppShell() {
           <p>Set the default window resolution when launching Minecraft.</p>
           <div style="display:flex; gap:8px; align-items:center;">
             <input type="number" class="clean-input" id="default-window-width" placeholder="Width" style="text-align:center; flex:1;" value="1024" />
-            <span style="color:var(--text-muted);">×</span>
+            <span style="color:var(--text-muted);">├ù</span>
             <input type="number" class="clean-input" id="default-window-height" placeholder="Height" style="text-align:center; flex:1;" value="768" />
             <label class="toggle-switch" style="margin:0;">
               <input type="checkbox" id="fullscreen-toggle" />
@@ -289,6 +289,16 @@ export function renderAppShell() {
               <span style="color: var(--text-main); font-size: 12px; margin-left: 4px;">Fullscreen</span>
             </label>
           </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>In-Game Overlay</h3>
+          <p>Enable the interactive in-game overlay featuring web browser, friends list, and discord status.</p>
+          <label class="toggle-switch" style="margin-top: 8px;">
+            <input type="checkbox" id="overlay-toggle" />
+            <div class="switch"></div>
+            <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Enable In-Game Overlay (Experimental, please turn on Fullscreen)</span>
+          </label>
         </div>
 
         <div class="settings-section">
@@ -361,7 +371,7 @@ export function renderAppShell() {
             <button class="mp-action-btn back" id="btn-refresh-profiles" title="Refresh all profiles from disk">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </button>
-            <button class="mp-action-btn back" id="btn-back-modpacks" title="Back to Modpacks">← Back</button>
+            <button class="mp-action-btn back" id="btn-back-modpacks" title="Back to Modpacks">ΓåÉ Back</button>
           </div>
           <div class="modpacks-list" id="modpacks-list"></div>
         </div>
@@ -392,7 +402,7 @@ export function renderAppShell() {
                 </div>
                 <div style="flex:1;">
                   <h2 id="modpack-name-display" style="font-size:28px;margin-bottom:2px;font-family:var(--font-title);font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);">Modpack</h2>
-                  <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 · Fabric</p>
+                  <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 ┬╖ Fabric</p>
                   <div style="display:flex;gap:20px;font-size:12px;align-items:center;font-family:var(--font-title);flex-wrap:wrap;">
                     <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
@@ -462,7 +472,7 @@ export function renderAppShell() {
       <div class="mod-browser" id="mod-browser">
         <div class="mod-browser-header">
           <h3 id="browser-title">Browse Mods</h3>
-          <button class="mod-browser-close" id="btn-close-browser">✕</button>
+          <button class="mod-browser-close" id="btn-close-browser">Γ£ò</button>
         </div>
         <div style="padding: 0 24px 12px; display:flex; align-items:center; gap:10px;">
           <div class="provider-pill-group" id="provider-pill-group">
@@ -492,7 +502,7 @@ export function renderAppShell() {
         <div class="mp-settings-box">
           <div class="mp-settings-header">
             <h3>Modpack Settings</h3>
-            <button class="mp-settings-close" id="btn-close-mp-settings">✕</button>
+            <button class="mp-settings-close" id="btn-close-mp-settings">Γ£ò</button>
           </div>
           <div class="mp-settings-content">
             <div class="mp-settings-section">
@@ -536,7 +546,7 @@ export function renderAppShell() {
               <label>Game Window Size</label>
               <div style="display:flex; gap:8px;">
                 <input type="number" class="clean-input" id="mp-settings-width" placeholder="Width" style="text-align:center; flex:1;" />
-                <span style="display:flex; align-items:center; color:var(--text-muted);">×</span>
+                <span style="display:flex; align-items:center; color:var(--text-muted);">├ù</span>
                 <input type="number" class="clean-input" id="mp-settings-height" placeholder="Height" style="text-align:center; flex:1;" />
               </div>
             </div>
@@ -600,7 +610,7 @@ export function renderAppShell() {
   <div class="friends-sidebar" id="friends-sidebar">
     <div class="friends-sidebar-header">
       <h3>IDK CONNECT <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px; opacity: 0.8;">(Beta)</span></h3>
-      <button class="friends-sidebar-close" id="btn-friends-sidebar-close">✕</button>
+      <button class="friends-sidebar-close" id="btn-friends-sidebar-close">Γ£ò</button>
     </div>
     
     <div class="friends-sidebar-content">
@@ -633,7 +643,7 @@ export function renderAppShell() {
             </div>
             <div class="friends-identity-name">
               <h4 id="friends-my-username">Username</h4>
-              <span>● Connected</span>
+              <span>ΓùÅ Connected</span>
             </div>
           </div>
           <button class="friends-identity-disconnect" id="btn-friends-disconnect" title="Disconnect Account">
@@ -720,7 +730,7 @@ export function renderAppShell() {
           <span class="updates-kicker">Modpack maintenance</span>
           <h3>Mod Updates</h3>
         </div>
-        <button class="mp-settings-close" id="btn-close-mod-updates">✕</button>
+        <button class="mp-settings-close" id="btn-close-mod-updates">Γ£ò</button>
       </div>
       <div id="mod-updates-content">
         <div class="updates-empty">Checking for updates...</div>
@@ -733,7 +743,7 @@ export function renderAppShell() {
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 id="changelog-title" style="margin: 0; font-size: 18px; font-weight: 700;">Changelog</h3>
-        <button class="mp-settings-close" id="btn-close-changelog">✕</button>
+        <button class="mp-settings-close" id="btn-close-changelog">Γ£ò</button>
       </div>
       <div id="changelog-content" style="color: white;">
         <div style="text-align: center; padding: 20px; color: #a0a0a0;">Loading changelog...</div>
@@ -746,7 +756,7 @@ export function renderAppShell() {
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Crash Log Analyzer</h3>
-        <button class="mp-settings-close" id="btn-close-crash-analyzer">✕</button>
+        <button class="mp-settings-close" id="btn-close-crash-analyzer">Γ£ò</button>
       </div>
       <div style="margin-bottom: 16px;">
         <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #4cb837; text-transform: uppercase;">Paste Crash Log</label>
@@ -764,7 +774,7 @@ export function renderAppShell() {
     <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Missing Dependencies</h3>
-        <button class="mp-settings-close" id="btn-close-dependencies">✕</button>
+        <button class="mp-settings-close" id="btn-close-dependencies">Γ£ò</button>
       </div>
       <div id="dependencies-content" style="color: white;">
         <div style="text-align: center; padding: 20px; color: #a0a0a0;">Scanning for dependencies...</div>
@@ -774,3 +784,4 @@ export function renderAppShell() {
 
 `;
 }
+
