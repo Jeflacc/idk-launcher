@@ -89,6 +89,22 @@ async function scanDownloadedVersions() {
     state.downloadedVersions = result.versions || [];
     console.log(`[Versions] Scanned ${state.downloadedVersions.length} downloaded versions:`, state.downloadedVersions);
     
+    // Update versionSettings with detected loaders
+    if (result.versionDetails) {
+      Object.keys(result.versionDetails).forEach(version => {
+        const details = result.versionDetails[version];
+        if (!state.versionSettings[version]) {
+          state.versionSettings[version] = {};
+        }
+        // Only update loader if not already set by user
+        if (!state.versionSettings[version].loader || state.versionSettings[version].loader === 'Vanilla') {
+          state.versionSettings[version].loader = details.loader;
+        }
+      });
+      localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+      console.log('[Versions] Updated version settings with detected loaders:', state.versionSettings);
+    }
+    
     // Re-render versions if they're already loaded
     if (state.allVersions && state.allVersions.length > 0) {
       renderVersions();

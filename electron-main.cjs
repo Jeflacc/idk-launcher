@@ -2472,11 +2472,12 @@ ipcMain.handle('scan-downloaded-versions', async () => {
     
     if (!fs.existsSync(versionsPath)) {
       console.log('[Versions] Versions directory does not exist yet');
-      return { success: true, versions: [] };
+      return { success: true, versions: [], versionDetails: {} };
     }
     
     const entries = fs.readdirSync(versionsPath, { withFileTypes: true });
     const downloadedVersions = [];
+    const versionDetails = {};
     
     entries.forEach(entry => {
       if (entry.isDirectory()) {
@@ -2486,6 +2487,19 @@ ipcMain.handle('scan-downloaded-versions', async () => {
         if (fs.existsSync(versionJsonPath)) {
           // Extract the actual game version from the directory name
           let gameVersion = versionId;
+          let loader = 'Vanilla';
+          
+          // Detect loader from directory name
+          const lowerName = versionId.toLowerCase();
+          if (lowerName.includes('fabric')) {
+            loader = 'Fabric';
+          } else if (lowerName.includes('neoforge')) {
+            loader = 'NeoForge';
+          } else if (lowerName.includes('forge')) {
+            loader = 'Forge';
+          } else if (lowerName.includes('quilt')) {
+            loader = 'Quilt';
+          }
           
           // Try to extract game version from loader format
           const loaderMatch = versionId.match(/-([\d.]+)$/);
@@ -2494,16 +2508,17 @@ ipcMain.handle('scan-downloaded-versions', async () => {
           }
           
           downloadedVersions.push(gameVersion);
-          console.log(`[Versions] Found downloaded version: ${gameVersion} (dir: ${versionId})`);
+          versionDetails[gameVersion] = { loader, fullId: versionId };
+          console.log(`[Versions] Found downloaded version: ${gameVersion} (${loader}) (dir: ${versionId})`);
         }
       }
     });
     
     console.log(`[Versions] Scanned ${downloadedVersions.length} downloaded versions:`, downloadedVersions);
-    return { success: true, versions: downloadedVersions };
+    return { success: true, versions: downloadedVersions, versionDetails };
   } catch (e) {
     console.error('[Versions] Failed to scan downloaded versions:', e);
-    return { success: false, error: e.message, versions: [] };
+    return { success: false, error: e.message, versions: [], versionDetails: {} };
   }
 });
 
