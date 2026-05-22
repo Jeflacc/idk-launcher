@@ -571,8 +571,37 @@ ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, 
 
 ipcMain.handle('remove-mod', async (event, { modpackId, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
-  const jarPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods', filename);
-  try { if (fs.existsSync(jarPath)) fs.unlinkSync(jarPath); } catch (e) { }
+  let jarPath;
+  
+  // Handle both modpacks and versions
+  if (modpackId.startsWith('version-')) {
+    // For versions, mods are in versions/{version-dir}/mods/
+    const version = modpackId.replace('version-', '');
+    const versionsPath = path.join(rootPath, 'versions');
+    
+    // Find the version directory
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length > 0) {
+      const versionDir = versionDirs[0];
+      jarPath = path.join(versionsPath, versionDir, 'mods', filename);
+    }
+  } else {
+    // For modpacks, mods are in profiles/modpack-{id}/mods/
+    jarPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods', filename);
+  }
+  
+  try { 
+    if (jarPath && fs.existsSync(jarPath)) {
+      fs.unlinkSync(jarPath);
+      console.log(`[RemoveMod] Deleted: ${jarPath}`);
+    }
+  } catch (e) { 
+    console.error(`[RemoveMod] Error deleting ${jarPath}:`, e);
+  }
   return { success: true };
 });
 
@@ -725,8 +754,26 @@ ipcMain.handle('install-resourcepack', async (event, { modpackId, downloadUrl, f
 
 ipcMain.handle('remove-resourcepack', async (event, { modpackId, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
-  const destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'resourcepacks', filename);
-  try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
+  let destPath;
+  
+  // Handle both modpacks and versions
+  if (modpackId.startsWith('version-')) {
+    const version = modpackId.replace('version-', '');
+    const versionsPath = path.join(rootPath, 'versions');
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length > 0) {
+      const versionDir = versionDirs[0];
+      destPath = path.join(versionsPath, versionDir, 'resourcepacks', filename);
+    }
+  } else {
+    destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'resourcepacks', filename);
+  }
+  
+  try { if (destPath && fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
   return { success: true };
 });
 
@@ -743,8 +790,26 @@ ipcMain.handle('install-shader', async (event, { modpackId, downloadUrl, filenam
 
 ipcMain.handle('remove-shader', async (event, { modpackId, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
-  const destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'shaderpacks', filename);
-  try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
+  let destPath;
+  
+  // Handle both modpacks and versions
+  if (modpackId.startsWith('version-')) {
+    const version = modpackId.replace('version-', '');
+    const versionsPath = path.join(rootPath, 'versions');
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length > 0) {
+      const versionDir = versionDirs[0];
+      destPath = path.join(versionsPath, versionDir, 'shaderpacks', filename);
+    }
+  } else {
+    destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'shaderpacks', filename);
+  }
+  
+  try { if (destPath && fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
   return { success: true };
 });
 

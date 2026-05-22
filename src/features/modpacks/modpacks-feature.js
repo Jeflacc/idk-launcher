@@ -662,11 +662,35 @@ document.querySelectorAll('.mp-tab').forEach(tab => {
 });
 
 async function mpRemoveItem(item, type, apiMethod) {
-  const mp = mpGet(); if (!mp) return;
-  mp[type] = mp[type].filter(i => i.modrinthId !== item.modrinthId);
-  mpSave();
-  if (window.electronAPI) await window.electronAPI[apiMethod]({ modpackId: mp.id, filename: item.filename });
-  mpRenderDetail(); mpRenderList();
+  const mp = mpGet();
+  const isViewingVersion = state.activeVersionForMods && !state.activeModpackId;
+  
+  if (isViewingVersion) {
+    // Remove from version settings
+    if (!state.versionSettings[state.activeVersionForMods]) return;
+    if (!state.versionSettings[state.activeVersionForMods][type]) return;
+    
+    state.versionSettings[state.activeVersionForMods][type] = 
+      state.versionSettings[state.activeVersionForMods][type].filter(i => i.filename !== item.filename);
+    
+    localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+    
+    // Call IPC to delete the file from disk
+    if (window.electronAPI) {
+      await window.electronAPI[apiMethod]({ 
+        modpackId: `version-${state.activeVersionForMods}`, 
+        filename: item.filename 
+      });
+    }
+  } else if (mp) {
+    // Remove from modpack
+    mp[type] = mp[type].filter(i => i.modrinthId !== item.modrinthId);
+    mpSave();
+    if (window.electronAPI) await window.electronAPI[apiMethod]({ modpackId: mp.id, filename: item.filename });
+  }
+  
+  mpRenderDetail(); 
+  mpRenderList();
 }
 
 // --- Create Modpack ---
@@ -1160,10 +1184,10 @@ document.querySelectorAll('.provider-pill').forEach(pill => {
 let mpSearchTimeout;
 document.getElementById('mod-search').addEventListener('input', e => {
   clearTimeout(mpSearchTimeout);
-  mpSearchTimeout = setTimeout(() => mpBrowse(e.target.value), 400);
+  mpSearchTimeout = setTimeout(() => mpBrowse(e.target.value, 0), 400);
 });
 
-async function mpBrowse(query) {
+async function mpBrowse(query, page = 0) {
   let mp = mpGet();
   const isViewingVersion = state.activeVersionForMods && !state.activeModpackId;
   
@@ -1185,33 +1209,80 @@ async function mpBrowse(query) {
   }
   
   if (!mp && state.browserMode !== 'modpack') return;
+  
+  // Store pagination state
+  state.browserPage = page;
+  state.browserQuery = query;
+  
   const results = document.getElementById('mod-browser-results');
   results.innerHTML = `<div class="mp-loading"><div class="launch-spinner" style="width:32px;height:32px;margin:0 auto 12px;"></div>Searching ${state.currentProvider === 'modrinth' ? 'Modrinth' : 'CurseForge'}...</div>`;
   try {
     let hits = [];
+    const pageSize = 20;
+    const offset = page * pageSize;
+    
     if (state.currentProvider === 'modrinth') {
       let facets;
       if (state.browserMode === 'mod') facets = encodeURIComponent(JSON.stringify([[`categories:${mp.loader.toLowerCase()}`],[`versions:${mp.mcVersion}`],[`project_type:mod`]]));
       else if (state.browserMode === 'resourcepack') facets = encodeURIComponent(JSON.stringify([[`versions:${mp.mcVersion}`],[`project_type:resourcepack`]]));
       else if (state.browserMode === 'shader') facets = encodeURIComponent(JSON.stringify([[`project_type:shader`]]));
       else if (state.browserMode === 'modpack') facets = encodeURIComponent(JSON.stringify([[`project_type:modpack`]]));
-      const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=20`);
+      const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=${pageSize}&offset=${offset}`);
       if (!res.ok) throw new Error(`Modrinth API error: ${res.status}`);
       const data = await res.json();
       hits = (data.hits || []).map(m => ({ project_id: m.project_id, title: m.title, description: m.description, icon_url: m.icon_url, downloads: m.downloads, follows: m.follows, provider: 'modrinth' }));
+      state.browserTotalResults = data.total_hits || 0;
     } else {
       let classId = 6;
       if (state.browserMode === 'resourcepack') classId = 12;
       else if (state.browserMode === 'shader') classId = 6552;
       else if (state.browserMode === 'modpack') classId = 4471;
       const gameVerStr = (mp && state.browserMode !== 'modpack') ? `&gameVersion=${mp.mcVersion}` : '';
-      const res = await fetch(`https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=${classId}&searchFilter=${encodeURIComponent(query)}${gameVerStr}&sortField=2&sortOrder=desc&pageSize=20`);
+      const res = await fetch(`https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=${classId}&searchFilter=${encodeURIComponent(query)}${gameVerStr}&sortField=2&sortOrder=desc&pageSize=${pageSize}&index=${offset}`);
       if (!res.ok) throw new Error(`CurseForge API error: ${res.status}`);
       const data = await res.json();
       hits = (data.data || []).map(m => ({ project_id: m.id.toString(), title: m.name, description: m.summary, icon_url: m.logo ? m.logo.thumbnailUrl : '', downloads: m.downloadCount, follows: 0, provider: 'curseforge' }));
+      state.browserTotalResults = data.pagination?.totalCount || 0;
     }
     results.innerHTML = '';
     if (!hits.length) { results.innerHTML = `<div class="mp-loading">No results found for "${query}" | Debug: classId ${classId}, provider ${state.currentProvider}</div>`; return; }
+    
+    // Add pagination controls to the header (next to Modrinth pill)
+    const totalPages = Math.ceil(state.browserTotalResults / pageSize);
+    const currentPage = state.browserPage + 1;
+    
+    const paginationContainer = document.getElementById('pagination-controls');
+    paginationContainer.innerHTML = '';
+    
+    if (totalPages > 1) {
+      // Previous button
+      if (state.browserPage > 0) {
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '← Previous';
+        prevBtn.style.cssText = 'padding:8px 14px;background:rgba(76,184,55,0.5);border:1px solid rgba(76,184,55,0.9);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;transition:all 0.2s;box-shadow:0 2px 8px rgba(76,184,55,0.3);';
+        prevBtn.addEventListener('mouseover', () => prevBtn.style.background = 'rgba(76,184,55,0.8)');
+        prevBtn.addEventListener('mouseout', () => prevBtn.style.background = 'rgba(76,184,55,0.5)');
+        prevBtn.addEventListener('click', () => mpBrowse(state.browserQuery, state.browserPage - 1));
+        paginationContainer.appendChild(prevBtn);
+      }
+      
+      // Page info - more visible
+      const pageInfo = document.createElement('span');
+      pageInfo.textContent = `${currentPage}/${totalPages}`;
+      pageInfo.style.cssText = 'color:#fff;font-size:13px;font-weight:700;min-width:50px;text-align:center;background:rgba(76,184,55,0.4);padding:6px 12px;border-radius:4px;border:1px solid rgba(76,184,55,0.6);';
+      paginationContainer.appendChild(pageInfo);
+      
+      // Next button
+      if (currentPage < totalPages) {
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Next →';
+        nextBtn.style.cssText = 'padding:8px 14px;background:rgba(76,184,55,0.5);border:1px solid rgba(76,184,55,0.9);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;transition:all 0.2s;box-shadow:0 2px 8px rgba(76,184,55,0.3);';
+        nextBtn.addEventListener('mouseover', () => nextBtn.style.background = 'rgba(76,184,55,0.8)');
+        nextBtn.addEventListener('mouseout', () => nextBtn.style.background = 'rgba(76,184,55,0.5)');
+        nextBtn.addEventListener('click', () => mpBrowse(state.browserQuery, state.browserPage + 1));
+        paginationContainer.appendChild(nextBtn);
+      }
+    }
     
     // Get installed mod IDs - handle both modpacks and versions
     let installedIds = [];
@@ -1250,6 +1321,42 @@ async function mpBrowse(query) {
       if (!installed) el.querySelector('.add-mod-btn').addEventListener('click', () => mpAddItem(mod, el.querySelector('.add-mod-btn')));
       results.appendChild(el);
     });
+    
+    // Add centered pagination at the bottom
+    if (totalPages > 1) {
+      const bottomPaginationDiv = document.createElement('div');
+      bottomPaginationDiv.style.cssText = 'grid-column:1/-1;display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;padding:20px;width:100%;';
+      
+      // Previous button
+      if (state.browserPage > 0) {
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '← Previous Page';
+        prevBtn.style.cssText = 'padding:8px 16px;background:rgba(76,184,55,0.3);border:1px solid rgba(76,184,55,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;';
+        prevBtn.addEventListener('mouseover', () => prevBtn.style.background = 'rgba(76,184,55,0.6)');
+        prevBtn.addEventListener('mouseout', () => prevBtn.style.background = 'rgba(76,184,55,0.3)');
+        prevBtn.addEventListener('click', () => mpBrowse(state.browserQuery, state.browserPage - 1));
+        bottomPaginationDiv.appendChild(prevBtn);
+      }
+      
+      // Page info - centered and visible
+      const pageInfo = document.createElement('span');
+      pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+      pageInfo.style.cssText = 'color:#fff;font-size:13px;font-weight:700;background:rgba(76,184,55,0.2);padding:8px 16px;border-radius:4px;border:1px solid rgba(76,184,55,0.5);';
+      bottomPaginationDiv.appendChild(pageInfo);
+      
+      // Next button
+      if (currentPage < totalPages) {
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Next Page →';
+        nextBtn.style.cssText = 'padding:8px 16px;background:rgba(76,184,55,0.3);border:1px solid rgba(76,184,55,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;';
+        nextBtn.addEventListener('mouseover', () => nextBtn.style.background = 'rgba(76,184,55,0.6)');
+        nextBtn.addEventListener('mouseout', () => nextBtn.style.background = 'rgba(76,184,55,0.3)');
+        nextBtn.addEventListener('click', () => mpBrowse(state.browserQuery, state.browserPage + 1));
+        bottomPaginationDiv.appendChild(nextBtn);
+      }
+      
+      results.appendChild(bottomPaginationDiv);
+    }
   } catch(e) {
     results.innerHTML = `<div class="mp-loading" style="color:red;font-size:12px;">Error: ${e.message} <br/> ${e.stack}</div>`;
   }
