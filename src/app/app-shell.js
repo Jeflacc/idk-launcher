@@ -498,11 +498,12 @@ export function renderAppShell() {
             </svg>
           </button>
         </div>
-        <div style="padding: 0 24px 12px; display:flex; align-items:center; gap:10px;">
+        <div style="padding: 0 24px 12px; display:flex; align-items:center; gap:10px; justify-content:space-between;">
           <div class="provider-pill-group" id="provider-pill-group">
             <button class="provider-pill active" data-provider="modrinth" id="pill-modrinth">Modrinth</button>
             <button class="provider-pill" data-provider="curseforge" id="pill-curseforge">CurseForge</button>
           </div>
+          <div id="pagination-controls" style="display:flex;align-items:center;gap:6px;"></div>
         </div>
         <input type="text" class="clean-input" id="mod-search" placeholder="Search..." style="margin:0 24px 16px;width:calc(100% - 48px);" />
         <div class="mod-browser-results" id="mod-browser-results"></div>

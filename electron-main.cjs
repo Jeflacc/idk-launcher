@@ -494,6 +494,41 @@ ipcMain.handle('install-mod-to-version', async (event, { version, downloadUrl, f
   });
 });
 
+// Scan mods installed for a specific version
+ipcMain.handle('scan-version-mods', async (event, version) => {
+  try {
+    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const versionsPath = path.join(rootPath, 'versions');
+    
+    // Find the version directory
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length === 0) {
+      return { success: true, mods: [] };
+    }
+    
+    const versionDir = versionDirs[0];
+    const modsPath = path.join(versionsPath, versionDir, 'mods');
+    
+    if (!fs.existsSync(modsPath)) {
+      return { success: true, mods: [] };
+    }
+    
+    const files = fs.readdirSync(modsPath)
+      .filter(f => f.endsWith('.jar'))
+      .map(filename => ({ filename }));
+    
+    console.log(`[ScanVersionMods] Found ${files.length} mods for version ${version}`);
+    return { success: true, mods: files };
+  } catch (e) {
+    console.error('[ScanVersionMods] Error:', e);
+    return { success: false, error: e.message, mods: [] };
+  }
+});
+
 // Auto-install missing mod dependencies detected from crash reports
 ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, mcVersion }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
@@ -536,8 +571,37 @@ ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, 
 
 ipcMain.handle('remove-mod', async (event, { modpackId, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
-  const jarPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods', filename);
-  try { if (fs.existsSync(jarPath)) fs.unlinkSync(jarPath); } catch (e) { }
+  let jarPath;
+  
+  // Handle both modpacks and versions
+  if (modpackId.startsWith('version-')) {
+    // For versions, mods are in versions/{version-dir}/mods/
+    const version = modpackId.replace('version-', '');
+    const versionsPath = path.join(rootPath, 'versions');
+    
+    // Find the version directory
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length > 0) {
+      const versionDir = versionDirs[0];
+      jarPath = path.join(versionsPath, versionDir, 'mods', filename);
+    }
+  } else {
+    // For modpacks, mods are in profiles/modpack-{id}/mods/
+    jarPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods', filename);
+  }
+  
+  try { 
+    if (jarPath && fs.existsSync(jarPath)) {
+      fs.unlinkSync(jarPath);
+      console.log(`[RemoveMod] Deleted: ${jarPath}`);
+    }
+  } catch (e) { 
+    console.error(`[RemoveMod] Error deleting ${jarPath}:`, e);
+  }
   return { success: true };
 });
 
@@ -690,8 +754,26 @@ ipcMain.handle('install-resourcepack', async (event, { modpackId, downloadUrl, f
 
 ipcMain.handle('remove-resourcepack', async (event, { modpackId, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
-  const destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'resourcepacks', filename);
-  try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
+  let destPath;
+  
+  // Handle both modpacks and versions
+  if (modpackId.startsWith('version-')) {
+    const version = modpackId.replace('version-', '');
+    const versionsPath = path.join(rootPath, 'versions');
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length > 0) {
+      const versionDir = versionDirs[0];
+      destPath = path.join(versionsPath, versionDir, 'resourcepacks', filename);
+    }
+  } else {
+    destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'resourcepacks', filename);
+  }
+  
+  try { if (destPath && fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
   return { success: true };
 });
 
@@ -708,8 +790,26 @@ ipcMain.handle('install-shader', async (event, { modpackId, downloadUrl, filenam
 
 ipcMain.handle('remove-shader', async (event, { modpackId, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
-  const destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'shaderpacks', filename);
-  try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
+  let destPath;
+  
+  // Handle both modpacks and versions
+  if (modpackId.startsWith('version-')) {
+    const version = modpackId.replace('version-', '');
+    const versionsPath = path.join(rootPath, 'versions');
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length > 0) {
+      const versionDir = versionDirs[0];
+      destPath = path.join(versionsPath, versionDir, 'shaderpacks', filename);
+    }
+  } else {
+    destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'shaderpacks', filename);
+  }
+  
+  try { if (destPath && fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
   return { success: true };
 });
 
@@ -2557,10 +2657,34 @@ ipcMain.handle('extract-mod-icon', async (event, { modId, modpackId, typeDir, fi
   try {
     const JSZip = require('jszip');
     
-    // Build paths
-    const jarPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`, typeDir, filename);
-    const cacheDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', modpackId, typeDir);
-    const cachePath = path.join(cacheDir, `${filename}.png`);
+    // Build paths - handle both modpacks and versions
+    let jarPath, cacheDir, cachePath;
+    
+    if (modpackId.startsWith('version-')) {
+      // For versions, mods are in versions/{version-dir}/mods/
+      const version = modpackId.replace('version-', '');
+      const versionsPath = path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+      
+      // Find the version directory (it might have loader prefix like "fabric-loader-0.19.2-1.16.4")
+      const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+        .filter(d => d.isDirectory())
+        .map(d => d.name)
+        .filter(name => name.endsWith(`-${version}`) || name === version);
+      
+      if (versionDirs.length === 0) {
+        return { success: false, reason: 'Version not found', filename };
+      }
+      
+      const versionDir = versionDirs[0];
+      jarPath = path.join(versionsPath, versionDir, typeDir, filename);
+      cacheDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', `version-${version}`, typeDir);
+      cachePath = path.join(cacheDir, `${filename}.png`);
+    } else {
+      // For modpacks, mods are in profiles/modpack-{id}/mods/
+      jarPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`, typeDir, filename);
+      cacheDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', modpackId, typeDir);
+      cachePath = path.join(cacheDir, `${filename}.png`);
+    }
     
     // Check if icon already cached on disk
     if (fs.existsSync(cachePath)) {
