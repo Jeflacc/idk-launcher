@@ -1,4 +1,4 @@
-﻿export function renderAppShell() {
+export function renderAppShell() {
   document.querySelector('#app').innerHTML = `
   <div class="background-slider">
     <video autoplay muted loop playsinline class="bg-video">
@@ -73,9 +73,22 @@
         </div>
       </div>
       <div class="window-controls">
-        <div class="ctrl minimize">_</div>
-        <div class="ctrl maximize">Γûí</div>
-        <div class="ctrl close">Γ£ò</div>
+        <div class="ctrl minimize">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1">
+            <line x1="0" y1="6" x2="12" y2="6"></line>
+          </svg>
+        </div>
+        <div class="ctrl maximize">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1">
+            <rect x="0.5" y="0.5" width="11" height="11"></rect>
+          </svg>
+        </div>
+        <div class="ctrl close">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1">
+            <line x1="0" y1="0" x2="12" y2="12"></line>
+            <line x1="12" y1="0" x2="0" y2="12"></line>
+          </svg>
+        </div>
       </div>
     </div>
   </div>
@@ -281,7 +294,7 @@
           <p>Set the default window resolution when launching Minecraft.</p>
           <div style="display:flex; gap:8px; align-items:center;">
             <input type="number" class="clean-input" id="default-window-width" placeholder="Width" style="text-align:center; flex:1;" value="1024" />
-            <span style="color:var(--text-muted);">├ù</span>
+            <span style="color:var(--text-muted);">×</span>
             <input type="number" class="clean-input" id="default-window-height" placeholder="Height" style="text-align:center; flex:1;" value="768" />
             <label class="toggle-switch" style="margin:0;">
               <input type="checkbox" id="fullscreen-toggle" />
@@ -371,7 +384,13 @@
             <button class="mp-action-btn back" id="btn-refresh-profiles" title="Refresh all profiles from disk">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </button>
-            <button class="mp-action-btn back" id="btn-back-modpacks" title="Back to Modpacks">ΓåÉ Back</button>
+            <button class="mp-action-btn back" id="btn-back-modpacks" title="Back to Modpacks">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              Back
+            </button>
           </div>
           <div class="modpacks-list" id="modpacks-list"></div>
         </div>
@@ -402,7 +421,7 @@
                 </div>
                 <div style="flex:1;">
                   <h2 id="modpack-name-display" style="font-size:28px;margin-bottom:2px;font-family:var(--font-title);font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);">Modpack</h2>
-                  <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 ┬╖ Fabric</p>
+                  <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 · Fabric</p>
                   <div style="display:flex;gap:20px;font-size:12px;align-items:center;font-family:var(--font-title);flex-wrap:wrap;">
                     <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
@@ -472,7 +491,12 @@
       <div class="mod-browser" id="mod-browser">
         <div class="mod-browser-header">
           <h3 id="browser-title">Browse Mods</h3>
-          <button class="mod-browser-close" id="btn-close-browser">Γ£ò</button>
+          <button class="mod-browser-close" id="btn-close-browser">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <div style="padding: 0 24px 12px; display:flex; align-items:center; gap:10px;">
           <div class="provider-pill-group" id="provider-pill-group">
@@ -502,7 +526,12 @@
         <div class="mp-settings-box">
           <div class="mp-settings-header">
             <h3>Modpack Settings</h3>
-            <button class="mp-settings-close" id="btn-close-mp-settings">Γ£ò</button>
+            <button class="mp-settings-close" id="btn-close-mp-settings">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
           <div class="mp-settings-content">
             <div class="mp-settings-section">
@@ -546,7 +575,7 @@
               <label>Game Window Size</label>
               <div style="display:flex; gap:8px;">
                 <input type="number" class="clean-input" id="mp-settings-width" placeholder="Width" style="text-align:center; flex:1;" />
-                <span style="display:flex; align-items:center; color:var(--text-muted);">├ù</span>
+                <span style="display:flex; align-items:center; color:var(--text-muted);">×</span>
                 <input type="number" class="clean-input" id="mp-settings-height" placeholder="Height" style="text-align:center; flex:1;" />
               </div>
             </div>
@@ -610,7 +639,12 @@
   <div class="friends-sidebar" id="friends-sidebar">
     <div class="friends-sidebar-header">
       <h3>IDK CONNECT <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px; opacity: 0.8;">(Beta)</span></h3>
-      <button class="friends-sidebar-close" id="btn-friends-sidebar-close">Γ£ò</button>
+      <button class="friends-sidebar-close" id="btn-friends-sidebar-close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
     
     <div class="friends-sidebar-content">
@@ -643,7 +677,12 @@
             </div>
             <div class="friends-identity-name">
               <h4 id="friends-my-username">Username</h4>
-              <span>ΓùÅ Connected</span>
+              <span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block;vertical-align:middle;margin-right:4px;">
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                Connected
+              </span>
             </div>
           </div>
           <button class="friends-identity-disconnect" id="btn-friends-disconnect" title="Disconnect Account">
@@ -730,7 +769,12 @@
           <span class="updates-kicker">Modpack maintenance</span>
           <h3>Mod Updates</h3>
         </div>
-        <button class="mp-settings-close" id="btn-close-mod-updates">Γ£ò</button>
+        <button class="mp-settings-close" id="btn-close-mod-updates">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div id="mod-updates-content">
         <div class="updates-empty">Checking for updates...</div>
@@ -743,7 +787,12 @@
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 id="changelog-title" style="margin: 0; font-size: 18px; font-weight: 700;">Changelog</h3>
-        <button class="mp-settings-close" id="btn-close-changelog">Γ£ò</button>
+        <button class="mp-settings-close" id="btn-close-changelog">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div id="changelog-content" style="color: white;">
         <div style="text-align: center; padding: 20px; color: #a0a0a0;">Loading changelog...</div>
@@ -756,7 +805,12 @@
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Crash Log Analyzer</h3>
-        <button class="mp-settings-close" id="btn-close-crash-analyzer">Γ£ò</button>
+        <button class="mp-settings-close" id="btn-close-crash-analyzer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div style="margin-bottom: 16px;">
         <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #4cb837; text-transform: uppercase;">Paste Crash Log</label>
@@ -774,7 +828,12 @@
     <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Missing Dependencies</h3>
-        <button class="mp-settings-close" id="btn-close-dependencies">Γ£ò</button>
+        <button class="mp-settings-close" id="btn-close-dependencies">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div id="dependencies-content" style="color: white;">
         <div style="text-align: center; padding: 20px; color: #a0a0a0;">Scanning for dependencies...</div>
@@ -784,4 +843,5 @@
 
 `;
 }
+
 

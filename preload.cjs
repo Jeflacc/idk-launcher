@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Mod / resourcepack / shader management
   installMod:          (data) => ipcRenderer.invoke('install-mod',         data),
+  installModToVersion: (data) => ipcRenderer.invoke('install-mod-to-version', data),
   unzipCurseforge:     (data) => ipcRenderer.invoke('unzip-curseforge',    data),
   selectModpackZip:    () => ipcRenderer.invoke('select-modpack-zip'),
   selectExportZip:     (data) => ipcRenderer.invoke('select-export-zip',   data),
