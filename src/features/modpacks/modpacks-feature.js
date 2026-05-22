@@ -192,14 +192,16 @@ function mpRenderList() {
     list.appendChild(versionsHeader);
     
     downloadedVersions.forEach(v => {
+      // Get version settings to show correct loader
+      const vSettings = state.versionSettings?.[v.id] || { loader: 'Vanilla' };
+      
       const el = document.createElement('div');
       el.className = 'modpack-item version-item' + (state.activeVersionForMods === v.id ? ' active' : '');
       el.innerHTML = `
-        <div class="mp-item-icon" style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(255,255,255,0.05);flex-shrink:0;border:1px solid rgba(255,255,255,0.08);">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+        <div class="mp-item-icon" style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(76,184,55,0.15);flex-shrink:0;border:2px solid rgba(76,184,55,0.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
         </div>
-        <div class="mp-item-info"><strong>${v.id}</strong><span>Vanilla</span></div>
-        <span class="mp-item-count">0</span>`;
+        <div class="mp-item-info"><strong>${v.id}</strong><span>${vSettings.loader}</span></div>`;
       el.addEventListener('click', () => {
         state.activeVersionForMods = v.id;
         state.activeModpackId = null;
@@ -536,10 +538,11 @@ function mpRenderDetail() {
   if (isViewingVersion) {
     document.getElementById('mp-stat-version').innerText = versionData?.id || '1.20.4';
     document.getElementById('mp-stat-loader').innerText = versionSettings.loader;
-    document.getElementById('mp-stat-playtime').innerText = 'Never Played';
-    document.getElementById('mod-count').innerText = 0;
-    document.getElementById('rp-count').innerText = 0;
-    document.getElementById('shader-count').innerText = 0;
+    document.getElementById('mp-stat-playtime').innerText = '0h played';
+    document.getElementById('mp-stat-achievements').innerText = '0 Achievements';
+    document.getElementById('mod-count').innerText = '0';
+    document.getElementById('rp-count').innerText = '0';
+    document.getElementById('shader-count').innerText = '0';
   } else {
     document.getElementById('mp-stat-version').innerText = mp.mcVersion || '1.20.4';
     document.getElementById('mp-stat-loader').innerText = mp.loader || 'Vanilla';
