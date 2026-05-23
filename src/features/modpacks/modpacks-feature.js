@@ -388,6 +388,17 @@ async function batchExtractIconsForModpack(modpackId) {
 // Initial Render
 setTimeout(() => { mpRenderList(); mpRenderDetail(); }, 100);
 
+if (window.electronAPI?.onLaunchClosed) {
+  window.electronAPI.onLaunchClosed(() => {
+    const mp = mpGet();
+    if (mp?.id) {
+      updateAchievementsStat({ modpackId: mp.id });
+    } else if (state.activeVersionForMods) {
+      updateAchievementsStat({ versionId: state.activeVersionForMods });
+    }
+  });
+}
+
 function mpRenderInstalledList(type) {
   const mp = mpGet();
   const isViewingVersion = state.activeVersionForMods && !state.activeModpackId;
@@ -490,6 +501,32 @@ function mpRenderInstalledList(type) {
   });
 }
 
+function formatAchievementCount(count) {
+  const n = Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0;
+  return n === 1 ? '1 achievement' : `${n} achievements`;
+}
+
+async function updateAchievementsStat({ modpackId, versionId } = {}) {
+  const el = document.getElementById('mp-stat-achievements');
+  if (!el) return;
+
+  if (!window.electronAPI?.scanProfileAchievements) {
+    el.innerText = formatAchievementCount(0);
+    return;
+  }
+
+  el.innerText = '…';
+
+  try {
+    const result = await window.electronAPI.scanProfileAchievements({ modpackId, versionId });
+    const count = result?.success ? result.count : 0;
+    el.innerText = formatAchievementCount(count);
+  } catch (err) {
+    console.warn('[Modpacks] Achievement scan failed:', err);
+    el.innerText = formatAchievementCount(0);
+  }
+}
+
 function mpRenderDetail() {
   const mp = mpGet();
   const noMpMsg = document.getElementById('no-modpack-msg');
@@ -560,7 +597,7 @@ function mpRenderDetail() {
     document.getElementById('mp-stat-version').innerText = versionData?.id || '1.20.4';
     document.getElementById('mp-stat-loader').innerText = versionSettings.loader;
     document.getElementById('mp-stat-playtime').innerText = '0h played';
-    document.getElementById('mp-stat-achievements').innerText = '0 Achievements';
+    updateAchievementsStat({ versionId: state.activeVersionForMods });
     document.getElementById('mod-count').innerText = '0';
     document.getElementById('rp-count').innerText = '0';
     document.getElementById('shader-count').innerText = '0';
@@ -590,6 +627,8 @@ function mpRenderDetail() {
     document.getElementById('mod-count').innerText = mp.mods?.length || 0;
     document.getElementById('rp-count').innerText = mp.resourcepacks?.length || 0;
     document.getElementById('shader-count').innerText = mp.shaders?.length || 0;
+
+    updateAchievementsStat({ modpackId: mp.id });
   }
   
   // Load installed mods for versions

@@ -579,11 +579,21 @@ export function initFriendsFeature() {
       }
 
       // Hook Remove Friend
-      card.querySelector('.friend-remove-btn').onclick = (e) => {
+      card.querySelector('.friend-remove-btn').onclick = async (e) => {
         e.stopPropagation();
-        if (confirm(`Are you sure you want to remove ${friend.username} as a friend?`)) {
-          unfriend(friend.id);
+        const confirmFn = actions.showConfirmDialog;
+        if (!confirmFn) {
+          if (confirm(`Remove ${friend.username} from your friends list?`)) unfriend(friend.id);
+          return;
         }
+        const ok = await confirmFn({
+          title: 'Remove friend',
+          message: `Remove ${friend.username} from your friends list? You can send them a new request later.`,
+          confirmText: 'Unfriend',
+          cancelText: 'Keep friend',
+          variant: 'danger',
+        });
+        if (ok) unfriend(friend.id);
       };
 
       // Hook Join World
