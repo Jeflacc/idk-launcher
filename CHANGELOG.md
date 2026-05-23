@@ -1,5 +1,58 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.3.0-preview.26w21a Changelog
+
+Welcome to the Minecraft snapshot style unstable preview revision **v1.3.0-preview.26w21a**! This massive update introduces a completely redesigned Modular Feature-Based Architecture, a comprehensive Version Mods Management system, advanced performance optimizations, and crash analysis tools.
+
+---
+
+### 🚀 New Features & Enhancements
+
+* **📂 Version Mods Management System**
+  - Added a **"Manage Mods"** option to downloaded Minecraft versions directly from the Play view.
+  - Integrated downloaded versions into the sidebar, allowing you to manage mods, resource packs, and shaders per version just like modpacks.
+  - Added per-version settings (custom loader, JVM arguments, and window size configuration) persisting in local storage.
+  - Automatically scans and detects version loaders (Fabric, Forge, NeoForge, Quilt, Vanilla) from folder structures.
+
+* **⚙️ Redesigned Modular Architecture**
+  - Refactored the core launcher into a robust, feature-based modular system under `src/features/`.
+  - Improved application maintainability, cleaner code organization, and decoupled feature states.
+
+* **⚡ Performance & Memory Optimizations**
+  - **Asset Caching & CPU Tuning**: Optimized rendering flows and CPU load.
+  - **Memory Management**: Implemented renderer memory destruction via `about:blank` transitions and V8 Garbage Collection to free up RAM.
+  - **UI Offloading**: Delegated heavy tasks away from the main thread for smooth UX interactions.
+  - Scrubbed and corrected style.css UTF-16 null byte formatting errors.
+
+* **🛡️ Crash Analyzer & Mod Updates**
+  - **Crash Report Parser**: Injected a crash analysis helper to detect missing dependencies and runtime exceptions.
+  - **Mod Updates Integration**: Automatically scans for update availability from Modrinth and CurseForge.
+  - **Auto-Dependency Installer**: One-click installer for downloading missing dependencies.
+
+* **🖥️ Borderless Fullscreen Overlay & Window Control Improvements**
+  - Implemented borderless fullscreen overlay mode along with customizable overlay toggles.
+  - Enhanced window resizing, maximizing, minimizing, and closing controls in the Electron main process.
+  - Auto-hide launcher window during gameplay and automatically restore it on exit.
+
+---
+
+### 🔧 Fixes & Stability
+
+* **📁 Modpack Deletion & File Scans**
+  - Added recursive local folder purging upon deleting modpacks with multi-attempt fail-safe strategy.
+  - Fixed issues where modpack profiles were not correctly loaded after reset.
+* **📦 Parallel Downloader Queue**
+  - Added a download queue manager with concurrency limiting, integrity verification, and performance monitoring.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.3.0-preview.26w21a`
+* **Release Channel:** Preview / Unstable Release
+* **Platform:** Windows, macOS, Linux
+
+---
+
 ## 🎮 IDK Launcher v1.3.0 Changelog
 
 Hello everyone! The stable release **v1.3.0** is officially here! This major update elevates the launcher to the next level by introducing integrated P2P multiplayer connectivity, local modpack archiving management (Import/Export), and extensive modpack compatibility enhancements.

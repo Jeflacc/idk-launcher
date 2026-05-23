@@ -494,6 +494,41 @@ ipcMain.handle('install-mod-to-version', async (event, { version, downloadUrl, f
   });
 });
 
+// Scan mods installed for a specific version
+ipcMain.handle('scan-version-mods', async (event, version) => {
+  try {
+    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const versionsPath = path.join(rootPath, 'versions');
+    
+    // Find the version directory
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length === 0) {
+      return { success: true, mods: [] };
+    }
+    
+    const versionDir = versionDirs[0];
+    const modsPath = path.join(versionsPath, versionDir, 'mods');
+    
+    if (!fs.existsSync(modsPath)) {
+      return { success: true, mods: [] };
+    }
+    
+    const files = fs.readdirSync(modsPath)
+      .filter(f => f.endsWith('.jar'))
+      .map(filename => ({ filename }));
+    
+    console.log(`[ScanVersionMods] Found ${files.length} mods for version ${version}`);
+    return { success: true, mods: files };
+  } catch (e) {
+    console.error('[ScanVersionMods] Error:', e);
+    return { success: false, error: e.message, mods: [] };
+  }
+});
+
 // Auto-install missing mod dependencies detected from crash reports
 ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, mcVersion }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
@@ -536,8 +571,37 @@ ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, 
 
 ipcMain.handle('remove-mod', async (event, { modpackId, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
-  const jarPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods', filename);
-  try { if (fs.existsSync(jarPath)) fs.unlinkSync(jarPath); } catch (e) { }
+  let jarPath;
+  
+  // Handle both modpacks and versions
+  if (modpackId.startsWith('version-')) {
+    // For versions, mods are in versions/{version-dir}/mods/
+    const version = modpackId.replace('version-', '');
+    const versionsPath = path.join(rootPath, 'versions');
+    
+    // Find the version directory
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length > 0) {
+      const versionDir = versionDirs[0];
+      jarPath = path.join(versionsPath, versionDir, 'mods', filename);
+    }
+  } else {
+    // For modpacks, mods are in profiles/modpack-{id}/mods/
+    jarPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods', filename);
+  }
+  
+  try { 
+    if (jarPath && fs.existsSync(jarPath)) {
+      fs.unlinkSync(jarPath);
+      console.log(`[RemoveMod] Deleted: ${jarPath}`);
+    }
+  } catch (e) { 
+    console.error(`[RemoveMod] Error deleting ${jarPath}:`, e);
+  }
   return { success: true };
 });
 
@@ -690,8 +754,26 @@ ipcMain.handle('install-resourcepack', async (event, { modpackId, downloadUrl, f
 
 ipcMain.handle('remove-resourcepack', async (event, { modpackId, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
-  const destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'resourcepacks', filename);
-  try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
+  let destPath;
+  
+  // Handle both modpacks and versions
+  if (modpackId.startsWith('version-')) {
+    const version = modpackId.replace('version-', '');
+    const versionsPath = path.join(rootPath, 'versions');
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length > 0) {
+      const versionDir = versionDirs[0];
+      destPath = path.join(versionsPath, versionDir, 'resourcepacks', filename);
+    }
+  } else {
+    destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'resourcepacks', filename);
+  }
+  
+  try { if (destPath && fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
   return { success: true };
 });
 
@@ -708,8 +790,26 @@ ipcMain.handle('install-shader', async (event, { modpackId, downloadUrl, filenam
 
 ipcMain.handle('remove-shader', async (event, { modpackId, filename }) => {
   const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
-  const destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'shaderpacks', filename);
-  try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
+  let destPath;
+  
+  // Handle both modpacks and versions
+  if (modpackId.startsWith('version-')) {
+    const version = modpackId.replace('version-', '');
+    const versionsPath = path.join(rootPath, 'versions');
+    const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name)
+      .filter(name => name.endsWith(`-${version}`) || name === version);
+    
+    if (versionDirs.length > 0) {
+      const versionDir = versionDirs[0];
+      destPath = path.join(versionsPath, versionDir, 'shaderpacks', filename);
+    }
+  } else {
+    destPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'shaderpacks', filename);
+  }
+  
+  try { if (destPath && fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (e) { }
   return { success: true };
 });
 
@@ -2278,21 +2378,22 @@ function installSodium(version, profilePath) {
 }
 
 // ============================================================
-// === CLOUDFLARED TUNNEL MULTIPLAYER SYSTEM ===================
+// === FRPC TUNNEL MULTIPLAYER SYSTEM =========================
 // ============================================================
 let activeTunnelProcess = null;
+let activeDownloadRequest = null;
 
-ipcMain.handle('ensure-cloudflared', async (event) => {
+ipcMain.handle('ensure-frpc', async (event) => {
   const binDir = path.join(app.getPath('userData'), 'bin');
   if (!fs.existsSync(binDir)) fs.mkdirSync(binDir, { recursive: true });
-  const exePath = path.join(binDir, 'cloudflared.exe');
+  const exePath = path.join(binDir, 'frpc.exe');
 
   if (fs.existsSync(exePath) && fs.statSync(exePath).size > 0) {
     return { success: true, path: exePath };
   }
 
-  const url = 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe';
-  event.sender.send('cloudflared-install-progress', { status: 'Downloading cloudflared.exe...', percent: 0 });
+  const url = 'https://github.com/fatedier/frp/releases/download/v0.56.0/frp_0.56.0_windows_amd64.zip';
+  event.sender.send('frpc-install-progress', { status: 'Downloading frpc...', percent: 0 });
 
   return new Promise((resolve) => {
     function download(downloadUrl, redirectCount = 0) {
@@ -2300,70 +2401,104 @@ ipcMain.handle('ensure-cloudflared', async (event) => {
         return resolve({ success: false, error: 'Too many redirects' });
       }
 
-      https.get(downloadUrl, (res) => {
+      const req = https.get(downloadUrl, (res) => {
         if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
           const nextUrl = res.headers.location;
           if (!nextUrl) {
+            activeDownloadRequest = null;
             return resolve({ success: false, error: 'Redirect location missing' });
           }
           return download(nextUrl, redirectCount + 1);
         }
 
         if (res.statusCode !== 200) {
+          activeDownloadRequest = null;
           return resolve({ success: false, error: 'Status ' + res.statusCode });
         }
 
         const total = parseInt(res.headers['content-length'] || '0', 10);
-        const file = fs.createWriteStream(exePath);
+        const buffers = [];
         let downloadedBytes = 0;
 
         res.on('data', (chunk) => {
+          buffers.push(chunk);
           downloadedBytes += chunk.length;
           if (total > 0) {
             const percent = Math.round((downloadedBytes / total) * 100);
-            event.sender.send('cloudflared-install-progress', { status: 'Downloading cloudflared...', percent });
+            event.sender.send('frpc-install-progress', { status: 'Downloading frpc...', percent });
           }
         });
 
-        res.pipe(file);
-
-        file.on('finish', () => {
-          file.close();
-          resolve({ success: true, path: exePath });
+        res.on('end', async () => {
+          activeDownloadRequest = null;
+          try {
+            event.sender.send('frpc-install-progress', { status: 'Extracting frpc.exe...', percent: 100 });
+            const zipBuffer = Buffer.concat(buffers);
+            const JSZip = require('jszip');
+            const zip = await JSZip.loadAsync(zipBuffer);
+            
+            // Find frpc.exe in the zip
+            const frpcEntry = Object.values(zip.files).find(file => file.name.endsWith('frpc.exe'));
+            if (!frpcEntry) {
+              throw new Error('frpc.exe not found in downloaded zip');
+            }
+            
+            const exeBuffer = await frpcEntry.async('nodebuffer');
+            fs.writeFileSync(exePath, exeBuffer);
+            resolve({ success: true, path: exePath });
+          } catch (err) {
+            resolve({ success: false, error: 'Failed to extract frpc: ' + err.message });
+          }
         });
 
-        file.on('error', (e) => {
-          fs.unlink(exePath, () => { });
+        res.on('error', (e) => {
+          activeDownloadRequest = null;
           resolve({ success: false, error: e.message });
         });
       }).on('error', (e) => {
+        activeDownloadRequest = null;
         resolve({ success: false, error: e.message });
       });
+
+      activeDownloadRequest = req;
     }
 
     download(url);
   });
 });
 
-ipcMain.handle('start-cloudflared-tunnel', async (event, { port }) => {
+ipcMain.handle('start-frpc-tunnel', async (event, { port }) => {
   if (activeTunnelProcess) {
     try { activeTunnelProcess.kill(); } catch (e) { }
     activeTunnelProcess = null;
   }
 
   const binDir = path.join(app.getPath('userData'), 'bin');
-  const exePath = path.join(binDir, 'cloudflared.exe');
+  const exePath = path.join(binDir, 'frpc.exe');
 
   if (!fs.existsSync(exePath)) {
-    return { success: false, error: 'cloudflared.exe is not installed' };
+    return { success: false, error: 'frpc.exe is not installed' };
   }
 
   return new Promise((resolve) => {
     const { spawn } = require('child_process');
-    console.log(`[Cloudflared] Starting tunnel on port tcp://localhost:${port}`);
+    
+    // Generate a random remote port between 10000 and 65000
+    const remotePort = Math.floor(Math.random() * (65000 - 10000 + 1)) + 10000;
+    const proxyName = 'idk_proxy_' + Math.random().toString(36).substring(2, 10);
+    
+    console.log(`[FRPC] Starting tunnel on local tcp://127.0.0.1:${port} to remote play.somniac.me:${remotePort}`);
 
-    // Spawn cloudflared to forward TCP traffic
-    const proc = spawn(exePath, ['tunnel', '--url', `tcp://127.0.0.1:${port}`]);
+    const proc = spawn(exePath, [
+      'tcp', 
+      '-s', 'play.somniac.me', 
+      '-P', '7000', 
+      '-t', 'indkingdomisalive', 
+      '-l', port.toString(), 
+      '-r', remotePort.toString(), 
+      '-n', proxyName
+    ]);
+    
     activeTunnelProcess = proc;
 
     let resolved = false;
@@ -2371,37 +2506,36 @@ ipcMain.handle('start-cloudflared-tunnel', async (event, { port }) => {
 
     const handleLogData = (data, source) => {
       const line = data.toString();
-      console.log(`[Cloudflared ${source}]`, line.trim());
+      console.log(`[FRPC ${source}]`, line.trim());
+      logBuffer += line;
 
-      // Strip ANSI escape sequences (colors, formatting) to prevent regex matching failures
-      const cleanLine = line.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
-      logBuffer += cleanLine;
-
-      // Scan for the trycloudflare URL (both HTTPS and TCP quick tunnels)
-      const match = logBuffer.match(/(https|tcp):\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.trycloudflare\.com(:[0-9]{1,5})?/);
-      if (match && !resolved) {
+      // Scan for successful start
+      if (line.includes('start proxy success') && !resolved) {
         resolved = true;
-        const tunnelUrl = match[0];
-        console.log(`[Cloudflared] Tunnel successfully established: ${tunnelUrl}`);
+        const tunnelUrl = `tcp://play.somniac.me:${remotePort}`;
+        console.log(`[FRPC] Tunnel successfully established: ${tunnelUrl}`);
         resolve({ success: true, url: tunnelUrl });
+      }
+      
+      // Check for port already used
+      if (line.includes('port already used') && !resolved) {
+        resolved = true;
+        resolve({ success: false, error: 'Port collision', retry: true });
       }
     };
 
-    proc.stderr.on('data', (data) => handleLogData(data, 'Output'));
+    proc.stderr.on('data', (data) => handleLogData(data, 'Stderr'));
     proc.stdout.on('data', (data) => handleLogData(data, 'Stdout'));
 
     proc.on('close', (code) => {
-      console.log(`[Cloudflared] Process exited with code ${code}`);
+      console.log(`[FRPC] Process exited with code ${code}`);
       activeTunnelProcess = null;
       if (!resolved) {
-        const lines = logBuffer.split('\n').map(l => l.trim()).filter(Boolean);
-        const lastErrorLine = lines[lines.length - 1] || 'Check if the port is correct or another process is running on it.';
-        resolve({ success: false, error: `Cloudflared exited (code ${code}): ${lastErrorLine}` });
+        resolve({ success: false, error: `FRPC exited with code ${code}` });
       }
-      event.sender.send('cloudflared-tunnel-closed');
+      event.sender.send('frpc-tunnel-closed');
     });
 
-    // Timeout if tunnel is not established in 20 seconds
     setTimeout(() => {
       if (!resolved) {
         resolved = true;
@@ -2413,74 +2547,24 @@ ipcMain.handle('start-cloudflared-tunnel', async (event, { port }) => {
   });
 });
 
-ipcMain.handle('stop-cloudflared-tunnel', async () => {
+ipcMain.handle('stop-frpc-tunnel', async () => {
+  let stopped = false;
+  if (activeDownloadRequest) {
+    console.log('[FRPC] Aborting active download...');
+    try { activeDownloadRequest.destroy(); } catch (e) {}
+    activeDownloadRequest = null;
+    stopped = true;
+  }
   if (activeTunnelProcess) {
-    console.log('[Cloudflared] Stopping active tunnel...');
+    console.log('[FRPC] Stopping active tunnel...');
     try { activeTunnelProcess.kill(); } catch (e) { }
     activeTunnelProcess = null;
+    stopped = true;
+  }
+  if (stopped) {
     return { success: true };
   }
-  return { success: false, error: 'No active tunnel running' };
-});
-
-let activeAccessProcess = null;
-
-ipcMain.handle('start-cloudflared-access', async (event, { url, localPort }) => {
-  if (activeAccessProcess) {
-    try { activeAccessProcess.kill(); } catch (e) { }
-    activeAccessProcess = null;
-  }
-
-  const binDir = path.join(app.getPath('userData'), 'bin');
-  const exePath = path.join(binDir, 'cloudflared.exe');
-
-  if (!fs.existsSync(exePath)) {
-    return { success: false, error: 'cloudflared.exe is not installed' };
-  }
-
-  return new Promise((resolve) => {
-    const { spawn } = require('child_process');
-    console.log(`[Cloudflared Access] Mapping ${url} to local port tcp://127.0.0.1:${localPort}`);
-
-    // Spawn cloudflared in client access mode
-    const proc = spawn(exePath, ['access', 'tcp', '--listener', `127.0.0.1:${localPort}`, '--hostname', url]);
-    activeAccessProcess = proc;
-
-    let established = false;
-
-    proc.stderr.on('data', (data) => {
-      const line = data.toString();
-      console.log('[Cloudflared Access Output]', line.trim());
-    });
-
-    // Assume success after 1.5 seconds if the process hasn't exited
-    const timer = setTimeout(() => {
-      if (!established) {
-        established = true;
-        resolve({ success: true });
-      }
-    }, 1500);
-
-    proc.on('close', (code) => {
-      console.log(`[Cloudflared Access] Process exited with code ${code}`);
-      activeAccessProcess = null;
-      clearTimeout(timer);
-      if (!established) {
-        resolve({ success: false, error: `Process exited with code ${code}` });
-      }
-      event.sender.send('cloudflared-access-closed');
-    });
-  });
-});
-
-ipcMain.handle('stop-cloudflared-access', async () => {
-  if (activeAccessProcess) {
-    console.log('[Cloudflared Access] Stopping active client-side bridge...');
-    try { activeAccessProcess.kill(); } catch (e) { }
-    activeAccessProcess = null;
-    return { success: true };
-  }
-  return { success: false, error: 'No active access bridge running' };
+  return { success: false, error: 'No active tunnel or download running' };
 });
 
 // Get userData path for frontend
@@ -2557,10 +2641,34 @@ ipcMain.handle('extract-mod-icon', async (event, { modId, modpackId, typeDir, fi
   try {
     const JSZip = require('jszip');
     
-    // Build paths
-    const jarPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`, typeDir, filename);
-    const cacheDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', modpackId, typeDir);
-    const cachePath = path.join(cacheDir, `${filename}.png`);
+    // Build paths - handle both modpacks and versions
+    let jarPath, cacheDir, cachePath;
+    
+    if (modpackId.startsWith('version-')) {
+      // For versions, mods are in versions/{version-dir}/mods/
+      const version = modpackId.replace('version-', '');
+      const versionsPath = path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+      
+      // Find the version directory (it might have loader prefix like "fabric-loader-0.19.2-1.16.4")
+      const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
+        .filter(d => d.isDirectory())
+        .map(d => d.name)
+        .filter(name => name.endsWith(`-${version}`) || name === version);
+      
+      if (versionDirs.length === 0) {
+        return { success: false, reason: 'Version not found', filename };
+      }
+      
+      const versionDir = versionDirs[0];
+      jarPath = path.join(versionsPath, versionDir, typeDir, filename);
+      cacheDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', `version-${version}`, typeDir);
+      cachePath = path.join(cacheDir, `${filename}.png`);
+    } else {
+      // For modpacks, mods are in profiles/modpack-{id}/mods/
+      jarPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`, typeDir, filename);
+      cacheDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', modpackId, typeDir);
+      cachePath = path.join(cacheDir, `${filename}.png`);
+    }
     
     // Check if icon already cached on disk
     if (fs.existsSync(cachePath)) {

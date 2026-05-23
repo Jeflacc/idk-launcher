@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getUserDataPath: () => ipcRenderer.invoke('get-user-data-path'),
   getVersionsPath: () => ipcRenderer.invoke('get-versions-path'),
   scanDownloadedVersions: () => ipcRenderer.invoke('scan-downloaded-versions'),
+  scanVersionMods: (version) => ipcRenderer.invoke('scan-version-mods', version),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
@@ -60,17 +61,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onShowStartupNotification: (cb) => ipcRenderer.on('show-startup-notification', (_e, data) => cb(data)),
   hideOverlayWindow: () => ipcRenderer.send('hide-overlay-window'),
 
-  // Cloudflared Multiplayer Tunneling
-  ensureCloudflared: () => ipcRenderer.invoke('ensure-cloudflared'),
-  startCloudflaredTunnel: (port) => ipcRenderer.invoke('start-cloudflared-tunnel', { port }),
-  stopCloudflaredTunnel: () => ipcRenderer.invoke('stop-cloudflared-tunnel'),
-  onCloudflaredInstallProgress: (cb) => ipcRenderer.on('cloudflared-install-progress', (_e, data) => cb(data)),
-  onCloudflaredTunnelClosed: (cb) => ipcRenderer.on('cloudflared-tunnel-closed', () => cb()),
-  
-  // Cloudflared Multiplayer Client-side Access Bridge
-  startCloudflaredAccess: (url, localPort) => ipcRenderer.invoke('start-cloudflared-access', { url, localPort }),
-  stopCloudflaredAccess: () => ipcRenderer.invoke('stop-cloudflared-access'),
-  onCloudflaredAccessClosed: (cb) => ipcRenderer.on('cloudflared-access-closed', () => cb()),
+  // FRPC Multiplayer Tunneling
+  ensureFrpc: () => ipcRenderer.invoke('ensure-frpc'),
+  startFrpcTunnel: (port) => ipcRenderer.invoke('start-frpc-tunnel', { port }),
+  stopFrpcTunnel: () => ipcRenderer.invoke('stop-frpc-tunnel'),
+  onFrpcInstallProgress: (cb) => ipcRenderer.on('frpc-install-progress', (_e, data) => cb(data)),
+  onFrpcTunnelClosed: (cb) => ipcRenderer.on('frpc-tunnel-closed', () => cb()),
 
   // Missing mod dependencies (crash report auto-detection)
   onMissingDependencies: (cb) => ipcRenderer.on('missing-dependencies', (_e, data) => cb(data)),

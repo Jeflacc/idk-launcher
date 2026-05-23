@@ -23,6 +23,9 @@ export const state = {
   activeVersionForMods: null,
   browserMode: 'mod',
   currentProvider: 'modrinth',
+  browserPage: 0,
+  browserQuery: '',
+  browserTotalResults: 0,
 };
 
 export const actions = {};

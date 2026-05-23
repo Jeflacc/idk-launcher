@@ -1,4 +1,4 @@
-import { state, actions } from '../../core/app-state.js';
+﻿import { state, actions } from '../../core/app-state.js';
 
 export function initModpacksFeature({ switchView }) {
 // === MODPACK MANAGER =====================================
@@ -394,7 +394,15 @@ function mpRenderInstalledList(type) {
   
   if (!mp && !isViewingVersion) return;
   
-  const items = mp ? (mp[type] || []) : [];
+  // For versions, get mods from versionSettings
+  let items = [];
+  if (isViewingVersion) {
+    const versionSettings = state.versionSettings?.[state.activeVersionForMods];
+    items = versionSettings?.[type] || [];
+  } else {
+    items = mp ? (mp[type] || []) : [];
+  }
+  
   const gridId = type === 'mods' ? 'installed-mods-list' : type === 'resourcepacks' ? 'installed-rp-list' : 'installed-shaders-list';
   const grid = document.getElementById(gridId);
   const emptyMsgs = {
@@ -444,11 +452,19 @@ function mpRenderInstalledList(type) {
     grid.appendChild(el);
     
     // Extract icon from JAR ONLY if not already present (no API icon available)
-    if (!item.iconUrl && mp) {
-      extractAndCacheModIcon(mp.id, typeDir, item.filename).then(iconUrl => {
+    // This is a fallback - icons should come from Modrinth/CurseForge API first
+    if (!item.iconUrl) {
+      // For modpacks, use mp.id; for versions, use version ID
+      const modpackId = isViewingVersion ? `version-${state.activeVersionForMods}` : mp.id;
+      extractAndCacheModIcon(modpackId, typeDir, item.filename).then(iconUrl => {
         if (iconUrl) {
           item.iconUrl = iconUrl;
-          mpSave(); // Save updated item with icon
+          // Save updated item with icon
+          if (isViewingVersion) {
+            localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+          } else {
+            mpSave();
+          }
           
           // Update the card's image
           const cardEl = document.getElementById(`item-${type}-${index}`);
@@ -576,9 +592,58 @@ function mpRenderDetail() {
     document.getElementById('shader-count').innerText = mp.shaders?.length || 0;
   }
   
+  // Load installed mods for versions
+  if (isViewingVersion) {
+    loadVersionMods(state.activeVersionForMods);
+  }
+  
   mpRenderInstalledList('mods');
   mpRenderInstalledList('resourcepacks');
   mpRenderInstalledList('shaders');
+}
+
+// Load installed mods for a version from disk
+async function loadVersionMods(version) {
+  try {
+    const result = await window.electronAPI?.scanVersionMods?.(version);
+    if (result && result.success) {
+      if (!state.versionSettings[version]) {
+        state.versionSettings[version] = {};
+      }
+      
+      // Convert filenames to full mod objects with metadata
+      const diskMods = result.mods || [];
+      const existingMods = state.versionSettings[version].mods || [];
+      
+      // Merge disk mods with existing metadata
+      const mergedMods = diskMods.map(diskMod => {
+        // Try to find existing metadata for this mod
+        const existing = existingMods.find(m => m.filename === diskMod.filename);
+        if (existing) {
+          return existing; // Keep existing metadata
+        }
+        // Create new mod entry from disk
+        return {
+          filename: diskMod.filename,
+          name: diskMod.filename.replace(/\.jar$/, ''),
+          version: 'Unknown',
+          modrinthId: diskMod.filename,
+          iconUrl: ''
+        };
+      });
+      
+      state.versionSettings[version].mods = mergedMods;
+      localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+      
+      // Update counts
+      document.getElementById('mod-count').innerText = mergedMods.length || 0;
+      
+      // Re-render the installed list
+      mpRenderInstalledList('mods');
+    }
+  } catch (e) {
+    console.error('[LoadVersionMods] Error:', e);
+  }
 }
 
 // Tab switching
@@ -597,11 +662,35 @@ document.querySelectorAll('.mp-tab').forEach(tab => {
 });
 
 async function mpRemoveItem(item, type, apiMethod) {
-  const mp = mpGet(); if (!mp) return;
-  mp[type] = mp[type].filter(i => i.modrinthId !== item.modrinthId);
-  mpSave();
-  if (window.electronAPI) await window.electronAPI[apiMethod]({ modpackId: mp.id, filename: item.filename });
-  mpRenderDetail(); mpRenderList();
+  const mp = mpGet();
+  const isViewingVersion = state.activeVersionForMods && !state.activeModpackId;
+  
+  if (isViewingVersion) {
+    // Remove from version settings
+    if (!state.versionSettings[state.activeVersionForMods]) return;
+    if (!state.versionSettings[state.activeVersionForMods][type]) return;
+    
+    state.versionSettings[state.activeVersionForMods][type] = 
+      state.versionSettings[state.activeVersionForMods][type].filter(i => i.filename !== item.filename);
+    
+    localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+    
+    // Call IPC to delete the file from disk
+    if (window.electronAPI) {
+      await window.electronAPI[apiMethod]({ 
+        modpackId: `version-${state.activeVersionForMods}`, 
+        filename: item.filename 
+      });
+    }
+  } else if (mp) {
+    // Remove from modpack
+    mp[type] = mp[type].filter(i => i.modrinthId !== item.modrinthId);
+    mpSave();
+    if (window.electronAPI) await window.electronAPI[apiMethod]({ modpackId: mp.id, filename: item.filename });
+  }
+  
+  mpRenderDetail(); 
+  mpRenderList();
 }
 
 // --- Create Modpack ---
@@ -1095,40 +1184,127 @@ document.querySelectorAll('.provider-pill').forEach(pill => {
 let mpSearchTimeout;
 document.getElementById('mod-search').addEventListener('input', e => {
   clearTimeout(mpSearchTimeout);
-  mpSearchTimeout = setTimeout(() => mpBrowse(e.target.value), 400);
+  mpSearchTimeout = setTimeout(() => mpBrowse(e.target.value, 0), 400);
 });
 
-async function mpBrowse(query) {
-  const mp = mpGet();
+async function mpBrowse(query, page = 0) {
+  let mp = mpGet();
+  const isViewingVersion = state.activeVersionForMods && !state.activeModpackId;
+  
+  // Create virtual modpack for version if needed
+  if (!mp && isViewingVersion) {
+    const versionData = state.allVersions?.find(v => v.id === state.activeVersionForMods);
+    const versionSettings = state.versionSettings?.[state.activeVersionForMods] || { loader: 'Vanilla' };
+    
+    mp = {
+      id: `version-${state.activeVersionForMods}`,
+      name: state.activeVersionForMods,
+      mcVersion: state.activeVersionForMods,
+      loader: versionSettings.loader,
+      mods: [],
+      resourcepacks: [],
+      shaders: [],
+      isVersion: true
+    };
+  }
+  
   if (!mp && state.browserMode !== 'modpack') return;
+  
+  // Store pagination state
+  state.browserPage = page;
+  state.browserQuery = query;
+  
   const results = document.getElementById('mod-browser-results');
   results.innerHTML = `<div class="mp-loading"><div class="launch-spinner" style="width:32px;height:32px;margin:0 auto 12px;"></div>Searching ${state.currentProvider === 'modrinth' ? 'Modrinth' : 'CurseForge'}...</div>`;
   try {
     let hits = [];
+    const pageSize = 20;
+    const offset = page * pageSize;
+    
     if (state.currentProvider === 'modrinth') {
       let facets;
       if (state.browserMode === 'mod') facets = encodeURIComponent(JSON.stringify([[`categories:${mp.loader.toLowerCase()}`],[`versions:${mp.mcVersion}`],[`project_type:mod`]]));
       else if (state.browserMode === 'resourcepack') facets = encodeURIComponent(JSON.stringify([[`versions:${mp.mcVersion}`],[`project_type:resourcepack`]]));
       else if (state.browserMode === 'shader') facets = encodeURIComponent(JSON.stringify([[`project_type:shader`]]));
       else if (state.browserMode === 'modpack') facets = encodeURIComponent(JSON.stringify([[`project_type:modpack`]]));
-      const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=20`);
+      const res = await fetch(`https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=${pageSize}&offset=${offset}`);
       if (!res.ok) throw new Error(`Modrinth API error: ${res.status}`);
       const data = await res.json();
       hits = (data.hits || []).map(m => ({ project_id: m.project_id, title: m.title, description: m.description, icon_url: m.icon_url, downloads: m.downloads, follows: m.follows, provider: 'modrinth' }));
+      state.browserTotalResults = data.total_hits || 0;
     } else {
       let classId = 6;
       if (state.browserMode === 'resourcepack') classId = 12;
       else if (state.browserMode === 'shader') classId = 6552;
       else if (state.browserMode === 'modpack') classId = 4471;
       const gameVerStr = (mp && state.browserMode !== 'modpack') ? `&gameVersion=${mp.mcVersion}` : '';
-      const res = await fetch(`https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=${classId}&searchFilter=${encodeURIComponent(query)}${gameVerStr}&sortField=2&sortOrder=desc&pageSize=20`);
+      const res = await fetch(`https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=${classId}&searchFilter=${encodeURIComponent(query)}${gameVerStr}&sortField=2&sortOrder=desc&pageSize=${pageSize}&index=${offset}`);
       if (!res.ok) throw new Error(`CurseForge API error: ${res.status}`);
       const data = await res.json();
       hits = (data.data || []).map(m => ({ project_id: m.id.toString(), title: m.name, description: m.summary, icon_url: m.logo ? m.logo.thumbnailUrl : '', downloads: m.downloadCount, follows: 0, provider: 'curseforge' }));
+      state.browserTotalResults = data.pagination?.totalCount || 0;
     }
     results.innerHTML = '';
     if (!hits.length) { results.innerHTML = `<div class="mp-loading">No results found for "${query}" | Debug: classId ${classId}, provider ${state.currentProvider}</div>`; return; }
-    const installedIds = state.browserMode === 'modpack' ? [] : (mp ? (state.browserMode === 'mod' ? (Array.isArray(mp.mods) ? mp.mods : []).map(m=>m.modrinthId) : state.browserMode === 'resourcepack' ? (Array.isArray(mp.resourcepacks) ? mp.resourcepacks : []).map(r=>r.modrinthId) : (Array.isArray(mp.shaders) ? mp.shaders : []).map(s=>s.modrinthId)) : []);
+    
+    // Add pagination controls to the header (next to Modrinth pill)
+    const totalPages = Math.ceil(state.browserTotalResults / pageSize);
+    const currentPage = state.browserPage + 1;
+    
+    const paginationContainer = document.getElementById('pagination-controls');
+    paginationContainer.innerHTML = '';
+    
+    if (totalPages > 1) {
+      // Previous button
+      if (state.browserPage > 0) {
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '← Previous';
+        prevBtn.style.cssText = 'padding:8px 14px;background:rgba(76,184,55,0.5);border:1px solid rgba(76,184,55,0.9);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;transition:all 0.2s;box-shadow:0 2px 8px rgba(76,184,55,0.3);';
+        prevBtn.addEventListener('mouseover', () => prevBtn.style.background = 'rgba(76,184,55,0.8)');
+        prevBtn.addEventListener('mouseout', () => prevBtn.style.background = 'rgba(76,184,55,0.5)');
+        prevBtn.addEventListener('click', () => mpBrowse(state.browserQuery, state.browserPage - 1));
+        paginationContainer.appendChild(prevBtn);
+      }
+      
+      // Page info - more visible
+      const pageInfo = document.createElement('span');
+      pageInfo.textContent = `${currentPage}/${totalPages}`;
+      pageInfo.style.cssText = 'color:#fff;font-size:13px;font-weight:700;min-width:50px;text-align:center;background:rgba(76,184,55,0.4);padding:6px 12px;border-radius:4px;border:1px solid rgba(76,184,55,0.6);';
+      paginationContainer.appendChild(pageInfo);
+      
+      // Next button
+      if (currentPage < totalPages) {
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Next →';
+        nextBtn.style.cssText = 'padding:8px 14px;background:rgba(76,184,55,0.5);border:1px solid rgba(76,184,55,0.9);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;transition:all 0.2s;box-shadow:0 2px 8px rgba(76,184,55,0.3);';
+        nextBtn.addEventListener('mouseover', () => nextBtn.style.background = 'rgba(76,184,55,0.8)');
+        nextBtn.addEventListener('mouseout', () => nextBtn.style.background = 'rgba(76,184,55,0.5)');
+        nextBtn.addEventListener('click', () => mpBrowse(state.browserQuery, state.browserPage + 1));
+        paginationContainer.appendChild(nextBtn);
+      }
+    }
+    
+    // Get installed mod IDs - handle both modpacks and versions
+    let installedIds = [];
+    if (state.browserMode === 'modpack') {
+      installedIds = [];
+    } else if (mp) {
+      if (mp.isVersion) {
+        // For versions, get from versionSettings
+        const versionMods = state.versionSettings?.[state.activeVersionForMods]?.mods || [];
+        installedIds = versionMods.map(m => m.modrinthId || m.filename);
+      } else {
+        // For modpacks, get from modpack object
+        if (state.browserMode === 'mod') {
+          installedIds = (Array.isArray(mp.mods) ? mp.mods : []).map(m => m.modrinthId);
+        } else if (state.browserMode === 'resourcepack') {
+          installedIds = (Array.isArray(mp.resourcepacks) ? mp.resourcepacks : []).map(r => r.modrinthId);
+        } else {
+          installedIds = (Array.isArray(mp.shaders) ? mp.shaders : []).map(s => s.modrinthId);
+        }
+      }
+    }
+    
     hits.forEach(mod => {
       const installed = installedIds.includes(mod.project_id);
       const el = document.createElement('div');
@@ -1145,6 +1321,42 @@ async function mpBrowse(query) {
       if (!installed) el.querySelector('.add-mod-btn').addEventListener('click', () => mpAddItem(mod, el.querySelector('.add-mod-btn')));
       results.appendChild(el);
     });
+    
+    // Add centered pagination at the bottom
+    if (totalPages > 1) {
+      const bottomPaginationDiv = document.createElement('div');
+      bottomPaginationDiv.style.cssText = 'grid-column:1/-1;display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;padding:20px;width:100%;';
+      
+      // Previous button
+      if (state.browserPage > 0) {
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '← Previous Page';
+        prevBtn.style.cssText = 'padding:8px 16px;background:rgba(76,184,55,0.3);border:1px solid rgba(76,184,55,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;';
+        prevBtn.addEventListener('mouseover', () => prevBtn.style.background = 'rgba(76,184,55,0.6)');
+        prevBtn.addEventListener('mouseout', () => prevBtn.style.background = 'rgba(76,184,55,0.3)');
+        prevBtn.addEventListener('click', () => mpBrowse(state.browserQuery, state.browserPage - 1));
+        bottomPaginationDiv.appendChild(prevBtn);
+      }
+      
+      // Page info - centered and visible
+      const pageInfo = document.createElement('span');
+      pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+      pageInfo.style.cssText = 'color:#fff;font-size:13px;font-weight:700;background:rgba(76,184,55,0.2);padding:8px 16px;border-radius:4px;border:1px solid rgba(76,184,55,0.5);';
+      bottomPaginationDiv.appendChild(pageInfo);
+      
+      // Next button
+      if (currentPage < totalPages) {
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Next Page →';
+        nextBtn.style.cssText = 'padding:8px 16px;background:rgba(76,184,55,0.3);border:1px solid rgba(76,184,55,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;';
+        nextBtn.addEventListener('mouseover', () => nextBtn.style.background = 'rgba(76,184,55,0.6)');
+        nextBtn.addEventListener('mouseout', () => nextBtn.style.background = 'rgba(76,184,55,0.3)');
+        nextBtn.addEventListener('click', () => mpBrowse(state.browserQuery, state.browserPage + 1));
+        bottomPaginationDiv.appendChild(nextBtn);
+      }
+      
+      results.appendChild(bottomPaginationDiv);
+    }
   } catch(e) {
     results.innerHTML = `<div class="mp-loading" style="color:red;font-size:12px;">Error: ${e.message} <br/> ${e.stack}</div>`;
   }
@@ -1510,11 +1722,51 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         }
         
         console.log(`[CurseForge] Selected file: ${compatibleFile.fileName}`);
-        entry = { modrinthId: projectId, name: modTitle, version: compatibleFile.displayName, filename: compatibleFile.fileName, downloadUrl: compatibleFile.downloadUrl, iconUrl: modIcon };
+        
+        // Fetch project icon from CurseForge API if not already available
+        let projectIcon = modIcon;
+        if (!projectIcon) {
+          try {
+            const projRes = await fetch(`https://api.curse.tools/v1/cf/mods/${projectId}`);
+            if (projRes.ok) {
+              const projData = await projRes.json();
+              projectIcon = projData.data?.logo?.thumbnailUrl || '';
+            }
+          } catch (e) {
+            console.warn('[CurseForge] Failed to fetch project icon:', e);
+          }
+        }
+        
+        entry = { modrinthId: projectId, name: modTitle, version: compatibleFile.displayName, filename: compatibleFile.fileName, downloadUrl: compatibleFile.downloadUrl, iconUrl: projectIcon };
         
         if (mp.isVersion) {
-          // For versions, install directly without saving to modpack
+          // For versions, install directly and track in versionSettings
           if (btn) btn.textContent='↓ Installing...';
+          
+          // Initialize versionSettings if needed
+          if (!state.versionSettings[state.activeVersionForMods]) {
+            state.versionSettings[state.activeVersionForMods] = {};
+          }
+          if (!state.versionSettings[state.activeVersionForMods].mods) {
+            state.versionSettings[state.activeVersionForMods].mods = [];
+          }
+          
+          // Add mod metadata to versionSettings
+          const modEntry = { 
+            modrinthId: projectId, 
+            name: modTitle, 
+            version: compatibleFile.displayName, 
+            filename: compatibleFile.fileName, 
+            downloadUrl: compatibleFile.downloadUrl, 
+            iconUrl: projectIcon 
+          };
+          
+          // Check if already added
+          if (!state.versionSettings[state.activeVersionForMods].mods.find(m => m.filename === compatibleFile.fileName)) {
+            state.versionSettings[state.activeVersionForMods].mods.push(modEntry);
+            localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+          }
+          
           if (window.electronAPI) {
             await window.electronAPI.installModToVersion({ 
               version: state.activeVersionForMods, 
@@ -1606,11 +1858,51 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
         }
         const versionObj = versions[0];
         fileObj = versionObj.files.find(f=>f.primary)||versionObj.files[0];
-        entry = { modrinthId: projectId, name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: modIcon };
+        
+        // Fetch project icon from Modrinth API if not already available
+        let projectIcon = modIcon;
+        if (!projectIcon) {
+          try {
+            const projRes = await fetch(`https://api.modrinth.com/v2/project/${projectId}`);
+            if (projRes.ok) {
+              const projData = await projRes.json();
+              projectIcon = projData.icon_url || '';
+            }
+          } catch (e) {
+            console.warn('[Modrinth] Failed to fetch project icon:', e);
+          }
+        }
+        
+        entry = { modrinthId: projectId, name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, version: versionObj.version_number, filename: fileObj.filename, downloadUrl: fileObj.url, iconUrl: projectIcon };
         
         if (mp.isVersion) {
-          // For versions, install directly without saving to modpack
+          // For versions, install directly and track in versionSettings
           if (btn) btn.textContent='↓ Installing...';
+          
+          // Initialize versionSettings if needed
+          if (!state.versionSettings[state.activeVersionForMods]) {
+            state.versionSettings[state.activeVersionForMods] = {};
+          }
+          if (!state.versionSettings[state.activeVersionForMods].mods) {
+            state.versionSettings[state.activeVersionForMods].mods = [];
+          }
+          
+          // Add mod metadata to versionSettings
+          const modEntry = { 
+            modrinthId: projectId, 
+            name: modTitle === 'Dependency' ? fileObj.filename.split('-')[0] : modTitle, 
+            version: versionObj.version_number, 
+            filename: fileObj.filename, 
+            downloadUrl: fileObj.url, 
+            iconUrl: projectIcon 
+          };
+          
+          // Check if already added
+          if (!state.versionSettings[state.activeVersionForMods].mods.find(m => m.filename === fileObj.filename)) {
+            state.versionSettings[state.activeVersionForMods].mods.push(modEntry);
+            localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+          }
+          
           if (window.electronAPI) {
             await window.electronAPI.installModToVersion({ 
               version: state.activeVersionForMods, 
@@ -1658,6 +1950,12 @@ async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
       }
     }
     if (btn) { btn.textContent = '✓ Added'; btn.classList.add('installed'); }
+    
+    // Reload version mods if viewing a version
+    if (mp.isVersion && state.activeVersionForMods) {
+      await loadVersionMods(state.activeVersionForMods);
+    }
+    
     mpRenderDetail(); mpRenderList();
   } catch(e) {
     if (btn && !isDependency) {
