@@ -4,7 +4,7 @@ export function initFriendsFeature() {
 // === IDK CONNECT - PREMIUM FRIENDS & CLOUDFLARED LAN SHARING CLIENT ENGINE ===
 // ============================================================================
 (function initFriendsSystem() {
-  let IDK_BACKEND_URL = 'https://api.somniac.me';
+  let IDK_BACKEND_URL = 'https://play.somniac.me';
   let idkToken = localStorage.getItem('idk_connect_token') || '';
   let idkUser = JSON.parse(localStorage.getItem('idk_connect_user') || 'null');
   let idkAuthTab = 'login';
@@ -39,12 +39,15 @@ export function initFriendsFeature() {
   const shareInputRow = document.getElementById('friends-share-input-row');
   const inputSharePort = document.getElementById('friends-share-port');
   const btnShare = document.getElementById('btn-friends-share');
+  const btnFriendsShareCancel = document.getElementById('btn-friends-share-cancel');
   const tunnelLink = document.getElementById('friends-share-tunnel-link');
   
-  const progressPanel = document.getElementById('cloudflared-progress-panel');
-  const statusText = document.getElementById('cloudflared-status-text');
-  const percentText = document.getElementById('cloudflared-percent-text');
-  const progressFill = document.getElementById('cloudflared-progress-fill');
+  let isCancellingHost = false;
+  
+  const progressPanel = document.getElementById('frpc-progress-panel');
+  const statusText = document.getElementById('frpc-status-text');
+  const percentText = document.getElementById('frpc-percent-text');
+  const progressFill = document.getElementById('frpc-progress-fill');
   
   const requestsSection = document.getElementById('friends-requests-section');
   const requestsList = document.getElementById('friends-requests-list');
@@ -227,7 +230,7 @@ export function initFriendsFeature() {
       btnShare.click(); // Stop sharing first
     }
     if (window.electronAPI) {
-      window.electronAPI.stopCloudflaredAccess();
+      // window.electronAPI.stopCloudflaredAccess(); // No longer needed
     }
     
     idkToken = '';
@@ -247,7 +250,7 @@ export function initFriendsFeature() {
       btnShare.innerText = 'Stopping...';
       try {
         if (window.electronAPI) {
-          await window.electronAPI.stopCloudflaredTunnel();
+          await window.electronAPI.stopFrpcTunnel();
         }
         activeTunnelUrl = null;
         activeSharePort = null;
@@ -279,12 +282,17 @@ export function initFriendsFeature() {
       return;
     }
 
+    isCancellingHost = false;
     btnShare.disabled = true;
     btnShare.innerText = 'Starting...';
+    btnFriendsShareCancel.style.display = 'inline-flex';
+    btnFriendsShareCancel.innerText = 'Cancel';
+    btnFriendsShareCancel.disabled = false;
     
     if (!window.electronAPI) {
       // Fallback/Mock for Web Browsers
       setTimeout(() => {
+        if (isCancellingHost) return;
         activeTunnelUrl = `tcp://mock-tunnel-${Math.random().toString(36).substring(3, 8)}.trycloudflare.com:54321`;
         activeSharePort = portVal;
         shareCard.classList.add('active');
@@ -305,22 +313,22 @@ export function initFriendsFeature() {
     }
 
     try {
-      // 1. Ensure Cloudflared binary exists (downloads if not)
+      // 1. Ensure FRPC binary exists (downloads if not)
       progressPanel.style.display = 'block';
-      statusText.innerText = 'Preparing cloudflared.exe...';
+      statusText.innerText = 'Preparing frpc.exe...';
       percentText.innerText = '0%';
       progressFill.style.width = '0%';
       
-      const cfStatus = await window.electronAPI.ensureCloudflared();
+      const cfStatus = await window.electronAPI.ensureFrpc();
       if (!cfStatus.success) {
-        throw new Error(cfStatus.error || "Failed to download cloudflared");
+        throw new Error(cfStatus.error || "Failed to download frpc");
       }
       
       progressPanel.style.display = 'none';
       
-      // 2. Start Cloudflared TCP tunnel forwarding LAN port
+      // 2. Start FRPC TCP tunnel forwarding LAN port
       statusText.innerText = 'Connecting tunnel...';
-      const tunnelStatus = await window.electronAPI.startCloudflaredTunnel(portVal);
+      const tunnelStatus = await window.electronAPI.startFrpcTunnel(portVal);
       if (!tunnelStatus.success) {
         throw new Error(tunnelStatus.error || "Failed to establish TCP tunnel");
       }
@@ -345,24 +353,48 @@ export function initFriendsFeature() {
       await sendPresenceHeartbeat();
       actions.showWarningToast("LAN world successfully shared! IP address copied to clipboard.");
     } catch (err) {
-      actions.showWarningToast(`Tunnel Error: ${err.message}`);
+      if (!isCancellingHost) {
+        actions.showWarningToast(`Tunnel Error: ${err.message}`);
+      }
       progressPanel.style.display = 'none';
       btnShare.innerText = 'Share';
     } finally {
       btnShare.disabled = false;
+      btnFriendsShareCancel.style.display = 'none';
     }
   });
 
-  // Listen to cloudflared download progress
+  // Cancel host button event listener
+  btnFriendsShareCancel.addEventListener('click', async () => {
+    btnFriendsShareCancel.disabled = true;
+    btnFriendsShareCancel.innerText = 'Cancelling...';
+    isCancellingHost = true;
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.stopFrpcTunnel();
+      }
+    } catch (err) {
+      console.error('[Friends] Failed to cancel host:', err);
+    } finally {
+      btnFriendsShareCancel.disabled = false;
+      btnFriendsShareCancel.innerText = 'Cancel';
+      btnFriendsShareCancel.style.display = 'none';
+      btnShare.disabled = false;
+      btnShare.innerText = 'Share';
+      progressPanel.style.display = 'none';
+    }
+  });
+
+  // Listen to frpc download progress
   if (window.electronAPI) {
-    window.electronAPI.onCloudflaredInstallProgress((data) => {
+    window.electronAPI.onFrpcInstallProgress((data) => {
       progressPanel.style.display = 'block';
       statusText.innerText = data.status || 'Downloading...';
       percentText.innerText = `${data.percent}%`;
       progressFill.style.width = `${data.percent}%`;
     });
 
-    window.electronAPI.onCloudflaredTunnelClosed(() => {
+    window.electronAPI.onFrpcTunnelClosed(() => {
       if (activeTunnelUrl) {
         // Tunnel closed from outside
         activeTunnelUrl = null;
@@ -613,13 +645,11 @@ export function initFriendsFeature() {
     let connectAddressText;
 
     if (friend.cloudflaredUrl.startsWith('https://')) {
+      // Legacy Cloudflare quick tunnel support
       host = '127.0.0.1';
       port = 25565;
       connectAddressText = '127.0.0.1:25565';
-      if (window.electronAPI) {
-        window.electronAPI.startCloudflaredAccess(friend.cloudflaredUrl, 25565);
-        actions.showWarningToast("Connecting secure bridge over Cloudflare network...");
-      }
+      actions.showWarningToast("Legacy HTTPS tunnels are no longer supported. Please ask your friend to update their launcher.");
     } else {
       const hostPort = friend.cloudflaredUrl.replace('tcp://', '');
       const parts = hostPort.split(':');

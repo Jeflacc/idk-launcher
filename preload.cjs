@@ -51,17 +51,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
   scanProfiles: () => ipcRenderer.invoke('scan-profiles'),
 
-  // Cloudflared Multiplayer Tunneling
-  ensureCloudflared: () => ipcRenderer.invoke('ensure-cloudflared'),
-  startCloudflaredTunnel: (port) => ipcRenderer.invoke('start-cloudflared-tunnel', { port }),
-  stopCloudflaredTunnel: () => ipcRenderer.invoke('stop-cloudflared-tunnel'),
-  onCloudflaredInstallProgress: (cb) => ipcRenderer.on('cloudflared-install-progress', (_e, data) => cb(data)),
-  onCloudflaredTunnelClosed: (cb) => ipcRenderer.on('cloudflared-tunnel-closed', () => cb()),
-  
-  // Cloudflared Multiplayer Client-side Access Bridge
-  startCloudflaredAccess: (url, localPort) => ipcRenderer.invoke('start-cloudflared-access', { url, localPort }),
-  stopCloudflaredAccess: () => ipcRenderer.invoke('stop-cloudflared-access'),
-  onCloudflaredAccessClosed: (cb) => ipcRenderer.on('cloudflared-access-closed', () => cb()),
+  // FRPC Multiplayer Tunneling
+  ensureFrpc: () => ipcRenderer.invoke('ensure-frpc'),
+  startFrpcTunnel: (port) => ipcRenderer.invoke('start-frpc-tunnel', { port }),
+  stopFrpcTunnel: () => ipcRenderer.invoke('stop-frpc-tunnel'),
+  onFrpcInstallProgress: (cb) => ipcRenderer.on('frpc-install-progress', (_e, data) => cb(data)),
+  onFrpcTunnelClosed: (cb) => ipcRenderer.on('frpc-tunnel-closed', () => cb()),
 
   // Missing mod dependencies (crash report auto-detection)
   onMissingDependencies: (cb) => ipcRenderer.on('missing-dependencies', (_e, data) => cb(data)),
