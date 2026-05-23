@@ -251,14 +251,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       card.querySelector('.friend-remove-btn').onclick = async (e) => {
         e.stopPropagation();
-        if (confirm(`Are you sure you want to remove ${friend.username} as a friend?`)) {
-          try {
-            await idkRequest(`/api/friends/${friend.id}`, 'DELETE');
-            showToast(`Removed ${friend.username}.`);
-            refreshFriendsData();
-          } catch (err) {
-            showToast(err.message, 'error');
-          }
+        const confirmFn = window.IdkApp?.actions?.showConfirmDialog;
+        let proceed = false;
+        if (confirmFn) {
+          proceed = await confirmFn({
+            title: 'Remove friend',
+            message: `Remove ${friend.username} from your friends list? You can send them a new request later.`,
+            confirmText: 'Unfriend',
+            cancelText: 'Keep friend',
+            variant: 'danger',
+          });
+        } else {
+          proceed = confirm(`Remove ${friend.username} from your friends list?`);
+        }
+        if (!proceed) return;
+        try {
+          await idkRequest(`/api/friends/${friend.id}`, 'DELETE');
+          showToast(`Removed ${friend.username}.`);
+          refreshFriendsData();
+        } catch (err) {
+          showToast(err.message, 'error');
         }
       };
 
@@ -290,8 +302,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <span>Wants to be friends</span>
         </div>
         <div class="friend-request-actions">
-          <button class="friend-request-btn accept" title="Accept">✓</button>
-          <button class="friend-request-btn decline" title="Decline">✕</button>
+          <button class="friend-request-btn accept" title="Accept">&#x2713;</button>
+          <button class="friend-request-btn decline" title="Decline">&times;</button>
         </div>
       `;
 

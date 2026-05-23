@@ -7,6 +7,7 @@ const { exec, execSync, spawn } = require('child_process');
 const DiscordRPC = require('discord-rpc');
 const { Worker } = require('worker_threads');
 const crypto = require('crypto');
+const { scanProfileAchievements, resolveProfilePath } = require('./src/backend/achievements-scanner.cjs');
 
 app.commandLine.appendSwitch('js-flags', '--expose_gc');
 
@@ -324,6 +325,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1050,
     height: 650,
+    minWidth: 1060,
+    minHeight: 650,
     frame: false,
     resizable: true,
     maximizable: true,
@@ -492,6 +495,22 @@ ipcMain.handle('install-mod-to-version', async (event, { version, downloadUrl, f
   return new Promise((resolve, reject) => {
     downloadFile(downloadUrl, jarPath, () => resolve({ success: true }), (e) => reject(e));
   });
+});
+
+// Scan unique completed advancements for a modpack or version profile
+ipcMain.handle('scan-profile-achievements', async (event, { modpackId, versionId } = {}) => {
+  try {
+    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const profilePath = resolveProfilePath(rootPath, { modpackId, versionId });
+    if (!profilePath) {
+      return { success: false, error: 'No profile specified', count: 0, advancements: [] };
+    }
+    const { count, advancements } = scanProfileAchievements(profilePath);
+    return { success: true, count, advancements, profilePath };
+  } catch (e) {
+    console.error('[Achievements] Scan error:', e);
+    return { success: false, error: e.message, count: 0, advancements: [] };
+  }
 });
 
 // Scan mods installed for a specific version

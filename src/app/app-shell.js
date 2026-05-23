@@ -1,5 +1,5 @@
 export function renderAppShell() {
-  document.querySelector('#app').innerHTML = `
+  document.querySelector("#app").innerHTML = `
   <div class="background-slider">
     <video autoplay muted loop playsinline class="bg-video">
       <source src="./background.mp4" type="video/mp4">
@@ -22,6 +22,10 @@ export function renderAppShell() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
             Modpacks
           </div>
+          <div class="nav-tab" data-target="profile">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Profile
+          </div>
           <div class="nav-tab" data-target="settings">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg>
             Settings
@@ -29,7 +33,7 @@ export function renderAppShell() {
         </div>
       </div>
     </div>
-    
+
     <div class="top-bar-right">
       <!-- FRIENDS TOGGLE BUTTON -->
       <button class="friends-toggle-btn" id="btn-friends-toggle" title="Friends List" style="margin-right: 4px;">
@@ -44,27 +48,24 @@ export function renderAppShell() {
 
       <div class="user-profile-wrapper">
         <div class="user-profile" id="user-profile-btn">
-          <div class="user-profile-3d-wrap">
-            <canvas id="profile-3d-canvas" width="50" height="100"></canvas>
+          <div class="user-profile-avatar" aria-hidden="true">
+            <canvas id="avatar-canvas" width="40" height="40"></canvas>
           </div>
-          <div class="user-avatar" style="display: none;">
-            <canvas id="avatar-canvas" width="28" height="28" style="width:100%;height:100%;image-rendering:pixelated;"></canvas>
-          </div>
-          <div class="user-details" style="display: flex; flex-direction: column; align-items: flex-start; gap: 1px;">
-            <span style="font-size: 8px; font-weight: 600; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.8px; line-height: 1; font-family: inherit;">Playing as</span>
-            <h4 id="display-username" style="font-size: 13px; font-weight: 800; color: white; margin: 0; line-height: 1.1; font-family: var(--font-title); letter-spacing: 0.5px;">PlayerOne</h4>
-            <span style="display: none;">Offline Account</span>
+          <div class="user-details">
+            <span class="user-details-label">Playing as</span>
+            <h4 id="display-username">PlayerOne</h4>
+            <span class="user-details-account" style="display: none;">Offline Account</span>
           </div>
         </div>
-        
+
         <div class="profile-dropdown" id="profile-dropdown">
           <div class="profile-dropdown-item" id="btn-dropdown-skin" style="display:none;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 8a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z"></path></svg>
             Change Skin (Ely.by)
           </div>
-          <div class="profile-dropdown-item" id="btn-dropdown-3d-skin">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-            View 3D Skin
+          <div class="profile-dropdown-item" id="btn-dropdown-profile">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            My profile
           </div>
           <div class="profile-dropdown-item logout" id="btn-dropdown-logout">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -98,12 +99,12 @@ export function renderAppShell() {
     <div class="login-box">
       <h2>Welcome Back</h2>
       <p style="color: var(--text-muted); margin-bottom: 10px;">Select your login method to enter the launcher.</p>
-      
+
       <div class="login-btn microsoft" id="btn-elyby-login">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         Ely.by Account
       </div>
-      
+
       <div class="login-btn offline" id="btn-offline-login">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         Offline Account
@@ -129,7 +130,7 @@ export function renderAppShell() {
         <source src="./background.mp4" type="video/mp4">
       </video>
       <div class="hero-overlay"></div>
-      
+
       <!-- Integrated invisible navigation trigger links to keep original JS functional -->
       <div id="btn-open-mods" style="display:none;"></div>
       <div id="btn-open-settings" style="display:none;"></div>
@@ -216,7 +217,7 @@ export function renderAppShell() {
         </div>
       </div>
     </div>
-    
+
     <div class="details-section">
       <div class="details-content">
         <div class="stats-grid">
@@ -243,7 +244,7 @@ export function renderAppShell() {
           </div>
           <div class="news-grid" id="mojang-news-grid">
             <div style="padding: 60px 40px; text-align: center; color: var(--text-muted); width: 100%; grid-column: 1 / -1;">
-              <div style="font-size: 48px; margin-bottom: 16px;">≡ƒô░</div>
+              <div style="font-size: 48px; margin-bottom: 16px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></div>
               <div>Loading Mojang news...</div>
             </div>
           </div>
@@ -255,10 +256,10 @@ export function renderAppShell() {
   <!-- SETTINGS VIEW -->
   <div id="view-settings" class="view">
     <div id="btn-close-settings" style="display:none;"></div>
-    
+
     <div class="settings-content-wrapper">
       <h2 class="view-title">Settings</h2>
-      
+
       <div class="settings-grid">
         <div class="settings-section">
           <h3>Memory Allocation</h3>
@@ -294,7 +295,7 @@ export function renderAppShell() {
           <p>Set the default window resolution when launching Minecraft.</p>
           <div style="display:flex; gap:8px; align-items:center;">
             <input type="number" class="clean-input" id="default-window-width" placeholder="Width" style="text-align:center; flex:1;" value="1024" />
-            <span style="color:var(--text-muted);">×</span>
+            <span style="color:var(--text-muted);">&times;</span>
             <input type="number" class="clean-input" id="default-window-height" placeholder="Height" style="text-align:center; flex:1;" value="768" />
             <label class="toggle-switch" style="margin:0;">
               <input type="checkbox" id="fullscreen-toggle" />
@@ -364,14 +365,110 @@ export function renderAppShell() {
     </div>
   </div>
 
+  <!-- PROFILE VIEW -->
+  <div id="view-profile" class="view">
+    <div class="profile-page">
+      <div class="profile-page-content">
+        <section class="profile-main-stage">
+          <div class="profile-stage-grid"></div>
+          <div class="profile-stage-character">
+            <div class="profile-stage-heading">
+              <h1 class="profile-character-name" id="profile-page-username">MUZLIK_GAMER</h1>
+            </div>
+
+            <div class="profile-skin-viewer-wrapper" id="profile-skin-stage">
+              <div class="profile-skin-loading" id="profile-skin-loading">Loading skin…</div>
+              <canvas id="profile-skin-canvas"></canvas>
+            </div>
+
+            <div class="profile-stage-bar">
+              <button type="button" class="profile-stage-bar-main" id="profile-stage-open-main">Play</button>
+              <button type="button" class="profile-stage-bar-side" id="profile-stage-open-settings" aria-label="Open settings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="profile-sidebar">
+          <!-- Identity -->
+          <div class="profile-sidebar-identity">
+            <div class="profile-sidebar-avatar-wrap">
+              <canvas id="profile-sidebar-avatar" width="52" height="52"></canvas>
+            </div>
+            <div class="profile-sidebar-identity-info">
+              <span class="profile-sidebar-identity-name" id="profile-sidebar-name">PLAYER</span>
+              <span class="profile-sidebar-identity-acct" id="profile-sidebar-acct">Offline account</span>
+            </div>
+          </div>
+
+          <!-- Statistics -->
+          <section class="profile-stats-section">
+            <h4 class="profile-section-title">Statistics</h4>
+            <div class="profile-stat-mini-list">
+              <div class="profile-stat-mini">
+                <span class="profile-stat-mini-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </span>
+                <div class="profile-stat-mini-content">
+                  <span class="profile-stat-mini-value" id="profile-stat-playtime">0.0h</span>
+                  <span class="profile-stat-mini-label">Playtime</span>
+                </div>
+              </div>
+              <div class="profile-stat-mini">
+                <span class="profile-stat-mini-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </span>
+                <div class="profile-stat-mini-content">
+                  <span class="profile-stat-mini-value" id="profile-stat-account-type">Offline</span>
+                  <span class="profile-stat-mini-label">Account</span>
+                </div>
+              </div>
+              <div class="profile-stat-mini">
+                <span class="profile-stat-mini-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                </span>
+                <div class="profile-stat-mini-content">
+                  <span class="profile-stat-mini-value" id="profile-stat-modpacks">0</span>
+                  <span class="profile-stat-mini-label">Modpacks</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Quick Actions -->
+          <section class="profile-actions-section">
+            <h4 class="profile-section-title">Quick actions</h4>
+            <button type="button" class="profile-quick-action profile-action-primary" id="profile-btn-change-skin" style="display:none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z"></path></svg>
+              <span>Change skin</span>
+            </button>
+            <button type="button" class="profile-quick-action" id="profile-btn-friends">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>Open friends</span>
+            </button>
+            <button type="button" class="profile-quick-action" id="profile-btn-settings">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg>
+              <span>Launcher settings</span>
+            </button>
+            <button type="button" class="profile-quick-action profile-action-danger" id="profile-btn-logout">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              <span>Log out</span>
+            </button>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </div>
+
   <!-- MODS VIEW -->
   <div id="view-mods" class="view">
     <div id="btn-close-mods" style="display:none;"></div>
-    
+
     <div class="mods-content-wrapper">
       <div class="mods-page-header">
         <h2 class="view-title">Modpack Manager</h2>
-        <div style="display:flex; gap:10px;">
+        <div class="mods-header-actions">
           <button class="create-modpack-btn" id="btn-browse-modpacks">Browse Modpacks</button>
           <button class="create-modpack-btn" id="btn-import-modpack">Import Zip</button>
           <button class="create-modpack-btn" id="btn-new-modpack">+ New Modpack</button>
@@ -421,34 +518,34 @@ export function renderAppShell() {
                 </div>
                 <div style="flex:1;">
                   <h2 id="modpack-name-display" style="font-size:28px;margin-bottom:2px;font-family:var(--font-title);font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);">Modpack</h2>
-                  <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 · Fabric</p>
-                  <div style="display:flex;gap:20px;font-size:12px;align-items:center;font-family:var(--font-title);flex-wrap:wrap;">
-                    <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
+                  <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 &middot; Fabric</p>
+                  <div class="mp-stats-row">
+                    <div class="mp-stat">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
                       <span id="mp-stat-version">1.20.4</span>
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
+                    <div class="mp-stat">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"></path></svg>
                       <span id="mp-stat-playtime">0h played</span>
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
+                    <div class="mp-stat">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                       <span id="mp-stat-loader">Fabric</span>
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;color:#ffffff;font-weight:600;">
+                    <div class="mp-stat">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                       <span id="mp-stat-achievements">0 Achievements</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div style="display:flex;flex-direction:column;gap:8px;align-items:stretch;">
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <button class="mp-action-btn icon-btn" id="btn-export-modpack" title="Export Modpack" style="flex:1;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
-                  <button class="mp-action-btn icon-btn" id="btn-delete-modpack" title="Delete" style="flex:1;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg></button>
-                  <button class="mp-action-btn icon-btn" id="btn-modpack-settings" title="Settings" style="flex:1;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg></button>
+              <div class="modpack-header-actions">
+                <div class="mp-action-icon-row">
+                  <button class="mp-action-btn icon-btn" id="btn-export-modpack" title="Export Modpack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
+                  <button class="mp-action-btn icon-btn" id="btn-delete-modpack" title="Delete"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg></button>
+                  <button class="mp-action-btn icon-btn" id="btn-modpack-settings" title="Settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg></button>
                 </div>
-                <button class="mp-action-btn play" id="btn-play-modpack" style="padding:12px 24px;font-size:14px;font-weight:600;font-family:var(--font-title);width:100%;">PLAY</button>
+                <button class="mp-action-btn play" id="btn-play-modpack">PLAY</button>
               </div>
             </div>
             <div class="mp-tabs">
@@ -539,17 +636,17 @@ export function renderAppShell() {
               <label>Modpack Name</label>
               <input type="text" class="clean-input" id="mp-settings-name" placeholder="Modpack name..." style="text-align:left;" />
             </div>
-            
+
             <div class="mp-settings-section">
               <label>Description</label>
               <textarea class="clean-input" id="mp-settings-description" placeholder="Add a description for this modpack..." style="text-align:left; min-height:80px; resize:vertical;"></textarea>
             </div>
-            
+
             <div class="mp-settings-section">
               <label>Minecraft Version</label>
               <select class="clean-select" id="mp-settings-version"></select>
             </div>
-            
+
             <div class="mp-settings-section">
               <label>Mod Loader</label>
               <select class="clean-select" id="mp-settings-loader">
@@ -560,27 +657,27 @@ export function renderAppShell() {
                 <option value="Quilt">Quilt</option>
               </select>
             </div>
-            
+
             <div class="mp-settings-section">
               <label>Loader Version</label>
               <input type="text" class="clean-input" id="mp-settings-loader-version" placeholder="Auto-detected" style="text-align:left;" />
             </div>
-            
+
             <div class="mp-settings-section">
               <label>Java Arguments</label>
               <input type="text" class="clean-input" id="mp-settings-java-args" placeholder="e.g., -XX:+UseG1GC -XX:+ParallelRefProcEnabled" style="text-align:left; font-size:11px;" />
               <small style="color:var(--text-muted); display:block; margin-top:4px;">Advanced JVM arguments for this modpack</small>
             </div>
-            
+
             <div class="mp-settings-section">
               <label>Game Window Size</label>
               <div style="display:flex; gap:8px;">
                 <input type="number" class="clean-input" id="mp-settings-width" placeholder="Width" style="text-align:center; flex:1;" />
-                <span style="display:flex; align-items:center; color:var(--text-muted);">×</span>
+                <span style="display:flex; align-items:center; color:var(--text-muted);">&times;</span>
                 <input type="number" class="clean-input" id="mp-settings-height" placeholder="Height" style="text-align:center; flex:1;" />
               </div>
             </div>
-            
+
             <div class="mp-settings-actions">
               <button class="submit-btn" id="btn-save-mp-settings" style="flex:1;">Save Changes</button>
               <button class="modal-btn" id="btn-cancel-mp-settings" style="flex:1;">Cancel</button>
@@ -647,19 +744,19 @@ export function renderAppShell() {
         </svg>
       </button>
     </div>
-    
+
     <div class="friends-sidebar-content">
       <!-- PORTAL PANEL (WHEN NOT AUTHENTICATED WITH IDK SYSTEM) -->
       <div id="friends-auth-panel" class="friends-auth-panel">
         <p class="friends-auth-welcome">
           Connect to <strong>IDK Network</strong> to add friends, sync presence, and join multiplayer worlds with a single click!
         </p>
-        
+
         <div class="friends-auth-tabs">
           <button class="friends-auth-tab active" id="tab-friends-login">LOGIN</button>
           <button class="friends-auth-tab" id="tab-friends-register">REGISTER</button>
         </div>
-        
+
         <div class="friends-auth-form">
           <div class="friends-auth-error" id="friends-auth-error">Error message here</div>
           <input type="text" class="clean-input" id="friends-auth-username" placeholder="IDK Username..." />
@@ -667,7 +764,7 @@ export function renderAppShell() {
           <button class="submit-btn" id="btn-friends-auth-submit" style="margin-top: 10px;">Connect Account</button>
         </div>
       </div>
-      
+
       <!-- MAIN PANEL (WHEN AUTHENTICATED WITH IDK SYSTEM) -->
       <div id="friends-main-panel" class="friends-auth-panel" style="display:none;">
         <!-- Identity Card -->
@@ -690,7 +787,7 @@ export function renderAppShell() {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
           </button>
         </div>
-        
+
         <!-- Share LAN World Card -->
         <div class="friends-share-card" id="friends-share-card">
           <h4>
@@ -704,17 +801,17 @@ export function renderAppShell() {
             Host LAN World
           </h4>
           <p id="friends-share-instructions">Open your Minecraft singleplayer world, click "Open to LAN", then enter the port below to invite your friends!</p>
-          
+
           <div class="friends-share-input-row" id="friends-share-input-row">
             <input type="number" class="clean-input" id="friends-share-port" placeholder="LAN Port (e.g. 54321)" min="1024" max="65535" />
             <button class="friends-share-btn" id="btn-friends-share">Share</button>
             <button class="friends-share-btn stop-sharing" id="btn-friends-share-cancel" style="display:none;">Cancel</button>
           </div>
-          
+
           <div class="friends-share-tunnel-link" id="friends-share-tunnel-link" style="display:none;" title="Click to copy IP address">
             tcp://...
           </div>
-          
+
           <!-- FRPC Downloader Progress Panel -->
           <div id="frpc-progress-panel" style="display:none;">
             <div style="font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between;margin-bottom:2px;">
@@ -726,7 +823,7 @@ export function renderAppShell() {
             </div>
           </div>
         </div>
-        
+
         <!-- Pending Friend Requests -->
         <div class="friends-requests-section" id="friends-requests-section" style="display:none;">
           <span class="friends-requests-title">Friend Requests</span>
@@ -734,7 +831,7 @@ export function renderAppShell() {
             <!-- Dynamic requests -->
           </div>
         </div>
-        
+
         <!-- Add Friend -->
         <div class="friends-requests-section">
           <span class="friends-requests-title">Add Friend</span>
@@ -751,7 +848,7 @@ export function renderAppShell() {
             </button>
           </div>
         </div>
-        
+
         <!-- Friends List -->
         <div class="friends-list-section">
           <span class="friends-list-header">My Friends</span>
@@ -845,5 +942,3 @@ export function renderAppShell() {
 
 `;
 }
-
-

@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getVersionsPath: () => ipcRenderer.invoke('get-versions-path'),
   scanDownloadedVersions: () => ipcRenderer.invoke('scan-downloaded-versions'),
   scanVersionMods: (version) => ipcRenderer.invoke('scan-version-mods', version),
+  scanProfileAchievements: (data) => ipcRenderer.invoke('scan-profile-achievements', data),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),

@@ -15,7 +15,7 @@ void accessibilityManager;
 void errorDisplay;
 void SettingsUI;
 
-const { switchView } = createViewController();
+const { switchView, getReturnView } = createViewController();
 actions.switchView = switchView;
 
 initWindowControls();
@@ -30,6 +30,8 @@ const [
   { initContentFeature },
   { initDesktopHelpers },
   { initFriendsFeature },
+  { initProfileFeature },
+  { showConfirmDialog },
 ] = await Promise.all([
   import('./features/auth/auth-feature.js'),
   import('./features/settings/settings-feature.js'),
@@ -40,7 +42,11 @@ const [
   import('./features/content/content-feature.js'),
   import('./features/desktop/desktop-helpers.js'),
   import('./features/friends/friends-feature.js'),
+  import('./features/profile/profile-feature.js'),
+  import('./components/confirm-dialog.js'),
 ]);
+
+actions.showConfirmDialog = showConfirmDialog;
 
 initAuthFeature({ switchView });
 initSettingsFeature({ switchView });
@@ -51,3 +57,4 @@ initModpacksFeature({ switchView });
 initContentFeature();
 initDesktopHelpers();
 initFriendsFeature();
+initProfileFeature({ switchView, getReturnView });

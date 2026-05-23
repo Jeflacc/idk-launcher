@@ -187,7 +187,7 @@ function renderVersions() {
     
     // Add downloaded badge if version is downloaded
     const downloadedBadge = state.downloadedVersions.includes(v.id)
-      ? `<span class="downloaded-badge" title="Downloaded">✓</span>`
+      ? `<span class="downloaded-badge" title="Downloaded">&#x2713;</span>`
       : '';
 
     el.innerHTML = `
