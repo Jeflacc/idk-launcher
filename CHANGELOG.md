@@ -1,5 +1,34 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.3.0-preview.26w21b Changelog
+
+Welcome to the Minecraft snapshot style unstable preview revision **v1.3.0-preview.26w21b**! This update introduces host cancellation support, VPS connection improvements, and premium visual feedback during the connection phase.
+
+---
+
+### 🚀 New Features & Enhancements
+
+* **🛑 Host Connection Cancellation Support**
+  - Added a dedicated red **"Cancel"** button to the "Host LAN World" panel in both the main launcher UI and the in-game overlay.
+  - Allows you to immediately abort the process if the `frpc` download hangs or if the tunnel takes too long to connect.
+  - Automatically aborts active HTTP/HTTPS file download streams (`ensure-frpc` requests) or terminates the spawned Fast Reverse Proxy client process instantly in the background.
+  - Intelligently suppresses generic backend process exit error warning toasts during user-initiated cancellations for a polished, error-free experience.
+
+* **🌐 play.somniac.me VPS Integration**
+  - Updated all connection, API, and presence reporting endpoints to use the new `play.somniac.me` domain (instead of `api.somniac.me` or `somniac.me`), ensuring faster and more stable proxy routing.
+
+* **🎨 Live Download Progress in In-Game Overlay**
+  - Integrated a progress listener into the in-game overlay that updates the disabled SHARE button dynamically with status and percentages (e.g., `DOWNLOADING FRPC... (42%)`), giving immediate visual feedback without cluttered UI layouts.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.3.0-preview.26w21b`
+* **Release Channel:** Preview / Unstable Release
+* **Platform:** Windows, macOS, Linux
+
+---
+
 ## 🎮 IDK Launcher v1.3.0-preview.26w21a Changelog
 
 Welcome to the Minecraft snapshot style unstable preview revision **v1.3.0-preview.26w21a**! This massive update introduces a completely redesigned Modular Feature-Based Architecture, a comprehensive Version Mods Management system, advanced performance optimizations, and crash analysis tools.
