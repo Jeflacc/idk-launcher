@@ -1,8 +1,8 @@
 # IDK Launcher Changelog
 
-## 🎮 IDK Launcher v1.3.0-preview.26w21b Changelog
+## 🎮 IDK Launcher v1.3.0-preview.26w21c Changelog
 
-Welcome to the Minecraft snapshot style unstable preview revision **v1.3.0-preview.26w21b**! This update introduces host cancellation support, VPS connection improvements, and premium visual feedback during the connection phase.
+Welcome to the Minecraft snapshot style unstable preview revision **v1.3.0-preview.26w21c**! This update introduces host cancellation support, VPS connection improvements, and premium visual feedback during the connection phase.
 
 ---
 
@@ -23,7 +23,7 @@ Welcome to the Minecraft snapshot style unstable preview revision **v1.3.0-previ
 ---
 
 ### 📦 Build Specifications
-* **Version:** `1.3.0-preview.26w21b`
+* **Version:** `1.3.0-preview.26w21c`
 * **Release Channel:** Preview / Unstable Release
 * **Platform:** Windows, macOS, Linux
 
