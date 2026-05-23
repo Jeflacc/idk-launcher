@@ -1,5 +1,87 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.3.0-preview.26w21c Changelog
+
+Welcome to the Minecraft snapshot style unstable preview revision **v1.3.0-preview.26w21c**! This update introduces host cancellation support, VPS connection improvements, and premium visual feedback during the connection phase.
+
+---
+
+### 🚀 New Features & Enhancements
+
+* **🛑 Host Connection Cancellation Support**
+  - Added a dedicated red **"Cancel"** button to the "Host LAN World" panel in both the main launcher UI and the in-game overlay.
+  - Allows you to immediately abort the process if the `frpc` download hangs or if the tunnel takes too long to connect.
+  - Automatically aborts active HTTP/HTTPS file download streams (`ensure-frpc` requests) or terminates the spawned Fast Reverse Proxy client process instantly in the background.
+  - Intelligently suppresses generic backend process exit error warning toasts during user-initiated cancellations for a polished, error-free experience.
+
+* **🌐 play.somniac.me VPS Integration**
+  - Updated all connection, API, and presence reporting endpoints to use the new `play.somniac.me` domain (instead of `api.somniac.me` or `somniac.me`), ensuring faster and more stable proxy routing.
+
+* **🎨 Live Download Progress in In-Game Overlay**
+  - Integrated a progress listener into the in-game overlay that updates the disabled SHARE button dynamically with status and percentages (e.g., `DOWNLOADING FRPC... (42%)`), giving immediate visual feedback without cluttered UI layouts.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.3.0-preview.26w21c`
+* **Release Channel:** Preview / Unstable Release
+* **Platform:** Windows, macOS, Linux
+
+---
+
+## 🎮 IDK Launcher v1.3.0-preview.26w21a Changelog
+
+Welcome to the Minecraft snapshot style unstable preview revision **v1.3.0-preview.26w21a**! This massive update introduces a completely redesigned Modular Feature-Based Architecture, a comprehensive Version Mods Management system, advanced performance optimizations, and crash analysis tools.
+
+---
+
+### 🚀 New Features & Enhancements
+
+* **📂 Version Mods Management System**
+  - Added a **"Manage Mods"** option to downloaded Minecraft versions directly from the Play view.
+  - Integrated downloaded versions into the sidebar, allowing you to manage mods, resource packs, and shaders per version just like modpacks.
+  - Added per-version settings (custom loader, JVM arguments, and window size configuration) persisting in local storage.
+  - Automatically scans and detects version loaders (Fabric, Forge, NeoForge, Quilt, Vanilla) from folder structures.
+
+* **⚙️ Redesigned Modular Architecture**
+  - Refactored the core launcher into a robust, feature-based modular system under `src/features/`.
+  - Improved application maintainability, cleaner code organization, and decoupled feature states.
+
+* **⚡ Performance & Memory Optimizations**
+  - **Asset Caching & CPU Tuning**: Optimized rendering flows and CPU load.
+  - **Memory Management**: Implemented renderer memory destruction via `about:blank` transitions and V8 Garbage Collection to free up RAM.
+  - **UI Offloading**: Delegated heavy tasks away from the main thread for smooth UX interactions.
+  - Scrubbed and corrected style.css UTF-16 null byte formatting errors.
+
+* **🛡️ Crash Analyzer & Mod Updates**
+  - **Crash Report Parser**: Injected a crash analysis helper to detect missing dependencies and runtime exceptions.
+  - **Mod Updates Integration**: Automatically scans for update availability from Modrinth and CurseForge.
+  - **Auto-Dependency Installer**: One-click installer for downloading missing dependencies.
+
+* **🖥️ Borderless Fullscreen Overlay & Window Control Improvements**
+  - Implemented borderless fullscreen overlay mode along with customizable overlay toggles.
+  - Enhanced window resizing, maximizing, minimizing, and closing controls in the Electron main process.
+  - Auto-hide launcher window during gameplay and automatically restore it on exit.
+
+---
+
+### 🔧 Fixes & Stability
+
+* **📁 Modpack Deletion & File Scans**
+  - Added recursive local folder purging upon deleting modpacks with multi-attempt fail-safe strategy.
+  - Fixed issues where modpack profiles were not correctly loaded after reset.
+* **📦 Parallel Downloader Queue**
+  - Added a download queue manager with concurrency limiting, integrity verification, and performance monitoring.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.3.0-preview.26w21a`
+* **Release Channel:** Preview / Unstable Release
+* **Platform:** Windows, macOS, Linux
+
+---
+
 ## 🎮 IDK Launcher v1.3.0 Changelog
 
 Hello everyone! The stable release **v1.3.0** is officially here! This major update elevates the launcher to the next level by introducing integrated P2P multiplayer connectivity, local modpack archiving management (Import/Export), and extensive modpack compatibility enhancements.

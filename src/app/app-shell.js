@@ -805,20 +805,21 @@ export function renderAppShell() {
           <div class="friends-share-input-row" id="friends-share-input-row">
             <input type="number" class="clean-input" id="friends-share-port" placeholder="LAN Port (e.g. 54321)" min="1024" max="65535" />
             <button class="friends-share-btn" id="btn-friends-share">Share</button>
+            <button class="friends-share-btn stop-sharing" id="btn-friends-share-cancel" style="display:none;">Cancel</button>
           </div>
 
           <div class="friends-share-tunnel-link" id="friends-share-tunnel-link" style="display:none;" title="Click to copy IP address">
             tcp://...
           </div>
 
-          <!-- Cloudflared Downloader Progress Panel -->
-          <div id="cloudflared-progress-panel" style="display:none;">
+          <!-- FRPC Downloader Progress Panel -->
+          <div id="frpc-progress-panel" style="display:none;">
             <div style="font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between;margin-bottom:2px;">
-              <span id="cloudflared-status-text">Downloading Cloudflared...</span>
-              <span id="cloudflared-percent-text">0%</span>
+              <span id="frpc-status-text">Downloading FRPC...</span>
+              <span id="frpc-percent-text">0%</span>
             </div>
-            <div class="cloudflared-progress-bar">
-              <div class="cloudflared-progress-fill" id="cloudflared-progress-fill"></div>
+            <div class="frpc-progress-bar">
+              <div class="frpc-progress-fill" id="frpc-progress-fill"></div>
             </div>
           </div>
         </div>

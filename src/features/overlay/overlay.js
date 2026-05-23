@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const overlayTunnelLink = document.getElementById('overlay-tunnel-link');
   const inputSharePort = document.getElementById('lan-port-input');
   const btnShare = document.getElementById('btn-lan-share');
+  const btnShareCancel = document.getElementById('btn-lan-share-cancel');
+  let isCancellingHost = false;
 
   // Add Friend
   const inputAddFriend = document.getElementById('friends-add-username');
@@ -30,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const requestsList = document.getElementById('requests-list');
 
   // State
-  let IDK_BACKEND_URL = 'https://api.somniac.me';
+  let IDK_BACKEND_URL = 'https://play.somniac.me';
   let idkToken = localStorage.getItem('idk_connect_token') || '';
   let idkUser = JSON.parse(localStorage.getItem('idk_connect_user') || 'null');
   
@@ -129,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       await stopSharingTunnel();
     }
     if (window.electronAPI) {
-      window.electronAPI.stopCloudflaredAccess();
+      // window.electronAPI.stopCloudflaredAccess(); // No longer needed
     }
     
     localStorage.removeItem('idk_connect_token');
@@ -357,12 +359,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    isCancellingHost = false;
     btnShare.disabled = true;
     btnShare.innerText = 'STARTING...';
+    btnShareCancel.style.display = 'inline-flex';
+    btnShareCancel.innerText = 'CANCEL';
+    btnShareCancel.disabled = false;
 
     if (!window.electronAPI) {
       // Mock for development in browser
       setTimeout(() => {
+        if (isCancellingHost) return;
         activeTunnelUrl = `tcp://mock-tunnel-${Math.random().toString(36).substring(3, 8)}.trycloudflare.com:54321`;
         activeSharePort = portVal;
         renderSharingActive();
@@ -375,10 +382,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-      const cfStatus = await window.electronAPI.ensureCloudflared();
-      if (!cfStatus.success) throw new Error(cfStatus.error || "Failed to download cloudflared");
+      const cfStatus = await window.electronAPI.ensureFrpc();
+      if (!cfStatus.success) throw new Error(cfStatus.error || "Failed to download frpc");
 
-      const tunnelStatus = await window.electronAPI.startCloudflaredTunnel(portVal);
+      const tunnelStatus = await window.electronAPI.startFrpcTunnel(portVal);
       if (!tunnelStatus.success) throw new Error(tunnelStatus.error || "Failed to start tunnel");
 
       activeTunnelUrl = tunnelStatus.url;
@@ -389,10 +396,33 @@ document.addEventListener('DOMContentLoaded', async () => {
       await sendPresenceHeartbeat();
       showToast("LAN world shared! IP copied to clipboard.");
     } catch (err) {
-      showToast(`Tunnel Error: ${err.message}`, 'error');
+      if (!isCancellingHost) {
+        showToast(`Tunnel Error: ${err.message}`, 'error');
+      }
       btnShare.innerText = 'SHARE';
     } finally {
       btnShare.disabled = false;
+      btnShareCancel.style.display = 'none';
+    }
+  });
+
+  // Cancel sharing tunnel connection/download
+  btnShareCancel.addEventListener('click', async () => {
+    btnShareCancel.disabled = true;
+    btnShareCancel.innerText = 'CANCELLING...';
+    isCancellingHost = true;
+    try {
+      if (window.electronAPI) {
+        await window.electronAPI.stopFrpcTunnel();
+      }
+    } catch (err) {
+      console.error('[Overlay] Failed to cancel host:', err);
+    } finally {
+      btnShareCancel.disabled = false;
+      btnShareCancel.innerText = 'CANCEL';
+      btnShareCancel.style.display = 'none';
+      btnShare.disabled = false;
+      btnShare.innerText = 'SHARE';
     }
   });
 
@@ -401,7 +431,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnShare.innerText = 'STOPPING...';
     try {
       if (window.electronAPI) {
-        await window.electronAPI.stopCloudflaredTunnel();
+        await window.electronAPI.stopFrpcTunnel();
       }
       activeTunnelUrl = null;
       activeSharePort = null;
@@ -444,9 +474,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let connectAddressText;
     if (friend.cloudflaredUrl.startsWith('https://')) {
       connectAddressText = '127.0.0.1:25565';
-      if (window.electronAPI) {
-        window.electronAPI.startCloudflaredAccess(friend.cloudflaredUrl, 25565);
-      }
+      showToast("Legacy HTTPS tunnels are no longer supported. Please ask your friend to update their launcher.");
     } else {
       connectAddressText = friend.cloudflaredUrl.replace('tcp://', '');
     }
@@ -457,13 +485,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- ELECTRON EVENT LISTENERS ---
   if (window.electronAPI) {
-    window.electronAPI.onCloudflaredTunnelClosed(() => {
+    window.electronAPI.onFrpcTunnelClosed(() => {
       if (activeTunnelUrl) {
         activeTunnelUrl = null;
         activeSharePort = null;
         renderSharingInactive();
         sendPresenceHeartbeat();
         showToast("Tunnel connection closed unexpectedly.", 'error');
+      }
+    });
+
+    window.electronAPI.onFrpcInstallProgress((data) => {
+      if (!activeTunnelUrl && btnShare.disabled) {
+        btnShare.innerText = `${data.status.toUpperCase()} (${data.percent}%)`;
       }
     });
 

@@ -2397,21 +2397,22 @@ function installSodium(version, profilePath) {
 }
 
 // ============================================================
-// === CLOUDFLARED TUNNEL MULTIPLAYER SYSTEM ===================
+// === FRPC TUNNEL MULTIPLAYER SYSTEM =========================
 // ============================================================
 let activeTunnelProcess = null;
+let activeDownloadRequest = null;
 
-ipcMain.handle('ensure-cloudflared', async (event) => {
+ipcMain.handle('ensure-frpc', async (event) => {
   const binDir = path.join(app.getPath('userData'), 'bin');
   if (!fs.existsSync(binDir)) fs.mkdirSync(binDir, { recursive: true });
-  const exePath = path.join(binDir, 'cloudflared.exe');
+  const exePath = path.join(binDir, 'frpc.exe');
 
   if (fs.existsSync(exePath) && fs.statSync(exePath).size > 0) {
     return { success: true, path: exePath };
   }
 
-  const url = 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe';
-  event.sender.send('cloudflared-install-progress', { status: 'Downloading cloudflared.exe...', percent: 0 });
+  const url = 'https://github.com/fatedier/frp/releases/download/v0.56.0/frp_0.56.0_windows_amd64.zip';
+  event.sender.send('frpc-install-progress', { status: 'Downloading frpc...', percent: 0 });
 
   return new Promise((resolve) => {
     function download(downloadUrl, redirectCount = 0) {
@@ -2419,70 +2420,104 @@ ipcMain.handle('ensure-cloudflared', async (event) => {
         return resolve({ success: false, error: 'Too many redirects' });
       }
 
-      https.get(downloadUrl, (res) => {
+      const req = https.get(downloadUrl, (res) => {
         if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
           const nextUrl = res.headers.location;
           if (!nextUrl) {
+            activeDownloadRequest = null;
             return resolve({ success: false, error: 'Redirect location missing' });
           }
           return download(nextUrl, redirectCount + 1);
         }
 
         if (res.statusCode !== 200) {
+          activeDownloadRequest = null;
           return resolve({ success: false, error: 'Status ' + res.statusCode });
         }
 
         const total = parseInt(res.headers['content-length'] || '0', 10);
-        const file = fs.createWriteStream(exePath);
+        const buffers = [];
         let downloadedBytes = 0;
 
         res.on('data', (chunk) => {
+          buffers.push(chunk);
           downloadedBytes += chunk.length;
           if (total > 0) {
             const percent = Math.round((downloadedBytes / total) * 100);
-            event.sender.send('cloudflared-install-progress', { status: 'Downloading cloudflared...', percent });
+            event.sender.send('frpc-install-progress', { status: 'Downloading frpc...', percent });
           }
         });
 
-        res.pipe(file);
-
-        file.on('finish', () => {
-          file.close();
-          resolve({ success: true, path: exePath });
+        res.on('end', async () => {
+          activeDownloadRequest = null;
+          try {
+            event.sender.send('frpc-install-progress', { status: 'Extracting frpc.exe...', percent: 100 });
+            const zipBuffer = Buffer.concat(buffers);
+            const JSZip = require('jszip');
+            const zip = await JSZip.loadAsync(zipBuffer);
+            
+            // Find frpc.exe in the zip
+            const frpcEntry = Object.values(zip.files).find(file => file.name.endsWith('frpc.exe'));
+            if (!frpcEntry) {
+              throw new Error('frpc.exe not found in downloaded zip');
+            }
+            
+            const exeBuffer = await frpcEntry.async('nodebuffer');
+            fs.writeFileSync(exePath, exeBuffer);
+            resolve({ success: true, path: exePath });
+          } catch (err) {
+            resolve({ success: false, error: 'Failed to extract frpc: ' + err.message });
+          }
         });
 
-        file.on('error', (e) => {
-          fs.unlink(exePath, () => { });
+        res.on('error', (e) => {
+          activeDownloadRequest = null;
           resolve({ success: false, error: e.message });
         });
       }).on('error', (e) => {
+        activeDownloadRequest = null;
         resolve({ success: false, error: e.message });
       });
+
+      activeDownloadRequest = req;
     }
 
     download(url);
   });
 });
 
-ipcMain.handle('start-cloudflared-tunnel', async (event, { port }) => {
+ipcMain.handle('start-frpc-tunnel', async (event, { port }) => {
   if (activeTunnelProcess) {
     try { activeTunnelProcess.kill(); } catch (e) { }
     activeTunnelProcess = null;
   }
 
   const binDir = path.join(app.getPath('userData'), 'bin');
-  const exePath = path.join(binDir, 'cloudflared.exe');
+  const exePath = path.join(binDir, 'frpc.exe');
 
   if (!fs.existsSync(exePath)) {
-    return { success: false, error: 'cloudflared.exe is not installed' };
+    return { success: false, error: 'frpc.exe is not installed' };
   }
 
   return new Promise((resolve) => {
     const { spawn } = require('child_process');
-    console.log(`[Cloudflared] Starting tunnel on port tcp://localhost:${port}`);
+    
+    // Generate a random remote port between 10000 and 65000
+    const remotePort = Math.floor(Math.random() * (65000 - 10000 + 1)) + 10000;
+    const proxyName = 'idk_proxy_' + Math.random().toString(36).substring(2, 10);
+    
+    console.log(`[FRPC] Starting tunnel on local tcp://127.0.0.1:${port} to remote play.somniac.me:${remotePort}`);
 
-    // Spawn cloudflared to forward TCP traffic
-    const proc = spawn(exePath, ['tunnel', '--url', `tcp://127.0.0.1:${port}`]);
+    const proc = spawn(exePath, [
+      'tcp', 
+      '-s', 'play.somniac.me', 
+      '-P', '7000', 
+      '-t', 'indkingdomisalive', 
+      '-l', port.toString(), 
+      '-r', remotePort.toString(), 
+      '-n', proxyName
+    ]);
+    
     activeTunnelProcess = proc;
 
     let resolved = false;
@@ -2490,37 +2525,36 @@ ipcMain.handle('start-cloudflared-tunnel', async (event, { port }) => {
 
     const handleLogData = (data, source) => {
       const line = data.toString();
-      console.log(`[Cloudflared ${source}]`, line.trim());
+      console.log(`[FRPC ${source}]`, line.trim());
+      logBuffer += line;
 
-      // Strip ANSI escape sequences (colors, formatting) to prevent regex matching failures
-      const cleanLine = line.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
-      logBuffer += cleanLine;
-
-      // Scan for the trycloudflare URL (both HTTPS and TCP quick tunnels)
-      const match = logBuffer.match(/(https|tcp):\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.trycloudflare\.com(:[0-9]{1,5})?/);
-      if (match && !resolved) {
+      // Scan for successful start
+      if (line.includes('start proxy success') && !resolved) {
         resolved = true;
-        const tunnelUrl = match[0];
-        console.log(`[Cloudflared] Tunnel successfully established: ${tunnelUrl}`);
+        const tunnelUrl = `tcp://play.somniac.me:${remotePort}`;
+        console.log(`[FRPC] Tunnel successfully established: ${tunnelUrl}`);
         resolve({ success: true, url: tunnelUrl });
+      }
+      
+      // Check for port already used
+      if (line.includes('port already used') && !resolved) {
+        resolved = true;
+        resolve({ success: false, error: 'Port collision', retry: true });
       }
     };
 
-    proc.stderr.on('data', (data) => handleLogData(data, 'Output'));
+    proc.stderr.on('data', (data) => handleLogData(data, 'Stderr'));
     proc.stdout.on('data', (data) => handleLogData(data, 'Stdout'));
 
     proc.on('close', (code) => {
-      console.log(`[Cloudflared] Process exited with code ${code}`);
+      console.log(`[FRPC] Process exited with code ${code}`);
       activeTunnelProcess = null;
       if (!resolved) {
-        const lines = logBuffer.split('\n').map(l => l.trim()).filter(Boolean);
-        const lastErrorLine = lines[lines.length - 1] || 'Check if the port is correct or another process is running on it.';
-        resolve({ success: false, error: `Cloudflared exited (code ${code}): ${lastErrorLine}` });
+        resolve({ success: false, error: `FRPC exited with code ${code}` });
       }
-      event.sender.send('cloudflared-tunnel-closed');
+      event.sender.send('frpc-tunnel-closed');
     });
 
-    // Timeout if tunnel is not established in 20 seconds
     setTimeout(() => {
       if (!resolved) {
         resolved = true;
@@ -2532,74 +2566,24 @@ ipcMain.handle('start-cloudflared-tunnel', async (event, { port }) => {
   });
 });
 
-ipcMain.handle('stop-cloudflared-tunnel', async () => {
+ipcMain.handle('stop-frpc-tunnel', async () => {
+  let stopped = false;
+  if (activeDownloadRequest) {
+    console.log('[FRPC] Aborting active download...');
+    try { activeDownloadRequest.destroy(); } catch (e) {}
+    activeDownloadRequest = null;
+    stopped = true;
+  }
   if (activeTunnelProcess) {
-    console.log('[Cloudflared] Stopping active tunnel...');
+    console.log('[FRPC] Stopping active tunnel...');
     try { activeTunnelProcess.kill(); } catch (e) { }
     activeTunnelProcess = null;
+    stopped = true;
+  }
+  if (stopped) {
     return { success: true };
   }
-  return { success: false, error: 'No active tunnel running' };
-});
-
-let activeAccessProcess = null;
-
-ipcMain.handle('start-cloudflared-access', async (event, { url, localPort }) => {
-  if (activeAccessProcess) {
-    try { activeAccessProcess.kill(); } catch (e) { }
-    activeAccessProcess = null;
-  }
-
-  const binDir = path.join(app.getPath('userData'), 'bin');
-  const exePath = path.join(binDir, 'cloudflared.exe');
-
-  if (!fs.existsSync(exePath)) {
-    return { success: false, error: 'cloudflared.exe is not installed' };
-  }
-
-  return new Promise((resolve) => {
-    const { spawn } = require('child_process');
-    console.log(`[Cloudflared Access] Mapping ${url} to local port tcp://127.0.0.1:${localPort}`);
-
-    // Spawn cloudflared in client access mode
-    const proc = spawn(exePath, ['access', 'tcp', '--listener', `127.0.0.1:${localPort}`, '--hostname', url]);
-    activeAccessProcess = proc;
-
-    let established = false;
-
-    proc.stderr.on('data', (data) => {
-      const line = data.toString();
-      console.log('[Cloudflared Access Output]', line.trim());
-    });
-
-    // Assume success after 1.5 seconds if the process hasn't exited
-    const timer = setTimeout(() => {
-      if (!established) {
-        established = true;
-        resolve({ success: true });
-      }
-    }, 1500);
-
-    proc.on('close', (code) => {
-      console.log(`[Cloudflared Access] Process exited with code ${code}`);
-      activeAccessProcess = null;
-      clearTimeout(timer);
-      if (!established) {
-        resolve({ success: false, error: `Process exited with code ${code}` });
-      }
-      event.sender.send('cloudflared-access-closed');
-    });
-  });
-});
-
-ipcMain.handle('stop-cloudflared-access', async () => {
-  if (activeAccessProcess) {
-    console.log('[Cloudflared Access] Stopping active client-side bridge...');
-    try { activeAccessProcess.kill(); } catch (e) { }
-    activeAccessProcess = null;
-    return { success: true };
-  }
-  return { success: false, error: 'No active access bridge running' };
+  return { success: false, error: 'No active tunnel or download running' };
 });
 
 // Get userData path for frontend

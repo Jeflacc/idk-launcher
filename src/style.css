@@ -3384,7 +3384,7 @@ input[type="checkbox"]:checked + .switch::after {
     color: #ef4444;
 }
 
-/* Share LAN/Port cloudflared controls */
+/* Share LAN/Port frpc controls */
 .friends-share-card {
     background: rgba(60, 133, 39, 0.03);
     border: 1px solid rgba(60, 133, 39, 0.15);
@@ -3500,8 +3500,8 @@ input[type="checkbox"]:checked + .switch::after {
     border-color: #4cb837;
 }
 
-/* Download progress bar for cloudflared */
-.cloudflared-progress-bar {
+/* Download progress bar for frpc */
+.frpc-progress-bar {
     height: 4px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 2px;
@@ -3510,7 +3510,7 @@ input[type="checkbox"]:checked + .switch::after {
     margin-top: 4px;
 }
 
-.cloudflared-progress-fill {
+.frpc-progress-fill {
     height: 100%;
     background: var(--accent-green-hover);
     width: 0%;
