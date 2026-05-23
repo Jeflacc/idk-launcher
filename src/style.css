@@ -3509,10 +3509,10 @@ input[type="checkbox"]:checked + .switch::after {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .top-bar {
-    height: 56px;
-    padding: 0 12px;
+    height: 60px;
+    padding: 0 16px;
   }
   
   .top-brand {
@@ -3527,36 +3527,29 @@ input[type="checkbox"]:checked + .switch::after {
     padding: 0 12px 12px;
     font-size: 12px;
   }
+
+  .user-details {
+    display: none !important;
+  }
+
+  .user-profile {
+    padding: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+  }
+
+  .user-profile-3d-wrap {
+    left: 50%;
+    transform: translateX(-50%);
+  }
   
   .main-hero-banner {
     height: 420px;
     padding: 20px;
   }
   
-  .main-hero-banner .bottom-bar {
-    height: 72px;
-    padding: 0 16px;
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .controls-left {
-    width: 100%;
-    gap: 8px;
-  }
-  
-  .custom-select-wrapper {
-    width: 100% !important;
-  }
-  
-  .controls-right {
-    width: 100%;
-  }
-  
-  .play-button {
-    width: 100%;
-  }
-  
+
   .details-content {
     padding: 32px 16px;
   }
