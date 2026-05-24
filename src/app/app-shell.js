@@ -867,6 +867,44 @@ export function renderAppShell() {
           </div>
         </div>
       </div>
+
+      <!-- CHAT PANEL (WHEN CHATTING WITH A FRIEND) -->
+      <div id="friends-chat-panel" class="friends-chat-panel" style="display:none; flex-direction:column; height: 100%;">
+        <!-- Chat Header -->
+        <div class="friends-chat-header">
+          <button class="friends-chat-back" id="btn-friends-chat-back" title="Back to Friends List">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </button>
+          <div class="friends-chat-info">
+            <div class="friend-avatar" style="width:24px;height:24px;">
+              <canvas id="friends-chat-avatar" width="24" height="24" style="image-rendering:pixelated;width:100%;height:100%;"></canvas>
+            </div>
+            <div class="friend-info">
+              <strong id="friends-chat-name" style="font-size:12.5px;">Friend Name</strong>
+              <span id="friends-chat-status" class="friend-status-text" style="font-size:9px;">Online</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scrollable Messages Area -->
+        <div id="friends-chat-messages" class="friends-chat-messages">
+          <!-- Dynamically populated messages -->
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="friends-chat-input-row">
+          <input type="text" class="clean-input" id="friends-chat-input" placeholder="Type a message..." maxlength="500" />
+          <button class="friends-chat-send-btn" id="btn-friends-chat-send" title="Send Message">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

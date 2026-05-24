@@ -64,6 +64,21 @@ export function initFriendsFeature() {
     const btnAddFriend = document.getElementById("btn-friends-add");
     const friendsList = document.getElementById("friends-list");
 
+    // Chat Variables
+    let activeChatFriendId = null;
+    let activeChatFriendUsername = null;
+    let chatPollInterval = null;
+
+    // Chat DOM Elements
+    const chatPanel = document.getElementById("friends-chat-panel");
+    const btnFriendsChatBack = document.getElementById("btn-friends-chat-back");
+    const chatAvatarCanvas = document.getElementById("friends-chat-avatar");
+    const chatNameLabel = document.getElementById("friends-chat-name");
+    const chatStatusLabel = document.getElementById("friends-chat-status");
+    const chatMessagesContainer = document.getElementById("friends-chat-messages");
+    const chatInput = document.getElementById("friends-chat-input");
+    const btnFriendsChatSend = document.getElementById("btn-friends-chat-send");
+
     // --- SIDEBAR TOGGLE ---
     if (btnToggleSidebar) {
       btnToggleSidebar.addEventListener("click", (e) => {
@@ -75,6 +90,8 @@ export function initFriendsFeature() {
         );
         if (sidebar.classList.contains("active")) {
           refreshFriendsData();
+        } else {
+          exitChat();
         }
       });
     }
@@ -83,6 +100,7 @@ export function initFriendsFeature() {
       btnCloseSidebar.addEventListener("click", () => {
         sidebar.classList.remove("active");
         btnToggleSidebar.classList.remove("active");
+        exitChat();
       });
     }
 
@@ -97,6 +115,7 @@ export function initFriendsFeature() {
       ) {
         sidebar.classList.remove("active");
         btnToggleSidebar.classList.remove("active");
+        exitChat();
       }
     });
 
@@ -204,6 +223,7 @@ export function initFriendsFeature() {
         authPanel.style.display = "block";
         mainPanel.style.display = "none";
         stopHeartbeats();
+        exitChat();
       }
     }
 
@@ -656,6 +676,10 @@ export function initFriendsFeature() {
           statusClass = "online";
         }
 
+        const badgeHtml = (friend.unreadCount && friend.unreadCount > 0)
+          ? `<div class="friend-unread-badge">${friend.unreadCount}</div>`
+          : "";
+
         card.innerHTML = `
         <div class="friend-card-left">
           <div class="friend-avatar ${isOnline ? "online" : ""}">
@@ -670,6 +694,7 @@ export function initFriendsFeature() {
           </div>
         </div>
         <div class="friend-card-right">
+          ${badgeHtml}
           ${isHosting ? `<button class="friend-join-btn" title="Join Friend's LAN game!">JOIN</button>` : ""}
           <button class="friend-remove-btn" title="Unfriend" data-id="${friend.id}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="17" y1="11" x2="23" y2="11"></line></svg>
@@ -680,8 +705,13 @@ export function initFriendsFeature() {
         // Render canvas face async
         const canvas = card.querySelector(`#friend-avatar-${friend.id}`);
         if (canvas) {
-          renderSkinFaceOnFriendsCanvas(canvas, friend.username);
+          loadAvatarForUser(canvas, friend.username, "elyby");
         }
+
+        // Hook Enter Chat on left click
+        card.querySelector(".friend-card-left").onclick = () => {
+          enterChat(friend);
+        };
 
         // Hook Remove Friend
         card.querySelector(".friend-remove-btn").onclick = async (e) => {
@@ -704,8 +734,10 @@ export function initFriendsFeature() {
 
         // Hook Join World
         if (isHosting) {
-          card.querySelector(".friend-join-btn").onclick = () =>
+          card.querySelector(".friend-join-btn").onclick = (e) => {
+            e.stopPropagation();
             joinFriendWorld(friend);
+          };
         }
 
         friendsList.appendChild(card);
@@ -832,6 +864,165 @@ export function initFriendsFeature() {
       setTimeout(() => {
         actions.playGame?.();
       }, 800);
+    }
+
+    // --- DIRECT MESSAGING / CHAT SYSTEM ---
+    async function enterChat(friend) {
+      activeChatFriendId = friend.id;
+      activeChatFriendUsername = friend.username;
+
+      // Update UI Views
+      mainPanel.style.display = "none";
+      chatPanel.style.display = "flex";
+
+      // Set friend details in header
+      chatNameLabel.innerText = friend.username;
+
+      const isOnline = friend.status !== "offline";
+      const isHosting = !!friend.cloudflaredUrl;
+      const isPlaying = !!friend.playingVersion && !isHosting;
+      let statusText = "Offline";
+      let statusClass = "";
+      if (isHosting) {
+        statusText = `Hosting ${friend.playingVersion || ""}`;
+        statusClass = "hosting";
+      } else if (isPlaying) {
+        statusText = `Playing ${friend.playingVersion}`;
+        statusClass = "playing";
+      } else if (isOnline) {
+        statusText = "Online";
+        statusClass = "online";
+      }
+
+      chatStatusLabel.innerHTML = `
+        <span class="friend-status-dot ${isOnline ? "online" : ""}"></span>
+        ${statusText}
+      `;
+      chatStatusLabel.className = `friend-status-text ${statusClass}`;
+
+      // Load avatar
+      loadAvatarForUser(chatAvatarCanvas, friend.username, "elyby");
+
+      // Load messages initially
+      chatMessagesContainer.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:11px;padding:20px 0;">Loading chat history...</div>';
+      await loadChatMessages(true);
+
+      // Start message polling every 3 seconds
+      if (chatPollInterval) clearInterval(chatPollInterval);
+      chatPollInterval = setInterval(() => loadChatMessages(false), 3000);
+    }
+
+    function exitChat() {
+      if (chatPollInterval) {
+        clearInterval(chatPollInterval);
+        chatPollInterval = null;
+      }
+      activeChatFriendId = null;
+      activeChatFriendUsername = null;
+
+      chatPanel.style.display = "none";
+      if (idkToken && idkUser) {
+        mainPanel.style.display = "block";
+        refreshFriendsData(); // Refresh friends list to clear unread counts instantly
+      }
+    }
+
+    let lastMessagesJson = "";
+    async function loadChatMessages(isInitial = false) {
+      if (!idkToken || !activeChatFriendId) return;
+
+      try {
+        const res = await idkRequest(`/api/messages/${activeChatFriendId}`);
+        const messages = res.messages || [];
+
+        // Check if messages actually changed to avoid unnecessary re-rendering
+        const currentJson = JSON.stringify(messages);
+        if (currentJson === lastMessagesJson && !isInitial) {
+          return;
+        }
+        lastMessagesJson = currentJson;
+
+        const shouldScroll = isInitial || (chatMessagesContainer.scrollHeight - chatMessagesContainer.scrollTop - chatMessagesContainer.clientHeight < 60);
+
+        if (messages.length === 0) {
+          chatMessagesContainer.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:11px;padding:20px 0;">No messages yet. Say hello!</div>';
+          return;
+        }
+
+        chatMessagesContainer.innerHTML = "";
+        messages.forEach(msg => {
+          const isMe = msg.senderId === idkUser.id;
+          const msgRow = document.createElement("div");
+          msgRow.className = `chat-message-row ${isMe ? "me" : "friend"}`;
+
+          // Format timestamp
+          const date = new Date(msg.timestamp);
+          const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          msgRow.innerHTML = `
+            <div class="chat-message-bubble">${escapeHtml(msg.text)}</div>
+            <div class="chat-message-time">${timeStr}</div>
+          `;
+          chatMessagesContainer.appendChild(msgRow);
+        });
+
+        if (shouldScroll) {
+          chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        }
+      } catch (err) {
+        console.warn("[Chat] Failed to load messages", err.message);
+      }
+    }
+
+    async function handleSendMessage() {
+      const text = chatInput.value.trim();
+      if (!text || !activeChatFriendId) return;
+
+      chatInput.value = "";
+      chatInput.focus();
+
+      // Optimistic locally rendered bubble for premium instant feedback feel
+      const msgRow = document.createElement("div");
+      msgRow.className = "chat-message-row me";
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      msgRow.innerHTML = `
+        <div class="chat-message-bubble">${escapeHtml(text)}</div>
+        <div class="chat-message-time">${timeStr}</div>
+      `;
+      chatMessagesContainer.appendChild(msgRow);
+      chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+
+      try {
+        await idkRequest(`/api/messages/${activeChatFriendId}`, "POST", { text });
+        // Refresh messages to sync IDs and states
+        loadChatMessages(false);
+      } catch (err) {
+        actions.showWarningToast(err.message);
+      }
+    }
+
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Hook DOM Event Listeners for Chat Panel
+    if (btnFriendsChatBack) {
+      btnFriendsChatBack.addEventListener("click", exitChat);
+    }
+    if (btnFriendsChatSend) {
+      btnFriendsChatSend.addEventListener("click", handleSendMessage);
+    }
+    if (chatInput) {
+      chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleSendMessage();
+      });
     }
 
     // --- INITIAL CHECK ---
