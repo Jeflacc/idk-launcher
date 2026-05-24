@@ -1,5 +1,60 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.4.0-preview.26w21e Changelog
+
+Welcome to the hotfix preview revision **v1.4.0-preview.26w21e**! This is a critical build fix that resolves a crash on startup introduced in the previous preview build.
+
+---
+
+### 🔧 Fixes
+
+* **🛠️ Critical Startup Crash Fix — Missing Backend Modules**
+  - Fixed a startup crash (`Error: Cannot find module './src/backend/achievements-scanner.cjs'`) that occurred in all installed preview builds.
+  - Root cause: `src/backend/` was not included in the `electron-builder` file packaging list, causing all backend `.cjs` modules (`achievements-scanner`, `download-queue-manager`, `integrity-verifier`, `settings-manager`) to be stripped from the `.asar` bundle.
+  - Also ensured `image-worker.cjs` is correctly packaged alongside the main process.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.4.0-preview.26w21e`
+* **Release Channel:** Preview / Hotfix Release
+* **Platform:** Windows, macOS, Linux
+
+---
+
+## 🎮 IDK Launcher v1.4.0-preview.26w21d Changelog
+
+Welcome to the Minecraft snapshot style unstable preview revision **v1.4.0-preview.26w21d**! This update introduces a setting to hide the launcher during gameplay, direct messaging in IDK Connect, near-instant version launching, and unified character skin rendering.
+
+---
+
+### 🚀 New Features & Enhancements
+
+* **👥 Direct Messaging / Chat in IDK Connect**
+  - Left-clicking any friend in the sidebar opens a Direct Message chat view.
+  - Interactive speech bubbles, message polling (every 3 seconds), and automatic bottom scrolling.
+  - Friends list items now display green unread count notification badges when new messages arrive.
+  - Fully integrated with the `idk-backend` storage layer.
+
+* **⚙️ "Hide Launcher on Launch" Option**
+  - Added a toggle setting to hide/minimize the launcher window while Minecraft is running to conserve system memory and CPU.
+  - Re-opens the launcher page seamlessly upon exiting the game.
+
+* **⚡ Near-Instant Game Launching**
+  - Bypasses file integrity checksum validation for version files that are already present on disk before launch, significantly speeding up Minecraft loading times.
+
+* **🎨 Unified Character Skin Rendering**
+  - Fixed avatar rendering issues and username casing inconsistencies between IDK Connect profiles and in-game overlays.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.4.0-preview.26w21d`
+* **Release Channel:** Preview / Unstable Release
+* **Platform:** Windows, macOS, Linux
+
+---
+
 ## 🎮 IDK Launcher v1.3.0-preview.26w21c Changelog
 
 Welcome to the Minecraft snapshot style unstable preview revision **v1.3.0-preview.26w21c**! This update introduces host cancellation support, VPS connection improvements, and premium visual feedback during the connection phase.

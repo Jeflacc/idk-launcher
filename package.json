@@ -62,10 +62,12 @@
       "dist/**/*",
       "electron-main.cjs",
       "preload.cjs",
+      "image-worker.cjs",
       "splash.html",
       "overlay.html",
       "logo.png",
-      "public/**/*"
+      "public/**/*",
+      "src/backend/**/*"
     ]
   },
   "devDependencies": {
