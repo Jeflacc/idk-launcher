@@ -168,7 +168,10 @@ export function initFriendsFeature() {
           img.src = `https://minotar.net/skin/${username}`;
         } else {
           // Draw standard letter avatar
-          ctx.fillStyle = "#16a34a";
+          const accentDark = getComputedStyle(document.documentElement)
+            .getPropertyValue("--theme-accent-dark")
+            .trim();
+          ctx.fillStyle = accentDark || "#16a34a";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.fillStyle = "white";
           ctx.font = "bold 12px Inter";

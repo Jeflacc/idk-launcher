@@ -227,7 +227,7 @@ export function formatAnalysis(analysis) {
       </div>
       
       <div style="margin-bottom: 16px;">
-        <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600; color: #4cb837; text-transform: uppercase; letter-spacing: 0.5px;">Suggestions</h4>
+        <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600; color: var(--theme-accent); text-transform: uppercase; letter-spacing: 0.5px;">Suggestions</h4>
         <ul style="margin: 0; padding-left: 20px; list-style: none;">
           ${analysis.suggestions.map(s => `<li style="margin-bottom: 6px; color: #d1d1d2; font-size: 12px;">&bull; ${s}</li>`).join('')}
         </ul>

@@ -1,68 +1,65 @@
-import './overlay.css';
-import { loadAvatarForUser } from '../../core/skin-texture.js';
+import "./overlay.css";
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const overlayContainer = document.getElementById('overlay-container');
-  const activePanel = document.getElementById('idk-active-panel');
-  const loggedOutPanel = document.getElementById('idk-logged-out');
+document.addEventListener("DOMContentLoaded", async () => {
+  const overlayContainer = document.getElementById("overlay-container");
+  const activePanel = document.getElementById("idk-active-panel");
+  const loggedOutPanel = document.getElementById("idk-logged-out");
 
   // Header & Close
-  const btnCloseOverlay = document.getElementById('btn-close-overlay');
+  const btnCloseOverlay = document.getElementById("btn-close-overlay");
 
   // Profile Card
-  const overlayUsername = document.getElementById('overlay-username');
-  const myAvatarCanvas = document.getElementById('overlay-avatar-canvas');
-  const btnLogout = document.getElementById('btn-logout');
+  const overlayUsername = document.getElementById("overlay-username");
+  const myAvatarCanvas = document.getElementById("overlay-avatar-canvas");
+  const btnLogout = document.getElementById("btn-logout");
 
   // LAN Sharing
-  const lanShareForm = document.getElementById('lan-share-form');
-  const lanActiveStatus = document.getElementById('lan-active-status');
-  const overlayTunnelLink = document.getElementById('overlay-tunnel-link');
-  const inputSharePort = document.getElementById('lan-port-input');
-  const btnShare = document.getElementById('btn-lan-share');
-  const btnShareCancel = document.getElementById('btn-lan-share-cancel');
+  const lanShareForm = document.getElementById("lan-share-form");
+  const lanActiveStatus = document.getElementById("lan-active-status");
+  const overlayTunnelLink = document.getElementById("overlay-tunnel-link");
+  const inputSharePort = document.getElementById("lan-port-input");
+  const btnShare = document.getElementById("btn-lan-share");
+  const btnShareCancel = document.getElementById("btn-lan-share-cancel");
   let isCancellingHost = false;
 
   // Add Friend
-  const inputAddFriend = document.getElementById('friends-add-username');
-  const btnAddFriend = document.getElementById('btn-friends-add');
+  const inputAddFriend = document.getElementById("friends-add-username");
+  const btnAddFriend = document.getElementById("btn-friends-add");
 
   // Lists
-  const friendsList = document.getElementById('friends-list');
-  const requestsSection = document.getElementById('requests-section');
-  const requestsList = document.getElementById('requests-list');
+  const friendsList = document.getElementById("friends-list");
+  const requestsSection = document.getElementById("requests-section");
+  const requestsList = document.getElementById("requests-list");
 
   // State
-  let IDK_BACKEND_URL = 'https://api.somniac.me';
-  let idkToken = localStorage.getItem('idk_connect_token') || '';
-  let idkUser = JSON.parse(localStorage.getItem('idk_connect_user') || 'null');
+  let IDK_BACKEND_URL = "https://play.somniac.me";
+  let idkToken = localStorage.getItem("idk_connect_token") || "";
+  let idkUser = JSON.parse(localStorage.getItem("idk_connect_user") || "null");
 
   let activeTunnelUrl = null;
   let activeSharePort = null;
   let presenceInterval = null;
   let refreshInterval = null;
-  let currentPlayingVersion = 'Vanilla';
-  let activeMcUsername = null;
-  let activeMcAuthMode = 'offline';
+  let currentPlayingVersion = "Vanilla";
 
   // --- TOAST NOTIFICATIONS ---
-  function showToast(message, type = 'info') {
-    const container = document.getElementById('toast-container');
+  function showToast(message, type = "info") {
+    const container = document.getElementById("toast-container");
     if (!container) return;
-    const toast = document.createElement('div');
+    const toast = document.createElement("div");
     toast.className = `toast ${type}`;
     toast.textContent = message;
     container.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => toast.classList.add("show"), 10);
     setTimeout(() => {
-      toast.classList.remove('show');
+      toast.classList.remove("show");
       setTimeout(() => toast.remove(), 300);
     }, 3000);
   }
 
   // --- AVATAR RENDERING HELPER ---
-  function renderSkinFace(canvas, username, authMode) {
-    const ctx = canvas.getContext('2d');
+  function renderSkinFace(canvas, username) {
+    const ctx = canvas.getContext("2d");
     const img = new Image();
 
     img.onload = () => {
@@ -70,9 +67,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingEnabled = false;
       // Face base
-      ctx.drawImage(img, 8 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(
+        img,
+        8 * scale,
+        8 * scale,
+        8 * scale,
+        8 * scale,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
       // Accessory layer
-      ctx.drawImage(img, 40 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(
+        img,
+        40 * scale,
+        8 * scale,
+        8 * scale,
+        8 * scale,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
     };
 
     let fallbackStage = 0;
@@ -81,59 +98,59 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (fallbackStage === 1) {
         img.src = `https://minotar.net/skin/${username}`;
       } else {
-        ctx.fillStyle = '#4cb837';
+        ctx.fillStyle = "#4cb837";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 16px Inter';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(username.substring(0, 2).toUpperCase(), canvas.width / 2, canvas.height / 2);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 16px Inter";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(
+          username.substring(0, 2).toUpperCase(),
+          canvas.width / 2,
+          canvas.height / 2,
+        );
       }
     };
 
-    if (authMode === 'offline') {
-      img.src = `https://minotar.net/skin/${username}`;
-    } else {
-      img.src = `https://skinsystem.ely.by/skins/${username}.png`;
-    }
+    img.src = `https://skinsystem.ely.by/skins/${username}.png`;
   }
 
   // --- API HELPER ---
-  async function idkRequest(endpoint, method = 'GET', body = null) {
-    const headers = { 'Content-Type': 'application/json' };
-    if (idkToken) headers['Authorization'] = `Bearer ${idkToken}`;
+  async function idkRequest(endpoint, method = "GET", body = null) {
+    const headers = { "Content-Type": "application/json" };
+    if (idkToken) headers["Authorization"] = `Bearer ${idkToken}`;
 
     const res = await fetch(`${IDK_BACKEND_URL}${endpoint}`, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : null
+      body: body ? JSON.stringify(body) : null,
     });
 
     const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Request failed');
+    if (!res.ok) throw new Error(json.error || "Request failed");
     return json;
   }
 
   // --- AUTH UI SYNC ---
   function updateAuthUI() {
-    idkToken = localStorage.getItem('idk_connect_token') || '';
-    idkUser = JSON.parse(localStorage.getItem('idk_connect_user') || 'null');
+    idkToken = localStorage.getItem("idk_connect_token") || "";
+    idkUser = JSON.parse(localStorage.getItem("idk_connect_user") || "null");
 
     if (idkToken && idkUser) {
-      loggedOutPanel.style.display = 'none';
-      activePanel.style.display = 'block';
+      loggedOutPanel.style.display = "none";
+      activePanel.style.display = "block";
       overlayUsername.textContent = idkUser.username;
-      loadAvatarForUser(myAvatarCanvas, activeMcUsername || idkUser.username, activeMcAuthMode);
+      renderSkinFace(myAvatarCanvas, idkUser.username);
       startHeartbeats();
     } else {
-      activePanel.style.display = 'none';
-      loggedOutPanel.style.display = 'block';
+      activePanel.style.display = "none";
+      loggedOutPanel.style.display = "block";
       stopHeartbeats();
     }
   }
 
   // --- LOGOUT ACTION ---
-  btnLogout.addEventListener('click', async () => {
+  btnLogout.addEventListener("click", async () => {
     if (activeTunnelUrl) {
       await stopSharingTunnel();
     }
@@ -141,8 +158,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       // window.electronAPI.stopCloudflaredAccess(); // No longer needed
     }
 
-    localStorage.removeItem('idk_connect_token');
-    localStorage.removeItem('idk_connect_user');
+    localStorage.removeItem("idk_connect_token");
+    localStorage.removeItem("idk_connect_user");
     showToast("Disconnected from IDK Network.");
     updateAuthUI();
   });
@@ -167,82 +184,83 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function sendPresenceHeartbeat() {
     if (!idkToken) return;
     try {
-      await idkRequest('/api/presence', 'POST', {
-        status: 'online',
+      await idkRequest("/api/presence", "POST", {
+        status: "online",
         playingVersion: currentPlayingVersion,
-        cloudflaredUrl: activeTunnelUrl
+        cloudflaredUrl: activeTunnelUrl,
       });
     } catch (e) {
-      console.warn('[Overlay] Heartbeat failed:', e.message);
+      console.warn("[Overlay] Heartbeat failed:", e.message);
     }
   }
 
   async function refreshFriendsData() {
     if (!idkToken) return;
     try {
-      const friendsData = await idkRequest('/api/friends');
+      const friendsData = await idkRequest("/api/friends");
       renderFriendsList(friendsData.friends);
 
-      const reqData = await idkRequest('/api/friends/requests');
+      const reqData = await idkRequest("/api/friends/requests");
       renderFriendRequests(reqData.requests);
     } catch (e) {
-      console.warn('[Overlay] Sync failed:', e.message);
+      console.warn("[Overlay] Sync failed:", e.message);
     }
   }
 
   // --- FRIENDS LIST ---
   function renderFriendsList(friends) {
     if (!friends || friends.length === 0) {
-      friendsList.innerHTML = '<div class="friends-list-empty">Your friends list is empty.</div>';
+      friendsList.innerHTML =
+        '<div class="friends-list-empty">Your friends list is empty.</div>';
       return;
     }
 
-    friendsList.innerHTML = '';
+    friendsList.innerHTML = "";
 
     const sorted = [...friends].sort((a, b) => {
       if (a.cloudflaredUrl && !b.cloudflaredUrl) return -1;
       if (!a.cloudflaredUrl && b.cloudflaredUrl) return 1;
-      if (a.status !== 'offline' && b.status === 'offline') return -1;
-      if (a.status === 'offline' && b.status !== 'offline') return 1;
+      if (a.status !== "offline" && b.status === "offline") return -1;
+      if (a.status === "offline" && b.status !== "offline") return 1;
       return a.username.localeCompare(b.username);
     });
 
-    sorted.forEach(friend => {
-      const card = document.createElement('div');
-      card.className = 'friend-card';
+    sorted.forEach((friend) => {
+      const card = document.createElement("div");
+      card.className = "friend-card";
 
-      const isOnline = friend.status !== 'offline';
+      const isOnline = friend.status !== "offline";
       const isHosting = !!friend.cloudflaredUrl;
       const isPlaying = !!friend.playingVersion && !isHosting;
 
-      let statusText = 'Offline';
-      let statusClass = '';
+      let statusText = "Offline";
+      let statusClass = "";
       if (isHosting) {
-        statusText = `Hosting ${friend.playingVersion || ''}`;
-        statusClass = 'hosting';
+        statusText = `Hosting ${friend.playingVersion || ""}`;
+        statusClass = "hosting";
       } else if (isPlaying) {
         statusText = `Playing ${friend.playingVersion}`;
-        statusClass = 'playing';
+        statusClass = "playing";
       } else if (isOnline) {
-        statusText = 'Online';
-        statusClass = 'online';
+        statusText = "Online";
+        statusClass = "online";
       }
 
       card.innerHTML = `
         <div class="friend-card-left">
-          <div class="friend-avatar ${isOnline ? 'online' : ''}">
+          <div class="friend-avatar ${isOnline ? "online" : ""}">
             <canvas id="friend-avatar-${friend.id}" width="32" height="32"></canvas>
           </div>
           <div class="friend-info">
             <strong>${friend.username}</strong>
             <span class="friend-status-text ${statusClass}">
-              <span class="friend-status-dot ${isOnline ? 'online' : ''}"></span>
+              <span class="friend-status-dot ${isOnline ? "online" : ""}"></span>
               ${statusText}
             </span>
           </div>
         </div>
         <div class="friend-card-right">
-          ${isHosting ? `<button class="friend-join-btn">JOIN</button>` : ''}
+          ${isHosting ? `<button class="friend-join-btn">JOIN</button>` : ""}
           <button class="friend-remove-btn" title="Unfriend">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -256,33 +274,36 @@ document.addEventListener('DOMContentLoaded', async () => {
       const canvas = card.querySelector(`#friend-avatar-${friend.id}`);
       if (canvas) renderSkinFace(canvas, friend.username);
 
-      card.querySelector('.friend-remove-btn').onclick = async (e) => {
+      card.querySelector(".friend-remove-btn").onclick = async (e) => {
         e.stopPropagation();
         const confirmFn = window.IdkApp?.actions?.showConfirmDialog;
         let proceed = false;
         if (confirmFn) {
           proceed = await confirmFn({
-            title: 'Remove friend',
+            title: "Remove friend",
             message: `Remove ${friend.username} from your friends list? You can send them a new request later.`,
-            confirmText: 'Unfriend',
-            cancelText: 'Keep friend',
-            variant: 'danger',
+            confirmText: "Unfriend",
+            cancelText: "Keep friend",
+            variant: "danger",
           });
         } else {
-          proceed = confirm(`Remove ${friend.username} from your friends list?`);
+          proceed = confirm(
+            `Remove ${friend.username} from your friends list?`,
+          );
         }
         if (!proceed) return;
         try {
-          await idkRequest(`/api/friends/${friend.id}`, 'DELETE');
+          await idkRequest(`/api/friends/${friend.id}`, "DELETE");
           showToast(`Removed ${friend.username}.`);
           refreshFriendsData();
         } catch (err) {
-          showToast(err.message, 'error');
+          showToast(err.message, "error");
         }
       };
 
       if (isHosting) {
-        card.querySelector('.friend-join-btn').onclick = () => joinFriendWorld(friend);
+        card.querySelector(".friend-join-btn").onclick = () =>
+          joinFriendWorld(friend);
       }
 
       friendsList.appendChild(card);
@@ -292,17 +313,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // --- FRIEND REQUESTS ---
   function renderFriendRequests(requests) {
     if (!requests || requests.length === 0) {
-      requestsSection.style.display = 'none';
-      requestsList.innerHTML = '';
+      requestsSection.style.display = "none";
+      requestsList.innerHTML = "";
       return;
     }
 
-    requestsSection.style.display = 'block';
-    requestsList.innerHTML = '';
+    requestsSection.style.display = "block";
+    requestsList.innerHTML = "";
 
-    requests.forEach(req => {
-      const card = document.createElement('div');
-      card.className = 'friend-request-card';
+    requests.forEach((req) => {
+      const card = document.createElement("div");
+      card.className = "friend-request-card";
       card.innerHTML = `
         <div class="friend-request-info">
           <strong>${req.username}</strong>
@@ -314,26 +335,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `;
 
-      card.querySelector('.accept').onclick = () => handleFriendRequest(req.requestId, true);
-      card.querySelector('.decline').onclick = () => handleFriendRequest(req.requestId, false);
+      card.querySelector(".accept").onclick = () =>
+        handleFriendRequest(req.requestId, true);
+      card.querySelector(".decline").onclick = () =>
+        handleFriendRequest(req.requestId, false);
       requestsList.appendChild(card);
     });
   }
 
   async function handleFriendRequest(requestId, accept) {
     try {
-      const res = await idkRequest('/api/friends/requests/handle', 'POST', { requestId, accept });
+      const res = await idkRequest("/api/friends/requests/handle", "POST", {
+        requestId,
+        accept,
+      });
       showToast(res.message);
       refreshFriendsData();
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast(err.message, "error");
     }
   }
 
   // --- ADD FRIEND ---
-  btnAddFriend.addEventListener('click', handleAddFriend);
-  inputAddFriend.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleAddFriend();
+  btnAddFriend.addEventListener("click", handleAddFriend);
+  inputAddFriend.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleAddFriend();
   });
 
   async function handleAddFriend() {
@@ -342,19 +368,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnAddFriend.disabled = true;
     try {
-      const res = await idkRequest('/api/friends/request', 'POST', { username: friendName });
-      inputAddFriend.value = '';
+      const res = await idkRequest("/api/friends/request", "POST", {
+        username: friendName,
+      });
+      inputAddFriend.value = "";
       showToast(res.message);
       refreshFriendsData();
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast(err.message, "error");
     } finally {
       btnAddFriend.disabled = false;
     }
   }
 
   // --- LAN SHARING ---
-  btnShare.addEventListener('click', async () => {
+  btnShare.addEventListener("click", async () => {
     if (activeTunnelUrl) {
       await stopSharingTunnel();
       return;
@@ -362,15 +390,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const portVal = parseInt(inputSharePort.value);
     if (isNaN(portVal) || portVal < 1024 || portVal > 65535) {
-      showToast("Please enter a valid LAN port (1024-65535)", 'error');
+      showToast("Please enter a valid LAN port (1024-65535)", "error");
       return;
     }
 
     isCancellingHost = false;
     btnShare.disabled = true;
-    btnShare.innerText = 'STARTING...';
-    btnShareCancel.style.display = 'inline-flex';
-    btnShareCancel.innerText = 'CANCEL';
+    btnShare.innerText = "STARTING...";
+    btnShareCancel.style.display = "inline-flex";
+    btnShareCancel.innerText = "CANCEL";
     btnShareCancel.disabled = false;
 
     if (!window.electronAPI) {
@@ -390,10 +418,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       const cfStatus = await window.electronAPI.ensureFrpc();
-      if (!cfStatus.success) throw new Error(cfStatus.error || "Failed to download frpc");
+      if (!cfStatus.success)
+        throw new Error(cfStatus.error || "Failed to download frpc");
 
       const tunnelStatus = await window.electronAPI.startFrpcTunnel(portVal);
-      if (!tunnelStatus.success) throw new Error(tunnelStatus.error || "Failed to start tunnel");
+      if (!tunnelStatus.success)
+        throw new Error(tunnelStatus.error || "Failed to start tunnel");
 
       activeTunnelUrl = tunnelStatus.url;
       activeSharePort = portVal;
@@ -404,38 +434,38 @@ document.addEventListener('DOMContentLoaded', async () => {
       showToast("LAN world shared! IP copied to clipboard.");
     } catch (err) {
       if (!isCancellingHost) {
-        showToast(`Tunnel Error: ${err.message}`, 'error');
+        showToast(`Tunnel Error: ${err.message}`, "error");
       }
-      btnShare.innerText = 'SHARE';
+      btnShare.innerText = "SHARE";
     } finally {
       btnShare.disabled = false;
-      btnShareCancel.style.display = 'none';
+      btnShareCancel.style.display = "none";
     }
   });
 
   // Cancel sharing tunnel connection/download
-  btnShareCancel.addEventListener('click', async () => {
+  btnShareCancel.addEventListener("click", async () => {
     btnShareCancel.disabled = true;
-    btnShareCancel.innerText = 'CANCELLING...';
+    btnShareCancel.innerText = "CANCELLING...";
     isCancellingHost = true;
     try {
       if (window.electronAPI) {
         await window.electronAPI.stopFrpcTunnel();
       }
     } catch (err) {
-      console.error('[Overlay] Failed to cancel host:', err);
+      console.error("[Overlay] Failed to cancel host:", err);
     } finally {
       btnShareCancel.disabled = false;
-      btnShareCancel.innerText = 'CANCEL';
-      btnShareCancel.style.display = 'none';
+      btnShareCancel.innerText = "CANCEL";
+      btnShareCancel.style.display = "none";
       btnShare.disabled = false;
-      btnShare.innerText = 'SHARE';
+      btnShare.innerText = "SHARE";
     }
   });
 
   async function stopSharingTunnel() {
     btnShare.disabled = true;
-    btnShare.innerText = 'STOPPING...';
+    btnShare.innerText = "STOPPING...";
     try {
       if (window.electronAPI) {
         await window.electronAPI.stopFrpcTunnel();
@@ -446,28 +476,28 @@ document.addEventListener('DOMContentLoaded', async () => {
       await sendPresenceHeartbeat();
       showToast("LAN sharing tunnel closed.");
     } catch (err) {
-      showToast("Failed to stop tunnel cleanly.", 'error');
+      showToast("Failed to stop tunnel cleanly.", "error");
     } finally {
       btnShare.disabled = false;
     }
   }
 
   function renderSharingActive() {
-    lanShareForm.style.display = 'none';
-    lanActiveStatus.style.display = 'block';
+    lanShareForm.style.display = "none";
+    lanActiveStatus.style.display = "block";
     overlayTunnelLink.textContent = activeTunnelUrl;
-    btnShare.innerText = 'STOP';
-    btnShare.classList.add('stop-sharing');
+    btnShare.innerText = "STOP";
+    btnShare.classList.add("stop-sharing");
   }
 
   function renderSharingInactive() {
-    lanActiveStatus.style.display = 'none';
-    lanShareForm.style.display = 'flex';
-    btnShare.innerText = 'SHARE';
-    btnShare.classList.remove('stop-sharing');
+    lanActiveStatus.style.display = "none";
+    lanShareForm.style.display = "flex";
+    btnShare.innerText = "SHARE";
+    btnShare.classList.remove("stop-sharing");
   }
 
-  overlayTunnelLink.addEventListener('click', () => {
+  overlayTunnelLink.addEventListener("click", () => {
     if (activeTunnelUrl) {
       navigator.clipboard.writeText(activeTunnelUrl);
       showToast("IP Address copied to clipboard!");
@@ -479,15 +509,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!friend.cloudflaredUrl) return;
 
     let connectAddressText;
-    if (friend.cloudflaredUrl.startsWith('https://')) {
-      connectAddressText = '127.0.0.1:25565';
-      showToast("Legacy HTTPS tunnels are no longer supported. Please ask your friend to update their launcher.");
+    if (friend.cloudflaredUrl.startsWith("https://")) {
+      connectAddressText = "127.0.0.1:25565";
+      showToast(
+        "Legacy HTTPS tunnels are no longer supported. Please ask your friend to update their launcher.",
+      );
     } else {
-      connectAddressText = friend.cloudflaredUrl.replace('tcp://', '');
+      connectAddressText = friend.cloudflaredUrl.replace("tcp://", "");
     }
 
     navigator.clipboard.writeText(connectAddressText);
-    showToast(`IP copied! Paste it in Minecraft Direct Connect to join ${friend.username}.`);
+    showToast(
+      `IP copied! Paste it in Minecraft Direct Connect to join ${friend.username}.`,
+    );
   }
 
   // --- ELECTRON EVENT LISTENERS ---
@@ -498,7 +532,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         activeSharePort = null;
         renderSharingInactive();
         sendPresenceHeartbeat();
-        showToast("Tunnel connection closed unexpectedly.", 'error');
+        showToast("Tunnel connection closed unexpectedly.", "error");
       }
     });
 
@@ -508,13 +542,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    btnCloseOverlay.addEventListener('click', () => {
+    btnCloseOverlay.addEventListener("click", () => {
       window.electronAPI.resumeGame();
     });
   } else {
     // Dev close fallback
-    btnCloseOverlay.addEventListener('click', () => {
-      overlayContainer.classList.remove('active');
+    btnCloseOverlay.addEventListener("click", () => {
+      overlayContainer.classList.remove("active");
       closeBrowserView();
     });
   }
@@ -522,9 +556,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // --- SESSION INIT ---
   function applySessionData(data) {
     if (!data) return;
-    currentPlayingVersion = `${data.loader || 'Vanilla'} ${data.version || ''}`.trim();
-    activeMcUsername = data.username || null;
-    activeMcAuthMode = data.authMode || 'offline';
+    currentPlayingVersion =
+      `${data.loader || "Vanilla"} ${data.version || ""}`.trim();
     updateAuthUI();
   }
 
@@ -533,12 +566,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = await window.electronAPI.getOverlayData();
       if (data) applySessionData(data);
     } catch (e) {
-      console.warn('[Overlay] getOverlayData failed:', e);
+      console.warn("[Overlay] getOverlayData failed:", e);
     }
 
     window.electronAPI.onOverlayInit((data) => applySessionData(data));
     window.electronAPI.onToggleOverlay((active) => {
-      overlayContainer.classList.toggle('active', active);
+      overlayContainer.classList.toggle("active", active);
       if (active) {
         updateAuthUI();
       } else {
@@ -550,39 +583,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // --- BROWSER FUNCTIONALITY ---
-  const browserIframe = document.getElementById('browser-iframe');
-  const browserUrlInput = document.getElementById('browser-url-input');
-  const btnBrowserBack = document.getElementById('btn-browser-back');
-  const btnBrowserForward = document.getElementById('btn-browser-forward');
-  const btnBrowserReload = document.getElementById('btn-browser-reload');
-  const btnBrowserHome = document.getElementById('btn-browser-home');
-  const browserWindow = document.getElementById('browser-window');
-  const overlayToolbar = document.getElementById('overlay-toolbar');
-  const btnOpenBrowser = document.getElementById('btn-open-browser');
-  const btnBrowserCloseView = document.getElementById('btn-browser-close-view');
+  const browserIframe = document.getElementById("browser-iframe");
+  const browserUrlInput = document.getElementById("browser-url-input");
+  const btnBrowserBack = document.getElementById("btn-browser-back");
+  const btnBrowserForward = document.getElementById("btn-browser-forward");
+  const btnBrowserReload = document.getElementById("btn-browser-reload");
+  const btnBrowserHome = document.getElementById("btn-browser-home");
+  const browserWindow = document.getElementById("browser-window");
+  const overlayToolbar = document.getElementById("overlay-toolbar");
+  const btnOpenBrowser = document.getElementById("btn-open-browser");
+  const btnBrowserCloseView = document.getElementById("btn-browser-close-view");
 
-  const defaultHomeUrl = 'https://google.com/search?igu=1';
+  const defaultHomeUrl = "https://google.com/search?igu=1";
 
   function openBrowserView() {
     if (browserWindow && overlayToolbar) {
-      browserWindow.classList.add('browser-open');
-      overlayToolbar.classList.add('hidden');
+      browserWindow.classList.add("browser-open");
+      overlayToolbar.classList.add("hidden");
     }
   }
 
   function closeBrowserView() {
     if (browserWindow && overlayToolbar) {
-      browserWindow.classList.remove('browser-open');
-      overlayToolbar.classList.remove('hidden');
+      browserWindow.classList.remove("browser-open");
+      overlayToolbar.classList.remove("hidden");
     }
   }
 
   if (btnOpenBrowser) {
-    btnOpenBrowser.addEventListener('click', openBrowserView);
+    btnOpenBrowser.addEventListener("click", openBrowserView);
   }
 
   if (btnBrowserCloseView) {
-    btnBrowserCloseView.addEventListener('click', closeBrowserView);
+    btnBrowserCloseView.addEventListener("click", closeBrowserView);
   }
 
   if (browserUrlInput && browserIframe) {
@@ -594,13 +627,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const target = queryOrUrl.trim();
     if (!target) return;
 
-    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?($|\?|#)/i;
-    const ipPattern = /^(https?:\/\/)?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?(\/.*)?$/;
+    const urlPattern =
+      /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?($|\?|#)/i;
+    const ipPattern =
+      /^(https?:\/\/)?\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?(\/.*)?$/;
 
-    if (target.startsWith('http://') || target.startsWith('https://')) {
+    if (target.startsWith("http://") || target.startsWith("https://")) {
       browserIframe.src = target;
     } else if (urlPattern.test(target) || ipPattern.test(target)) {
-      browserIframe.src = 'https://' + target;
+      browserIframe.src = "https://" + target;
     } else {
       browserIframe.src = `https://google.com/search?q=${encodeURIComponent(target)}&igu=1`;
     }
@@ -608,46 +643,55 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (browserUrlInput) {
-    browserUrlInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+    browserUrlInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
         navigateBrowser(browserUrlInput.value);
         browserUrlInput.blur();
       }
     });
 
-    browserUrlInput.addEventListener('focus', () => {
+    browserUrlInput.addEventListener("focus", () => {
       browserUrlInput.select();
     });
   }
 
   if (btnBrowserBack && browserIframe) {
-    btnBrowserBack.addEventListener('click', () => {
+    btnBrowserBack.addEventListener("click", () => {
       try {
-        if (browserIframe.contentWindow && browserIframe.contentWindow.history) {
+        if (
+          browserIframe.contentWindow &&
+          browserIframe.contentWindow.history
+        ) {
           browserIframe.contentWindow.history.back();
         }
       } catch (e) {
-        console.warn('[Browser] Back navigation failed:', e.message);
+        console.warn("[Browser] Back navigation failed:", e.message);
       }
     });
   }
 
   if (btnBrowserForward && browserIframe) {
-    btnBrowserForward.addEventListener('click', () => {
+    btnBrowserForward.addEventListener("click", () => {
       try {
-        if (browserIframe.contentWindow && browserIframe.contentWindow.history) {
+        if (
+          browserIframe.contentWindow &&
+          browserIframe.contentWindow.history
+        ) {
           browserIframe.contentWindow.history.forward();
         }
       } catch (e) {
-        console.warn('[Browser] Forward navigation failed:', e.message);
+        console.warn("[Browser] Forward navigation failed:", e.message);
       }
     });
   }
 
   if (btnBrowserReload && browserIframe) {
-    btnBrowserReload.addEventListener('click', () => {
+    btnBrowserReload.addEventListener("click", () => {
       try {
-        if (browserIframe.contentWindow && browserIframe.contentWindow.location) {
+        if (
+          browserIframe.contentWindow &&
+          browserIframe.contentWindow.location
+        ) {
           browserIframe.contentWindow.location.reload();
         } else {
           browserIframe.src = browserIframe.src;
@@ -659,23 +703,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (btnBrowserHome && browserIframe && browserUrlInput) {
-    btnBrowserHome.addEventListener('click', () => {
+    btnBrowserHome.addEventListener("click", () => {
       browserIframe.src = defaultHomeUrl;
       browserUrlInput.value = defaultHomeUrl;
     });
   }
 
   if (browserIframe && browserUrlInput) {
-    browserIframe.addEventListener('load', () => {
+    browserIframe.addEventListener("load", () => {
       try {
-        if (browserIframe.contentWindow && browserIframe.contentWindow.location) {
+        if (
+          browserIframe.contentWindow &&
+          browserIframe.contentWindow.location
+        ) {
           const currentUrl = browserIframe.contentWindow.location.href;
-          if (currentUrl && currentUrl !== 'about:blank') {
+          if (currentUrl && currentUrl !== "about:blank") {
             browserUrlInput.value = currentUrl;
           }
         }
       } catch (e) {
-        console.log('[Browser] Could not read cross-origin location (normal for default iframe security/origins):', e.message);
+        console.log(
+          "[Browser] Could not read cross-origin location (normal for default iframe security/origins):",
+          e.message,
+        );
       }
     });
   }

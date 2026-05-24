@@ -284,20 +284,20 @@ class AccessibilityManager {
         input:focus-visible,
         [role="button"]:focus-visible,
         [tabindex]:focus-visible {
-          outline: 3px solid #4cb837;
+          outline: 3px solid var(--theme-accent);
           outline-offset: 2px;
           border-radius: 2px;
         }
 
         /* Download UI specific focus indicators */
         .download-control-btn:focus-visible {
-          outline: 3px solid #4cb837;
+          outline: 3px solid var(--theme-accent);
           outline-offset: 2px;
-          box-shadow: 0 0 0 4px rgba(76, 184, 55, 0.2);
+          box-shadow: 0 0 0 4px rgba(var(--theme-accent-rgb), 0.2);
         }
 
         .progress-bar-fill:focus-visible {
-          outline: 3px solid #4cb837;
+          outline: 3px solid var(--theme-accent);
           outline-offset: 2px;
         }
 

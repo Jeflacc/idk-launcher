@@ -7,6 +7,8 @@ import {
 
 let skinViewerInstance = null;
 let skinResizeObserver = null;
+let homeSkinViewerInstance = null;
+let homeSkinResizeObserver = null;
 let profileReturnView = "main";
 
 function formatPlaytimeHours() {
@@ -29,11 +31,26 @@ function disposeSkinViewer() {
   }
 }
 
+function disposeHomeSkinViewer() {
+  if (homeSkinResizeObserver) {
+    homeSkinResizeObserver.disconnect();
+    homeSkinResizeObserver = null;
+  }
+  if (homeSkinViewerInstance) {
+    try {
+      homeSkinViewerInstance.dispose();
+    } catch {
+      /* already disposed */
+    }
+    homeSkinViewerInstance = null;
+  }
+}
+
 function fitCanvasToStage(canvasEl, stageEl) {
-  const maxW = stageEl.clientWidth - 20;
-  const maxH = stageEl.clientHeight - 16;
-  let width = Math.min(840, maxW);
-  let height = Math.min(900, maxH);
+  const maxW = stageEl.clientWidth + 200;
+  const maxH = stageEl.clientHeight + 200;
+  let width = Math.min(1400, maxW);
+  let height = Math.min(1400, maxH);
   canvasEl.style.width = `${width}px`;
   canvasEl.style.height = `${height}px`;
   return { width, height };
@@ -41,7 +58,7 @@ function fitCanvasToStage(canvasEl, stageEl) {
 
 function applyViewerCamera(viewer) {
   viewer.autoRotate = false;
-  viewer.autoRotateSpeed = 1.0;
+  viewer.autoRotateSpeed = 0.8;
 
   if (viewer.controls) {
     viewer.controls.enableRotate = true;
@@ -50,19 +67,150 @@ function applyViewerCamera(viewer) {
   }
 
   if (viewer.camera) {
-    viewer.camera.fov = 22;
-    viewer.camera.position.set(0, 14, 19);
-    viewer.camera.lookAt(0, 13, 0);
+    viewer.camera.fov = 16;
+    viewer.camera.zoom = 0.92;
+    viewer.camera.position.set(2, 8, 30);
+    viewer.camera.lookAt(0, 0, 0);
     viewer.camera.updateProjectionMatrix();
   }
 
   if (viewer.playerObject) {
-    viewer.playerObject.rotation.y = -0.38;
+    viewer.playerObject.rotation.y = 0.3;
+    viewer.playerObject.rotation.z= 0;
     viewer.playerObject.position.y = 0;
   }
 
   if (typeof viewer.zoom === "number") {
     viewer.zoom = 1.0;
+  }
+}
+
+function fitHomeCanvasToStage(canvasEl, stageEl) {
+  const maxW = Math.max(240, stageEl.clientWidth - 16);
+  const maxH = Math.max(360, stageEl.clientHeight - 16);
+  const width = Math.min(500, maxW);
+  const height = Math.min(640, maxH);
+  canvasEl.style.width = `${width}px`;
+  canvasEl.style.height = `${height}px`;
+  return { width, height };
+}
+
+function applyHomeViewerCamera(viewer) {
+  viewer.autoRotate = false;
+  viewer.autoRotateSpeed = 0.6;
+
+  if (viewer.controls) {
+    viewer.controls.enableRotate = true;
+    viewer.controls.enableZoom = false;
+    viewer.controls.enablePan = false;
+  }
+
+  if (viewer.camera) {
+    viewer.camera.fov = 24;
+    viewer.camera.position.set(0, 13.5, 20);
+    viewer.camera.lookAt(0, 12.5, 0);
+    viewer.camera.updateProjectionMatrix();
+  }
+
+  if (viewer.playerObject) {
+    viewer.playerObject.rotation.y = -0.28;
+    viewer.playerObject.position.y = 0;
+  }
+
+  if (typeof viewer.zoom === "number") {
+    viewer.zoom = 1.0;
+  }
+}
+
+async function initHomeSkinViewer() {
+  const isAdvanced = document.body.dataset.uiMode === "advanced";
+  const isMainActive = document
+    .getElementById("view-main")
+    ?.classList.contains("active");
+  const stage = document.getElementById("advanced-home-skin-stage");
+  const canvasEl = document.getElementById("advanced-home-skin-canvas");
+  const loaderEl = document.getElementById("advanced-home-skin-loading");
+  const nameEl = document.getElementById("advanced-home-username");
+
+  if (!stage || !canvasEl || !isAdvanced || !isMainActive) {
+    disposeHomeSkinViewer();
+    return;
+  }
+
+  if (nameEl)
+    nameEl.textContent = (state.currentUser || "Player").toUpperCase();
+
+  disposeHomeSkinViewer();
+
+  if (loaderEl) {
+    loaderEl.style.display = "flex";
+    loaderEl.textContent = "Loading skin…";
+  }
+  canvasEl.classList.remove("is-ready");
+
+  const username = state.currentUser || "Steve";
+  const skinUrl = await getSkinTextureUrl(username, state.authMode);
+  const texture = await resolveSkinTextureBase64(skinUrl);
+  const { width, height } = fitHomeCanvasToStage(canvasEl, stage);
+
+  try {
+    const { SkinViewer, IdleAnimation } = await import("skinview3d");
+    const THREE = await import("three");
+
+    homeSkinViewerInstance = new SkinViewer({
+      canvas: canvasEl,
+      width,
+      height,
+      skin: texture,
+    });
+
+    canvasEl.width = width;
+    canvasEl.height = height;
+    canvasEl.style.width = `${width}px`;
+    canvasEl.style.height = `${height}px`;
+
+    if (homeSkinViewerInstance.scene) {
+      const existingLights = homeSkinViewerInstance.scene.children.filter(
+        (child) => child.isLight,
+      );
+      existingLights.forEach((light) =>
+        homeSkinViewerInstance.scene.remove(light),
+      );
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.72);
+      homeSkinViewerInstance.scene.add(ambientLight);
+
+      const mainLight = new THREE.DirectionalLight(0xffffff, 1.05);
+      mainLight.position.set(4, 8, 7);
+      homeSkinViewerInstance.scene.add(mainLight);
+
+      const rimLight = new THREE.DirectionalLight(0x9f7aea, 0.45);
+      rimLight.position.set(-5, 5, -3);
+      homeSkinViewerInstance.scene.add(rimLight);
+    }
+
+    applyHomeViewerCamera(homeSkinViewerInstance);
+
+    const ambientAnimation = new IdleAnimation();
+    ambientAnimation.speed = 0.48;
+    homeSkinViewerInstance.animation = ambientAnimation;
+
+    if (loaderEl) loaderEl.style.display = "none";
+    canvasEl.classList.add("is-ready");
+
+    homeSkinResizeObserver = new ResizeObserver(() => {
+      if (!homeSkinViewerInstance || !canvasEl.isConnected) return;
+      const next = fitHomeCanvasToStage(canvasEl, stage);
+      homeSkinViewerInstance.setSize(next.width, next.height);
+      applyHomeViewerCamera(homeSkinViewerInstance);
+    });
+    homeSkinResizeObserver.observe(stage);
+  } catch (err) {
+    console.error("[Profile] Advanced home skin viewer error:", err);
+    if (loaderEl) {
+      loaderEl.style.display = "flex";
+      loaderEl.textContent = "Could not load 3D preview";
+    }
   }
 }
 
@@ -166,9 +314,7 @@ function refreshProfilePage() {
     accountStat.textContent = state.authMode === "elyby" ? "Ely.by" : "Offline";
   if (playtimeEl) playtimeEl.textContent = formatPlaytimeHours();
   if (modpacksEl) modpacksEl.textContent = String(state.modpacks?.length || 0);
-  if (changeSkinBtn) {
-    changeSkinBtn.style.display = state.authMode === "elyby" ? "flex" : "none";
-  }
+  // Change skin button removed - no longer needed
   if (sidebarName) sidebarName.textContent = name.toUpperCase();
   if (sidebarAcct)
     sidebarAcct.textContent =
@@ -179,7 +325,76 @@ function refreshProfilePage() {
     loadAvatarForUser(sidebarAvatarCanvas, name, state.authMode);
   }
 
+  loadProfileFriendsList();
   initProfileSkinViewer();
+}
+
+async function loadProfileFriendsList() {
+  const friendsListEl = document.getElementById("profile-friends-list");
+  if (!friendsListEl) return;
+
+  try {
+    // Get friends from the IDK Connect sidebar (same source as the main friends list)
+    const friendsContainer = document.getElementById("friends-list");
+    
+    if (!friendsContainer) {
+      friendsListEl.innerHTML = '<div class="profile-friends-empty">No friends</div>';
+      return;
+    }
+
+    // Get all friend cards from the IDK Connect sidebar
+    const friendCards = friendsContainer.querySelectorAll(".friend-card");
+    
+    if (friendCards.length === 0) {
+      friendsListEl.innerHTML = '<div class="profile-friends-empty">No friends</div>';
+      return;
+    }
+
+    // Extract friend data from the existing friend cards
+    const friends = [];
+    friendCards.forEach(card => {
+      const nameEl = card.querySelector(".friend-info strong");
+      const statusEl = card.querySelector(".friend-status-text");
+      const avatarEl = card.querySelector(".friend-avatar canvas");
+      
+      if (nameEl) {
+        friends.push({
+          username: nameEl.textContent.trim(),
+          status: statusEl ? statusEl.textContent.trim() : "Offline",
+          element: card
+        });
+      }
+    });
+
+    if (friends.length === 0) {
+      friendsListEl.innerHTML = '<div class="profile-friends-empty">No friends</div>';
+      return;
+    }
+
+    // Render friends in profile sidebar (limit to 8)
+    friendsListEl.innerHTML = friends.slice(0, 8).map(friend => `
+      <div class="profile-friend-item" title="${friend.username}">
+        <div class="profile-friend-avatar">
+          <canvas width="24" height="24" data-friend-username="${friend.username}"></canvas>
+        </div>
+        <div class="profile-friend-info">
+          <span class="profile-friend-name">${friend.username}</span>
+          <span class="profile-friend-status ${friend.status.toLowerCase().includes("playing") || friend.status.toLowerCase().includes("hosting") ? "online" : "offline"}">${friend.status}</span>
+        </div>
+      </div>
+    `).join("");
+
+    // Load friend avatars
+    friends.slice(0, 8).forEach(friend => {
+      const canvas = friendsListEl.querySelector(`canvas[data-friend-username="${friend.username}"]`);
+      if (canvas) {
+        loadAvatarForUser(canvas, friend.username, "elyby");
+      }
+    });
+  } catch (err) {
+    console.error("[Profile] Failed to load friends:", err);
+    friendsListEl.innerHTML = '<div class="profile-friends-empty">No friends</div>';
+  }
 }
 
 export function initProfileFeature({ switchView, getReturnView }) {
@@ -198,23 +413,57 @@ export function initProfileFeature({ switchView, getReturnView }) {
 
   actions.openProfile = openProfile;
   actions.closeProfile = closeProfile;
+  actions.refreshHomeSkin = initHomeSkinViewer;
+
+  document.addEventListener("idk:view-changed", (event) => {
+    if (event.detail?.viewName === "main") {
+      initHomeSkinViewer();
+    } else {
+      disposeHomeSkinViewer();
+    }
+  });
+
+  if (document.getElementById("view-main")?.classList.contains("active")) {
+    initHomeSkinViewer();
+  }
+
+  function openSkinManager() {
+    const url = "https://ely.by/profile";
+    if (window.electronAPI?.openExternal) {
+      window.electronAPI.openExternal(url);
+    } else {
+      window.open(url, "_blank");
+    }
+  }
+
+  async function exportCurrentSkin() {
+    try {
+      const username = state.currentUser || "Steve";
+      const skinUrl = await getSkinTextureUrl(username, state.authMode);
+      const texture = await resolveSkinTextureBase64(skinUrl);
+      const link = document.createElement("a");
+      link.href = texture;
+      link.download = `${username || "skin"}-skin.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("[Profile] Failed to export skin:", err);
+      actions.showWarningToast?.("Failed to export skin");
+    }
+  }
 
   document
     .getElementById("profile-btn-change-skin")
-    ?.addEventListener("click", () => {
-      const url = "https://ely.by/profile";
-      if (window.electronAPI?.openExternal) {
-        window.electronAPI.openExternal(url);
-      } else {
-        window.open(url, "_blank");
-      }
-    });
+    ?.addEventListener("click", openSkinManager);
 
   document
-    .getElementById("profile-btn-friends")
-    ?.addEventListener("click", () => {
-      document.getElementById("btn-friends-toggle")?.click();
-    });
+    .getElementById("profile-stage-change-skin")
+    ?.addEventListener("click", openSkinManager);
+
+  document
+    .getElementById("profile-stage-export-skin")
+    ?.addEventListener("click", exportCurrentSkin);
 
   document
     .getElementById("profile-btn-settings")

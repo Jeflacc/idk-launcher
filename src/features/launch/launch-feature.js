@@ -207,13 +207,13 @@ function showMissingDepsModal(missing, mcVersion) {
 
   const list = missing.map(d =>
     `<li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;">
-      <strong style="color:#4cb837;">${d.modId}</strong>
+      <strong style="color:var(--theme-accent);">${d.modId}</strong>
       <span style="color:#888;font-size:11px;margin-left:8px;">required by ${d.requiredBy}</span>
     </li>`
   ).join('');
 
   modal.innerHTML = `
-    <div style="background:#1a1a1b;border:2px solid #4cb837;border-radius:8px;padding:32px;max-width:480px;width:90%;font-family:var(--font-title);">
+    <div style="background:#1a1a1b;border:2px solid var(--theme-accent);border-radius:8px;padding:32px;max-width:480px;width:90%;font-family:var(--font-title);">
       <div style="text-align:center;margin-bottom:20px;">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="margin-bottom:12px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         <h2 style="font-size:20px;color:white;margin:0 0 8px;">Missing Dependencies</h2>
@@ -221,7 +221,7 @@ function showMissingDepsModal(missing, mcVersion) {
       </div>
       <ul style="list-style:none;padding:0;margin:0 0 24px;max-height:200px;overflow-y:auto;">${list}</ul>
       <div style="display:flex;gap:10px;">
-        <button id="btn-auto-install-deps" style="flex:1;background:#4cb837;border:none;border-radius:4px;padding:12px;color:white;font-family:var(--font-title);font-size:13px;font-weight:700;cursor:pointer;">
+        <button id="btn-auto-install-deps" style="flex:1;background:var(--theme-accent);border:none;border-radius:4px;padding:12px;color:white;font-family:var(--font-title);font-size:13px;font-weight:700;cursor:pointer;">
           Auto-Install All
         </button>
         <button id="btn-dismiss-deps" style="flex:1;background:#3a3a3b;border:none;border-radius:4px;padding:12px;color:white;font-family:var(--font-title);font-size:13px;font-weight:700;cursor:pointer;">
@@ -268,7 +268,7 @@ function showMissingDepsModal(missing, mcVersion) {
       }
 
       if (failed.length === 0) {
-        status.style.color = '#4cb837';
+        status.style.color = 'var(--theme-accent)';
         status.innerText = `\u2713 Installed ${succeeded.length} dependencies. Launch the game again!`;
         btn.innerText = 'Done!';
       } else {

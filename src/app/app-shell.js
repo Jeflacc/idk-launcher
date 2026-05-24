@@ -10,24 +10,24 @@ export function renderAppShell() {
   <!-- TOP TITLE BAR & NAVIGATION -->
   <div class="top-bar">
     <div class="top-bar-left">
-      <div class="top-brand">IDK<span>.</span></div>
+      <div class="top-brand"><span class="brand-mark">IDK.</span><span class="brand-word">Launcher</span></div>
       <div class="header-nav">
-        <div class="brand-title">MINECRAFT: JAVA EDITION</div>
+        <div class="brand-title" style="display:none;"></div>
         <div class="nav-tabs">
           <div class="nav-tab" data-target="main">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             Play
           </div>
           <div class="nav-tab" data-target="mods">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             Modpacks
           </div>
           <div class="nav-tab" data-target="profile">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             Profile
           </div>
           <div class="nav-tab" data-target="settings">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg>
             Settings
           </div>
         </div>
@@ -136,6 +136,13 @@ export function renderAppShell() {
       <div id="btn-open-settings" style="display:none;"></div>
 
       <div class="main-center">
+        <div class="advanced-home-player" aria-hidden="true">
+          <h1 class="advanced-home-username" id="advanced-home-username">PLAYER</h1>
+          <div class="advanced-home-skin-viewer-wrapper" id="advanced-home-skin-stage">
+            <div class="advanced-home-skin-loading" id="advanced-home-skin-loading">Loading skin…</div>
+            <canvas id="advanced-home-skin-canvas"></canvas>
+          </div>
+        </div>
         <img src="./java.png" alt="Minecraft Java Edition" class="mc-logo" />
       </div>
 
@@ -261,6 +268,57 @@ export function renderAppShell() {
       <h2 class="view-title">Settings</h2>
 
       <div class="settings-grid">
+        <div class="settings-section appearance-settings-section">
+          <h3>Appearance</h3>
+          <p>Choose the launcher color theme and switch between the current layout and the new advanced UI/UX.</p>
+
+          <div class="settings-subgroup">
+            <div class="settings-subgroup-heading">
+              <span>Theme</span>
+              <small>Each theme uses its own complete accent palette.</small>
+            </div>
+            <div class="theme-picker-grid" id="launcher-theme-picker">
+              <button type="button" class="theme-choice-card" data-theme="green" aria-label="Use Green theme">
+                <span class="theme-choice-swatch" style="--swatch-a:#4cb837;--swatch-b:#122018;"></span>
+                <strong>Green</strong>
+                <small>Classic Minecraft green</small>
+              </button>
+              <button type="button" class="theme-choice-card" data-theme="violet" aria-label="Use Violet theme">
+                <span class="theme-choice-swatch" style="--swatch-a:#8b5cf6;--swatch-b:#190b2f;"></span>
+                <strong>Violet</strong>
+                <small>Advanced purple grid</small>
+              </button>
+              <button type="button" class="theme-choice-card" data-theme="azure" aria-label="Use Profile Blue theme">
+                <span class="theme-choice-swatch" style="--swatch-a:#bad7ff;--swatch-b:#061827;"></span>
+                <strong>Profile Blue</strong>
+                <small>The profile-page wireframe blue</small>
+              </button>
+              <button type="button" class="theme-choice-card" data-theme="ember" aria-label="Use Ember theme">
+                <span class="theme-choice-swatch" style="--swatch-a:#f97316;--swatch-b:#241007;"></span>
+                <strong>Ember</strong>
+                <small>Warm orange glow</small>
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-subgroup">
+            <div class="settings-subgroup-heading">
+              <span>UI/UX Mode</span>
+              <small>Classic keeps the current layout. Advanced enables the new sidebar/grid experience.</small>
+            </div>
+            <div class="ui-mode-grid" id="launcher-ui-modes">
+              <button type="button" class="ui-mode-card active" data-ui-mode="classic">
+                <strong>Current</strong>
+                <span>Existing Mojang-style launcher layout.</span>
+              </button>
+              <button type="button" class="ui-mode-card" data-ui-mode="advanced">
+                <strong>Advanced</strong>
+                <span>Sidebar navigation, pixel font, grid stages, and themed panels.</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="settings-section">
           <h3>Memory Allocation</h3>
           <p>Set how much RAM Minecraft is allowed to use. More RAM = smoother gameplay, but don't exceed ~80% of your total system RAM.</p>
@@ -391,11 +449,16 @@ export function renderAppShell() {
               <canvas id="profile-skin-canvas"></canvas>
             </div>
 
-            <div class="profile-stage-bar">
-              <button type="button" class="profile-stage-bar-main" id="profile-stage-open-main">Play</button>
-              <button type="button" class="profile-stage-bar-side" id="profile-stage-open-settings" aria-label="Open settings">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>
-              </button>
+            <div class="profile-stage-bar profile-skin-actions">
+              <div class="profile-stage-bar-combined">
+                <button type="button" class="profile-stage-bar-main-text" id="profile-stage-change-skin">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                  Change Skin
+                </button>
+                <button type="button" class="profile-stage-bar-export-icon" id="profile-stage-export-skin" title="Export Skin">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -449,23 +512,25 @@ export function renderAppShell() {
           <!-- Quick Actions -->
           <section class="profile-actions-section">
             <h4 class="profile-section-title">Quick actions</h4>
-            <button type="button" class="profile-quick-action profile-action-primary" id="profile-btn-change-skin" style="display:none;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z"></path></svg>
-              <span>Change skin</span>
-            </button>
-            <button type="button" class="profile-quick-action" id="profile-btn-friends">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-              <span>Open friends</span>
-            </button>
             <button type="button" class="profile-quick-action" id="profile-btn-settings">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg>
               <span>Launcher settings</span>
             </button>
-            <button type="button" class="profile-quick-action profile-action-danger" id="profile-btn-logout">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-              <span>Log out</span>
-            </button>
           </section>
+
+          <!-- Friends List Section -->
+          <section class="profile-friends-section">
+            <h4 class="profile-section-title">Friends</h4>
+            <div class="profile-friends-list" id="profile-friends-list">
+              <div class="profile-friends-empty">No friends online</div>
+            </div>
+          </section>
+
+          <!-- Logout Button -->
+          <button type="button" class="profile-quick-action profile-action-danger" id="profile-btn-logout">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>Log out</span>
+          </button>
         </aside>
       </div>
     </div>
@@ -486,18 +551,20 @@ export function renderAppShell() {
       </div>
       <div class="mods-container">
         <div class="modpacks-sidebar">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:6px;">
+          <div class="modpacks-sidebar-header">
             <p class="sidebar-label">YOUR MODPACKS</p>
+            <div class="modpacks-sidebar-actions">
             <button class="mp-action-btn back" id="btn-refresh-profiles" title="Refresh all profiles from disk">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </button>
-            <button class="mp-action-btn back" id="btn-back-modpacks" title="Back to Modpacks">
+            <button class="mp-action-btn back" id="btn-back-modpacks" title="Clear selection">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="19" y1="12" x2="5" y2="12"></line>
                 <polyline points="12 19 5 12 12 5"></polyline>
               </svg>
               Back
             </button>
+            </div>
           </div>
           <div class="modpacks-list" id="modpacks-list"></div>
         </div>
@@ -523,23 +590,23 @@ export function renderAppShell() {
           <div class="modpack-content" id="modpack-content">
             <div class="modpack-content-header">
               <div style="display:flex;align-items:center;gap:16px;flex:1;">
-                <div id="modpack-icon-display" title="Click to change icon" style="width:80px;height:80px;border-radius:0px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;border:3px solid #4cb837;transition:all 0.2s;box-shadow:inset 0 2px 0 rgba(255,255,255,0.1), inset 0 -2px 0 rgba(0,0,0,0.3);">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="1.5" style="opacity:0.8;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                <div id="modpack-icon-display" title="Click to change icon" style="width:80px;height:80px;border-radius:0px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;border:3px solid var(--theme-accent);transition:all 0.2s;box-shadow:inset 0 2px 0 rgba(255,255,255,0.1), inset 0 -2px 0 rgba(0,0,0,0.3);">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.8;color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                 </div>
                 <div style="flex:1;">
                   <h2 id="modpack-name-display" style="font-size:28px;margin-bottom:2px;font-family:var(--font-title);font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);">Modpack</h2>
                   <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 &middot; Fabric</p>
                   <div class="mp-stats-row">
                     <div class="mp-stat">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--theme-accent);"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
                       <span id="mp-stat-version">1.20.4</span>
                     </div>
                     <div class="mp-stat">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"></path></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--theme-accent);"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"></path></svg>
                       <span id="mp-stat-playtime">0h played</span>
                     </div>
                     <div class="mp-stat">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4cb837" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                       <span id="mp-stat-loader">Fabric</span>
                     </div>
                     <div class="mp-stat">
@@ -960,7 +1027,7 @@ export function renderAppShell() {
         </button>
       </div>
       <div style="margin-bottom: 16px;">
-        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: #4cb837; text-transform: uppercase;">Paste Crash Log</label>
+        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--theme-accent); text-transform: uppercase;">Paste Crash Log</label>
         <textarea id="crash-log-input" class="clean-input" placeholder="Paste your crash log here..." style="width: 100%; min-height: 150px; resize: vertical; text-align: left; font-family: monospace; font-size: 11px;"></textarea>
       </div>
       <button class="submit-btn" id="btn-analyze-crash" style="width: 100%; margin-bottom: 16px;">Analyze Crash Log</button>

@@ -132,7 +132,7 @@ async function handleCheckUpdatesClick() {
       return;
       content.innerHTML = `
         <div style="text-align: center; padding: 20px;">
-          <div style="font-size: 14px; color: #4cb837; margin-bottom: 8px;">&#x2713; All mods are up to date</div>
+          <div style="font-size: 14px; color: var(--theme-accent); margin-bottom: 8px;">&#x2713; All mods are up to date</div>
           <div style="font-size: 12px; color: #a0a0a0;">No updates available</div>
         </div>
       `;
@@ -151,7 +151,7 @@ async function handleCheckUpdatesClick() {
             <div>
               <strong style="color: white; font-size: 13px;">${update.name}</strong>
               <div style="font-size: 11px; color: #a0a0a0; margin-top: 2px;">
-                ${update.currentVersion} &rarr; <span style="color: #4cb837;">${update.latestVersion}</span>
+                ${update.currentVersion} &rarr; <span style="color: var(--theme-accent);">${update.latestVersion}</span>
               </div>
             </div>
             <button class="submit-btn" style="padding: 6px 12px; font-size: 11px; white-space: nowrap;" onclick="alert('Update feature coming soon')">Update</button>
@@ -429,7 +429,7 @@ export async function checkDependenciesForMod(modpackId, modId) {
         if (result.success) {
           content.innerHTML = `
             <div style="text-align: center; padding: 20px;">
-              <div style="font-size: 14px; color: #4cb837; margin-bottom: 8px;">&#x2713; Dependencies installed</div>
+              <div style="font-size: 14px; color: var(--theme-accent); margin-bottom: 8px;">&#x2713; Dependencies installed</div>
               <div style="font-size: 12px; color: #a0a0a0;">${result.message}</div>
             </div>
           `;
@@ -476,16 +476,16 @@ export async function showChangelog(modrinthId, modName) {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
             <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
               <div style="font-size: 10px; color: #707070; text-transform: uppercase;">Downloads</div>
-              <div style="font-size: 16px; font-weight: 700; color: #4cb837;">${changelog.downloads.toLocaleString()}</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--theme-accent);">${changelog.downloads.toLocaleString()}</div>
             </div>
             <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
               <div style="font-size: 10px; color: #707070; text-transform: uppercase;">Followers</div>
-              <div style="font-size: 16px; font-weight: 700; color: #4cb837;">${changelog.followers.toLocaleString()}</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--theme-accent);">${changelog.followers.toLocaleString()}</div>
             </div>
           </div>
         </div>
         <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-          <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #4cb837; text-transform: uppercase;">Changelog</h4>
+          <h4 style="margin: 0 0 8px 0; font-size: 13px; color: var(--theme-accent); text-transform: uppercase;">Changelog</h4>
           <div style="font-size: 12px; color: #d1d1d2; line-height: 1.6; white-space: pre-wrap; word-break: break-word;">
             ${changelog.body || 'No detailed changelog available'}
           </div>

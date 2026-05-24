@@ -33,3 +33,4 @@ node_modules
 .playwright-mcp
 idk-backend/
 scratch/
+.agent
