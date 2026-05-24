@@ -2435,6 +2435,7 @@ function installSodium(version, profilePath) {
 // === FRPC TUNNEL MULTIPLAYER SYSTEM =========================
 // ============================================================
 let activeTunnelProcess = null;
+let activeAccessProcess = null;
 let activeDownloadRequest = null;
 
 ipcMain.handle('ensure-frpc', async (event) => {
