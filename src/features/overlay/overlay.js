@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let presenceInterval = null;
   let refreshInterval = null;
   let currentPlayingVersion = 'Vanilla';
+  let activeMcUsername = null;
 
   // --- TOAST NOTIFICATIONS ---
   function showToast(message, type = 'info') {
@@ -116,7 +117,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       loggedOutPanel.style.display = 'none';
       activePanel.style.display = 'block';
       overlayUsername.textContent = idkUser.username;
-      renderSkinFace(myAvatarCanvas, idkUser.username);
+      renderSkinFace(myAvatarCanvas, activeMcUsername || idkUser.username);
       startHeartbeats();
     } else {
       activePanel.style.display = 'none';
@@ -516,6 +517,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function applySessionData(data) {
     if (!data) return;
     currentPlayingVersion = `${data.loader || 'Vanilla'} ${data.version || ''}`.trim();
+    activeMcUsername = data.username || null;
     updateAuthUI();
   }
 

@@ -190,7 +190,7 @@ export function initFriendsFeature() {
         myUsernameLabel.innerText = idkUser.username;
 
         // Draw client avatar
-        renderSkinFaceOnFriendsCanvas(myAvatarCanvas, idkUser.username);
+        renderSkinFaceOnFriendsCanvas(myAvatarCanvas, state.currentUser || idkUser.username);
 
         // Initialize intervals
         startHeartbeats();
