@@ -217,6 +217,14 @@ class SettingsManager extends EventEmitter {
         description: 'Enable the interactive in-game overlay',
         tooltip: 'Shift+Tab to open in-game overlay'
       },
+      hideLauncher: {
+        value: true,
+        type: 'boolean',
+        category: 'Launcher',
+        label: 'Hide Launcher on Launch',
+        description: 'Hide the launcher window when the game is running to save system resources. The launcher will automatically reappear when you exit the game.',
+        tooltip: 'Hides/minimizes the launcher during gameplay'
+      },
       maxMemoryGB: {
         value: 4,
         type: 'number',

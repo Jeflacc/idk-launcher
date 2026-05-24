@@ -144,7 +144,8 @@ playBtn.addEventListener('click', () => {
       width: state.defaultWindowWidth,
       height: state.defaultWindowHeight,
       fullscreen: state.defaultFullscreen,
-      enableOverlay: state.enableOverlay
+      enableOverlay: state.enableOverlay,
+      hideLauncher: state.hideLauncher !== false
     };
     window.electronAPI.launchMinecraft(
       state.currentUser,

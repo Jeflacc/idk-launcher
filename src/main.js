@@ -39,6 +39,7 @@ if (window.electronAPI) {
       state.defaultWindowHeight = getMigrated('defaultWindowHeight', 'idk_default_window_height', 768, false, true);
       state.defaultFullscreen = getMigrated('defaultFullscreen', 'idk_default_fullscreen', false, true);
       state.enableOverlay = getMigrated('enableOverlay', 'idk_enable_overlay', false, true);
+      state.hideLauncher = getMigrated('hideLauncher', 'idk_hide_launcher', true, true);
       state.maxMemoryGB = getMigrated('maxMemoryGB', 'craftlaunch_maxMemory', 4, false, true);
       state.launcherPerformanceMode = getMigrated('launcherPerformanceMode', 'idk_launcher_performance_mode', 'balanced');
       state.autoOptimization = getMigrated('autoOptimization', 'craftlaunch_autoOptimization', false, true);

@@ -316,6 +316,16 @@ export function renderAppShell() {
         </div>
 
         <div class="settings-section">
+          <h3>Hide Launcher on Launch</h3>
+          <p>Hide the launcher window when the game is running to save system resources. The launcher will automatically reappear when you exit the game.</p>
+          <label class="toggle-switch" style="margin-top: 8px;">
+            <input type="checkbox" id="hide-launcher-toggle" />
+            <div class="switch"></div>
+            <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Hide launcher when launch</span>
+          </label>
+        </div>
+
+        <div class="settings-section">
           <h3>Performance Boost Pack</h3>
           <p>For Fabric launches, install a compatible optimization pack when available: Sodium, Lithium, FerriteCore, and EntityCulling.</p>
           <label class="toggle-switch" style="margin-top: 8px;">

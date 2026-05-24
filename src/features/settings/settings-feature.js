@@ -67,6 +67,18 @@ overlayToggle.addEventListener('change', (e) => {
   }
 });
 
+// Hide Launcher on Launch
+const hideLauncherToggle = document.getElementById('hide-launcher-toggle');
+hideLauncherToggle.checked = state.hideLauncher !== false;
+
+hideLauncherToggle.addEventListener('change', (e) => {
+  state.hideLauncher = e.target.checked;
+  localStorage.setItem('idk_hide_launcher', state.hideLauncher);
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ hideLauncher: state.hideLauncher }).catch(console.error);
+  }
+});
+
 // Memory slider
 const memSlider = document.getElementById('memory-slider');
 const memLabel  = document.getElementById('memory-value-label');

@@ -1,4 +1,4 @@
-﻿import { state, actions } from '../../core/app-state.js';
+import { state, actions } from '../../core/app-state.js';
 
 export function initModpacksFeature({ switchView }) {
 // === MODPACK MANAGER =====================================
@@ -2015,6 +2015,13 @@ document.getElementById('btn-play-modpack').addEventListener('click', () => {
   switchView('main');
   actions.beginLaunchOverlay?.('Launching...');
   const authData = state.authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
+  const windowSize = {
+    width: state.defaultWindowWidth,
+    height: state.defaultWindowHeight,
+    fullscreen: state.defaultFullscreen,
+    enableOverlay: state.enableOverlay,
+    hideLauncher: state.hideLauncher !== false
+  };
 
   if (isViewingVersion) {
     // Launch the version with its settings
@@ -2037,11 +2044,25 @@ document.getElementById('btn-play-modpack').addEventListener('click', () => {
         loaderVersion: versionSettings.loaderVersion || '', 
         javaPath: state.javaPath, 
         maxMemory: `${state.maxMemoryGB}G`, 
-        authData 
+        authData,
+        windowSize,
+        globalJavaArgs: state.globalJavaArgs
       });
     }
   } else if (window.electronAPI) {
-    window.electronAPI.launchModpack({ username: state.currentUser, modpackId: mp.id, modpackName: mp.name, mcVersion: mp.mcVersion, loader: mp.loader, loaderVersion: mp.loaderVersion || '', javaPath: state.javaPath, maxMemory: `${state.maxMemoryGB}G`, authData });
+    window.electronAPI.launchModpack({ 
+      username: state.currentUser, 
+      modpackId: mp.id, 
+      modpackName: mp.name, 
+      mcVersion: mp.mcVersion, 
+      loader: mp.loader, 
+      loaderVersion: mp.loaderVersion || '', 
+      javaPath: state.javaPath, 
+      maxMemory: `${state.maxMemoryGB}G`, 
+      authData,
+      windowSize,
+      globalJavaArgs: state.globalJavaArgs
+    });
   }
 });
 
