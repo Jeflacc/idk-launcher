@@ -1377,6 +1377,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
         loader: loaderName,
         server: quickConnect ? `${quickConnect.host}:${quickConnect.port}` : 'Singleplayer / LAN',
         username: (authData && authData.selectedProfile) ? authData.selectedProfile.name : (username || 'Player'),
+        authMode: (authData && authData.accessToken) ? 'elyby' : 'offline',
         isFullscreen: isLaunchFullscreen
       });
     }
@@ -1700,6 +1701,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
         loader: loaderName,
         server: quickConnect ? `${quickConnect.host}:${quickConnect.port}` : 'Singleplayer / LAN',
         username: (authData && authData.selectedProfile) ? authData.selectedProfile.name : (username || 'Player'),
+        authMode: (authData && authData.accessToken) ? 'elyby' : 'offline',
         isFullscreen: isLaunchFullscreen
       });
     }

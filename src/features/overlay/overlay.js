@@ -1,4 +1,5 @@
 import './overlay.css';
+import { loadAvatarForUser } from '../../core/skin-texture.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const overlayContainer = document.getElementById('overlay-container');
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let refreshInterval = null;
   let currentPlayingVersion = 'Vanilla';
   let activeMcUsername = null;
+  let activeMcAuthMode = 'offline';
 
   // --- TOAST NOTIFICATIONS ---
   function showToast(message, type = 'info') {
@@ -59,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // --- AVATAR RENDERING HELPER ---
-  function renderSkinFace(canvas, username) {
+  function renderSkinFace(canvas, username, authMode) {
     const ctx = canvas.getContext('2d');
     const img = new Image();
 
@@ -89,7 +91,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     };
 
-    img.src = `https://skinsystem.ely.by/skins/${username}.png`;
+    if (authMode === 'offline') {
+      img.src = `https://minotar.net/skin/${username}`;
+    } else {
+      img.src = `https://skinsystem.ely.by/skins/${username}.png`;
+    }
   }
 
   // --- API HELPER ---
@@ -117,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       loggedOutPanel.style.display = 'none';
       activePanel.style.display = 'block';
       overlayUsername.textContent = idkUser.username;
-      renderSkinFace(myAvatarCanvas, activeMcUsername || idkUser.username);
+      loadAvatarForUser(myAvatarCanvas, activeMcUsername || idkUser.username, activeMcAuthMode);
       startHeartbeats();
     } else {
       activePanel.style.display = 'none';
@@ -518,6 +524,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!data) return;
     currentPlayingVersion = `${data.loader || 'Vanilla'} ${data.version || ''}`.trim();
     activeMcUsername = data.username || null;
+    activeMcAuthMode = data.authMode || 'offline';
     updateAuthUI();
   }
 

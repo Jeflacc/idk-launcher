@@ -114,6 +114,9 @@ function updateUserDisplay(name) {
     }
     loadAvatarForUser(avatarCanvas, name, state.authMode);
   }
+
+  // Sync IDK Connect UI
+  actions.updateFriendsAuthUI?.();
 }
 
 // User Profile Dropdown Triggers
@@ -177,6 +180,8 @@ btnDropdownLogout.addEventListener('click', async (e) => {
   if (window.electronAPI) {
     window.electronAPI.saveSettings({ currentUser: '', authMode: 'offline', elybyData: null }).catch(console.error);
   }
+  // Sync IDK Connect UI
+  actions.updateFriendsAuthUI?.();
   switchView('login');
 });
 

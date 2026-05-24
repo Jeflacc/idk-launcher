@@ -1,4 +1,5 @@
 import { state, actions } from "../../core/app-state.js";
+import { loadAvatarForUser } from "../../core/skin-texture.js";
 
 export function initFriendsFeature() {
   // === IDK CONNECT - PREMIUM FRIENDS & CLOUDFLARED LAN SHARING CLIENT ENGINE ===
@@ -106,7 +107,7 @@ export function initFriendsFeature() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    function renderSkinFaceOnFriendsCanvas(canvas, username) {
+    function renderSkinFaceOnFriendsCanvas(canvas, username, authMode) {
       const ctx = canvas.getContext("2d");
       const img = new Image();
 
@@ -162,8 +163,12 @@ export function initFriendsFeature() {
         }
       };
 
-      // Start by checking Ely.by skins
-      img.src = `https://skinsystem.ely.by/skins/${username}.png`;
+      if (authMode === "offline") {
+        img.src = `https://minotar.net/skin/${username}`;
+      } else {
+        // Ely.by or unknown (e.g. friend) - check Ely.by first, fallback to minotar
+        img.src = `https://skinsystem.ely.by/skins/${username}.png`;
+      }
     }
 
     // --- HTTP BACKEND REQUEST WRAPPER ---
@@ -190,7 +195,7 @@ export function initFriendsFeature() {
         myUsernameLabel.innerText = idkUser.username;
 
         // Draw client avatar
-        renderSkinFaceOnFriendsCanvas(myAvatarCanvas, state.currentUser || idkUser.username);
+        loadAvatarForUser(myAvatarCanvas, state.currentUser || idkUser.username, state.authMode);
 
         // Initialize intervals
         startHeartbeats();
@@ -831,5 +836,8 @@ export function initFriendsFeature() {
 
     // --- INITIAL CHECK ---
     updateFriendsAuthUI();
+
+    // Register action to allow updating from outside
+    actions.updateFriendsAuthUI = updateFriendsAuthUI;
   })();
 }
