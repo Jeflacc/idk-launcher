@@ -3487,9 +3487,6 @@ app.on('will-quit', () => {
   if (activeTunnelProcess) {
     try { activeTunnelProcess.kill(); } catch (e) { }
   }
-  if (activeAccessProcess) {
-    try { activeAccessProcess.kill(); } catch (e) { }
-  }
 });
 
 

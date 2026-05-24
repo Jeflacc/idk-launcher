@@ -8,6 +8,9 @@ javaPathInput.value = state.javaPath;
 javaPathInput.addEventListener('input', (e) => {
   state.javaPath = e.target.value;
   localStorage.setItem('craftlaunch_javaPath', state.javaPath);
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ javaPath: state.javaPath }).catch(console.error);
+  }
 });
 
 // Global Java Arguments
@@ -16,6 +19,9 @@ globalJavaArgsInput.value = state.globalJavaArgs || '';
 globalJavaArgsInput.addEventListener('input', (e) => {
   state.globalJavaArgs = e.target.value;
   localStorage.setItem('idk_global_java_args', state.globalJavaArgs);
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ globalJavaArgs: state.globalJavaArgs }).catch(console.error);
+  }
 });
 
 // Default Window Size
@@ -32,21 +38,33 @@ overlayToggle.checked = state.enableOverlay || false;
 defaultWidthInput.addEventListener('input', (e) => {
   state.defaultWindowWidth = parseInt(e.target.value) || 1024;
   localStorage.setItem('idk_default_window_width', state.defaultWindowWidth);
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ defaultWindowWidth: state.defaultWindowWidth }).catch(console.error);
+  }
 });
 
 defaultHeightInput.addEventListener('input', (e) => {
   state.defaultWindowHeight = parseInt(e.target.value) || 768;
   localStorage.setItem('idk_default_window_height', state.defaultWindowHeight);
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ defaultWindowHeight: state.defaultWindowHeight }).catch(console.error);
+  }
 });
 
 fullscreenToggle.addEventListener('change', (e) => {
   state.defaultFullscreen = e.target.checked;
   localStorage.setItem('idk_default_fullscreen', state.defaultFullscreen);
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ defaultFullscreen: state.defaultFullscreen }).catch(console.error);
+  }
 });
 
 overlayToggle.addEventListener('change', (e) => {
   state.enableOverlay = e.target.checked;
   localStorage.setItem('idk_enable_overlay', state.enableOverlay);
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ enableOverlay: state.enableOverlay }).catch(console.error);
+  }
 });
 
 // Memory slider
@@ -58,6 +76,9 @@ function setMemory(gb) {
   memSlider.value = gb;
   memLabel.innerText = `${gb} GB`;
   localStorage.setItem('craftlaunch_maxMemory', gb);
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ maxMemoryGB: gb }).catch(console.error);
+  }
   // Highlight active preset button
   document.querySelectorAll('.mem-preset-btn').forEach(b => {
     b.classList.toggle('active', parseInt(b.dataset.gb) === gb);
@@ -74,6 +95,9 @@ function applyLauncherPerformanceMode(mode) {
   state.launcherPerformanceMode = mode;
   document.body.dataset.launcherPerformance = mode;
   localStorage.setItem('idk_launcher_performance_mode', mode);
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ launcherPerformanceMode: mode }).catch(console.error);
+  }
 
   document.querySelectorAll('.performance-mode-card').forEach(card => {
     card.classList.toggle('active', card.dataset.performanceMode === mode);

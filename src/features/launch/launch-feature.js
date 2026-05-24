@@ -130,6 +130,9 @@ if (window.electronAPI) {
 
 playBtn.addEventListener('click', () => {
   localStorage.setItem('idk_last_played', JSON.stringify({ version: state.selectedVersion, loader: state.selectedLoader }));
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ lastPlayedVersion: state.selectedVersion, lastPlayedLoader: state.selectedLoader }).catch(console.error);
+  }
   overlay.classList.add('active');
   gameStartTime = Date.now();
   launchFill.style.width = '0%';
@@ -306,7 +309,11 @@ window.updatePlaytime = function() {
   if (gameStartTime > 0) {
     const playedMs = Date.now() - gameStartTime;
     const totalMs = parseInt(localStorage.getItem('idk_playtime') || '0');
-    localStorage.setItem('idk_playtime', totalMs + playedMs);
+    const newTotalPlaytime = totalMs + playedMs;
+    localStorage.setItem('idk_playtime', newTotalPlaytime);
+    if (window.electronAPI) {
+      window.electronAPI.saveSettings({ playtime: newTotalPlaytime }).catch(console.error);
+    }
     gameStartTime = 0;
     updatePlaytimeDisplay();
   }

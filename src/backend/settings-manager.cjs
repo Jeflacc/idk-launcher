@@ -166,6 +166,136 @@ class SettingsManager extends EventEmitter {
         label: 'Font Scale',
         description: 'Scale factor for fonts (0.8-2.0)',
         tooltip: 'Adjust font size for better readability'
+      },
+      
+      // Launcher settings
+      javaPath: {
+        value: '',
+        type: 'string',
+        category: 'Launcher',
+        label: 'Java Executable Path',
+        description: 'Provide the absolute path to your javaw.exe file',
+        tooltip: 'Leave blank to use system default Java'
+      },
+      globalJavaArgs: {
+        value: '',
+        type: 'string',
+        category: 'Launcher',
+        label: 'Global Java Arguments',
+        description: 'Advanced JVM arguments applied to all modpacks',
+        tooltip: 'Leave empty for defaults'
+      },
+      defaultWindowWidth: {
+        value: 1024,
+        type: 'number',
+        category: 'Launcher',
+        label: 'Default Window Width',
+        description: 'Set the default window width when launching Minecraft',
+        tooltip: 'Default width in pixels'
+      },
+      defaultWindowHeight: {
+        value: 768,
+        type: 'number',
+        category: 'Launcher',
+        label: 'Default Window Height',
+        description: 'Set the default window height when launching Minecraft',
+        tooltip: 'Default height in pixels'
+      },
+      defaultFullscreen: {
+        value: false,
+        type: 'boolean',
+        category: 'Launcher',
+        label: 'Fullscreen',
+        description: 'Launch the game in fullscreen mode',
+        tooltip: 'Launches Minecraft in fullscreen'
+      },
+      enableOverlay: {
+        value: false,
+        type: 'boolean',
+        category: 'Launcher',
+        label: 'In-Game Overlay',
+        description: 'Enable the interactive in-game overlay',
+        tooltip: 'Shift+Tab to open in-game overlay'
+      },
+      maxMemoryGB: {
+        value: 4,
+        type: 'number',
+        category: 'Launcher',
+        label: 'Memory Allocation',
+        description: 'Set how much RAM Minecraft is allowed to use',
+        tooltip: 'More RAM = smoother gameplay'
+      },
+      launcherPerformanceMode: {
+        value: 'balanced',
+        type: 'string',
+        category: 'Launcher',
+        label: 'Launcher Performance',
+        description: 'Choose how much animation and background rendering the launcher should use',
+        tooltip: 'Quality, balanced, or eco'
+      },
+      autoOptimization: {
+        value: false,
+        type: 'boolean',
+        category: 'Launcher',
+        label: 'Performance Boost Pack',
+        description: 'For Fabric launches, install compatible optimization pack when available',
+        tooltip: 'Auto-installs Sodium, Lithium, etc.'
+      },
+      currentUser: {
+        value: '',
+        type: 'string',
+        category: 'Launcher',
+        label: 'Current User',
+        description: 'Currently logged in username',
+        tooltip: 'Offline username'
+      },
+      authMode: {
+        value: 'offline',
+        type: 'string',
+        category: 'Launcher',
+        label: 'Authentication Mode',
+        description: 'Method used to log in',
+        tooltip: 'offline or elyby'
+      },
+      elybyData: {
+        value: null,
+        type: 'object',
+        category: 'Launcher',
+        label: 'Ely.by Auth Data',
+        description: 'Authentication data for Ely.by accounts',
+        tooltip: 'Token and profile data for Ely.by'
+      },
+      lastPlayedVersion: {
+        value: '',
+        type: 'string',
+        category: 'Launcher',
+        label: 'Last Played Version',
+        description: 'The last played Minecraft version',
+        tooltip: 'Auto-selected on launch'
+      },
+      lastPlayedLoader: {
+        value: 'Vanilla',
+        type: 'string',
+        category: 'Launcher',
+        label: 'Last Played Loader',
+        description: 'The last played mod loader',
+        tooltip: 'Auto-selected on launch'
+      },
+      versionSettings: {
+        value: {},
+        type: 'object',
+        category: 'Launcher',
+        label: 'Version Settings',
+        description: 'Loader and settings per version',
+        tooltip: 'Stored as an object mapping version ID to config'
+      },
+      playtime: {
+        value: 0,
+        type: 'number',
+        category: 'Launcher',
+        label: 'Playtime',
+        description: 'Total playtime in milliseconds',
+        tooltip: 'Accumulated playtime'
       }
     };
     
@@ -432,7 +562,15 @@ class SettingsManager extends EventEmitter {
     // Update values from loaded settings
     Object.entries(loaded).forEach(([key, value]) => {
       if (merged[key]) {
-        merged[key].value = value;
+        if (value && typeof value === 'object' && 'value' in value) {
+          let unwrapped = value.value;
+          while (unwrapped && typeof unwrapped === 'object' && 'value' in unwrapped) {
+            unwrapped = unwrapped.value;
+          }
+          merged[key].value = unwrapped;
+        } else {
+          merged[key].value = value;
+        }
       }
     });
     
