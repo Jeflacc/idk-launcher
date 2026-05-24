@@ -7,6 +7,7 @@ export const state = {
   selectedVersion: lastPlayed.version,
   selectedLoader: lastPlayed.loader,
   autoOptimization: localStorage.getItem('craftlaunch_autoOptimization') === 'true',
+  hideLauncher: localStorage.getItem('idk_hide_launcher') !== 'false',
   launcherPerformanceMode: localStorage.getItem('idk_launcher_performance_mode') || 'balanced',
   javaPath: localStorage.getItem('craftlaunch_javaPath') || '',
   globalJavaArgs: localStorage.getItem('idk_global_java_args') || '',

@@ -43,6 +43,9 @@ function login() {
   state.authMode = 'offline';
   localStorage.setItem('craftlaunch_username', state.currentUser);
   localStorage.setItem('craftlaunch_authmode', state.authMode);
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ currentUser: state.currentUser, authMode: state.authMode }).catch(console.error);
+  }
   updateUserDisplay(state.currentUser);
   switchView('main');
 }
@@ -76,6 +79,9 @@ btnSubmitElyby.addEventListener('click', async () => {
       localStorage.setItem('craftlaunch_username', state.currentUser);
       localStorage.setItem('craftlaunch_authmode', state.authMode);
       localStorage.setItem('craftlaunch_elybydata', JSON.stringify(data));
+      if (window.electronAPI) {
+        window.electronAPI.saveSettings({ currentUser: state.currentUser, authMode: state.authMode, elybyData: data }).catch(console.error);
+      }
       updateUserDisplay(state.currentUser);
       switchView('main');
     } else {
@@ -108,6 +114,9 @@ function updateUserDisplay(name) {
     }
     loadAvatarForUser(avatarCanvas, name, state.authMode);
   }
+
+  // Sync IDK Connect UI
+  actions.updateFriendsAuthUI?.();
 }
 
 // User Profile Dropdown Triggers
@@ -168,6 +177,11 @@ btnDropdownLogout.addEventListener('click', async (e) => {
   if (!ok) return;
   state.currentUser = '';
   localStorage.removeItem('craftlaunch_username');
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ currentUser: '', authMode: 'offline', elybyData: null }).catch(console.error);
+  }
+  // Sync IDK Connect UI
+  actions.updateFriendsAuthUI?.();
   switchView('login');
 });
 

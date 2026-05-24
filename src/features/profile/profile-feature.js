@@ -261,6 +261,8 @@ export function initProfileFeature({ switchView, getReturnView }) {
       disposeSkinViewer();
       state.currentUser = "";
       localStorage.removeItem("craftlaunch_username");
+      // Sync IDK Connect UI
+      actions.updateFriendsAuthUI?.();
       switchView("login");
     });
 }
