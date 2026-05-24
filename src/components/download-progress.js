@@ -438,59 +438,59 @@ class DownloadProgressTracker {
       'network-timeout': {
         title: 'Network Timeout',
         message: 'The download took too long. Check your internet connection and try again.',
-        icon: '⏱️'
+        icon: '\u23F1\uFE0F'
       },
       'checksum-mismatch': {
         title: 'File Corrupted',
         message: 'The downloaded file is corrupted. The file will be re-downloaded automatically.',
-        icon: '⚠️'
+        icon: '\u26A0\uFE0F'
       },
       'disk-space-error': {
         title: 'Insufficient Disk Space',
         message: 'Not enough disk space to complete the download. Free up space and try again.',
-        icon: '💾'
+        icon: '\uD83D\uDCBE'
       },
       'invalid-url': {
         title: 'Invalid URL',
         message: 'The download URL is invalid or inaccessible. Please check the URL and try again.',
-        icon: '🔗'
+        icon: '\uD83D\uDD17'
       },
       'permission-denied': {
         title: 'Permission Denied',
         message: 'Cannot write to the download directory. Check folder permissions and try again.',
-        icon: '🔒'
+        icon: '\uD83D\uDD12'
       },
       'download-failed': {
         title: 'Download Failed',
         message: 'One or more items failed to download. Check your connection and try again.',
-        icon: '❌'
+        icon: '\u274C'
       },
       'item-failed': {
         title: 'Item Download Failed',
         message: `Failed to download: ${error.itemName || 'unknown item'}. ${error.error || 'Unknown error'}`,
-        icon: '❌'
+        icon: '\u274C'
       },
       'integrity-verification-failed': {
         title: 'Integrity Verification Failed',
         message: `${error.report?.failedItems || 0} files are corrupted and ${error.report?.missingItems || 0} files are missing. Attempting to re-download...`,
-        icon: '🔍'
+        icon: '\uD83D\uDD0D'
       },
       'verification-error': {
         title: 'Verification Error',
         message: 'An error occurred while verifying downloaded files. Please try again.',
-        icon: '⚠️'
+        icon: '\u26A0\uFE0F'
       },
       'finalization-error': {
         title: 'Finalization Error',
         message: 'An error occurred while finalizing the download. Please try again.',
-        icon: '⚠️'
+        icon: '\u26A0\uFE0F'
       }
     };
 
     const errorInfo = errorMessages[error.type] || {
       title: 'Download Error',
       message: error.message || 'An unknown error occurred',
-      icon: '❌'
+      icon: '\u274C'
     };
 
     // Build detailed error message
@@ -500,7 +500,7 @@ class DownloadProgressTracker {
       detailedMessage += '\n\nDetails:';
       if (Array.isArray(error.details)) {
         error.details.forEach(detail => {
-          detailedMessage += `\n• ${detail.itemName || detail.itemId}: ${detail.error}`;
+          detailedMessage += `\n\u2022 ${detail.itemName || detail.itemId}: ${detail.error}`;
         });
       }
     }
@@ -527,9 +527,9 @@ class DownloadProgressTracker {
   showError(message) {
     this.elements.errorDisplay.innerHTML = `
       <div class="error-content">
-        <div class="error-icon">⚠️</div>
+        <div class="error-icon">\u26A0\uFE0F</div>
         <div class="error-text">${this._escapeHtml(message)}</div>
-        <button class="error-close-btn" aria-label="Close error message">×</button>
+        <button class="error-close-btn" aria-label="Close error message">&times;</button>
       </div>
     `;
     this.elements.errorDisplay.classList.add('visible');

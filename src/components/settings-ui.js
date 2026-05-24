@@ -71,7 +71,7 @@ class SettingsUI {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'settings-close-btn';
     closeBtn.setAttribute('aria-label', 'Close settings');
-    closeBtn.innerHTML = '✕';
+    closeBtn.innerHTML = '&times;';
     closeBtn.addEventListener('click', () => this.close());
     
     header.appendChild(title);

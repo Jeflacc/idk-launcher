@@ -35,6 +35,9 @@ optimizationCheckbox.checked = state.autoOptimization;
 optimizationCheckbox.addEventListener('change', (e) => {
   state.autoOptimization = e.target.checked;
   localStorage.setItem('craftlaunch_autoOptimization', String(state.autoOptimization));
+  if (window.electronAPI) {
+    window.electronAPI.saveSettings({ autoOptimization: state.autoOptimization }).catch(console.error);
+  }
 });
 
 loaderTrigger.addEventListener('click', (e) => {
@@ -58,6 +61,9 @@ loaderOptions.forEach(opt => {
     e.stopPropagation();
     state.selectedLoader = opt.getAttribute('data-loader');
     localStorage.setItem('idk_selected_loader', state.selectedLoader);
+    if (window.electronAPI) {
+      window.electronAPI.saveSettings({ lastPlayedLoader: state.selectedLoader }).catch(console.error);
+    }
     updateLoaderUI(state.selectedLoader);
     loaderDropdown.classList.remove('open');
   });
@@ -102,6 +108,9 @@ async function scanDownloadedVersions() {
         }
       });
       localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+      if (window.electronAPI) {
+        window.electronAPI.saveSettings({ versionSettings: state.versionSettings }).catch(console.error);
+      }
       console.log('[Versions] Updated version settings with detected loaders:', state.versionSettings);
     }
     
@@ -187,7 +196,7 @@ function renderVersions() {
     
     // Add downloaded badge if version is downloaded
     const downloadedBadge = state.downloadedVersions.includes(v.id)
-      ? `<span class="downloaded-badge" title="Downloaded">✓</span>`
+      ? `<span class="downloaded-badge" title="Downloaded">&#x2713;</span>`
       : '';
 
     el.innerHTML = `

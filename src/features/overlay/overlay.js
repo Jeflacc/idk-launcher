@@ -1,4 +1,5 @@
 import './overlay.css';
+import { loadAvatarForUser } from '../../core/skin-texture.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const overlayContainer = document.getElementById('overlay-container');
@@ -32,15 +33,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const requestsList = document.getElementById('requests-list');
 
   // State
-  let IDK_BACKEND_URL = 'https://play.somniac.me';
+  let IDK_BACKEND_URL = 'https://api.somniac.me';
   let idkToken = localStorage.getItem('idk_connect_token') || '';
   let idkUser = JSON.parse(localStorage.getItem('idk_connect_user') || 'null');
-  
+
   let activeTunnelUrl = null;
   let activeSharePort = null;
   let presenceInterval = null;
   let refreshInterval = null;
   let currentPlayingVersion = 'Vanilla';
+  let activeMcUsername = null;
+  let activeMcAuthMode = 'offline';
 
   // --- TOAST NOTIFICATIONS ---
   function showToast(message, type = 'info') {
@@ -58,10 +61,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // --- AVATAR RENDERING HELPER ---
-  function renderSkinFace(canvas, username) {
+  function renderSkinFace(canvas, username, authMode) {
     const ctx = canvas.getContext('2d');
     const img = new Image();
-    
+
     img.onload = () => {
       const scale = img.naturalWidth / 64;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -88,7 +91,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     };
 
-    img.src = `https://skinsystem.ely.by/skins/${username}.png`;
+    if (authMode === 'offline') {
+      img.src = `https://minotar.net/skin/${username}`;
+    } else {
+      img.src = `https://skinsystem.ely.by/skins/${username}.png`;
+    }
   }
 
   // --- API HELPER ---
@@ -116,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       loggedOutPanel.style.display = 'none';
       activePanel.style.display = 'block';
       overlayUsername.textContent = idkUser.username;
-      renderSkinFace(myAvatarCanvas, idkUser.username);
+      loadAvatarForUser(myAvatarCanvas, activeMcUsername || idkUser.username, activeMcAuthMode);
       startHeartbeats();
     } else {
       activePanel.style.display = 'none';
@@ -133,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.electronAPI) {
       // window.electronAPI.stopCloudflaredAccess(); // No longer needed
     }
-    
+
     localStorage.removeItem('idk_connect_token');
     localStorage.removeItem('idk_connect_user');
     showToast("Disconnected from IDK Network.");
@@ -145,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     stopHeartbeats();
     sendPresenceHeartbeat();
     presenceInterval = setInterval(sendPresenceHeartbeat, 10000);
-    
+
     refreshFriendsData();
     refreshInterval = setInterval(refreshFriendsData, 7000);
   }
@@ -203,11 +210,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     sorted.forEach(friend => {
       const card = document.createElement('div');
       card.className = 'friend-card';
-      
+
       const isOnline = friend.status !== 'offline';
       const isHosting = !!friend.cloudflaredUrl;
       const isPlaying = !!friend.playingVersion && !isHosting;
-      
+
       let statusText = 'Offline';
       let statusClass = '';
       if (isHosting) {
@@ -251,14 +258,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       card.querySelector('.friend-remove-btn').onclick = async (e) => {
         e.stopPropagation();
-        if (confirm(`Are you sure you want to remove ${friend.username} as a friend?`)) {
-          try {
-            await idkRequest(`/api/friends/${friend.id}`, 'DELETE');
-            showToast(`Removed ${friend.username}.`);
-            refreshFriendsData();
-          } catch (err) {
-            showToast(err.message, 'error');
-          }
+        const confirmFn = window.IdkApp?.actions?.showConfirmDialog;
+        let proceed = false;
+        if (confirmFn) {
+          proceed = await confirmFn({
+            title: 'Remove friend',
+            message: `Remove ${friend.username} from your friends list? You can send them a new request later.`,
+            confirmText: 'Unfriend',
+            cancelText: 'Keep friend',
+            variant: 'danger',
+          });
+        } else {
+          proceed = confirm(`Remove ${friend.username} from your friends list?`);
+        }
+        if (!proceed) return;
+        try {
+          await idkRequest(`/api/friends/${friend.id}`, 'DELETE');
+          showToast(`Removed ${friend.username}.`);
+          refreshFriendsData();
+        } catch (err) {
+          showToast(err.message, 'error');
         }
       };
 
@@ -290,8 +309,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <span>Wants to be friends</span>
         </div>
         <div class="friend-request-actions">
-          <button class="friend-request-btn accept" title="Accept">✓</button>
-          <button class="friend-request-btn decline" title="Decline">✕</button>
+          <button class="friend-request-btn accept" title="Accept">&#x2713;</button>
+          <button class="friend-request-btn decline" title="Decline">&times;</button>
         </div>
       `;
 
@@ -504,6 +523,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   function applySessionData(data) {
     if (!data) return;
     currentPlayingVersion = `${data.loader || 'Vanilla'} ${data.version || ''}`.trim();
+    activeMcUsername = data.username || null;
+    activeMcAuthMode = data.authMode || 'offline';
     updateAuthUI();
   }
 

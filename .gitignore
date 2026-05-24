@@ -31,3 +31,5 @@ release
 node_modules
 .kiro
 .playwright-mcp
+idk-backend/
+scratch/

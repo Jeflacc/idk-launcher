@@ -55,7 +55,7 @@ class ErrorDisplay {
               </svg>
             </div>
             <div class="error-display-title">Error</div>
-            <button class="error-display-close" aria-label="Close error message">✕</button>
+            <button class="error-display-close" aria-label="Close error message">&times;</button>
           </div>
           <div class="error-display-message"></div>
           <div class="error-display-details"></div>

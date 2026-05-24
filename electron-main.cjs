@@ -2,11 +2,33 @@ const { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, screen, prot
 const path = require('path');
 const { Client } = require('minecraft-launcher-core');
 const fs = require('fs');
+
+// --- Launch Performance Optimization: Checksum Bypass for Existing Files ---
+const Handler = require('minecraft-launcher-core/components/handler');
+const originalCheckSum = Handler.prototype.checkSum;
+Handler.prototype.checkSum = async function(hash, file) {
+  try {
+    if (fs.existsSync(file)) {
+      const stat = fs.statSync(file);
+      const launchTime = global.lastLaunchTime || Date.now();
+      // If the file was modified at least 10 seconds before the current launch started,
+      // it was already fully downloaded and present on disk. Skip hashing.
+      if (stat.mtimeMs < launchTime - 10000) {
+        return true;
+      }
+    }
+  } catch (e) {
+    console.warn('[Launch Optimizer] Failed to check file stat:', e.message);
+  }
+  return originalCheckSum.call(this, hash, file);
+};
+
 const https = require('https');
 const { exec, execSync, spawn } = require('child_process');
 const DiscordRPC = require('discord-rpc');
 const { Worker } = require('worker_threads');
 const crypto = require('crypto');
+const { scanProfileAchievements, resolveProfilePath } = require('./src/backend/achievements-scanner.cjs');
 
 app.commandLine.appendSwitch('js-flags', '--expose_gc');
 
@@ -324,6 +346,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1050,
     height: 650,
+    minWidth: 1060,
+    minHeight: 650,
     frame: false,
     resizable: true,
     maximizable: true,
@@ -492,6 +516,22 @@ ipcMain.handle('install-mod-to-version', async (event, { version, downloadUrl, f
   return new Promise((resolve, reject) => {
     downloadFile(downloadUrl, jarPath, () => resolve({ success: true }), (e) => reject(e));
   });
+});
+
+// Scan unique completed advancements for a modpack or version profile
+ipcMain.handle('scan-profile-achievements', async (event, { modpackId, versionId } = {}) => {
+  try {
+    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const profilePath = resolveProfilePath(rootPath, { modpackId, versionId });
+    if (!profilePath) {
+      return { success: false, error: 'No profile specified', count: 0, advancements: [] };
+    }
+    const { count, advancements } = scanProfileAchievements(profilePath);
+    return { success: true, count, advancements, profilePath };
+  } catch (e) {
+    console.error('[Achievements] Scan error:', e);
+    return { success: false, error: e.message, count: 0, advancements: [] };
+  }
 });
 
 // Scan mods installed for a specific version
@@ -1127,6 +1167,7 @@ function isModernVersion(ver) {
 }
 
 ipcMain.on('launch-modpack', async (event, args) => {
+  global.lastLaunchTime = Date.now();
   let { username, modpackId, modpackName, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData, quickConnect, windowSize, globalJavaArgs } = args;
 
   // Always read mcVersion and loader from profile.json on disk — it's the source of truth.
@@ -1315,9 +1356,11 @@ ipcMain.on('launch-modpack', async (event, args) => {
     
     // Restore UI Page
     if (mainWindow) {
-      if (process.env.VITE_DEV_SERVER_URL) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
-      else mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
-      mainWindow.show();
+      if (!mainWindow.isVisible()) {
+        if (process.env.VITE_DEV_SERVER_URL) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+        else mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+        mainWindow.show();
+      }
     }
 
     event.sender.send('launch-closed');
@@ -1346,11 +1389,14 @@ ipcMain.on('launch-modpack', async (event, args) => {
     
     // Destroy UI to free memory
     if (mainWindow) {
-      mainWindow.hide();
-      setTimeout(() => {
-        mainWindow.loadURL('about:blank');
-        try { if (global.gc) global.gc(); } catch(e){}
-      }, 500);
+      const hideLauncher = !(windowSize && windowSize.hideLauncher === false);
+      if (hideLauncher) {
+        mainWindow.hide();
+        setTimeout(() => {
+          mainWindow.loadURL('about:blank');
+          try { if (global.gc) global.gc(); } catch(e){}
+        }, 500);
+      }
     }
     if (windowSize && windowSize.enableOverlay) {
       createOverlayWindow({
@@ -1358,6 +1404,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
         loader: loaderName,
         server: quickConnect ? `${quickConnect.host}:${quickConnect.port}` : 'Singleplayer / LAN',
         username: (authData && authData.selectedProfile) ? authData.selectedProfile.name : (username || 'Player'),
+        authMode: (authData && authData.accessToken) ? 'elyby' : 'offline',
         isFullscreen: isLaunchFullscreen
       });
     }
@@ -1378,6 +1425,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
 
 // Minecraft Launch IPC
 ipcMain.on('launch-minecraft', async (event, args) => {
+  global.lastLaunchTime = Date.now();
   const { username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect, windowSize, globalJavaArgs } = args;
 
   if (username) lastActiveUsername = username;
@@ -1601,9 +1649,11 @@ ipcMain.on('launch-minecraft', async (event, args) => {
 
     // Restore UI Page
     if (mainWindow) {
-      if (process.env.VITE_DEV_SERVER_URL) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
-      else mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
-      mainWindow.show();
+      if (!mainWindow.isVisible()) {
+        if (process.env.VITE_DEV_SERVER_URL) mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+        else mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
+        mainWindow.show();
+      }
     }
 
     // --- Crash Report Parser: detect missing mod dependencies ---
@@ -1669,11 +1719,14 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     
     // Destroy UI to free memory
     if (mainWindow) {
-      mainWindow.hide();
-      setTimeout(() => {
-        mainWindow.loadURL('about:blank');
-        try { if (global.gc) global.gc(); } catch(e){}
-      }, 500);
+      const hideLauncher = !(windowSize && windowSize.hideLauncher === false);
+      if (hideLauncher) {
+        mainWindow.hide();
+        setTimeout(() => {
+          mainWindow.loadURL('about:blank');
+          try { if (global.gc) global.gc(); } catch(e){}
+        }, 500);
+      }
     }
     if (windowSize && windowSize.enableOverlay) {
       createOverlayWindow({
@@ -1681,6 +1734,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
         loader: loaderName,
         server: quickConnect ? `${quickConnect.host}:${quickConnect.port}` : 'Singleplayer / LAN',
         username: (authData && authData.selectedProfile) ? authData.selectedProfile.name : (username || 'Player'),
+        authMode: (authData && authData.accessToken) ? 'elyby' : 'offline',
         isFullscreen: isLaunchFullscreen
       });
     }
@@ -3467,9 +3521,6 @@ ipcMain.handle('detect-missing-items', async (event, items, downloadPath) => {
 app.on('will-quit', () => {
   if (activeTunnelProcess) {
     try { activeTunnelProcess.kill(); } catch (e) { }
-  }
-  if (activeAccessProcess) {
-    try { activeAccessProcess.kill(); } catch (e) { }
   }
 });
 
