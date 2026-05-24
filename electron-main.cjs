@@ -2,6 +2,27 @@ const { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, screen, prot
 const path = require('path');
 const { Client } = require('minecraft-launcher-core');
 const fs = require('fs');
+
+// --- Launch Performance Optimization: Checksum Bypass for Existing Files ---
+const Handler = require('minecraft-launcher-core/components/handler');
+const originalCheckSum = Handler.prototype.checkSum;
+Handler.prototype.checkSum = async function(hash, file) {
+  try {
+    if (fs.existsSync(file)) {
+      const stat = fs.statSync(file);
+      const launchTime = global.lastLaunchTime || Date.now();
+      // If the file was modified at least 10 seconds before the current launch started,
+      // it was already fully downloaded and present on disk. Skip hashing.
+      if (stat.mtimeMs < launchTime - 10000) {
+        return true;
+      }
+    }
+  } catch (e) {
+    console.warn('[Launch Optimizer] Failed to check file stat:', e.message);
+  }
+  return originalCheckSum.call(this, hash, file);
+};
+
 const https = require('https');
 const { exec, execSync, spawn } = require('child_process');
 const DiscordRPC = require('discord-rpc');
@@ -1146,6 +1167,7 @@ function isModernVersion(ver) {
 }
 
 ipcMain.on('launch-modpack', async (event, args) => {
+  global.lastLaunchTime = Date.now();
   let { username, modpackId, modpackName, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData, quickConnect, windowSize, globalJavaArgs } = args;
 
   // Always read mcVersion and loader from profile.json on disk — it's the source of truth.
@@ -1398,6 +1420,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
 
 // Minecraft Launch IPC
 ipcMain.on('launch-minecraft', async (event, args) => {
+  global.lastLaunchTime = Date.now();
   const { username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect, windowSize, globalJavaArgs } = args;
 
   if (username) lastActiveUsername = username;
