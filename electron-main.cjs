@@ -3458,7 +3458,7 @@ function getMinecraftDataPath() {
   }
 
   // Fall back to default path — never recurse
-  return path.join(app.getPath('appData'), 'IDK Launcher', 'minecraft-data');
+  return path.join(app.getPath('userData'), 'minecraft-data');
 }
 
 
