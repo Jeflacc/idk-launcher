@@ -1,5 +1,64 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.4.0 Changelog
+
+Hello everyone! The stable release **v1.4.0** is officially here! This major release introduces custom Minecraft installation location directories, version mod management, live achievement statistics trackers, direct messaging in IDK Connect, direct IP connection routing, and robust Ely.by skin support.
+
+---
+
+### 🚀 New Features & Enhancements
+
+* **📂 Custom Minecraft Installation Location**
+  - You can now specify a custom folder for all your Minecraft directories (versions, profiles, assets, mods) rather than defaulting to `%appdata%`.
+  - Added "Browse" and "Clear" setting buttons in the Settings page to manage paths easily.
+  - Dynamically scans and updates available versions as soon as a new directory path is set.
+
+* **🛠️ Per-Version Mods & Customization Management**
+  - Added a **"Manage Mods"** feature for downloaded standard versions of Minecraft.
+  - Allows you to configure custom loaders (Fabric, Forge, NeoForge, Quilt, Vanilla), custom JVM arguments, and window sizes per version.
+  - Automatically scans local folders to match loader options.
+
+* **🏆 Live Achievements Tracker**
+  - Integrated a global achievements count in the main stats grid and Profile sidebar.
+  - Automatically scans Minecraft save files across all modpacks and versions to calculate your overall achievements.
+
+* **💬 Direct Messaging & Chat in IDK Connect**
+  - Click on any online friend in your sidebar to open a dedicated, real-time Direct Message chat.
+  - Features green unread count notification badges on your friends list.
+
+* **🌐 Direct IP Connections (Direct Routing)**
+  - Updated the "Join" button connection parameters to parse and strip protocol prefixes (like `tcp://` or `https://`).
+  - Connects you directly to the remote server IP and port instead of forcing a local `127.0.0.1` redirect.
+
+* **⚙️ \"Hide Launcher on Launch\" Option**
+  - Minimize the launcher window to the system tray while Minecraft is active to free up CPU and memory resources.
+  - Restores the launcher window immediately after exiting Minecraft.
+
+---
+
+### 🔧 Stability, Fixes & Polish
+
+* **🎭 Ely.by Skin Support Fixes**
+  - Fixed a critical launch argument override bug where the Ely.by skin agent was wiping out other custom JVM arguments (like GC parameters).
+* **☕ JRE Version Mapping Updates**
+  - Updated JRE version mapping to use Java 17 for versions `1.17` to `1.20.4` (e.g. Fabric 1.20.1) and Java 21 for `1.20.5`+.
+* **⚡ Near-Instant Game Launching**
+  - Skips redundant file integrity checksum checks for existing versions on disk to drastically reduce launch load times.
+* **🖼️ Relative Playtime Image Loading**
+  - Resolved a broken playtime icon loading bug in packaged production builds.
+* **🛑 Host Connection Cancellation**
+  - Added a red **"Cancel"** button to abort the frpc tunnel setup process immediately.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.4.0`
+* **Release Channel:** Stable Release
+* **Platform:** Windows, macOS, Linux
+* **CI/CD Build:** Fully integrated with GitHub Actions Workflows for automated multiplatform builds triggered upon pushing release tags!
+
+---
+
 ## 🎮 IDK Launcher v1.4.0-preview.26w21e Changelog
 
 Welcome to the hotfix preview revision **v1.4.0-preview.26w21e**! This is a critical build fix that resolves a crash on startup introduced in the previous preview build.
