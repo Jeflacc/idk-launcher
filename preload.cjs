@@ -23,12 +23,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getOverlayData:    ()   => ipcRenderer.invoke('get-overlay-data'),
 
   openMinecraftFolder: () => ipcRenderer.send('open-minecraft-folder'),
+  selectMinecraftFolder: () => ipcRenderer.invoke('select-minecraft-folder'),
   openExternal: (url) => ipcRenderer.send('open-external', url),
   getUserDataPath: () => ipcRenderer.invoke('get-user-data-path'),
   getVersionsPath: () => ipcRenderer.invoke('get-versions-path'),
   scanDownloadedVersions: () => ipcRenderer.invoke('scan-downloaded-versions'),
   scanVersionMods: (version) => ipcRenderer.invoke('scan-version-mods', version),
   scanProfileAchievements: (data) => ipcRenderer.invoke('scan-profile-achievements', data),
+  scanAllAchievements: () => ipcRenderer.invoke('scan-all-achievements'),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
@@ -51,6 +53,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   launchModpack: (args) => ipcRenderer.send('launch-modpack', args),
   toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
   scanProfiles: () => ipcRenderer.invoke('scan-profiles'),
+  deleteModpackFolder: (data) => ipcRenderer.invoke('delete-modpack-folder', data),
+
+  // Overlay System IPC Bridge
+  setIdkConnectData: (data) => ipcRenderer.send('set-idk-connect-data', data),
+  getOverlayData: () => ipcRenderer.invoke('get-overlay-data'),
+  closeOverlay: () => ipcRenderer.send('close-overlay'),
+  onOverlayToggle: (cb) => ipcRenderer.on('overlay-toggle', (_e, data) => cb(data)),
+  onOverlaySyncConnect: (cb) => ipcRenderer.on('overlay-sync-connect', (_e, data) => cb(data)),
+  onShowStartupNotification: (cb) => ipcRenderer.on('show-startup-notification', (_e, data) => cb(data)),
+  hideOverlayWindow: () => ipcRenderer.send('hide-overlay-window'),
 
   // FRPC Multiplayer Tunneling
   ensureFrpc: () => ipcRenderer.invoke('ensure-frpc'),

@@ -19,6 +19,7 @@ export const state = {
   enableOverlay: localStorage.getItem("idk_enable_overlay") === "true",
   javaPath: localStorage.getItem("craftlaunch_javaPath") || "",
   globalJavaArgs: localStorage.getItem("idk_global_java_args") || "",
+  customMinecraftPath: localStorage.getItem("idk_custom_minecraft_path") || "",
   defaultWindowWidth: parseInt(
     localStorage.getItem("idk_default_window_width") || "1024",
   ),

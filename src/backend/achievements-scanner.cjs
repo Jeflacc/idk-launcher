@@ -81,16 +81,8 @@ function scanWorldFolder(worldPath, completed) {
   scanJsonDirectory(path.join(worldPath, 'stats'), completed, collectFromStatsFile);
 }
 
-/**
- * @param {string} profilePath - Modpack / version game directory (contains saves/)
- * @returns {{ count: number, advancements: string[] }}
- */
-function scanProfileAchievements(profilePath) {
-  const completed = new Set();
-
-  if (!profilePath || !fs.existsSync(profilePath)) {
-    return { count: 0, advancements: [] };
-  }
+function scanProfileFolderInternal(profilePath, completed) {
+  if (!profilePath || !fs.existsSync(profilePath)) return;
 
   const savesPath = path.join(profilePath, 'saves');
   if (fs.existsSync(savesPath)) {
@@ -111,6 +103,57 @@ function scanProfileAchievements(profilePath) {
   // Some installs keep stats at profile root (older layouts)
   scanJsonDirectory(path.join(profilePath, 'stats'), completed, collectFromStatsFile);
   scanJsonDirectory(path.join(profilePath, 'advancements'), completed, collectFromAdvancementsFile);
+}
+
+/**
+ * @param {string} profilePath - Modpack / version game directory (contains saves/)
+ * @returns {{ count: number, advancements: string[] }}
+ */
+function scanProfileAchievements(profilePath) {
+  const completed = new Set();
+  scanProfileFolderInternal(profilePath, completed);
+  const advancements = [...completed].sort();
+  return { count: advancements.length, advancements };
+}
+
+function scanAllAchievements(rootPath) {
+  const completed = new Set();
+  if (!rootPath || !fs.existsSync(rootPath)) {
+    return { count: 0, advancements: [] };
+  }
+
+  // 1. Scan root path itself
+  scanProfileFolderInternal(rootPath, completed);
+
+  // 2. Scan all subdirectories of profiles/
+  const profilesPath = path.join(rootPath, 'profiles');
+  if (fs.existsSync(profilesPath)) {
+    try {
+      const dirs = fs.readdirSync(profilesPath, { withFileTypes: true });
+      for (const d of dirs) {
+        if (d.isDirectory()) {
+          scanProfileFolderInternal(path.join(profilesPath, d.name), completed);
+        }
+      }
+    } catch (e) {
+      console.warn('[Achievements] Error reading profiles directory:', e.message);
+    }
+  }
+
+  // 3. Scan all subdirectories of versions/
+  const versionsPath = path.join(rootPath, 'versions');
+  if (fs.existsSync(versionsPath)) {
+    try {
+      const dirs = fs.readdirSync(versionsPath, { withFileTypes: true });
+      for (const d of dirs) {
+        if (d.isDirectory()) {
+          scanProfileFolderInternal(path.join(versionsPath, d.name), completed);
+        }
+      }
+    } catch (e) {
+      console.warn('[Achievements] Error reading versions directory:', e.message);
+    }
+  }
 
   const advancements = [...completed].sort();
   return { count: advancements.length, advancements };
@@ -136,6 +179,7 @@ function resolveProfilePath(rootPath, { modpackId, versionId } = {}) {
 
 module.exports = {
   scanProfileAchievements,
+  scanAllAchievements,
   resolveProfilePath,
   isRecipeAdvancement,
   collectFromAdvancementsFile,

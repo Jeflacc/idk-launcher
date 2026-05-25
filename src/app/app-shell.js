@@ -231,11 +231,21 @@ export function renderAppShell() {
           <div class="stat-card">
             <div class="stat-icon">
               <!-- Minecraft-style sword icon for Time Played -->
-              <img src="/playtime.png" alt="Time Played" style="width:28px;height:28px;image-rendering:pixelated;" />
+              <img src="./playtime.png" alt="Time Played" style="width:28px;height:28px;image-rendering:pixelated;" />
             </div>
             <div class="stat-info">
               <h4>Time Played</h4>
               <h2 id="stat-playtime">0.0h</h2>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <!-- Minecraft-style achievement icon for Achievements -->
+              <img src="./achievement.png" alt="Total Achievements" style="width:28px;height:28px;image-rendering:pixelated;" />
+            </div>
+            <div class="stat-info">
+              <h4>Total Achievements</h4>
+              <h2 id="stat-achievements">0</h2>
             </div>
           </div>
         </div>
@@ -340,6 +350,16 @@ export function renderAppShell() {
           <h3>Java Executable Path</h3>
           <p>Provide the absolute path to your javaw.exe file (e.g., C:\\\Program Files\\\Java\\\jdk-17\\\bin\\\javaw.exe). If left blank, the launcher will use the system default Java.</p>
           <input type="text" class="clean-input" style="text-align: left;" id="java-path" placeholder="&lt;Use System Default&gt;" />
+        </div>
+
+        <div class="settings-section">
+          <h3>Custom Minecraft Location</h3>
+          <p>Choose where to store your Minecraft directories (profiles, versions, assets, and mods). If left blank, it will default to the standard location inside %appdata%/IDK Launcher/minecraft-data.</p>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="clean-input" style="text-align: left; flex:1;" id="custom-minecraft-path" placeholder="&lt;Use Default Location&gt;" readonly />
+            <button class="submit-btn" id="btn-browse-minecraft-path" style="width: auto; padding: 10px 20px; margin: 0;">Browse</button>
+            <button class="submit-btn" id="btn-clear-minecraft-path" style="width: auto; padding: 10px 15px; margin: 0; background: #ef4444;" title="Reset to default">&#x2715;</button>
+          </div>
         </div>
 
         <div class="settings-section">
@@ -504,6 +524,15 @@ export function renderAppShell() {
                 <div class="profile-stat-mini-content">
                   <span class="profile-stat-mini-value" id="profile-stat-modpacks">0</span>
                   <span class="profile-stat-mini-label">Modpacks</span>
+                </div>
+              </div>
+              <div class="profile-stat-mini">
+                <span class="profile-stat-mini-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                </span>
+                <div class="profile-stat-mini-content">
+                  <span class="profile-stat-mini-value" id="profile-stat-achievements">0</span>
+                  <span class="profile-stat-mini-label">Achievements</span>
                 </div>
               </div>
             </div>

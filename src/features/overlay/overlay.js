@@ -508,14 +508,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   function joinFriendWorld(friend) {
     if (!friend.cloudflaredUrl) return;
 
-    let connectAddressText;
-    if (friend.cloudflaredUrl.startsWith("https://")) {
-      connectAddressText = "127.0.0.1:25565";
-      showToast(
-        "Legacy HTTPS tunnels are no longer supported. Please ask your friend to update their launcher.",
-      );
-    } else {
-      connectAddressText = friend.cloudflaredUrl.replace("tcp://", "");
+    let connectAddressText = friend.cloudflaredUrl.replace(/^(tcp|https?):\/\//i, '');
+    if (!connectAddressText.includes(':')) {
+      connectAddressText += ':25565';
     }
 
     navigator.clipboard.writeText(connectAddressText);

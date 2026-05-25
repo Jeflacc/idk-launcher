@@ -98,6 +98,7 @@ if (window.electronAPI) {
     playBtn.classList.remove('running');
     playBtn.disabled = false;
     updatePlaytime();
+    updateAchievementsDisplay();
   });
   window.electronAPI.onLaunchError((error) => {
     document.getElementById('error-message').innerText = error;
@@ -305,6 +306,21 @@ function updatePlaytimeDisplay() {
   if (el) el.innerText = `${hours}h`;
 }
 
+async function updateAchievementsDisplay() {
+  const el = document.getElementById('stat-achievements');
+  if (!el) return;
+  if (window.electronAPI && window.electronAPI.scanAllAchievements) {
+    try {
+      const result = await window.electronAPI.scanAllAchievements();
+      if (result && result.success) {
+        el.innerText = result.count;
+      }
+    } catch (e) {
+      console.error('[Achievements] Failed to fetch total achievements:', e);
+    }
+  }
+}
+
 // Make updatePlaytime global so it can be called inside the event listeners
 window.updatePlaytime = function() {
   if (gameStartTime > 0) {
@@ -322,6 +338,7 @@ window.updatePlaytime = function() {
 
 // Initial display
 updatePlaytimeDisplay();
+updateAchievementsDisplay();
 
 // Background Dimming on Scroll
 const viewMain = document.getElementById('view-main');

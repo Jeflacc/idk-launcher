@@ -305,6 +305,7 @@ function refreshProfilePage() {
   const accountStat = document.getElementById("profile-stat-account-type");
   const playtimeEl = document.getElementById("profile-stat-playtime");
   const modpacksEl = document.getElementById("profile-stat-modpacks");
+  const achievementsEl = document.getElementById("profile-stat-achievements");
   const changeSkinBtn = document.getElementById("profile-btn-change-skin");
   const sidebarName = document.getElementById("profile-sidebar-name");
   const sidebarAcct = document.getElementById("profile-sidebar-acct");
@@ -314,6 +315,22 @@ function refreshProfilePage() {
     accountStat.textContent = state.authMode === "elyby" ? "Ely.by" : "Offline";
   if (playtimeEl) playtimeEl.textContent = formatPlaytimeHours();
   if (modpacksEl) modpacksEl.textContent = String(state.modpacks?.length || 0);
+  if (achievementsEl) {
+    achievementsEl.textContent = "Loading...";
+    if (window.electronAPI && window.electronAPI.scanAllAchievements) {
+      window.electronAPI.scanAllAchievements().then(result => {
+        if (result && result.success) {
+          achievementsEl.textContent = String(result.count);
+        } else {
+          achievementsEl.textContent = "0";
+        }
+      }).catch(() => {
+        achievementsEl.textContent = "0";
+      });
+    } else {
+      achievementsEl.textContent = "0";
+    }
+  }
   // Change skin button removed - no longer needed
   if (sidebarName) sidebarName.textContent = name.toUpperCase();
   if (sidebarAcct)
@@ -491,6 +508,15 @@ export function initProfileFeature({ switchView, getReturnView }) {
         return;
       const playtimeEl = document.getElementById("profile-stat-playtime");
       if (playtimeEl) playtimeEl.textContent = formatPlaytimeHours();
+
+      const achievementsEl = document.getElementById("profile-stat-achievements");
+      if (achievementsEl && window.electronAPI.scanAllAchievements) {
+        window.electronAPI.scanAllAchievements().then(result => {
+          if (result && result.success) {
+            achievementsEl.textContent = String(result.count);
+          }
+        }).catch(console.error);
+      }
     });
   }
 

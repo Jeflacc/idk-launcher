@@ -28,7 +28,7 @@ const { exec, execSync, spawn } = require('child_process');
 const DiscordRPC = require('discord-rpc');
 const { Worker } = require('worker_threads');
 const crypto = require('crypto');
-const { scanProfileAchievements, resolveProfilePath } = require('./src/backend/achievements-scanner.cjs');
+const { scanProfileAchievements, scanAllAchievements, resolveProfilePath } = require('./src/backend/achievements-scanner.cjs');
 
 app.commandLine.appendSwitch('js-flags', '--expose_gc');
 
@@ -455,7 +455,7 @@ ipcMain.on('window-close', () => {
 });
 
 ipcMain.on('open-minecraft-folder', () => {
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   if (!fs.existsSync(rootPath)) {
     fs.mkdirSync(rootPath, { recursive: true });
   }
@@ -480,7 +480,7 @@ ipcMain.on('toggle-devtools', () => {
 });
 // Mod install IPC (for modpack manager)
 ipcMain.handle('install-mod', async (event, { modpackId, downloadUrl, filename }) => {
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   const modsPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods');
   if (!fs.existsSync(modsPath)) fs.mkdirSync(modsPath, { recursive: true });
   const jarPath = path.join(modsPath, filename);
@@ -492,7 +492,7 @@ ipcMain.handle('install-mod', async (event, { modpackId, downloadUrl, filename }
 
 // Install mod directly to a version's mods folder
 ipcMain.handle('install-mod-to-version', async (event, { version, downloadUrl, filename }) => {
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   const versionsPath = path.join(rootPath, 'versions');
   
   // Find the version directory (it might have loader prefix like "fabric-loader-0.19.2-1.16.4")
@@ -521,7 +521,7 @@ ipcMain.handle('install-mod-to-version', async (event, { version, downloadUrl, f
 // Scan unique completed advancements for a modpack or version profile
 ipcMain.handle('scan-profile-achievements', async (event, { modpackId, versionId } = {}) => {
   try {
-    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const rootPath = getMinecraftDataPath();
     const profilePath = resolveProfilePath(rootPath, { modpackId, versionId });
     if (!profilePath) {
       return { success: false, error: 'No profile specified', count: 0, advancements: [] };
@@ -534,10 +534,22 @@ ipcMain.handle('scan-profile-achievements', async (event, { modpackId, versionId
   }
 });
 
+// Scan all completed achievements across all profiles
+ipcMain.handle('scan-all-achievements', async (event) => {
+  try {
+    const rootPath = getMinecraftDataPath();
+    const { count, advancements } = scanAllAchievements(rootPath);
+    return { success: true, count, advancements };
+  } catch (e) {
+    console.error('[Achievements] Scan error:', e);
+    return { success: false, error: e.message, count: 0, advancements: [] };
+  }
+});
+
 // Scan mods installed for a specific version
 ipcMain.handle('scan-version-mods', async (event, version) => {
   try {
-    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const rootPath = getMinecraftDataPath();
     const versionsPath = path.join(rootPath, 'versions');
     
     // Find the version directory
@@ -571,7 +583,7 @@ ipcMain.handle('scan-version-mods', async (event, version) => {
 
 // Auto-install missing mod dependencies detected from crash reports
 ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, mcVersion }) => {
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   const modsPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods');
   if (!fs.existsSync(modsPath)) fs.mkdirSync(modsPath, { recursive: true });
 
@@ -610,7 +622,7 @@ ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, 
 });
 
 ipcMain.handle('remove-mod', async (event, { modpackId, filename }) => {
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   let jarPath;
   
   // Handle both modpacks and versions
@@ -648,7 +660,7 @@ ipcMain.handle('remove-mod', async (event, { modpackId, filename }) => {
 // Delete entire modpack folder from disk
 ipcMain.handle('delete-modpack-folder', async (event, { modpackId }) => {
   try {
-    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const rootPath = getMinecraftDataPath();
     const profilePath = path.join(rootPath, 'profiles', `modpack-${modpackId}`);
     
     if (!fs.existsSync(profilePath)) {
@@ -782,7 +794,7 @@ ipcMain.handle('delete-modpack-folder', async (event, { modpackId }) => {
 });
 
 ipcMain.handle('install-resourcepack', async (event, { modpackId, downloadUrl, filename }) => {
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   const rpPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'resourcepacks');
   if (!fs.existsSync(rpPath)) fs.mkdirSync(rpPath, { recursive: true });
   const destPath = path.join(rpPath, filename);
@@ -793,7 +805,7 @@ ipcMain.handle('install-resourcepack', async (event, { modpackId, downloadUrl, f
 });
 
 ipcMain.handle('remove-resourcepack', async (event, { modpackId, filename }) => {
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   let destPath;
   
   // Handle both modpacks and versions
@@ -818,7 +830,7 @@ ipcMain.handle('remove-resourcepack', async (event, { modpackId, filename }) => 
 });
 
 ipcMain.handle('install-shader', async (event, { modpackId, downloadUrl, filename }) => {
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   const shaderPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'shaderpacks');
   if (!fs.existsSync(shaderPath)) fs.mkdirSync(shaderPath, { recursive: true });
   const destPath = path.join(shaderPath, filename);
@@ -829,7 +841,7 @@ ipcMain.handle('install-shader', async (event, { modpackId, downloadUrl, filenam
 });
 
 ipcMain.handle('remove-shader', async (event, { modpackId, filename }) => {
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   let destPath;
   
   // Handle both modpacks and versions
@@ -868,7 +880,7 @@ ipcMain.handle('unzip-curseforge', async (event, { filePath }) => {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     const modpackId = Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-    const profilePath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`);
+    const profilePath = path.join(getMinecraftDataPath(), 'profiles', `modpack-${modpackId}`);
     fs.mkdirSync(profilePath, { recursive: true });
 
     const overridesFolder = manifest.overrides || 'overrides';
@@ -921,7 +933,7 @@ ipcMain.handle('select-export-zip', async (event, { defaultName }) => {
 
 ipcMain.handle('export-modpack', async (event, { modpackId, name, mcVersion, loader, loaderVersion, destPath }) => {
   try {
-    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const rootPath = getMinecraftDataPath();
     const profilePath = path.join(rootPath, 'profiles', `modpack-${modpackId}`);
     if (!fs.existsSync(profilePath)) throw new Error("Modpack folder not found.");
 
@@ -1001,7 +1013,7 @@ ipcMain.handle('download-curseforge-modpack', async (event, { downloadUrl }) => 
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     const modpackId = Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-    const profilePath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`);
+    const profilePath = path.join(getMinecraftDataPath(), 'profiles', `modpack-${modpackId}`);
     fs.mkdirSync(profilePath, { recursive: true });
 
     const overridesFolder = manifest.overrides || 'overrides';
@@ -1172,7 +1184,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
 
   // Always read mcVersion and loader from profile.json on disk — it's the source of truth.
   // This prevents stale localStorage values from causing wrong-version launches.
-  const profileJsonPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`, 'profile.json');
+  const profileJsonPath = path.join(getMinecraftDataPath(), 'profiles', `modpack-${modpackId}`, 'profile.json');
   if (fs.existsSync(profileJsonPath)) {
     try {
       let raw = fs.readFileSync(profileJsonPath, 'utf8');
@@ -1204,7 +1216,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
     loaderName.toLowerCase(),
     loaderName
   );
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   const profilePath = path.join(rootPath, 'profiles', `modpack-${modpackId}`);
   if (!fs.existsSync(profilePath)) fs.mkdirSync(profilePath, { recursive: true });
 
@@ -1278,7 +1290,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
     try {
       event.sender.send('launch-progress', { status: 'Downloading Ely.by Injector...', percent: 50 });
       const injectorPath = await ensureAuthlibInjector(rootPath);
-      opts.customArgs = [`-javaagent:${injectorPath}=https://authserver.ely.by`];
+      opts.customArgs.push(`-javaagent:${injectorPath}=https://authserver.ely.by`);
     } catch (e) {
       console.warn("Injector failed", e);
       event.sender.send('launch-warning', "Ely.by skins may not work (injector failed).");
@@ -1374,6 +1386,12 @@ ipcMain.on('launch-modpack', async (event, args) => {
     cleanEmptyFiles(path.join(rootPath, 'libraries'));
     cleanEmptyFiles(path.join(rootPath, 'versions'));
     cleanCorruptFabricJars(path.join(rootPath, 'versions'));
+
+    console.log('[Launch Modpack] Launching Minecraft with options:', JSON.stringify({
+      ...opts,
+      authorization: opts.authorization ? { ...opts.authorization, access_token: '***' } : null
+    }, null, 2));
+
     const mcProcess = await launchClient.launch(opts);
     
     // CPU Priority Tuning
@@ -1440,7 +1458,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     loaderName
   );
 
-  const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+  const rootPath = getMinecraftDataPath();
   const profilePath = path.join(rootPath, 'profiles', version);
   if (!fs.existsSync(profilePath)) fs.mkdirSync(profilePath, { recursive: true });
 
@@ -1516,7 +1534,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     try {
       event.sender.send('launch-progress', { status: 'Downloading Ely.by Injector...', percent: 50 });
       const injectorPath = await ensureAuthlibInjector(rootPath);
-      opts.customArgs = [`-javaagent:${injectorPath}=https://authserver.ely.by`];
+      opts.customArgs.push(`-javaagent:${injectorPath}=https://authserver.ely.by`);
     } catch (e) {
       console.warn("Injector failed", e);
       event.sender.send('launch-warning', "Ely.by skins may not work (injector failed).");
@@ -1704,6 +1722,12 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     cleanEmptyFiles(path.join(rootPath, 'libraries'));
     cleanEmptyFiles(path.join(rootPath, 'versions'));
     cleanCorruptFabricJars(path.join(rootPath, 'versions'));
+    
+    console.log('[Launch] Launching Minecraft with options:', JSON.stringify({
+      ...opts,
+      authorization: opts.authorization ? { ...opts.authorization, access_token: '***' } : null
+    }, null, 2));
+
     const mcProcess = await launchClient.launch(opts);
     
     // CPU Priority Tuning
@@ -1801,8 +1825,6 @@ async function ensureAuthlibInjector(rootPath) {
 }
 
 function getRequiredJavaVersion(mcVersion, loader) {
-  const isFabric = (loader || '').toLowerCase() === 'fabric';
-
   // Extract the minor version ONLY from legacy "1.x.x" format (e.g., 21 from "1.21.4").
   // The regex is anchored to ^ so "26.1.2" does NOT falsely match "1.2".
   // If the version doesn't start with "1." (modern format like 26.x.x, snapshots, etc),
@@ -1810,13 +1832,12 @@ function getRequiredJavaVersion(mcVersion, loader) {
   const match = (mcVersion || '').match(/^1\.(\d+)/);
   const minor = match ? parseInt(match[1], 10) : 999;
 
-  // Modern Minecraft (26.x+) and modern Fabric mods require Java 25
+  // Modern Minecraft (26.x+) requires Java 25
   if (minor >= 999) return 25; // Non-1.x versions (e.g. 26.1.2) → Java 25
-  if (isFabric && minor >= 20) return 25; // Fabric 1.20+ mods now compile against Java 25
-  if (isFabric && minor >= 16) return 21; // Older Fabric (1.16-1.19) → Java 21
 
-  if (minor >= 20) return 21; // Vanilla 1.20+ → Java 21
-  if (minor >= 17) return 17; // 1.17 to 1.19.x → Java 17
+  if (minor >= 21) return 21; // 1.21+ → Java 21
+  if (mcVersion === '1.20.5' || mcVersion === '1.20.6') return 21; // 1.20.5/1.20.6 require Java 21
+  if (minor >= 17) return 17; // 1.17 to 1.20.4 → Java 17
   return 8; // 1.16.5 and below → Java 8
 }
 
@@ -1891,7 +1912,7 @@ async function ensureJava(mcVersion, rootPath, loader, progressCallback) {
 
 function autoCleanJunkFiles() {
   try {
-    const rootPath = path.join(app.getPath('userData'), 'minecraft-data');
+    const rootPath = getMinecraftDataPath();
     const pathsToClean = [
       path.join(rootPath, 'versions'),
       path.join(app.getPath('userData'), 'temp'),
@@ -2629,13 +2650,13 @@ ipcMain.handle('get-user-data-path', async () => {
 
 // Get versions path for frontend
 ipcMain.handle('get-versions-path', async () => {
-  return path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+  return path.join(getMinecraftDataPath(), 'versions');
 });
 
 // Scan for downloaded versions
 ipcMain.handle('scan-downloaded-versions', async () => {
   try {
-    const versionsPath = path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+    const versionsPath = path.join(getMinecraftDataPath(), 'versions');
     
     if (!fs.existsSync(versionsPath)) {
       console.log('[Versions] Versions directory does not exist yet');
@@ -2702,7 +2723,7 @@ ipcMain.handle('extract-mod-icon', async (event, { modId, modpackId, typeDir, fi
     if (modpackId.startsWith('version-')) {
       // For versions, mods are in versions/{version-dir}/mods/
       const version = modpackId.replace('version-', '');
-      const versionsPath = path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+      const versionsPath = path.join(getMinecraftDataPath(), 'versions');
       
       // Find the version directory (it might have loader prefix like "fabric-loader-0.19.2-1.16.4")
       const versionDirs = fs.readdirSync(versionsPath, { withFileTypes: true })
@@ -2716,12 +2737,12 @@ ipcMain.handle('extract-mod-icon', async (event, { modId, modpackId, typeDir, fi
       
       const versionDir = versionDirs[0];
       jarPath = path.join(versionsPath, versionDir, typeDir, filename);
-      cacheDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', `version-${version}`, typeDir);
+      cacheDir = path.join(getMinecraftDataPath(), 'icon-cache', `version-${version}`, typeDir);
       cachePath = path.join(cacheDir, `${filename}.png`);
     } else {
       // For modpacks, mods are in profiles/modpack-{id}/mods/
-      jarPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`, typeDir, filename);
-      cacheDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', modpackId, typeDir);
+      jarPath = path.join(getMinecraftDataPath(), 'profiles', `modpack-${modpackId}`, typeDir, filename);
+      cacheDir = path.join(getMinecraftDataPath(), 'icon-cache', modpackId, typeDir);
       cachePath = path.join(cacheDir, `${filename}.png`);
     }
     
@@ -2930,8 +2951,8 @@ function generatePlaceholderIcon(filename) {
 ipcMain.handle('extract-all-icons', async (event, { modpackId }) => {
   try {
     const JSZip = require('jszip');
-    const profilePath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles', `modpack-${modpackId}`);
-    const cacheBaseDir = path.join(app.getPath('userData'), 'minecraft-data', 'icon-cache', modpackId);
+    const profilePath = path.join(getMinecraftDataPath(), 'profiles', `modpack-${modpackId}`);
+    const cacheBaseDir = path.join(getMinecraftDataPath(), 'icon-cache', modpackId);
     
     if (!fs.existsSync(profilePath)) {
       return { success: false, reason: 'Profile not found', extracted: 0 };
@@ -3075,8 +3096,8 @@ ipcMain.handle('extract-all-icons', async (event, { modpackId }) => {
 ipcMain.handle('scan-profiles', async () => {
   console.log('[Profiles] scan-profiles handler called');
   try {
-    const rootPath = path.join(app.getPath('userData'), 'minecraft-data', 'profiles');
-    const versionsPath = path.join(app.getPath('userData'), 'minecraft-data', 'versions');
+    const rootPath = path.join(getMinecraftDataPath(), 'profiles');
+    const versionsPath = path.join(getMinecraftDataPath(), 'versions');
     const profiles = [];
     console.log('[Profiles] Scanning:', rootPath);
 
@@ -3411,6 +3432,36 @@ function getSettingsManager() {
   return settingsManager;
 }
 
+function getMinecraftDataPath() {
+  const manager = getSettingsManager();
+  
+  // If the settings file has not been loaded into memory yet, do a quick synchronous read
+  if (manager.settings.customMinecraftPath && manager.settings.customMinecraftPath.value === '') {
+    try {
+      if (fs.existsSync(manager.settingsPath)) {
+        const raw = fs.readFileSync(manager.settingsPath, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.customMinecraftPath) {
+          const val = parsed.customMinecraftPath.value !== undefined ? parsed.customMinecraftPath.value : parsed.customMinecraftPath;
+          if (val && typeof val === 'string' && val.trim() !== '') {
+            return val;
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[MinecraftPath] Error loading settings synchronously:', e.message);
+    }
+  }
+
+  // Otherwise check in-memory settings
+  const customPath = manager.settings.customMinecraftPath?.value;
+  if (customPath && typeof customPath === 'string' && customPath.trim() !== '') {
+    return customPath;
+  }
+  return getMinecraftDataPath();
+}
+
+
 // Global integrity verifier instance
 let integrityVerifier = null;
 
@@ -3526,6 +3577,23 @@ app.on('will-quit', () => {
 });
 
 
+
+// IPC Handler: Browse custom Minecraft path
+ipcMain.handle('select-minecraft-folder', async (event) => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select Custom Minecraft Data Folder',
+      properties: ['openDirectory', 'createDirectory']
+    });
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false };
+    }
+    return { success: true, filePath: result.filePaths[0] };
+  } catch (error) {
+    console.error('[Settings IPC] select-minecraft-folder error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
 
 // --- Settings Manager IPC Handlers ---
 

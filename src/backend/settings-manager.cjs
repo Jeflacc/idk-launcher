@@ -297,6 +297,14 @@ class SettingsManager extends EventEmitter {
         description: 'Loader and settings per version',
         tooltip: 'Stored as an object mapping version ID to config'
       },
+      customMinecraftPath: {
+        value: '',
+        type: 'string',
+        category: 'Launcher',
+        label: 'Custom Minecraft Location',
+        description: 'Set a custom directory for Minecraft profiles, versions, and assets.',
+        tooltip: 'Leave blank to use the default launcher directory under %appdata%'
+      },
       playtime: {
         value: 0,
         type: 'number',
