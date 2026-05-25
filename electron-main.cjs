@@ -3435,30 +3435,30 @@ function getSettingsManager() {
 function getMinecraftDataPath() {
   const manager = getSettingsManager();
   
-  // If the settings file has not been loaded into memory yet, do a quick synchronous read
-  if (manager.settings.customMinecraftPath && manager.settings.customMinecraftPath.value === '') {
-    try {
-      if (fs.existsSync(manager.settingsPath)) {
-        const raw = fs.readFileSync(manager.settingsPath, 'utf8');
-        const parsed = JSON.parse(raw);
-        if (parsed && parsed.customMinecraftPath) {
-          const val = parsed.customMinecraftPath.value !== undefined ? parsed.customMinecraftPath.value : parsed.customMinecraftPath;
-          if (val && typeof val === 'string' && val.trim() !== '') {
-            return val;
-          }
-        }
-      }
-    } catch (e) {
-      console.error('[MinecraftPath] Error loading settings synchronously:', e.message);
-    }
-  }
-
-  // Otherwise check in-memory settings
+  // Check in-memory settings first
   const customPath = manager.settings.customMinecraftPath?.value;
   if (customPath && typeof customPath === 'string' && customPath.trim() !== '') {
     return customPath;
   }
-  return getMinecraftDataPath();
+
+  // If the settings file has not been loaded into memory yet, do a quick synchronous read
+  try {
+    if (fs.existsSync(manager.settingsPath)) {
+      const raw = fs.readFileSync(manager.settingsPath, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.customMinecraftPath) {
+        const val = parsed.customMinecraftPath.value !== undefined ? parsed.customMinecraftPath.value : parsed.customMinecraftPath;
+        if (val && typeof val === 'string' && val.trim() !== '') {
+          return val;
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[MinecraftPath] Error loading settings synchronously:', e.message);
+  }
+
+  // Fall back to default path — never recurse
+  return path.join(app.getPath('appData'), 'IDK Launcher', 'minecraft-data');
 }
 
 
