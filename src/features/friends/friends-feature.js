@@ -764,19 +764,14 @@ export function initFriendsFeature() {
       let host, port;
       let connectAddressText;
 
-      if (friend.cloudflaredUrl.startsWith("https://")) {
-        // Legacy Cloudflare quick tunnel support
-        host = "127.0.0.1";
+      const hostPort = friend.cloudflaredUrl.replace(/^(tcp|https?):\/\//i, "");
+      const parts = hostPort.split(":");
+      host = parts[0];
+      port = parseInt(parts[1]);
+      if (isNaN(port)) {
         port = 25565;
-        connectAddressText = "127.0.0.1:25565";
-        actions.showWarningToast(
-          "Legacy HTTPS tunnels are no longer supported. Please ask your friend to update their launcher.",
-        );
+        connectAddressText = `${host}:${port}`;
       } else {
-        const hostPort = friend.cloudflaredUrl.replace("tcp://", "");
-        const parts = hostPort.split(":");
-        host = parts[0];
-        port = parseInt(parts[1]);
         connectAddressText = hostPort;
       }
 

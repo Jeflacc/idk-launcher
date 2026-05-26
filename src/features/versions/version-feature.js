@@ -61,8 +61,22 @@ loaderOptions.forEach(opt => {
     e.stopPropagation();
     state.selectedLoader = opt.getAttribute('data-loader');
     localStorage.setItem('idk_selected_loader', state.selectedLoader);
+    
+    // Save loader selection for the currently selected version too
+    if (state.selectedVersion) {
+      if (!state.versionSettings[state.selectedVersion]) {
+        state.versionSettings[state.selectedVersion] = {};
+      }
+      state.versionSettings[state.selectedVersion].loader = state.selectedLoader;
+      localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+    }
+
     if (window.electronAPI) {
-      window.electronAPI.saveSettings({ lastPlayedLoader: state.selectedLoader }).catch(console.error);
+      const settingsToSave = { lastPlayedLoader: state.selectedLoader };
+      if (state.selectedVersion) {
+        settingsToSave.versionSettings = state.versionSettings;
+      }
+      window.electronAPI.saveSettings(settingsToSave).catch(console.error);
     }
     updateLoaderUI(state.selectedLoader);
     loaderDropdown.classList.remove('open');
@@ -212,6 +226,16 @@ function renderVersions() {
       state.selectedVersion = v.id;
       selectedText.innerText = `Version: ${v.id}`;
       versionDropdown.classList.remove('open');
+
+      // Auto-load loader settings for this version if available
+      const versionSettings = state.versionSettings[v.id] || { loader: 'Vanilla' };
+      state.selectedLoader = versionSettings.loader || 'Vanilla';
+      localStorage.setItem('idk_selected_loader', state.selectedLoader);
+      if (window.electronAPI) {
+        window.electronAPI.saveSettings({ lastPlayedLoader: state.selectedLoader }).catch(console.error);
+      }
+      updateLoaderUI(state.selectedLoader);
+
       renderVersions(); // Re-render to update 'selected' class
     });
     
@@ -255,5 +279,5 @@ setTimeout(() => {
 }, 100);
 
 
-  Object.assign(actions, { renderVersions, updateLoaderUI });
+  Object.assign(actions, { renderVersions, updateLoaderUI, scanDownloadedVersions });
 }

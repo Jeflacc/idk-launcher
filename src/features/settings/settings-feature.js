@@ -51,6 +51,44 @@ export function initSettingsFeature({ switchView }) {
     );
   });
 
+  // Custom Minecraft Location Settings
+  const customMinecraftPathInput = document.getElementById("custom-minecraft-path");
+  if (customMinecraftPathInput) {
+    customMinecraftPathInput.value = state.customMinecraftPath || "";
+
+    const btnBrowseMinecraftPath = document.getElementById("btn-browse-minecraft-path");
+    const btnClearMinecraftPath = document.getElementById("btn-clear-minecraft-path");
+
+    btnBrowseMinecraftPath?.addEventListener("click", async () => {
+      if (window.electronAPI?.selectMinecraftFolder) {
+        const result = await window.electronAPI.selectMinecraftFolder();
+        if (result && result.success && result.filePath) {
+          state.customMinecraftPath = result.filePath;
+          customMinecraftPathInput.value = state.customMinecraftPath;
+          localStorage.setItem("idk_custom_minecraft_path", state.customMinecraftPath);
+          await window.electronAPI.saveSettings({ customMinecraftPath: state.customMinecraftPath });
+          
+          if (actions.scanDownloadedVersions) {
+            await actions.scanDownloadedVersions();
+          }
+        }
+      }
+    });
+
+    btnClearMinecraftPath?.addEventListener("click", async () => {
+      state.customMinecraftPath = "";
+      customMinecraftPathInput.value = "";
+      localStorage.setItem("idk_custom_minecraft_path", "");
+      if (window.electronAPI) {
+        await window.electronAPI.saveSettings({ customMinecraftPath: "" });
+      }
+      
+      if (actions.scanDownloadedVersions) {
+        await actions.scanDownloadedVersions();
+      }
+    });
+  }
+
   const javaPathInput = document.getElementById("java-path");
   javaPathInput.value = state.javaPath;
 
@@ -110,12 +148,11 @@ export function initSettingsFeature({ switchView }) {
     memSlider.value = gb;
     memLabel.innerText = `${gb} GB`;
     localStorage.setItem("craftlaunch_maxMemory", gb);
-    // Highlight active preset button
     document.querySelectorAll(".mem-preset-btn").forEach((b) => {
       b.classList.toggle("active", parseInt(b.dataset.gb) === gb);
     });
   }
-  setMemory(state.maxMemoryGB); // init from saved value
+  setMemory(state.maxMemoryGB);
 
   memSlider.addEventListener("input", () =>
     setMemory(parseInt(memSlider.value)),
