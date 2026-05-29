@@ -372,13 +372,28 @@ async function loadProfileFriendsList() {
     friendCards.forEach(card => {
       const nameEl = card.querySelector(".friend-info strong");
       const statusEl = card.querySelector(".friend-status-text");
-      const avatarEl = card.querySelector(".friend-avatar canvas");
+      const removeBtn = card.querySelector(".friend-remove-btn");
+      const unreadBadge = card.querySelector(".friend-unread-badge");
       
+      // Extract friend ID from data-id on remove button or from canvas id
+      let friendId = removeBtn ? removeBtn.getAttribute("data-id") : null;
+      if (!friendId) {
+        const canvas = card.querySelector(".friend-avatar canvas");
+        if (canvas) {
+          const canvasId = canvas.id;
+          if (canvasId && canvasId.startsWith("friend-avatar-")) {
+            friendId = canvasId.replace("friend-avatar-", "");
+          }
+        }
+      }
+
       if (nameEl) {
         friends.push({
+          id: friendId,
           username: nameEl.textContent.trim(),
           status: statusEl ? statusEl.textContent.trim() : "Offline",
-          element: card
+          element: card,
+          unreadCount: unreadBadge ? parseInt(unreadBadge.innerText) || 0 : 0
         });
       }
     });
@@ -390,7 +405,7 @@ async function loadProfileFriendsList() {
 
     // Render friends in profile sidebar (limit to 8)
     friendsListEl.innerHTML = friends.slice(0, 8).map(friend => `
-      <div class="profile-friend-item" title="${friend.username}">
+      <div class="profile-friend-item" title="${friend.username}" data-friend-id="${friend.id || ""}">
         <div class="profile-friend-avatar">
           <canvas width="24" height="24" data-friend-username="${friend.username}"></canvas>
         </div>
@@ -398,14 +413,44 @@ async function loadProfileFriendsList() {
           <span class="profile-friend-name">${friend.username}</span>
           <span class="profile-friend-status ${friend.status.toLowerCase().includes("playing") || friend.status.toLowerCase().includes("hosting") ? "online" : "offline"}">${friend.status}</span>
         </div>
+        ${friend.unreadCount > 0 ? `<span class="profile-friend-unread">${friend.unreadCount}</span>` : ""}
       </div>
     `).join("");
 
-    // Load friend avatars
+    // Load friend avatars and attach click handlers
     friends.slice(0, 8).forEach(friend => {
       const canvas = friendsListEl.querySelector(`canvas[data-friend-username="${friend.username}"]`);
       if (canvas) {
         loadAvatarForUser(canvas, friend.username, "elyby");
+      }
+
+      // Attach click handler to open chat with this friend
+      const item = friendsListEl.querySelector(`.profile-friend-item[data-friend-id="${friend.id}"]`);
+      if (item) {
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          // Open the friends sidebar
+          actions.openFriendsSidebar?.();
+          // Build the friend object for enterChat
+          const friendData = {
+            id: friend.id,
+            username: friend.username,
+            status: friend.status === "Offline" ? "offline" : "online",
+          };
+          // Copy status-related fields from the original friend card's data
+          const card = friend.element;
+          if (card) {
+            const joinBtn = card.querySelector(".friend-join-btn");
+            const statusEl = card.querySelector(".friend-status-text");
+            if (joinBtn) friendData.cloudflaredUrl = true;
+            if (statusEl && statusEl.classList.contains("playing")) {
+              friendData.playingVersion = "Minecraft";
+            } else if (statusEl && statusEl.classList.contains("hosting")) {
+              friendData.playingVersion = "Minecraft";
+            }
+          }
+          setTimeout(() => actions.openChatWithFriend?.(friendData), 200);
+        });
       }
     });
   } catch (err) {

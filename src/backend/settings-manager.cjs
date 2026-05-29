@@ -168,6 +168,94 @@ class SettingsManager extends EventEmitter {
         tooltip: 'Adjust font size for better readability'
       },
       
+      // Advanced UI settings
+      language: {
+        value: 'en',
+        type: 'string',
+        category: 'Advanced',
+        label: 'Language',
+        description: 'UI language selection',
+        tooltip: 'Choose your preferred language for the launcher interface'
+      },
+      backgroundEffect: {
+        value: 'none',
+        type: 'string',
+        category: 'Advanced',
+        label: 'Background Effect',
+        description: 'Visual background effect for the launcher',
+        tooltip: 'Select a dynamic background effect'
+      },
+      backgroundIntensity: {
+        value: 50,
+        min: 0,
+        max: 100,
+        type: 'number',
+        category: 'Advanced',
+        label: 'Background Intensity',
+        description: 'How intense the background effect appears',
+        tooltip: 'Higher values make the effect more prominent'
+      },
+      concurrentDownloads: {
+        value: 4,
+        min: 1,
+        max: 10,
+        type: 'number',
+        category: 'Advanced',
+        label: 'Concurrent Downloads',
+        description: 'Number of simultaneous downloads',
+        tooltip: 'Higher values download faster but use more bandwidth'
+      },
+      concurrentIO: {
+        value: 2,
+        min: 1,
+        max: 8,
+        type: 'number',
+        category: 'Advanced',
+        label: 'Concurrent I/O Operations',
+        description: 'Number of simultaneous read/write operations',
+        tooltip: 'Higher values speed up file operations but increase disk load'
+      },
+      autoUpdates: {
+        value: true,
+        type: 'boolean',
+        category: 'Advanced',
+        label: 'Auto Updates',
+        description: 'Automatically check for launcher updates',
+        tooltip: 'When enabled, the launcher will check for updates on startup'
+      },
+      discordPresence: {
+        value: true,
+        type: 'boolean',
+        category: 'Advanced',
+        label: 'Discord Presence',
+        description: 'Show what you are playing on Discord',
+        tooltip: 'Enables Discord Rich Presence integration'
+      },
+      betaUpdates: {
+        value: false,
+        type: 'boolean',
+        category: 'Advanced',
+        label: 'Beta Updates',
+        description: 'Receive beta/development updates',
+        tooltip: 'Get early access to new features before stable release'
+      },
+      openLogsAfterLaunch: {
+        value: false,
+        type: 'boolean',
+        category: 'Advanced',
+        label: 'Open Logs After Launch',
+        description: 'Automatically open Minecraft logs after launching',
+        tooltip: 'Useful for debugging launch issues'
+      },
+      analyticsEnabled: {
+        value: false,
+        type: 'boolean',
+        category: 'Advanced',
+        label: 'Analytics',
+        description: 'Share anonymous usage data to help improve the launcher',
+        tooltip: 'No personal information is collected'
+      },
+
       // Launcher settings
       javaPath: {
         value: '',
@@ -312,6 +400,78 @@ class SettingsManager extends EventEmitter {
         label: 'Playtime',
         description: 'Total playtime in milliseconds',
         tooltip: 'Accumulated playtime'
+      },
+      launcherTheme: {
+        value: 'emerald',
+        type: 'string',
+        category: 'Appearance',
+        label: 'Launcher Theme',
+        description: 'Color theme for the launcher',
+        tooltip: 'Choose from preset themes or custom'
+      },
+      launcherAccentColor: {
+        value: '#4cb837',
+        type: 'string',
+        category: 'Appearance',
+        label: 'Accent Color',
+        description: 'Custom accent color hex value',
+        tooltip: 'Used when theme is set to custom'
+      },
+      launcherBorderRadius: {
+        value: 10,
+        min: 0,
+        max: 24,
+        type: 'number',
+        category: 'Appearance',
+        label: 'Border Radius',
+        description: 'How rounded UI elements are',
+        tooltip: 'Ranges from 0px (square) to 24px (very rounded)'
+      },
+      launcherAnimationSpeed: {
+        value: 1,
+        min: 0,
+        max: 2,
+        step: 0.1,
+        type: 'number',
+        category: 'Appearance',
+        label: 'Animation Speed',
+        description: 'UI motion multiplier',
+        tooltip: '0 = no animations, 1 = normal, 2 = double speed'
+      },
+      launcherFontScale: {
+        value: 1,
+        min: 0.8,
+        max: 2,
+        step: 0.1,
+        type: 'number',
+        category: 'Appearance',
+        label: 'Font Scale',
+        description: 'UI text size multiplier',
+        tooltip: 'Larger values increase all text sizes'
+      },
+      launcherBlurIntensity: {
+        value: 'medium',
+        type: 'string',
+        category: 'Appearance',
+        label: 'Blur Intensity',
+        description: 'Background blur level behind UI panels',
+        tooltip: 'None, light, medium, or heavy'
+      },
+      launcherCompactMode: {
+        value: false,
+        type: 'boolean',
+        category: 'Appearance',
+        label: 'Compact Mode',
+        description: 'Reduced padding for a denser UI',
+        tooltip: 'Tightens spacing throughout the launcher'
+      },
+      launcherUiMode: {
+        value: 'classic',
+        type: 'string',
+        category: 'Appearance',
+        label: 'UI Mode',
+        description: 'Classic layout or advanced sidebar',
+        tooltip: 'Switch between Classic and Advanced interface'
       }
     };
     
@@ -332,11 +492,9 @@ class SettingsManager extends EventEmitter {
         
         // Merge loaded settings with defaults (in case new settings were added)
         this.settings = this._mergeSettings(loaded);
-        console.log('[SettingsManager] Settings loaded from disk');
       } else {
         // Use defaults if file doesn't exist
         this.settings = JSON.parse(JSON.stringify(this.defaultSettings));
-        console.log('[SettingsManager] Using default settings');
       }
       
       return this._extractSettingsValues();
@@ -356,11 +514,12 @@ class SettingsManager extends EventEmitter {
    */
   async saveSettings(newSettings) {
     try {
-      // Validate all settings before saving
+      // Validate and clamp all settings before saving
       for (const [key, value] of Object.entries(newSettings)) {
-        const validation = this.validateSetting(key, value);
-        if (!validation.valid) {
-          throw new Error(`Invalid setting ${key}: ${validation.error}`);
+        const setting = this.settings[key];
+        if (!setting) continue;
+        if (setting.type === 'number' && typeof value === 'number') {
+          newSettings[key] = Math.min(Math.max(value, setting.min ?? value), setting.max ?? value);
         }
       }
       
@@ -378,7 +537,6 @@ class SettingsManager extends EventEmitter {
       
       // Write to disk
       fs.writeFileSync(this.settingsPath, JSON.stringify(this.settings, null, 2), 'utf-8');
-      console.log('[SettingsManager] Settings saved to disk');
       
       this.emit('settings-changed', this._extractSettingsValues());
     } catch (error) {
@@ -403,7 +561,6 @@ class SettingsManager extends EventEmitter {
       
       // Write defaults to disk
       fs.writeFileSync(this.settingsPath, JSON.stringify(this.settings, null, 2), 'utf-8');
-      console.log('[SettingsManager] Settings reset to defaults');
       
       this.emit('settings-changed', this._extractSettingsValues());
     } catch (error) {
@@ -422,7 +579,6 @@ class SettingsManager extends EventEmitter {
     try {
       const exportData = this._extractSettingsValues();
       fs.writeFileSync(exportPath, JSON.stringify(exportData, null, 2), 'utf-8');
-      console.log('[SettingsManager] Settings exported to:', exportPath);
     } catch (error) {
       console.error('[SettingsManager] Error exporting settings:', error);
       throw error;
@@ -450,7 +606,6 @@ class SettingsManager extends EventEmitter {
       
       // Save imported settings
       await this.saveSettings(imported);
-      console.log('[SettingsManager] Settings imported from:', importPath);
       
       return this._extractSettingsValues();
     } catch (error) {

@@ -52,7 +52,6 @@ class DownloadQueueManager extends EventEmitter {
    * @returns {Promise<Object>} Download session object
    */
   async startDownload(downloadId, items, downloadPath) {
-    console.log(`[DownloadQueueManager] Starting download session: ${downloadId}`);
     
     if (this.activeSessions.has(downloadId)) {
       throw new Error(`Download session ${downloadId} already active`);
@@ -123,7 +122,6 @@ class DownloadQueueManager extends EventEmitter {
    * @returns {Promise<void>}
    */
   async pauseDownload(downloadId) {
-    console.log(`[DownloadQueueManager] Pausing download: ${downloadId}`);
     
     const session = this.activeSessions.get(downloadId);
     if (!session) {
@@ -143,7 +141,6 @@ class DownloadQueueManager extends EventEmitter {
    * @returns {Promise<void>}
    */
   async resumeDownload(downloadId) {
-    console.log(`[DownloadQueueManager] Resuming download: ${downloadId}`);
     
     const session = this.activeSessions.get(downloadId);
     if (!session) {
@@ -180,7 +177,6 @@ class DownloadQueueManager extends EventEmitter {
    * @returns {Promise<void>}
    */
   async cancelDownload(downloadId) {
-    console.log(`[DownloadQueueManager] Cancelling download: ${downloadId}`);
     
     const session = this.activeSessions.get(downloadId);
     if (!session) {
@@ -470,12 +466,9 @@ class DownloadQueueManager extends EventEmitter {
     failureInfo.error = error.message;
     failureInfo.retryCount = (failureInfo.retryCount || 0) + 1;
 
-    console.log(`[DownloadQueueManager] Download failed for ${item.id}: ${error.message} (attempt ${failureInfo.retryCount}/${this.maxRetries})`);
-
     // Check if we should retry
     if (this.autoRetry && failureInfo.retryCount < this.maxRetries) {
       const backoffMs = Math.pow(2, failureInfo.retryCount - 1) * 1000; // 1s, 2s, 4s, 8s
-      console.log(`[DownloadQueueManager] Retrying ${item.id} in ${backoffMs}ms...`);
 
       session.failedItems.set(item.id, failureInfo);
       
@@ -510,8 +503,6 @@ class DownloadQueueManager extends EventEmitter {
     const session = this.activeSessions.get(downloadId);
     if (!session) return;
 
-    console.log(`[DownloadQueueManager] Finalizing download: ${downloadId}`);
-
     // Check for download failures first
     if (session.failedItems.size > 0) {
       session.status = 'failed';
@@ -530,7 +521,6 @@ class DownloadQueueManager extends EventEmitter {
 
     // All downloads completed successfully, now verify integrity if enabled
     if (this.verifyIntegrity) {
-      console.log(`[DownloadQueueManager] Starting integrity verification for ${downloadId}`);
       
       try {
         const report = await this.integrityVerifier.verifyDownload(
@@ -569,7 +559,6 @@ class DownloadQueueManager extends EventEmitter {
 
           // Auto-retry failed items if enabled
           if (this.autoRetry && failedItems.length > 0) {
-            console.log(`[DownloadQueueManager] Auto-retrying ${failedItems.length} failed items`);
             
             // Re-queue failed items
             const queue = this.downloadQueues.get(downloadId);
@@ -729,7 +718,7 @@ class DownloadQueueManager extends EventEmitter {
       session.downloadedBytes = state.downloadedBytes || 0;
       session.startTime = state.startTime || Date.now();
       
-      console.log(`[DownloadQueueManager] Restored session state: ${session.completedItems.size} completed items`);
+
     } catch (error) {
       console.warn(`[DownloadQueueManager] Failed to restore session state: ${error.message}`);
     }
