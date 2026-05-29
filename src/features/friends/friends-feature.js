@@ -864,6 +864,29 @@ export function initFriendsFeature() {
       }, 800);
     }
 
+    function formatChatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMin = Math.floor(diffMs / 60000);
+      const diffHr = Math.floor(diffMs / 3600000);
+
+      if (diffMin < 1) return "just now";
+      if (diffMin < 60) return `${diffMin}m ago`;
+      if (diffHr < 24) return `${diffHr}h ago`;
+
+      const isToday = date.toDateString() === now.toDateString();
+      const yesterday = new Date(now);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const isYesterday = date.toDateString() === yesterday.toDateString();
+
+      const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+      if (isToday) return `Today ${time}`;
+      if (isYesterday) return `Yesterday ${time}`;
+      return `${date.toLocaleDateString([], { month: "short", day: "numeric" })} ${time}`;
+    }
+
     // --- DIRECT MESSAGING / CHAT SYSTEM ---
     async function enterChat(friend) {
       activeChatFriendId = friend.id;
@@ -948,20 +971,37 @@ export function initFriendsFeature() {
         }
 
         chatMessagesContainer.innerHTML = "";
+
+        // Group consecutive messages by sender within a 2-minute window
+        const GROUP_WINDOW = 2 * 60 * 1000;
+        const groups = [];
+        let cur = null;
+
         messages.forEach(msg => {
           const isMe = msg.senderId === idkUser.id;
-          const msgRow = document.createElement("div");
-          msgRow.className = `chat-message-row ${isMe ? "me" : "friend"}`;
+          const ts = new Date(msg.timestamp).getTime();
+          if (cur && cur.isMe === isMe && ts - cur.lastTime < GROUP_WINDOW) {
+            cur.messages.push(msg);
+            cur.lastTime = ts;
+          } else {
+            cur = { isMe, messages: [msg], lastTime: ts };
+            groups.push(cur);
+          }
+        });
 
-          // Format timestamp
-          const date = new Date(msg.timestamp);
-          const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        groups.forEach(group => {
+          group.messages.forEach((msg, i) => {
+            const msgRow = document.createElement("div");
+            const isFirst = i === 0;
+            msgRow.className = `chat-message-row ${group.isMe ? "me" : "friend"}${!isFirst ? " grouped" : ""}`;
+            const isLast = i === group.messages.length - 1;
 
-          msgRow.innerHTML = `
-            <div class="chat-message-bubble">${escapeHtml(msg.text)}</div>
-            <div class="chat-message-time">${timeStr}</div>
-          `;
-          chatMessagesContainer.appendChild(msgRow);
+            msgRow.innerHTML = `
+              <div class="chat-message-bubble">${escapeHtml(msg.text)}</div>
+              ${isLast ? `<div class="chat-message-time">${formatChatTime(group.lastTime)}</div>` : ""}
+            `;
+            chatMessagesContainer.appendChild(msgRow);
+          });
         });
 
         if (shouldScroll) {
@@ -982,11 +1022,7 @@ export function initFriendsFeature() {
       // Optimistic locally rendered bubble for premium instant feedback feel
       const msgRow = document.createElement("div");
       msgRow.className = "chat-message-row me";
-      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      msgRow.innerHTML = `
-        <div class="chat-message-bubble">${escapeHtml(text)}</div>
-        <div class="chat-message-time">${timeStr}</div>
-      `;
+      msgRow.innerHTML = `<div class="chat-message-bubble">${escapeHtml(text)}</div>`;
       chatMessagesContainer.appendChild(msgRow);
       chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
 
@@ -1028,5 +1064,46 @@ export function initFriendsFeature() {
 
     // Register action to allow updating from outside
     actions.updateFriendsAuthUI = updateFriendsAuthUI;
+
+    // Expose enterChat so profile sidebar can open chat with a friend
+    actions.openChatWithFriend = enterChat;
+    actions.openFriendsSidebar = () => {
+      sidebar.classList.add("active");
+      btnToggleSidebar.classList.add("active");
+      mainPanel.style.display = "block";
+      chatPanel.style.display = "none";
+      refreshFriendsData();
+      // Hide unread dot immediately — next poll will re-show if new messages arrive
+      const dot = document.getElementById("friends-unread-dot");
+      if (dot) dot.style.display = "none";
+    };
+    actions.exitChat = exitChat;
+
+    // Background unread message notification polling
+    let lastUnreadTotals = {};
+    let isFirstUnreadPoll = true;
+    const unreadDot = document.getElementById("friends-unread-dot");
+    setInterval(async () => {
+      if (!idkToken || !idkUser) return;
+      try {
+        const res = await idkRequest("/api/friends");
+        const friends = res.friends || [];
+        let totalUnread = 0;
+        for (const friend of friends) {
+          const prev = lastUnreadTotals[friend.id] || 0;
+          if (friend.unreadCount > prev && !isFirstUnreadPoll) {
+            const newCount = friend.unreadCount - prev;
+            const plural = newCount > 1 ? "messages" : "message";
+            actions.showWarningToast(`${friend.username} sent ${newCount} new ${plural}!`);
+          }
+          lastUnreadTotals[friend.id] = friend.unreadCount || 0;
+          totalUnread += friend.unreadCount || 0;
+        }
+        if (unreadDot) {
+          unreadDot.style.display = totalUnread > 0 ? "block" : "none";
+        }
+        isFirstUnreadPoll = false;
+      } catch (_) {}
+    }, 15000);
   })();
 }

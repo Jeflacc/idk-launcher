@@ -1,6 +1,42 @@
 import { state, actions } from '../../core/app-state.js';
 
 export function initLaunchFeature() {
+// --- PLAY BUTTON DROPDOWN ---
+const playDropdown = document.getElementById('play-dropdown');
+const playDropdownTrigger = document.getElementById('play-dropdown-trigger');
+
+if (playDropdownTrigger && playDropdown) {
+  playDropdownTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    playDropdown.classList.toggle('active');
+    playDropdownTrigger.classList.toggle('active');
+  });
+
+  document.getElementById('play-dd-modpacks').addEventListener('click', () => {
+    playDropdown.classList.remove('active');
+    playDropdownTrigger.classList.remove('active');
+    actions.switchView('mods');
+  });
+
+  document.getElementById('play-dd-versions').addEventListener('click', () => {
+    playDropdown.classList.remove('active');
+    playDropdownTrigger.classList.remove('active');
+    const versionDropdown = document.getElementById('version-dropdown');
+    if (versionDropdown) {
+      versionDropdown.classList.add('open');
+      document.getElementById('selected-version-text')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const wrapper = document.getElementById('play-btn-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      playDropdown.classList.remove('active');
+      playDropdownTrigger.classList.remove('active');
+    }
+  });
+}
+
 // --- PLAY LOGIC ---
 const playBtn = document.getElementById('play-btn');
 const overlay = document.getElementById('launch-overlay');

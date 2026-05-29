@@ -75,7 +75,6 @@ class GameDetector {
         
         // Notify if state changed
         if (currentState !== previousState) {
-          console.log(`[GameDetector] Game state changed: ${previousState} -> ${currentState}`);
           previousState = currentState;
           onStateChange?.(currentState);
         }

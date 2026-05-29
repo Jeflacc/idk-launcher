@@ -36,7 +36,7 @@ function initializeDownloadHandlers(window, userDataPath) {
    */
   ipcMain.handle('start-download', async (event, { downloadId, items, options }) => {
     try {
-      console.log(`[IPC] Starting download: ${downloadId}`);
+
 
       // Load current settings
       const settings = await settingsManager.loadSettings();
@@ -358,7 +358,7 @@ function initializeDownloadHandlers(window, userDataPath) {
     }
   });
 
-  console.log('[IPC] Download handlers initialized successfully');
+
 }
 
 module.exports = {

@@ -6,6 +6,7 @@ export function renderAppShell() {
     </video>
   </div>
   <div class="bg-overlay"></div>
+  <canvas id="bg-effects-canvas" class="bg-effects-canvas"></canvas>
 
   <!-- TOP TITLE BAR & NAVIGATION -->
   <div class="top-bar">
@@ -44,6 +45,7 @@ export function renderAppShell() {
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
         <span class="friends-badge" id="friends-pending-badge" style="display:none;">0</span>
+        <span class="friends-unread-dot" id="friends-unread-dot" style="display:none;"></span>
       </button>
 
       <div class="user-profile-wrapper">
@@ -219,7 +221,22 @@ export function renderAppShell() {
         </div>
 
         <div class="controls-right">
-          <button class="play-button" id="play-btn">PLAY</button>
+          <div class="play-button-wrapper" id="play-btn-wrapper">
+            <button class="play-button" id="play-btn">PLAY</button>
+            <button class="play-dropdown-trigger" id="play-dropdown-trigger" aria-label="More options">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="play-dropdown" id="play-dropdown">
+              <button class="play-dropdown-item" id="play-dd-modpacks">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Modpacks
+              </button>
+              <button class="play-dropdown-item" id="play-dd-versions">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                Versions
+              </button>
+            </div>
+          </div>
           <button class="manage-mods-button" id="manage-mods-btn" style="display: none;">MANAGE MODS</button>
         </div>
       </div>
@@ -275,181 +292,690 @@ export function renderAppShell() {
     <div id="btn-close-settings" style="display:none;"></div>
 
     <div class="settings-content-wrapper">
-      <h2 class="view-title">Settings</h2>
 
-      <div class="settings-grid">
-        <div class="settings-section appearance-settings-section">
-          <h3>Appearance</h3>
-          <p>Choose the launcher color theme and switch between the current layout and the new advanced UI/UX.</p>
+      <!-- SETTINGS TAB BAR -->
+      <div class="settings-tab-bar" id="settings-tab-bar">
+        <button class="settings-tab active" data-settings-tab="general">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>General</span>
+        </button>
+        <button class="settings-tab" data-settings-tab="performance">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <span>Performance</span>
+        </button>
+        <button class="settings-tab" data-settings-tab="launch">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <span>Java & Launch</span>
+        </button>
+        <button class="settings-tab" data-settings-tab="accessibility">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 8v4l3 3M12 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"></path>
+          </svg>
+          <span>Accessibility</span>
+        </button>
+        <button class="settings-tab" data-settings-tab="about">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>About</span>
+        </button>
+        <div class="settings-tab-indicator" id="settings-tab-indicator"></div>
+      </div>
 
-          <div class="settings-subgroup">
-            <div class="settings-subgroup-heading">
-              <span>Theme</span>
-              <small>Each theme uses its own complete accent palette.</small>
+      <!-- GENERAL TAB -->
+      <div class="settings-tab-panel active" id="settings-panel-general">
+
+        <div class="settings-glass-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="4"></circle>
+              </svg>
             </div>
-            <div class="theme-picker-grid" id="launcher-theme-picker">
-              <button type="button" class="theme-choice-card" data-theme="green" aria-label="Use Green theme">
-                <span class="theme-choice-swatch" style="--swatch-a:#4cb837;--swatch-b:#122018;"></span>
-                <strong>Green</strong>
-                <small>Classic Minecraft green</small>
-              </button>
-              <button type="button" class="theme-choice-card" data-theme="violet" aria-label="Use Violet theme">
-                <span class="theme-choice-swatch" style="--swatch-a:#8b5cf6;--swatch-b:#190b2f;"></span>
-                <strong>Violet</strong>
-                <small>Advanced purple grid</small>
-              </button>
-              <button type="button" class="theme-choice-card" data-theme="azure" aria-label="Use Profile Blue theme">
-                <span class="theme-choice-swatch" style="--swatch-a:#bad7ff;--swatch-b:#061827;"></span>
-                <strong>Profile Blue</strong>
-                <small>The profile-page wireframe blue</small>
-              </button>
-              <button type="button" class="theme-choice-card" data-theme="ember" aria-label="Use Ember theme">
-                <span class="theme-choice-swatch" style="--swatch-a:#f97316;--swatch-b:#241007;"></span>
-                <strong>Ember</strong>
-                <small>Warm orange glow</small>
-              </button>
+            <div>
+              <h3>Theme & Appearance</h3>
+              <p>Color scheme, UI mode, and accent customization</p>
             </div>
           </div>
-
-          <div class="settings-subgroup">
-            <div class="settings-subgroup-heading">
-              <span>UI/UX Mode</span>
-              <small>Classic keeps the current layout. Advanced enables the new sidebar/grid experience.</small>
+          <div class="settings-card-body">
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Theme Presets</span>
+                <small>Complete color atmospheres</small>
+              </div>
+              <div class="theme-palette-grid" id="launcher-theme-picker">
+                <button type="button" class="theme-choice-card" data-theme="emerald" aria-label="Emerald theme">
+                  <span class="theme-swatch" style="--swatch:#4cb837;"></span>
+                  <span class="theme-name">Emerald</span>
+                </button>
+                <button type="button" class="theme-choice-card" data-theme="amethyst" aria-label="Amethyst theme">
+                  <span class="theme-swatch" style="--swatch:#8b5cf6;"></span>
+                  <span class="theme-name">Amethyst</span>
+                </button>
+                <button type="button" class="theme-choice-card" data-theme="ocean" aria-label="Ocean theme">
+                  <span class="theme-swatch" style="--swatch:#3b82f6;"></span>
+                  <span class="theme-name">Ocean</span>
+                </button>
+                <button type="button" class="theme-choice-card" data-theme="sunset" aria-label="Sunset theme">
+                  <span class="theme-swatch" style="--swatch:#f97316;"></span>
+                  <span class="theme-name">Sunset</span>
+                </button>
+                <button type="button" class="theme-choice-card" data-theme="custom" aria-label="Custom color">
+                  <span class="theme-swatch custom-swatch" style="--swatch:var(--theme-accent);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  </span>
+                  <span class="theme-name">Custom</span>
+                </button>
+              </div>
             </div>
-            <div class="ui-mode-grid" id="launcher-ui-modes">
-              <button type="button" class="ui-mode-card active" data-ui-mode="classic">
-                <strong>Current</strong>
-                <span>Existing Mojang-style launcher layout.</span>
-              </button>
-              <button type="button" class="ui-mode-card" data-ui-mode="advanced">
-                <strong>Advanced</strong>
-                <span>Sidebar navigation, pixel font, grid stages, and themed panels.</span>
-              </button>
+            <div class="settings-row" id="custom-color-row">
+              <div class="settings-row-label">
+                <span>Accent Color</span>
+                <small>Custom picker for the "Custom" theme</small>
+              </div>
+              <div class="color-picker-wrap">
+                <input type="color" id="custom-accent-picker" class="color-picker-input" value="#4cb837" />
+                <span class="color-hex-label" id="custom-accent-hex">#4cb837</span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>UI Mode</span>
+                <small>Classic layout or advanced sidebar</small>
+              </div>
+              <div class="pill-switch" id="launcher-ui-modes">
+                <button type="button" class="pill-switch-option" data-ui-mode="classic">Classic</button>
+                <button type="button" class="pill-switch-option" data-ui-mode="advanced">Advanced</button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="settings-section">
-          <h3>Memory Allocation</h3>
-          <p>Set how much RAM Minecraft is allowed to use. More RAM = smoother gameplay, but don't exceed ~80% of your total system RAM.</p>
-          <div class="memory-slider-row">
-            <input type="range" id="memory-slider" min="1" max="16" step="1" value="4" class="memory-slider" />
-            <span class="memory-value-label" id="memory-value-label">4 GB</span>
+        <div class="settings-glass-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v18M3 12h18M8 8l8 8M16 8l-8 8"/>
+              </svg>
+            </div>
+            <div>
+              <h3>Visual Tuning</h3>
+              <p>Border radius, animation, blur, and compact mode</p>
+            </div>
           </div>
-          <div class="memory-presets">
-            <button class="mem-preset-btn" data-gb="2">2 GB</button>
-            <button class="mem-preset-btn" data-gb="4">4 GB</button>
-            <button class="mem-preset-btn" data-gb="6">6 GB</button>
-            <button class="mem-preset-btn" data-gb="8">8 GB</button>
-            <button class="mem-preset-btn" data-gb="12">12 GB</button>
-            <button class="mem-preset-btn" data-gb="16">16 GB</button>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Java Executable Path</h3>
-          <p>Provide the absolute path to your javaw.exe file (e.g., C:\\\Program Files\\\Java\\\jdk-17\\\bin\\\javaw.exe). If left blank, the launcher will use the system default Java.</p>
-          <input type="text" class="clean-input" style="text-align: left;" id="java-path" placeholder="&lt;Use System Default&gt;" />
-        </div>
-
-        <div class="settings-section">
-          <h3>Custom Minecraft Location</h3>
-          <p>Choose where to store your Minecraft directories (profiles, versions, assets, and mods). If left blank, it will default to the standard location inside %appdata%/IDK Launcher/minecraft-data.</p>
-          <div style="display:flex; gap:8px;">
-            <input type="text" class="clean-input" style="text-align: left; flex:1;" id="custom-minecraft-path" placeholder="&lt;Use Default Location&gt;" readonly />
-            <button class="submit-btn" id="btn-browse-minecraft-path" style="width: auto; padding: 10px 20px; margin: 0;">Browse</button>
-            <button class="submit-btn" id="btn-clear-minecraft-path" style="width: auto; padding: 10px 15px; margin: 0; background: #ef4444;" title="Reset to default">&#x2715;</button>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Global Java Arguments</h3>
-          <p>Advanced JVM arguments applied to all modpacks. Example: -XX:+UseG1GC -XX:+ParallelRefProcEnabled</p>
-          <input type="text" class="clean-input" style="text-align: left; font-size:11px;" id="global-java-args" placeholder="Leave empty for defaults" />
-        </div>
-
-        <div class="settings-section">
-          <h3>Default Game Window Size</h3>
-          <p>Set the default window resolution when launching Minecraft.</p>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <input type="number" class="clean-input" id="default-window-width" placeholder="Width" style="text-align:center; flex:1;" value="1024" />
-            <span style="color:var(--text-muted);">&times;</span>
-            <input type="number" class="clean-input" id="default-window-height" placeholder="Height" style="text-align:center; flex:1;" value="768" />
-            <label class="toggle-switch" style="margin:0;">
-              <input type="checkbox" id="fullscreen-toggle" />
-              <div class="switch"></div>
-              <span style="color: var(--text-main); font-size: 12px; margin-left: 4px;">Fullscreen</span>
-            </label>
+          <div class="settings-card-body">
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Border Radius</span>
+                <small>How rounded are UI elements</small>
+              </div>
+              <div class="slider-group">
+                <input type="range" id="border-radius-slider" min="0" max="40" step="1" value="10" class="glass-slider" />
+                <span class="slider-value" id="border-radius-value">10px</span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Animation Speed</span>
+                <small>UI motion multiplier (0 = off)</small>
+              </div>
+              <div class="slider-group">
+                <input type="range" id="animation-speed-slider" min="0" max="2" step="0.1" value="1" class="glass-slider" />
+                <span class="slider-value" id="animation-speed-value">1.0x</span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Compact Mode</span>
+                <small>Reduced padding for a denser UI</small>
+              </div>
+              <label class="tg-switch">
+                <input type="checkbox" id="compact-mode-toggle" />
+                <span class="tg-slider"></span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="settings-section">
-          <h3>In-Game Overlay</h3>
-          <p>Enable the interactive in-game overlay featuring web browser, friends list, and discord status.</p>
-          <label class="toggle-switch" style="margin-top: 8px;">
-            <input type="checkbox" id="overlay-toggle" />
-            <div class="switch"></div>
-            <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Enable In-Game Overlay (Experimental, please turn on Fullscreen)</span>
-          </label>
-        </div>
+      </div>
 
-        <div class="settings-section">
-          <h3>Hide Launcher on Launch</h3>
-          <p>Hide the launcher window when the game is running to save system resources. The launcher will automatically reappear when you exit the game.</p>
-          <label class="toggle-switch" style="margin-top: 8px;">
-            <input type="checkbox" id="hide-launcher-toggle" />
-            <div class="switch"></div>
-            <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Hide launcher when launch</span>
-          </label>
-        </div>
+      <!-- PERFORMANCE TAB -->
+      <div class="settings-tab-panel" id="settings-panel-performance">
 
-        <div class="settings-section">
-          <h3>Performance Boost Pack</h3>
-          <p>For Fabric launches, install a compatible optimization pack when available: Sodium, Lithium, FerriteCore, and EntityCulling.</p>
-          <label class="toggle-switch" style="margin-top: 8px;">
-            <input type="checkbox" id="auto-optimization" />
-            <div class="switch"></div>
-            <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Auto-install Fabric performance mods</span>
-          </label>
-        </div>
-
-        <div class="settings-section performance-settings-section">
-          <h3>Launcher Performance</h3>
-          <p>Choose how much animation and background rendering the launcher should use while browsing.</p>
-          <div class="performance-mode-grid" id="launcher-performance-modes">
-            <button class="performance-mode-card" data-performance-mode="quality">
-              <strong>Quality</strong>
-              <span>Full motion and visual polish.</span>
-            </button>
-            <button class="performance-mode-card active" data-performance-mode="balanced">
-              <strong>Balanced</strong>
-              <span>Smooth UI with quieter background work.</span>
-            </button>
-            <button class="performance-mode-card" data-performance-mode="eco">
-              <strong>Eco</strong>
-              <span>Minimum animation and GPU usage.</span>
-            </button>
+        <div class="settings-glass-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+            </div>
+            <div>
+              <h3>Memory & Performance</h3>
+              <p>RAM allocation, launcher smoothness, and mod optimization</p>
+            </div>
+          </div>
+          <div class="settings-card-body">
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Memory Allocation</span>
+                <small>RAM for Minecraft (max ~80% of system)</small>
+              </div>
+              <div class="slider-group">
+                <input type="range" id="memory-slider" min="1" max="16" step="1" value="4" class="glass-slider" />
+                <span class="slider-value mem-value" id="memory-value-label">4 GB</span>
+              </div>
+              <div class="memory-presets">
+                <button class="mem-preset-btn" data-gb="2">2</button>
+                <button class="mem-preset-btn" data-gb="4">4</button>
+                <button class="mem-preset-btn" data-gb="6">6</button>
+                <button class="mem-preset-btn" data-gb="8">8</button>
+                <button class="mem-preset-btn" data-gb="12">12</button>
+                <button class="mem-preset-btn" data-gb="16">16</button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Launcher Performance</span>
+                <small>Animation & background rendering load</small>
+              </div>
+              <div class="pill-switch" id="launcher-performance-modes">
+                <button class="pill-switch-option" data-performance-mode="quality">Quality</button>
+                <button class="pill-switch-option active" data-performance-mode="balanced">Balanced</button>
+                <button class="pill-switch-option" data-performance-mode="eco">Eco</button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Performance Boost Pack</span>
+                <small>Auto-install Fabric optimization mods (Sodium, Lithium, etc.)</small>
+              </div>
+              <label class="tg-switch">
+                <input type="checkbox" id="auto-optimization" />
+                <span class="tg-slider"></span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="settings-section">
-          <h3>Game Directory</h3>
-          <p>Open the folder where your Minecraft game files, mods, and resource packs are stored.</p>
-          <button class="submit-btn" id="btn-open-folder" style="width: auto; padding: 10px 20px;">Open Minecraft Folder</button>
+      </div>
+
+      <!-- JAVA & LAUNCH TAB -->
+      <div class="settings-tab-panel" id="settings-panel-launch">
+
+        <div class="settings-glass-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+            </div>
+            <div>
+              <h3>Java & Launch Configuration</h3>
+              <p>Executable path, JVM arguments, and game launch defaults</p>
+            </div>
+          </div>
+          <div class="settings-card-body">
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Java Path</span>
+                <small>Path to javaw.exe (leave empty for system default)</small>
+              </div>
+              <input type="text" class="glass-input" id="java-path" placeholder="Use System Default" />
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Java Arguments</span>
+                <small>Global JVM flags for all launches</small>
+              </div>
+              <input type="text" class="glass-input" id="global-java-args" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Window Size</span>
+                <small>Default game resolution</small>
+              </div>
+              <div class="window-size-group">
+                <input type="number" class="glass-input sm" id="default-window-width" value="1024" />
+                <span class="win-size-x">&times;</span>
+                <input type="number" class="glass-input sm" id="default-window-height" value="768" />
+                <label class="tg-switch" style="margin-left:8px;">
+                  <input type="checkbox" id="fullscreen-toggle" />
+                  <span class="tg-slider"></span>
+                  <span class="tg-label">Fullscreen</span>
+                </label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Hide on Launch</span>
+                <small>Auto-hide launcher when game starts</small>
+              </div>
+              <label class="tg-switch">
+                <input type="checkbox" id="hide-launcher-toggle" />
+                <span class="tg-slider"></span>
+              </label>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>In-Game Overlay</span>
+                <small>Browser & friends overlay (experimental, requires fullscreen)</small>
+              </div>
+              <label class="tg-switch">
+                <input type="checkbox" id="overlay-toggle" />
+                <span class="tg-slider"></span>
+              </label>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Custom Minecraft Location</span>
+                <small>Override the default game data folder</small>
+              </div>
+              <div class="folder-row">
+                <input type="text" class="glass-input" id="custom-minecraft-path" placeholder="Default Location" readonly />
+                <button class="glass-btn" id="btn-browse-minecraft-path">Browse</button>
+                <button class="glass-btn danger" id="btn-clear-minecraft-path" title="Reset">&times;</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="settings-section">
-          <h3>Launcher Updates</h3>
-          <p>Check for new versions of the IDK Launcher and stay up to date with the latest features.</p>
-          <button class="submit-btn" id="btn-check-launcher-updates" style="width: auto; padding: 10px 20px;">Check for Updates</button>
+      </div>
+
+      <!-- ACCESSIBILITY TAB -->
+      <div class="settings-tab-panel" id="settings-panel-accessibility">
+
+        <div class="settings-glass-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 8v4l3 3M12 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3>Accessibility</h3>
+              <p>Font size, blur, animation reduction, and visual comfort</p>
+            </div>
+          </div>
+          <div class="settings-card-body">
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Font Scale</span>
+                <small>Overall UI text size (80% to 140%)</small>
+              </div>
+              <div class="slider-group">
+                <input type="range" id="font-scale-slider" min="0.8" max="1.4" step="0.05" value="1" class="glass-slider" />
+                <span class="slider-value" id="font-scale-value">100%</span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Blur Intensity</span>
+                <small>Backdrop blur effect on glass panels</small>
+              </div>
+              <div class="blur-choice-group">
+                <button class="blur-choice-card" data-blur="none">None</button>
+                <button class="blur-choice-card" data-blur="light">Light</button>
+                <button class="blur-choice-card active" data-blur="medium">Medium</button>
+                <button class="blur-choice-card" data-blur="heavy">Heavy</button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Animation Speed</span>
+                <small>Reduce motion (0 = no animations)</small>
+              </div>
+              <div class="slider-group">
+                <input type="range" id="access-animation-speed-slider" min="0" max="2" step="0.1" value="1" class="glass-slider" />
+                <span class="slider-value" id="access-animation-speed-value">1.0x</span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Compact Mode</span>
+                <small>Reduced spacing for less scrolling</small>
+              </div>
+              <label class="tg-switch">
+                <input type="checkbox" id="access-compact-toggle" />
+                <span class="tg-slider"></span>
+              </label>
+            </div>
+          </div>
         </div>
 
-        <div class="settings-section">
-          <h3>Developer Options</h3>
-          <p>Enable the debug console (DevTools) to troubleshoot issues. This is usually only needed for debugging.</p>
-          <button class="submit-btn" id="btn-toggle-devtools" style="width: auto; padding: 10px 20px; background: #4b5563;">Open Debug Console</button>
+      </div>
+
+      <!-- ABOUT TAB -->
+      <div class="settings-tab-panel" id="settings-panel-about">
+
+        <div class="settings-glass-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </div>
+            <div>
+              <h3>About & Tools</h3>
+              <p>Version info, updates, debugging, and quick actions</p>
+            </div>
+          </div>
+          <div class="settings-card-body">
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Launcher Updates</span>
+                <small>Check for new versions</small>
+              </div>
+              <button class="glass-btn" id="btn-check-launcher-updates">Check for Updates</button>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Open Game Directory</span>
+                <small>Browse your Minecraft files</small>
+              </div>
+              <button class="glass-btn" id="btn-open-folder">Open Folder</button>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span>Developer Tools</span>
+                <small>Chrome DevTools for debugging</small>
+              </div>
+              <button class="glass-btn" id="btn-toggle-devtools">Open DevTools</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ADVANCED SETTINGS (only visible when body.ui-advanced) -->
+    <div class="advanced-settings">
+
+    <div class="advanced-tab-bar">
+      <button class="advanced-tab active" data-adv-tab="general">GENERAL</button>
+      <button class="advanced-tab" data-adv-tab="background">BACKGROUND</button>
+      <button class="advanced-tab" data-adv-tab="advanced">ADVANCED</button>
+      <button class="advanced-tab" data-adv-tab="debug">DEBUG</button>
+      <div class="advanced-tab-indicator"></div>
+    </div>
+
+    <!-- GENERAL -->
+    <div class="advanced-tab-panel active" data-adv-panel="general">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Language</h3>
+          <p>Interface language preference</p>
+        </div>
+        <select class="adv-select" id="adv-language">
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+          <option value="es">Español</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+          <option value="zh">中文</option>
+          <option value="ja">日本語</option>
+        </select>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Accent Color</h3>
+          <p>Choose a custom accent color for the launcher</p>
+        </div>
+        <div class="accent-swatch-grid" id="adv-accent-grid">
+          <button type="button" class="accent-swatch" data-accent="#ff3b3b" style="--swatch:#ff3b3b" aria-label="Red"></button>
+          <button type="button" class="accent-swatch" data-accent="#ff6b3b" style="--swatch:#ff6b3b" aria-label="Orange"></button>
+          <button type="button" class="accent-swatch" data-accent="#ff9d3b" style="--swatch:#ff9d3b" aria-label="Warm orange"></button>
+          <button type="button" class="accent-swatch" data-accent="#ffeb3b" style="--swatch:#ffeb3b" aria-label="Yellow"></button>
+          <button type="button" class="accent-swatch" data-accent="#6bff6b" style="--swatch:#6bff6b" aria-label="Lime"></button>
+          <button type="button" class="accent-swatch" data-accent="#3bbaff" style="--swatch:#3bbaff" aria-label="Cyan"></button>
+          <button type="button" class="accent-swatch" data-accent="#3b5eff" style="--swatch:#3b5eff" aria-label="Blue"></button>
+
+          <button type="button" class="accent-swatch" data-accent="#9b3bff" style="--swatch:#9b3bff" aria-label="Purple"></button>
+          <button type="button" class="accent-swatch" data-accent="#ff3be6" style="--swatch:#ff3be6" aria-label="Pink"></button>
+          <button type="button" class="accent-swatch" data-accent="#e63e3e" style="--swatch:#e63e3e" aria-label="Crimson"></button>
+          <button type="button" class="accent-swatch" data-accent="#e68a3e" style="--swatch:#e68a3e" aria-label="Amber"></button>
+          <button type="button" class="accent-swatch" data-accent="#4cb837" style="--swatch:#4cb837" aria-label="Green"></button>
+          <button type="button" class="accent-swatch" data-accent="#8b5cf6" style="--swatch:#8b5cf6" aria-label="Violet"></button>
+          <button type="button" class="accent-swatch" data-accent="#3b82f6" style="--swatch:#3b82f6" aria-label="Ocean"></button>
+          <button type="button" class="accent-swatch" data-accent="#f97316" style="--swatch:#f97316" aria-label="Sunset"></button>
+          <button type="button" class="accent-swatch custom" id="adv-accent-custom" aria-label="Custom color">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
+        </div>
+        <div class="accent-custom-row" id="adv-accent-custom-row">
+          <input type="color" id="adv-accent-picker" class="accent-picker-input" value="#4cb837" />
+          <span class="accent-hex-label" id="adv-accent-hex">#4cb837</span>
         </div>
       </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>General Preferences</h3>
+          <p>Toggle launcher behavior options</p>
+        </div>
+        <div class="adv-toggles">
+          <label class="adv-toggle-row">
+            <span>Auto Updates</span>
+            <input type="checkbox" id="adv-toggle-updates" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>Discord Presence</span>
+            <input type="checkbox" id="adv-toggle-discord" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>Beta Updates</span>
+            <input type="checkbox" id="adv-toggle-beta" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>Open Logs After Launch</span>
+            <input type="checkbox" id="adv-toggle-logs" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>Hide Window on Launch</span>
+            <input type="checkbox" id="adv-toggle-hide" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>Analytics</span>
+            <input type="checkbox" id="adv-toggle-analytics" />
+            <span class="adv-toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>UI Mode</h3>
+          <p>Switch between Classic and Advanced interface</p>
+        </div>
+        <div class="pill-switch" id="adv-launcher-ui-modes">
+          <button type="button" class="pill-switch-option" data-ui-mode="classic">Classic</button>
+          <button type="button" class="pill-switch-option" data-ui-mode="advanced">Advanced</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BACKGROUND -->
+    <div class="advanced-tab-panel" data-adv-panel="background">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Background Effects</h3>
+          <p>Select a dynamic background for the launcher</p>
+        </div>
+        <div class="bg-effects-grid" id="adv-bg-effects">
+          <button class="bg-effect-card active" data-effect="none">
+            <div class="bg-effect-preview bg-none"></div>
+            <span>None</span>
+          </button>
+          <button class="bg-effect-card" data-effect="matrix">
+            <div class="bg-effect-preview bg-matrix"></div>
+            <span>Matrix Rain</span>
+          </button>
+          <button class="bg-effect-card" data-effect="nebula">
+            <div class="bg-effect-preview bg-nebula"></div>
+            <span>Nebula Waves</span>
+          </button>
+          <button class="bg-effect-card" data-effect="liquid">
+            <div class="bg-effect-preview bg-liquid"></div>
+            <span>Liquid Chrome</span>
+          </button>
+          <button class="bg-effect-card" data-effect="starfield">
+            <div class="bg-effect-preview bg-starfield"></div>
+            <span>Starfield</span>
+          </button>
+          <button class="bg-effect-card" data-effect="particles">
+            <div class="bg-effect-preview bg-particles"></div>
+            <span>Particles</span>
+          </button>
+        </div>
+      </div>
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Intensity</h3>
+          <p>Control the effect's visual density</p>
+        </div>
+        <div class="adv-slider-group">
+          <span class="adv-slider-label">Low</span>
+          <input type="range" id="adv-bg-intensity" min="0" max="100" value="50" class="adv-slider" />
+          <span class="adv-slider-label">High</span>
+          <span class="adv-slider-value" id="adv-bg-intensity-value">50</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADVANCED -->
+    <div class="advanced-tab-panel" data-adv-panel="advanced">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Launcher Performance</h3>
+          <p>Animation & background rendering load</p>
+        </div>
+        <div class="pill-switch" id="adv-launcher-performance-modes">
+          <button type="button" class="pill-switch-option" data-performance-mode="quality">Quality</button>
+          <button type="button" class="pill-switch-option active" data-performance-mode="balanced">Balanced</button>
+          <button type="button" class="pill-switch-option" data-performance-mode="eco">Eco</button>
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Memory Allocation</h3>
+          <p>RAM for Minecraft (max ~80% of system)</p>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Allocated RAM</span>
+            <span class="adv-slider-field-value" id="adv-memory-value-label">4 GB</span>
+          </div>
+          <input type="range" id="adv-memory-slider" min="1" max="16" step="1" value="4" class="adv-slider" />
+          <div class="adv-slider-range" style="display:flex;gap:4px;justify-content:space-between;margin-top:8px;">
+            <button class="mem-preset-btn adv-mem-preset" data-gb="2">2</button>
+            <button class="mem-preset-btn adv-mem-preset" data-gb="4">4</button>
+            <button class="mem-preset-btn adv-mem-preset" data-gb="6">6</button>
+            <button class="mem-preset-btn adv-mem-preset" data-gb="8">8</button>
+            <button class="mem-preset-btn adv-mem-preset" data-gb="12">12</button>
+            <button class="mem-preset-btn adv-mem-preset" data-gb="16">16</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Optimization</h3>
+          <p>Download throughput and mod optimization</p>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Concurrent Downloads</span>
+            <span class="adv-slider-field-value" id="adv-concurrent-dl-value">4</span>
+          </div>
+          <input type="range" id="adv-concurrent-dl" min="1" max="10" step="1" value="4" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>1</span>
+            <span>10</span>
+          </div>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Concurrent I/O Operations</span>
+            <span class="adv-slider-field-value" id="adv-concurrent-io-value">2</span>
+          </div>
+          <input type="range" id="adv-concurrent-io" min="1" max="8" step="1" value="2" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>1</span>
+            <span>8</span>
+          </div>
+        </div>
+        <label class="adv-toggle-row" style="margin-top:12px;">
+          <span>Performance Boost Pack</span>
+          <input type="checkbox" id="adv-auto-optimization" />
+          <span class="adv-toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Visual</h3>
+          <p>UI border radius and compact mode</p>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Border Radius</span>
+            <span class="adv-slider-field-value" id="adv-border-radius-value">10px</span>
+          </div>
+          <input type="range" id="adv-border-radius" min="0" max="40" step="1" value="10" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>0px</span>
+            <span>40px</span>
+          </div>
+        </div>
+        <label class="adv-toggle-row" style="margin-top:12px;">
+          <span>Compact Mode</span>
+          <input type="checkbox" id="adv-compact-mode-toggle" />
+          <span class="adv-toggle-track"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- DEBUG -->
+    <div class="advanced-tab-panel" data-adv-panel="debug">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Log Output</h3>
+          <p>Real-time launcher debug information</p>
+        </div>
+        <div class="debug-terminal" id="adv-debug-terminal">
+          <div class="debug-line" style="color: #666;">[IDK Launcher] Debug console ready...</div>
+          <div class="debug-line" style="color: #666;">[System] Waiting for events...</div>
+        </div>
+        <div class="debug-actions">
+          <button class="adv-btn" id="adv-debug-clear">Clear</button>
+          <button class="adv-btn" id="adv-toggle-devtools">DevTools</button>
+        </div>
+      </div>
+    </div>
+
     </div>
   </div>
 

@@ -100,7 +100,7 @@ export function initContentFeature() {
       const json = await res.json();
       if (json.data && json.data.length > 0) packs = json.data;
     } catch (e) {
-      console.warn("CurseForge trending fetch failed:", e);
+      // offline — fall through to defaults
     }
 
     grid.innerHTML = "";
