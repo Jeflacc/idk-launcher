@@ -31,7 +31,9 @@ body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 
 /* Block the panel itself so canvas never shows through the browser area */
 body[data-bg-effect]:not([data-bg-effect="none"]) .mod-browser {
-    background: var(--theme-bg-panel) !important;
+    background: rgba(15, 13, 24, 0.05) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     isolation: isolate;
 }
 
@@ -296,7 +298,7 @@ body.ui-advanced .nav-tabs {
     left: 0;
     bottom: 0;
     width: var(--advanced-sidebar-width);
-    height: auto;
+    height: calc(100vh - var(--top-bar-height));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -626,23 +628,26 @@ body.ui-advanced .play-button-wrapper {
     height: 100%;
     display: flex;
     align-items: stretch;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--theme-radius);
+    overflow: visible;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 body.ui-advanced .play-button {
     flex: 1;
     height: 100%;
     border: none;
-    border-radius: 0;
+    border-radius: var(--theme-radius) 0 0 var(--theme-radius);
     background: transparent;
     box-shadow: none;
     color: #fff;
     font-size: 26px;
     letter-spacing: 1.2px;
     text-shadow: 0 2px 0 rgba(0, 0, 0, 0.65);
+    cursor: pointer;
 }
 
-/* Override the default "Ready to play" ::after subtext with nothing —
-   the Mojang font renders it crisply already, keep it visible. */
 body.ui-advanced .play-button:not(.running):not(:disabled)::after {
     content: "\25CF  Ready to play";
     font-family: var(--font-main);
@@ -670,6 +675,7 @@ body.ui-advanced .play-dropdown-trigger {
     transition: background 0.15s;
     padding: 0;
     flex-shrink: 0;
+    border-radius: 0 var(--theme-radius) var(--theme-radius) 0;
 }
 
 body.ui-advanced .play-dropdown-trigger:hover {
@@ -690,7 +696,7 @@ body.ui-advanced .play-dropdown {
     position: absolute;
     bottom: calc(100% + 8px);
     right: 0;
-    min-width: 200px;
+    min-width: 240px;
     background: rgba(8, 8, 9, 0.96);
     border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
@@ -747,9 +753,142 @@ body.ui-advanced .play-dropdown-item:hover svg {
     color: var(--theme-accent-bright);
 }
 
+body.ui-advanced .play-dd-setup {
+    padding: 10px 14px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+body.ui-advanced .play-dd-setup-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+body.ui-advanced .play-dd-setup-value {
+    font-family: var(--font-title);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.3px;
+}
+
+body.ui-advanced .play-dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 2px 0;
+}
+
+body.ui-advanced .play-dd-section {
+    padding: 6px 10px;
+}
+
+body.ui-advanced .play-dd-section-header {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.35);
+    margin-bottom: 6px;
+    padding: 0 4px;
+}
+
+body.ui-advanced .play-dd-loader-list,
+body.ui-advanced .play-dd-version-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+body.ui-advanced .play-dd-loader-btn,
+body.ui-advanced .play-dd-version-btn {
+    font-family: var(--font-main);
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+}
+
+body.ui-advanced .play-dd-loader-btn:hover,
+body.ui-advanced .play-dd-version-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.ui-advanced .play-dd-loader-btn.active,
+body.ui-advanced .play-dd-version-btn.active {
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    color: #fff;
+}
+
+body.ui-advanced .play-dd-version-more {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.35);
+    border-style: dashed;
+}
+
+body.ui-advanced .play-dd-version-more:hover {
+    color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.ui-advanced .play-dd-version-wrapper {
+    display: flex;
+}
+
+body.ui-advanced .play-dd-version-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-main);
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+}
+
+body.ui-advanced .play-dd-version-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.ui-advanced .play-dd-version-btn.active {
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    color: #fff;
+}
+
+body.ui-advanced .play-dd-version-id {
+    color: inherit;
+}
+
+body.ui-advanced .play-dd-version-loader {
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    color: var(--theme-accent-bright);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
+    line-height: 1.2;
+}
+
 body.ui-advanced .details-section {
     width: min(32vw, 370px);
-    min-width: 320px;
+    min-width: 420px;
     height: 100%;
     min-height: 0;
     overflow-y: auto;
@@ -760,6 +899,7 @@ body.ui-advanced .details-section {
 
 body.ui-advanced .details-content {
     padding: 18px 14px 24px;
+    padding-right: 90px;
 }
 
 body.ui-advanced .stats-grid {
@@ -796,20 +936,61 @@ body.ui-advanced .news-grid {
 body.ui-advanced .news-card,
 body.ui-advanced .stat-card,
 body.ui-advanced .trending-mp-card,
-body.ui-advanced .installed-mod-card,
 body.ui-advanced .mod-result-card {
+    min-height: 0;
     background: #08080c;
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.28);
-    border-radius: 0;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
+    border-radius: 6px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    padding: 6px 10px;
+}
+
+body.ui-advanced .installed-mod-card {
+    min-height: 0;
+    background: #08080c;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
+    border-radius: 6px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    padding: 6px 10px;
+    gap: 8px;
 }
 
 body.ui-advanced .news-card:hover,
 body.ui-advanced .trending-mp-card:hover,
 body.ui-advanced .installed-mod-card:hover,
 body.ui-advanced .mod-result-card:hover {
-    border-color: rgba(var(--theme-accent-rgb), 0.62);
-    box-shadow: 0 0 22px rgba(var(--theme-accent-rgb), 0.12);
+    border-color: rgba(var(--theme-accent-rgb), 0.45);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+body.ui-advanced .mod-result-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--theme-radius);
+}
+
+body.ui-advanced .mod-result-info strong {
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0;
+}
+
+body.ui-advanced .mod-result-info > span {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.35;
+    margin-top: 2px;
+}
+
+body.ui-advanced .mod-result-meta {
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(var(--theme-accent-rgb), 0.1);
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: var(--font-title);
 }
 
 body.ui-advanced .news-img {
@@ -875,7 +1056,9 @@ body.ui-advanced .mods-content-wrapper,
 body.ui-advanced .settings-content-wrapper,
 body.ui-advanced .profile-page-content {
     border: 1px solid rgba(var(--theme-accent-rgb), 0.32);
-    background: #0b0816;
+    background: rgba(15, 13, 24, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
 }
 
@@ -1016,7 +1199,7 @@ body.ui-advanced .mods-container {
 
 body.ui-advanced .modpacks-sidebar {
     width: 280px;
-    border-right: 1px solid rgba(var(--theme-accent-rgb), 0.22);
+    border-right: 1px solid rgba(var(--theme-accent-rgb), 0.1);
     background: rgba(var(--theme-accent-rgb), 0.06);
     overflow-x: hidden;
 }
@@ -1092,44 +1275,12 @@ body.ui-advanced .mod-browser-results {
 
 body.ui-advanced .installed-mod-card,
 body.ui-advanced .mod-result-card {
-    min-height: 64px;
-    padding: 12px 16px;
+    min-height: 0;
+    padding: 6px 10px;
+    gap: 8px;
 }
 
-/* Better mod result cards in browser */
-body.ui-advanced .mod-result-card {
-    min-height: 72px;
-    gap: 14px;
-    align-items: center;
-}
 
-body.ui-advanced .mod-result-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--theme-radius);
-    flex-shrink: 0;
-}
-
-body.ui-advanced .mod-result-info strong {
-    font-family: var(--font-main);
-    font-size: 14px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 0;
-}
-
-body.ui-advanced .mod-result-info > span {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.55);
-    line-height: 1.35;
-    margin-top: 2px;
-}
-
-body.ui-advanced .mod-result-meta {
-    margin-top: 5px;
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.4);
-}
 
 /* Mod browser header */
 body.ui-advanced .mod-browser-header h3 {
@@ -1156,23 +1307,101 @@ body.ui-advanced .mp-tab.active {
 
 body.ui-advanced .mod-browser {
     left: 230px;
-    background: var(--theme-bg-panel);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-left: 1px solid rgba(var(--theme-accent-rgb), 0.36);
     isolation: isolate;
 }
 
-body.ui-advanced .mod-browser-header,
-body.ui-advanced .provider-pill-group {
+body.ui-advanced .mod-browser-header {
+    border-color: rgba(var(--theme-accent-rgb), 0.2);
+}
+
+body.ui-advanced .mod-browser-header-actions .provider-pill-group {
     border-color: rgba(var(--theme-accent-rgb), 0.25);
     background: rgba(var(--theme-accent-rgb), 0.08);
 }
 
+/* Browser body */
+body.ui-advanced .browser-search-bar {
+    border-bottom: 1px solid rgba(var(--theme-accent-rgb), 0.15);
+}
+
+body.ui-advanced .browser-sidebar {
+    width: 220px;
+    border-left: 1px solid rgba(var(--theme-accent-rgb), 0.18);
+    background: rgba(var(--theme-accent-rgb), 0.04);
+}
+
+body.ui-advanced .browser-filter-section {
+    border-bottom: 1px solid rgba(var(--theme-accent-rgb), 0.1);
+}
+
+body.ui-advanced .browser-filter-title {
+    color: var(--theme-accent-bright);
+    font-family: var(--font-title);
+    letter-spacing: 1.2px;
+    font-size: 9px;
+}
+
+body.ui-advanced .browser-filter-pill {
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.18);
+    color: rgba(255, 255, 255, 0.55);
+    border-radius: calc(var(--theme-radius) * 0.3);
+    font-family: var(--font-title);
+    letter-spacing: 0.5px;
+}
+
+body.ui-advanced .browser-filter-pill:hover {
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    color: white;
+}
+
+body.ui-advanced .browser-filter-pill.active {
+    background: rgba(var(--theme-accent-rgb), 0.22);
+    border-color: var(--theme-accent);
+    color: white;
+    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.12);
+}
+
+body.ui-advanced .browser-filter-section .clean-select {
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.18);
+    border-radius: calc(var(--theme-radius) * 0.3);
+}
+
+body.ui-advanced .browser-filter-clear {
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.15);
+    color: rgba(255, 255, 255, 0.45);
+    border-radius: calc(var(--theme-radius) * 0.3);
+    font-family: var(--font-title);
+}
+
+body.ui-advanced .browser-filter-clear:hover {
+    background: rgba(var(--theme-accent-rgb), 0.1);
+    color: white;
+    border-color: rgba(var(--theme-accent-rgb), 0.3);
+}
+
+body.ui-advanced .browser-results {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 /* Cyberpunk mods manager enhancements */
-body.ui-advanced .mods-content-wrapper {
+body.ui-advanced .mods-content-wrapper,
+body.ui-advanced .settings-content-wrapper,
+body.ui-advanced .profile-page-content,
+body.ui-advanced #view-main {
     position: relative;
 }
 
-body.ui-advanced .mods-content-wrapper::before {
+body.ui-advanced .mods-content-wrapper::before,
+body.ui-advanced .settings-content-wrapper::before,
+body.ui-advanced .profile-page-content::before,
+body.ui-advanced #view-main::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -1213,6 +1442,37 @@ body.ui-advanced .mp-list-section-header {
     letter-spacing: 1.2px;
 }
 
+/* Advanced pagination buttons */
+body.ui-advanced .browser-page-btn {
+    background: rgba(var(--theme-accent-rgb), 0.25);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.5);
+    border-radius: calc(var(--theme-radius) * 0.3);
+    font-family: var(--font-title);
+}
+body.ui-advanced .browser-page-btn:hover {
+    background: rgba(var(--theme-accent-rgb), 0.4);
+}
+body.ui-advanced .browser-page-info {
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
+    font-family: var(--font-title);
+}
+body.ui-advanced .browser-page-btn-lg {
+    background: rgba(var(--theme-accent-rgb), 0.2);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.45);
+    border-radius: calc(var(--theme-radius) * 0.3);
+    font-family: var(--font-title);
+    letter-spacing: 0.5px;
+}
+body.ui-advanced .browser-page-btn-lg:hover {
+    background: rgba(var(--theme-accent-rgb), 0.35);
+}
+body.ui-advanced .browser-page-info-lg {
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
+    font-family: var(--font-title);
+}
+
 body.ui-advanced .mp-tab.active {
     text-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.3);
 }
@@ -1236,6 +1496,33 @@ body.ui-advanced .mp-stat {
 
 body.ui-advanced .mp-stat svg {
     flex-shrink: 0;
+}
+
+/* Advanced pose selector */
+body.ui-advanced .pose-selector {
+    border-top: 1px solid rgba(var(--theme-accent-rgb), 0.12);
+    padding: 10px 16px;
+}
+
+body.ui-advanced .pose-btn {
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.15);
+    border-radius: calc(var(--theme-radius) * 0.3);
+    font-family: var(--font-title);
+    letter-spacing: 0.6px;
+    font-size: 9px;
+}
+
+body.ui-advanced .pose-btn:hover {
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    color: white;
+}
+
+body.ui-advanced .pose-btn.active {
+    background: rgba(var(--theme-accent-rgb), 0.22);
+    border-color: var(--theme-accent);
+    box-shadow: 0 0 6px rgba(var(--theme-accent-rgb), 0.12);
+    color: white;
 }
 
 /* Advanced settings */
@@ -1293,7 +1580,8 @@ body.ui-advanced .memory-slider::-webkit-slider-thumb {
 body.ui-advanced .profile-page-content {
     grid-template-columns: minmax(0, 1fr) 360px;
     border: 0;
-    background: var(--theme-bg);
+    background: rgba(15, 13, 24, 0.35);
+    backdrop-filter: blur(10px);
     box-shadow: none;
     gap: 0;
 }
@@ -1364,6 +1652,7 @@ body.ui-advanced .profile-skin-viewer-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
 body.ui-advanced .profile-skin-viewer-wrapper canvas {
@@ -1669,6 +1958,7 @@ body.ui-advanced .profile-skin-viewer-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
 body.ui-advanced .profile-skin-viewer-wrapper canvas {
@@ -2469,14 +2759,80 @@ body.ui-advanced[data-theme="custom"] #view-profile {
         linear-gradient(180deg, var(--theme-bg-panel), var(--theme-bg) 100%);
 }
 
-/* When a background effect is active, override ALL per-theme backgrounds with transparency.
-   Exclude "none" and "particles" — those modes keep solid view backgrounds intentionally. */
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) #view-main .main-hero-banner,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) #view-mods,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) #view-settings,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) #view-profile,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .details-section {
+/* =========================================================
+   TWO-LAYER GLASS SYSTEM — Background Effect Transparency
+   Layer 1 (Sidebars):      rgba(15,13,24,0.9) + blur(20px)
+   Layer 2 (Main Areas):    rgba(15,13,24,0.05) + no blur
+   Excludes "none" and "particles" — those keep solid backgrounds.
+   ========================================================= */
+
+/* Make view wrappers fully transparent so canvas shows through */
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-main,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-settings,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-profile,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-mods,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-main .main-hero-banner {
     background: transparent !important;
+}
+
+/* Layer 2 — Main Areas: barely-tinted clear glass, no blur */
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .mods-content-wrapper,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .settings-content-wrapper,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-page-content,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-main-stage {
+    background: rgba(15, 13, 24, 0.05) !important;
+    backdrop-filter: none !important;
+}
+
+/* Layer 1 — Sidebars: heavily frosted glass, strong blur */
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .nav-tabs,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .top-bar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .browser-sidebar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-sidebar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
+    background: rgba(15, 13, 24, 0.2) !important;
+    backdrop-filter: blur(20px) !important;
+}
+
+/* Layer 2 — Main Areas: barely-tinted clear glass, no blur */
+html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .mods-content-wrapper,
+html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .settings-content-wrapper,
+html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-page-content,
+html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-main-stage {
+    background: rgba(15, 13, 24, 0.05) !important;
+    backdrop-filter: none !important;
+}
+
+/* Layer 1 — Sidebars: heavily frosted glass, strong blur */
+html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .nav-tabs,
+html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .top-bar,
+html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .browser-sidebar,
+html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-sidebar,
+html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .friends-sidebar,
+html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .details-section {
+    background: rgba(15, 13, 24, 0.3) !important;
+    backdrop-filter: blur(20px) !important;
+}
+
+/* Layer 2 — Main Areas: barely-tinted clear glass, no blur */
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .mods-content-wrapper,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .settings-content-wrapper,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-page-content,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-main-stage {
+    background: rgba(15, 13, 24, 0.05) !important;
+    backdrop-filter: none !important;
+}
+
+/* Layer 1 — Sidebars: heavily frosted glass, strong blur */
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .nav-tabs,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .top-bar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .browser-sidebar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-sidebar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .friends-sidebar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .details-section {
+    background: rgba(15, 13, 24, 0.9) !important;
+    backdrop-filter: blur(20px);
 }
 
 @media (max-width: 980px) {

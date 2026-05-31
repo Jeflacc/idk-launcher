@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   scanVersionMods: (version) => ipcRenderer.invoke('scan-version-mods', version),
   scanProfileAchievements: (data) => ipcRenderer.invoke('scan-profile-achievements', data),
   scanAllAchievements: () => ipcRenderer.invoke('scan-all-achievements'),
+  downloadVersion: (data) => ipcRenderer.invoke('download-version', data),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
@@ -44,6 +45,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectExportZip:     (data) => ipcRenderer.invoke('select-export-zip',   data),
   exportModpack:       (data) => ipcRenderer.invoke('export-modpack',      data),
   downloadCurseforgeModpack: (data) => ipcRenderer.invoke('download-curseforge-modpack', data),
+  downloadModrinthModpack:   (data) => ipcRenderer.invoke('download-modrinth-modpack',   data),
   removeMod:           (data) => ipcRenderer.invoke('remove-mod',          data),
   installResourcepack: (data) => ipcRenderer.invoke('install-resourcepack', data),
   removeResourcepack:  (data) => ipcRenderer.invoke('remove-resourcepack',  data),
@@ -63,6 +65,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onOverlaySyncConnect: (cb) => ipcRenderer.on('overlay-sync-connect', (_e, data) => cb(data)),
   onShowStartupNotification: (cb) => ipcRenderer.on('show-startup-notification', (_e, data) => cb(data)),
   hideOverlayWindow: () => ipcRenderer.send('hide-overlay-window'),
+
+  onDownloadProgress: (cb) => {
+    if (globalThis.__dlProgCb) ipcRenderer.removeListener('download-progress', globalThis.__dlProgCb);
+    globalThis.__dlProgCb = (_e, data) => cb(data);
+    ipcRenderer.on('download-progress', globalThis.__dlProgCb);
+  },
 
   // FRPC Multiplayer Tunneling
   ensureFrpc: () => ipcRenderer.invoke('ensure-frpc'),

@@ -47,12 +47,14 @@ function disposeHomeSkinViewer() {
 }
 
 function fitCanvasToStage(canvasEl, stageEl) {
-  const maxW = stageEl.clientWidth + 200;
-  const maxH = stageEl.clientHeight + 200;
-  let width = Math.min(1400, maxW);
-  let height = Math.min(1400, maxH);
+  const maxW = 600;
+  const maxH = 800;
+  const width = Math.max(300, Math.min(maxW, stageEl.clientWidth));
+  const height = Math.max(400, Math.min(maxH, stageEl.clientHeight));
   canvasEl.style.width = `${width}px`;
   canvasEl.style.height = `${height}px`;
+  canvasEl.style.margin = "0 auto";
+  canvasEl.style.display = "block";
   return { width, height };
 }
 
@@ -76,8 +78,6 @@ function applyViewerCamera(viewer) {
 
   if (viewer.playerObject) {
     viewer.playerObject.rotation.y = 0.3;
-    viewer.playerObject.rotation.z= 0;
-    viewer.playerObject.position.y = 0;
   }
 
   if (typeof viewer.zoom === "number") {
@@ -85,13 +85,108 @@ function applyViewerCamera(viewer) {
   }
 }
 
+// === Player Pose System ===
+// Uses skinview3d animations for character poses
+const POSE_ANIMATIONS = {};
+const POSE_SPEEDS = {
+  idle: 0.55,
+  walking: 0.7,
+  running: 1.0,
+  flying: 0.6,
+  wave: 0.8,
+  crouch: 0.5,
+  swim: 0.5,
+};
+
+function getSavedPose() {
+  return localStorage.getItem("idk_player_pose") || "idle";
+}
+
+function savePose(poseName) {
+  localStorage.setItem("idk_player_pose", poseName);
+}
+
+async function ensureAnimationsLoaded() {
+  if (Object.keys(POSE_ANIMATIONS).length > 0) return;
+  const {
+    IdleAnimation,
+    WalkingAnimation,
+    RunningAnimation,
+    FlyingAnimation,
+    WaveAnimation,
+    CrouchAnimation,
+    SwimAnimation,
+    FunctionAnimation,
+  } = await import("skinview3d");
+
+  POSE_ANIMATIONS.idle = () => {
+    const anim = new FunctionAnimation((player, progress, delta) => {
+      const headLook = Math.sin(progress * Math.PI * 0.5) * 0.06;
+      const sway = Math.sin(progress * Math.PI * 0.4) * 0.02;
+      player.skin.head.rotation.y = headLook;
+      player.skin.head.rotation.x = Math.sin(progress * Math.PI * 0.3 + 1) * 0.04;
+      player.skin.leftArm.rotation.x = -0.04 + sway;
+      player.skin.leftArm.rotation.z = -0.02;
+      player.skin.rightArm.rotation.x = 0.04 - sway;
+      player.skin.rightArm.rotation.z = 0.02;
+      player.skin.leftLeg.rotation.x = -sway * 0.3;
+      player.skin.rightLeg.rotation.x = sway * 0.3;
+    });
+    anim.speed = 0.4;
+    return anim;
+  };
+  POSE_ANIMATIONS.walking = () => new WalkingAnimation();
+  POSE_ANIMATIONS.running = () => new RunningAnimation();
+  POSE_ANIMATIONS.flying = () => new FlyingAnimation();
+  POSE_ANIMATIONS.wave = () => new WaveAnimation("right");
+  POSE_ANIMATIONS.crouch = () => new CrouchAnimation();
+  POSE_ANIMATIONS.swim = () => new SwimAnimation();
+}
+
+function applyPose(viewer, poseName) {
+  if (!viewer) return;
+  if (!POSE_ANIMATIONS[poseName]) {
+    viewer.animation = null;
+    return;
+  }
+  const poseAnim = POSE_ANIMATIONS[poseName]();
+  if (poseAnim) {
+    poseAnim.speed = POSE_SPEEDS[poseName] || 0.5;
+    viewer.animation = poseAnim;
+  }
+}
+
+function setupPoseSelector(viewer) {
+  const selector = document.getElementById("pose-selector");
+  if (!selector) return;
+
+  const savedPose = getSavedPose();
+
+  selector.querySelectorAll(".pose-btn").forEach((btn) => {
+    const pose = btn.dataset.pose;
+    if (pose === savedPose) {
+      selector.querySelectorAll(".pose-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    }
+
+    btn.addEventListener("click", () => {
+      selector.querySelectorAll(".pose-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyPose(viewer, pose);
+      savePose(pose);
+    });
+  });
+}
+
 function fitHomeCanvasToStage(canvasEl, stageEl) {
-  const maxW = Math.max(240, stageEl.clientWidth - 16);
-  const maxH = Math.max(360, stageEl.clientHeight - 16);
-  const width = Math.min(500, maxW);
-  const height = Math.min(640, maxH);
+  const maxW = 400;
+  const maxH = 600;
+  const width = Math.max(200, Math.min(maxW, stageEl.clientWidth));
+  const height = Math.max(300, Math.min(maxH, stageEl.clientHeight));
   canvasEl.style.width = `${width}px`;
   canvasEl.style.height = `${height}px`;
+  canvasEl.style.margin = "0 auto";
+  canvasEl.style.display = "block";
   return { width, height };
 }
 
@@ -114,7 +209,6 @@ function applyHomeViewerCamera(viewer) {
 
   if (viewer.playerObject) {
     viewer.playerObject.rotation.y = -0.28;
-    viewer.playerObject.position.y = 0;
   }
 
   if (typeof viewer.zoom === "number") {
@@ -154,7 +248,7 @@ async function initHomeSkinViewer() {
   const { width, height } = fitHomeCanvasToStage(canvasEl, stage);
 
   try {
-    const { SkinViewer, IdleAnimation } = await import("skinview3d");
+    const { SkinViewer } = await import("skinview3d");
     const THREE = await import("three");
 
     homeSkinViewerInstance = new SkinViewer({
@@ -191,9 +285,9 @@ async function initHomeSkinViewer() {
 
     applyHomeViewerCamera(homeSkinViewerInstance);
 
-    const ambientAnimation = new IdleAnimation();
-    ambientAnimation.speed = 0.48;
-    homeSkinViewerInstance.animation = ambientAnimation;
+    await ensureAnimationsLoaded();
+    const savedPose = getSavedPose();
+    applyPose(homeSkinViewerInstance, savedPose);
 
     if (loaderEl) loaderEl.style.display = "none";
     canvasEl.classList.add("is-ready");
@@ -235,7 +329,7 @@ async function initProfileSkinViewer() {
   const { width, height } = fitCanvasToStage(canvasEl, stage);
 
   try {
-    const { SkinViewer, IdleAnimation } = await import("skinview3d");
+    const { SkinViewer } = await import("skinview3d");
 
     skinViewerInstance = new SkinViewer({
       canvas: canvasEl,
@@ -276,9 +370,10 @@ async function initProfileSkinViewer() {
 
     applyViewerCamera(skinViewerInstance);
 
-    const ambientAnimation = new IdleAnimation();
-    ambientAnimation.speed = 0.55;
-    skinViewerInstance.animation = ambientAnimation;
+    await ensureAnimationsLoaded();
+    const savedPose = getSavedPose();
+    applyPose(skinViewerInstance, savedPose);
+    setupPoseSelector(skinViewerInstance);
 
     if (loaderEl) loaderEl.style.display = "none";
     canvasEl.classList.add("is-ready");

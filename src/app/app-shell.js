@@ -36,6 +36,18 @@ export function renderAppShell() {
     </div>
 
     <div class="top-bar-right">
+      <!-- DOWNLOAD STATUS BUTTON -->
+      <button class="download-status-btn" id="nav-download-btn" style="display:none;" title="Download Progress">
+        <svg class="ds-ring" width="28" height="28" viewBox="0 0 28 28">
+          <circle class="ds-ring-bg" cx="14" cy="14" r="11" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2.5"/>
+          <circle class="ds-ring-fill" id="nav-dl-ring" cx="14" cy="14" r="11" fill="none" stroke="var(--theme-accent)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="69.12" stroke-dashoffset="69.12" transform="rotate(-90 14 14)"/>
+        </svg>
+        <svg class="ds-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
       <!-- FRIENDS TOGGLE BUTTON -->
       <button class="friends-toggle-btn" id="btn-friends-toggle" title="Friends List" style="margin-right: 4px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -140,10 +152,10 @@ export function renderAppShell() {
       <div class="main-center">
         <div class="advanced-home-player" aria-hidden="true">
           <h1 class="advanced-home-username" id="advanced-home-username">PLAYER</h1>
-          <div class="advanced-home-skin-viewer-wrapper" id="advanced-home-skin-stage">
-            <div class="advanced-home-skin-loading" id="advanced-home-skin-loading">Loading skin…</div>
-            <canvas id="advanced-home-skin-canvas"></canvas>
-          </div>
+           <div class="advanced-home-skin-viewer-wrapper" id="advanced-home-skin-stage" style="display:flex; justify-content:center; align-items:center; overflow:hidden;">
+             <div class="advanced-home-skin-loading" id="advanced-home-skin-loading">Loading skin…</div>
+             <canvas id="advanced-home-skin-canvas"></canvas>
+           </div>
         </div>
         <img src="./java.png" alt="Minecraft Java Edition" class="mc-logo" />
       </div>
@@ -227,13 +239,38 @@ export function renderAppShell() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </button>
             <div class="play-dropdown" id="play-dropdown">
+              <div class="play-dd-setup" id="play-dd-setup">
+                <span class="play-dd-setup-label">Current Setup</span>
+                <span class="play-dd-setup-value" id="play-dd-setup-value">—</span>
+              </div>
+
+              <div class="play-dropdown-divider"></div>
+
+              <div class="play-dd-section">
+                <div class="play-dd-section-header">Loader</div>
+                <div class="play-dd-loader-list" id="play-dd-loader-list">
+                  <button class="play-dd-loader-btn" data-loader="Vanilla">Vanilla</button>
+                  <button class="play-dd-loader-btn" data-loader="Forge">Forge</button>
+                  <button class="play-dd-loader-btn" data-loader="Fabric">Fabric</button>
+                  <button class="play-dd-loader-btn" data-loader="NeoForge">NeoForge</button>
+                  <button class="play-dd-loader-btn" data-loader="Quilt">Quilt</button>
+                </div>
+              </div>
+
+              <div class="play-dropdown-divider"></div>
+
+              <div class="play-dd-section">
+                <div class="play-dd-section-header">Version</div>
+                <div class="play-dd-version-list" id="play-dd-version-list">
+                  <!-- Injected by JS -->
+                </div>
+              </div>
+
+              <div class="play-dropdown-divider"></div>
+
               <button class="play-dropdown-item" id="play-dd-modpacks">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 Modpacks
-              </button>
-              <button class="play-dropdown-item" id="play-dd-versions">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                Versions
               </button>
             </div>
           </div>
@@ -857,7 +894,7 @@ export function renderAppShell() {
         </div>
         <div class="adv-slider-group">
           <span class="adv-slider-label">Low</span>
-          <input type="range" id="adv-bg-intensity" min="0" max="100" value="50" class="adv-slider" />
+          <input type="range" id="adv-bg-intensity" min="0" max="200" value="50" class="adv-slider" />
           <span class="adv-slider-label">High</span>
           <span class="adv-slider-value" id="adv-bg-intensity-value">50</span>
         </div>
@@ -990,7 +1027,7 @@ export function renderAppShell() {
               <h1 class="profile-character-name" id="profile-page-username">MUZLIK_GAMER</h1>
             </div>
 
-            <div class="profile-skin-viewer-wrapper" id="profile-skin-stage">
+            <div class="profile-skin-viewer-wrapper" id="profile-skin-stage" style="display:flex; justify-content:center; align-items:center; overflow:hidden;">
               <div class="profile-skin-loading" id="profile-skin-loading">Loading skin…</div>
               <canvas id="profile-skin-canvas"></canvas>
             </div>
@@ -1005,6 +1042,89 @@ export function renderAppShell() {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 </button>
               </div>
+            </div>
+            <div class="pose-selector" id="pose-selector">
+              <button class="pose-btn active" data-pose="idle" title="Idle">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="5" r="2.5"/>
+                  <line x1="12" y1="7.5" x2="12" y2="15"/>
+                  <line x1="12" y1="10" x2="8" y2="13"/>
+                  <line x1="12" y1="10" x2="16" y2="13"/>
+                  <line x1="12" y1="15" x2="9" y2="19"/>
+                  <line x1="12" y1="15" x2="15" y2="19"/>
+                </svg>
+                Idle
+              </button>
+              <button class="pose-btn" data-pose="walking" title="Walking">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="13" cy="4" r="2.5"/>
+                  <line x1="13" y1="6.5" x2="10" y2="13"/>
+                  <line x1="10" y1="13" x2="7" y2="19"/>
+                  <line x1="10" y1="13" x2="14" y2="15"/>
+                  <line x1="14" y1="15" x2="16" y2="19"/>
+                  <line x1="10" y1="10" x2="16" y2="11"/>
+                </svg>
+                Walk
+              </button>
+              <button class="pose-btn" data-pose="running" title="Running">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="14" cy="4" r="2.5"/>
+                  <line x1="14" y1="6.5" x2="11" y2="12"/>
+                  <line x1="11" y1="12" x2="7" y2="17"/>
+                  <line x1="11" y1="12" x2="16" y2="11"/>
+                  <line x1="16" y1="11" x2="19" y2="15"/>
+                  <line x1="9" y1="9" x2="12" y2="10"/>
+                  <line x1="16" y1="11" x2="18" y2="7"/>
+                </svg>
+                Run
+              </button>
+              <button class="pose-btn" data-pose="flying" title="Flying">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="4" r="2.5"/>
+                  <line x1="12" y1="6.5" x2="12" y2="14"/>
+                  <line x1="12" y1="9" x2="6" y2="6"/>
+                  <line x1="12" y1="9" x2="18" y2="6"/>
+                  <line x1="12" y1="14" x2="8" y2="18"/>
+                  <line x1="12" y1="14" x2="16" y2="18"/>
+                </svg>
+                Fly
+              </button>
+              <button class="pose-btn" data-pose="wave" title="Wave">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="4" r="2.5"/>
+                  <line x1="12" y1="6.5" x2="12" y2="15"/>
+                  <line x1="12" y1="15" x2="9" y2="19"/>
+                  <line x1="12" y1="15" x2="15" y2="19"/>
+                  <line x1="12" y1="8" x2="8" y2="5"/>
+                  <path d="M5 3c0 0-2 2-1 4s2 2 1 4"/>
+                  <path d="M1 1c0 0-2 2-1 4"/>
+                </svg>
+                Wave
+              </button>
+              <button class="pose-btn" data-pose="crouch" title="Crouch">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="4" r="2.5"/>
+                  <line x1="12" y1="6.5" x2="12" y2="11"/>
+                  <line x1="12" y1="11" x2="7" y2="14"/>
+                  <line x1="12" y1="11" x2="17" y2="14"/>
+                  <line x1="7" y1="14" x2="5" y2="18"/>
+                  <line x1="17" y1="14" x2="19" y2="18"/>
+                  <line x1="12" y1="11" x2="10" y2="8"/>
+                </svg>
+                Crouch
+              </button>
+              <button class="pose-btn" data-pose="swim" title="Swim">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="3" r="2.5"/>
+                  <line x1="12" y1="5.5" x2="12" y2="11"/>
+                  <line x1="12" y1="8" x2="7" y2="4"/>
+                  <line x1="12" y1="8" x2="17" y2="4"/>
+                  <line x1="12" y1="11" x2="7" y2="16"/>
+                  <line x1="12" y1="11" x2="16" y2="14"/>
+                  <path d="M4 17c2 0 3-1 5-1s3 1 5 1 3-1 5-1"/>
+                </svg>
+                Swim
+              </button>
             </div>
           </div>
         </section>
@@ -1125,22 +1245,57 @@ export function renderAppShell() {
         </div>
         <div class="modpack-detail" id="modpack-detail">
           <div class="no-modpack-msg" id="no-modpack-msg">
-            <div style="text-align:center; padding: 40px 0;">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-              <p style="font-size:18px; font-family:var(--font-title);">Select or create a modpack to get started</p>
+
+            <div class="mp-welcome-hero">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+              <h2>Welcome! Let's set up your first modpack</h2>
+              <p>Pick a Minecraft version below, then create or browse a modpack.</p>
             </div>
-            <div class="news-section" style="padding: 0 40px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-                <h2 class="section-title" style="margin-bottom:0;">Trending Modpacks</h2>
-                <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
-                  CurseForge
-                </span>
+
+            <div class="mp-wizard-columns">
+
+              <div class="mp-wizard-section" id="mp-version-wizard">
+                <div class="mp-wizard-header">
+                  <span class="mp-wizard-step">Step 1</span>
+                  <h3>Download a Minecraft Version</h3>
+                  <span class="mp-wizard-note">You need at least one version to play</span>
+                </div>
+                <div class="mp-version-download-grid" id="mp-version-download-grid">
+                  <!-- Injected by JS -->
+                </div>
+                <div class="mp-wizard-footer">
+                  <button class="mp-dl-btn" id="btn-show-all-versions">Show all versions…</button>
+                </div>
               </div>
-              <div class="trending-modpacks-grid" id="trending-mods-grid">
-                <div style="padding: 40px; text-align: center; color: var(--text-muted); width: 100%;">Loading modpacks...</div>
+
+              <div class="mp-wizard-section">
+                <div class="mp-wizard-header">
+                  <span class="mp-wizard-step">Step 2</span>
+                  <h3>Create or Import a Modpack</h3>
+                  <span class="mp-wizard-note">Add mods, resource packs, and shaders</span>
+                </div>
+                <div class="mp-wizard-buttons">
+                  <button class="mp-action-btn browse" id="btn-new-modpack-wizard">+ New Modpack</button>
+                  <button class="mp-action-btn browse" id="btn-import-modpack-wizard">Import Zip</button>
+                  <button class="mp-action-btn browse" id="btn-browse-modpacks-wizard">Browse Modpacks</button>
+                </div>
+
+                <div class="mp-trending-section">
+                  <div class="mp-trending-header">
+                    <h2 class="mp-trending-title">Trending Modpacks</h2>
+                    <span class="mp-trending-brand">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
+                      CurseForge
+                    </span>
+                  </div>
+                  <div class="trending-modpacks-grid" id="trending-mods-grid">
+                    <div class="mp-loading-placeholder">Loading modpacks...</div>
+                  </div>
+                </div>
               </div>
+
             </div>
+
           </div>
           <div class="modpack-content" id="modpack-content">
             <div class="modpack-content-header">
@@ -1220,22 +1375,53 @@ export function renderAppShell() {
       <div class="mod-browser" id="mod-browser">
         <div class="mod-browser-header">
           <h3 id="browser-title">Browse Mods</h3>
-          <button class="mod-browser-close" id="btn-close-browser">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-        <div style="padding: 0 24px 12px; display:flex; align-items:center; gap:10px; justify-content:space-between;">
-          <div class="provider-pill-group" id="provider-pill-group">
-            <button class="provider-pill active" data-provider="modrinth" id="pill-modrinth">Modrinth</button>
-            <button class="provider-pill" data-provider="curseforge" id="pill-curseforge">CurseForge</button>
+          <div class="mod-browser-header-actions">
+            <div class="provider-pill-group" id="provider-pill-group">
+              <button class="provider-pill active" data-provider="modrinth" id="pill-modrinth">Modrinth</button>
+              <button class="provider-pill" data-provider="curseforge" id="pill-curseforge">CurseForge</button>
+            </div>
+            <button class="mod-browser-close" id="btn-close-browser">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
-          <div id="pagination-controls" style="display:flex;align-items:center;gap:6px;"></div>
         </div>
-        <input type="text" class="clean-input" id="mod-search" placeholder="Search..." style="margin:0 24px 16px;width:calc(100% - 48px);" />
-        <div class="mod-browser-results" id="mod-browser-results"></div>
+        <div class="browser-body">
+          <div class="browser-main">
+            <div class="browser-search-bar">
+              <svg class="browser-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" class="clean-input" id="mod-search" placeholder="Search mods..." />
+              <div id="pagination-controls" class="browser-pagination-bar"></div>
+            </div>
+            <div class="browser-results" id="mod-browser-results"></div>
+          </div>
+          <div class="browser-sidebar" id="browser-sidebar">
+            <div class="browser-filter-section">
+              <h4 class="browser-filter-title">Category</h4>
+              <div class="browser-filter-options" id="filter-category"></div>
+            </div>
+            <div class="browser-filter-section">
+              <h4 class="browser-filter-title">Sort By</h4>
+              <select class="clean-select" id="filter-sort">
+                <option value="relevance">Relevance</option>
+                <option value="downloads">Most Downloads</option>
+                <option value="updated">Recently Updated</option>
+                <option value="follows">Most Follows</option>
+              </select>
+            </div>
+            <div class="browser-filter-section">
+              <h4 class="browser-filter-title">Loader</h4>
+              <div class="browser-filter-options" id="filter-loader"></div>
+            </div>
+            <div class="browser-filter-section">
+              <h4 class="browser-filter-title">Minecraft Version</h4>
+              <select class="clean-select" id="filter-version"></select>
+            </div>
+            <button class="browser-filter-clear" id="btn-clear-filters">Clear Filters</button>
+          </div>
+        </div>
       </div>
       <div class="mp-create-modal" id="mp-create-modal">
         <div class="mp-create-box">
@@ -1316,6 +1502,24 @@ export function renderAppShell() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Version Download Modal -->
+  <div class="mp-create-modal" id="mp-all-versions-modal">
+    <div class="mp-create-box" style="width:480px;max-height:80vh;overflow-y:auto;">
+      <h3>All Minecraft Versions</h3>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="pill-switch-option active" id="mp-dl-tab-release" data-dl-tab="release">Release</button>
+        <button class="pill-switch-option" id="mp-dl-tab-snapshot" data-dl-tab="snapshot">Snapshots</button>
+        <button class="pill-switch-option" id="mp-dl-tab-old" data-dl-tab="old">Historical</button>
+      </div>
+      <div class="mods-grid" id="mp-all-version-list" style="max-height:400px;overflow-y:auto;">
+        <!-- Injected by JS -->
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="modal-btn" id="btn-close-all-versions" style="flex:1;">Close</button>
       </div>
     </div>
   </div>
@@ -1607,6 +1811,59 @@ export function renderAppShell() {
       <div id="dependencies-content" style="color: white;">
         <div style="text-align: center; padding: 20px; color: #a0a0a0;">Scanning for dependencies...</div>
       </div>
+    </div>
+  </div>
+
+  <!-- DOWNLOAD CONFIRMATION MODAL -->
+  <div class="custom-modal" id="dl-confirm-modal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <div id="dl-confirm-icon-wrap" style="width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.04);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+        </div>
+        <div style="min-width:0;">
+          <h3 id="dl-confirm-name" style="margin:0 0 3px;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Download Modpack?</h3>
+          <p style="margin:0;font-size:11px;color:var(--text-muted);">Import this modpack into your collection.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="modal-btn" id="btn-dl-confirm-cancel" style="flex:1;">Cancel</button>
+        <button class="submit-btn" id="btn-dl-confirm-start" style="flex:2;">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOWNLOAD DETAIL PANEL -->
+  <div class="download-detail-panel" id="download-detail-panel">
+    <div class="ddp-header">
+      <span class="ddp-title">Downloading Modpack</span>
+      <button class="ddp-close" id="btn-ddp-close">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="ddp-body">
+      <div class="ddp-status" id="ddp-status">Preparing...</div>
+      <div class="ddp-progress-bar">
+        <div class="ddp-progress-fill" id="ddp-progress-fill"></div>
+      </div>
+      <div class="ddp-current-item" id="ddp-current-item"></div>
+      <div class="ddp-metrics">
+        <div class="ddp-metric">
+          <span class="ddp-metric-label">Progress</span>
+          <span class="ddp-metric-value" id="ddp-percent">0%</span>
+        </div>
+        <div class="ddp-metric">
+          <span class="ddp-metric-label">Speed</span>
+          <span class="ddp-metric-value" id="ddp-speed">—</span>
+        </div>
+        <div class="ddp-metric">
+          <span class="ddp-metric-label">ETA</span>
+          <span class="ddp-metric-value" id="ddp-eta">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="ddp-actions">
+      <button class="ddp-btn ddp-cancel" id="btn-ddp-cancel">Cancel</button>
     </div>
   </div>
 

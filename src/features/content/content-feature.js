@@ -125,7 +125,7 @@ export function initContentFeature() {
           icon_url: thumb,
           provider: "curseforge",
         }).replace(/"/g, "&quot;");
-        grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
+        grid.innerHTML += `<div class="trending-mp-card" onclick="clickTrendingMod(JSON.parse('${modObj}'));" style="cursor:pointer;">
         <div class="trending-mp-thumb" style="background-image:url('${thumb}');background-size:cover;background-position:center;"></div>
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
           <div class="trending-mp-meta"><span>&#x2B07; ${dl}</span>${loader ? '<span class="trending-mp-tag">' + loader + "</span>" : ""}</div>
@@ -140,7 +140,7 @@ export function initContentFeature() {
           icon_url: mp.thumb,
           provider: "curseforge",
         }).replace(/"/g, "&quot;");
-        grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
+        grid.innerHTML += `<div class="trending-mp-card" onclick="clickTrendingMod(JSON.parse('${modObj}'));" style="cursor:pointer;">
         <div class="trending-mp-thumb" style="background-image:url('${thumbCached}');background-size:cover;background-position:center;"></div>
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
           <div class="trending-mp-meta"><span>&#x2B07; ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>

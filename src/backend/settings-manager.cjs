@@ -188,12 +188,12 @@ class SettingsManager extends EventEmitter {
       backgroundIntensity: {
         value: 50,
         min: 0,
-        max: 100,
+        max: 200,
         type: 'number',
         category: 'Advanced',
         label: 'Background Intensity',
         description: 'How intense the background effect appears',
-        tooltip: 'Higher values make the effect more prominent'
+        tooltip: 'Higher values make the effect more prominent (200 = 2x)'
       },
       concurrentDownloads: {
         value: 4,
