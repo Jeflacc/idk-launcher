@@ -2568,12 +2568,77 @@ function installQuilt(version, rootPath) {
 
 function installFabric(version, rootPath, pinnedLoaderVersion = null) {
   return new Promise((resolve, reject) => {
+    const isValidFabricJar = (jarPath) => {
+      try {
+        if (!fs.existsSync(jarPath)) return false;
+        const stat = fs.statSync(jarPath);
+        if (stat.size < 4) return false;
+        const fd = fs.openSync(jarPath, 'r');
+        const header = Buffer.alloc(4);
+        try {
+          fs.readSync(fd, header, 0, 4, 0);
+        } finally {
+          fs.closeSync(fd);
+        }
+        if (header[0] !== 0x50 || header[1] !== 0x4b) return false;
+
+        const jarBytes = fs.readFileSync(jarPath);
+        return jarBytes.includes(Buffer.from('net/fabricmc/loader'));
+      } catch {
+        return false;
+      }
+    };
+
+    const removeBadJar = (jarPath) => {
+      if (fs.existsSync(jarPath) && !isValidFabricJar(jarPath)) {
+        try {
+          fs.unlinkSync(jarPath);
+          console.warn(`[Fabric] Removed invalid loader jar: ${jarPath}`);
+        } catch (e) {
+          console.warn(`[Fabric] Failed to remove invalid loader jar ${jarPath}:`, e.message);
+        }
+      }
+    };
+
+    const downloadFabricJar = (loaderVersion, jarPath) => new Promise((jarResolve, jarReject) => {
+      removeBadJar(jarPath);
+      if (isValidFabricJar(jarPath)) return jarResolve();
+
+      const tmpPath = `${jarPath}.download`;
+      try {
+        if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+      } catch {}
+
+      const jarUrl = `https://maven.fabricmc.net/net/fabricmc/fabric-loader/${loaderVersion}/fabric-loader-${loaderVersion}.jar`;
+      downloadFile(jarUrl, tmpPath, () => {
+        if (!isValidFabricJar(tmpPath)) {
+          try { fs.unlinkSync(tmpPath); } catch {}
+          return jarReject(new Error(`Downloaded Fabric loader ${loaderVersion} is not a valid jar.`));
+        }
+        try {
+          fs.renameSync(tmpPath, jarPath);
+          jarResolve();
+        } catch (e) {
+          jarReject(e);
+        }
+      }, (e) => {
+        try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch {}
+        jarReject(e);
+      });
+    });
+
+    const isFabricInstallComplete = (jarName, versionsPath) => {
+      const jsonPath = path.join(versionsPath, `${jarName}.json`);
+      const jarPath = path.join(versionsPath, `${jarName}.jar`);
+      removeBadJar(jarPath);
+      return fs.existsSync(jsonPath) && fs.statSync(jsonPath).size > 0 && isValidFabricJar(jarPath);
+    };
+
     // If we have a pinned version, check the cache before making any network request
     if (pinnedLoaderVersion) {
       const jarName = `fabric-loader-${pinnedLoaderVersion}-${version}`;
       const versionsPath = path.join(rootPath, 'versions', jarName);
-      const jsonPath = path.join(versionsPath, `${jarName}.json`);
-      if (fs.existsSync(jsonPath) && fs.statSync(jsonPath).size > 0) {
+      if (isFabricInstallComplete(jarName, versionsPath)) {
         return resolve(jarName);
       }
     }
@@ -2585,8 +2650,8 @@ function installFabric(version, rootPath, pinnedLoaderVersion = null) {
         const entries = fs.readdirSync(versionsDir, { withFileTypes: true });
         for (const entry of entries) {
           if (entry.isDirectory() && entry.name.startsWith(`fabric-loader-`) && entry.name.endsWith(`-${version}`)) {
-            const jsonPath = path.join(versionsDir, entry.name, `${entry.name}.json`);
-            if (fs.existsSync(jsonPath) && fs.statSync(jsonPath).size > 0) {
+            const versionsPath = path.join(versionsDir, entry.name);
+            if (isFabricInstallComplete(entry.name, versionsPath)) {
               return resolve(entry.name);
             }
           }
@@ -2608,33 +2673,37 @@ function installFabric(version, rootPath, pinnedLoaderVersion = null) {
           const versionsPath = path.join(rootPath, 'versions', jarName);
           if (!fs.existsSync(versionsPath)) fs.mkdirSync(versionsPath, { recursive: true });
 
-          // Delete the dummy 0-byte jar from any previous buggy runs
-          const dummyJarPath = path.join(versionsPath, `${jarName}.jar`);
-          if (fs.existsSync(dummyJarPath)) {
-            try {
-              if (fs.statSync(dummyJarPath).size === 0) {
-                fs.unlinkSync(dummyJarPath);
-              }
-            } catch (e) { console.error('Failed to delete dummy jar', e); }
-          }
-
-          // If the JSON already exists and is non-empty, skip the download entirely
           const jsonPath = path.join(versionsPath, `${jarName}.json`);
-          if (fs.existsSync(jsonPath) && fs.statSync(jsonPath).size > 0) {
-            return resolve(jarName);
-          }
+          const jarPath = path.join(versionsPath, `${jarName}.jar`);
+          const needsJson = !fs.existsSync(jsonPath) || fs.statSync(jsonPath).size === 0;
 
-          // Fetch only the JSON instead of the full ZIP, bypassing the dummy jar completely!
+          const finishInstall = () => {
+            downloadFabricJar(loaderVersion, jarPath)
+              .then(() => resolve(jarName))
+              .catch(reject);
+          };
+
+          if (!needsJson) return finishInstall();
+
           const jsonUrl = `https://meta.fabricmc.net/v2/versions/loader/${version}/${loaderVersion}/profile/json`;
-          const file = fs.createWriteStream(jsonPath);
-
-          https.get(jsonUrl, (r) => {
-            r.pipe(file);
-            file.on('finish', () => {
-              file.close();
-              resolve(jarName);
-            });
-          }).on('error', reject);
+          const tmpJsonPath = `${jsonPath}.download`;
+          try { if (fs.existsSync(tmpJsonPath)) fs.unlinkSync(tmpJsonPath); } catch {}
+          downloadFile(jsonUrl, tmpJsonPath, () => {
+            try {
+              const profile = JSON.parse(fs.readFileSync(tmpJsonPath, 'utf8'));
+              if (!profile || typeof profile !== 'object' || !profile.id) {
+                throw new Error('Fabric profile JSON is invalid.');
+              }
+              fs.renameSync(tmpJsonPath, jsonPath);
+              finishInstall();
+            } catch (e) {
+              try { if (fs.existsSync(tmpJsonPath)) fs.unlinkSync(tmpJsonPath); } catch {}
+              reject(e);
+            }
+          }, (e) => {
+            try { if (fs.existsSync(tmpJsonPath)) fs.unlinkSync(tmpJsonPath); } catch {}
+            reject(e);
+          });
         } catch (e) { reject(e); }
       });
     }).on('error', reject);
