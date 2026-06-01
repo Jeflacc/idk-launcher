@@ -2655,14 +2655,15 @@ input[type="checkbox"]:checked + .switch::after {
     padding: 10px 20px;
     margin-top: 0;
     align-items: center;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: thin;
+    overflow: hidden;
+    scrollbar-width: none;
 }
 
 .mp-tabs-spacer {
-    flex: 1;
+    flex: 1 1 16px;
+    min-width: 0;
 }
 
 .mp-tab {
@@ -2683,7 +2684,8 @@ input[type="checkbox"]:checked + .switch::after {
     text-transform: lowercase;
     line-height: 1;
     white-space: nowrap;
-    flex-shrink: 0;
+    flex: 0 1 auto;
+    min-width: 0;
 }
 
 .mp-tab svg {
@@ -2713,6 +2715,16 @@ input[type="checkbox"]:checked + .switch::after {
     border-radius: 99px;
     font-weight: 700;
     line-height: 1;
+    flex-shrink: 0;
+}
+
+.mp-tabs > .mp-action-btn.browse {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 170px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .mp-tab.active .mp-tab-count {
