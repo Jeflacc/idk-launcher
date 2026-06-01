@@ -8,6 +8,11 @@ import { state, actions } from "./core/app-state.js";
 import { createViewController, initWindowControls } from "./core/views.js";
 import { initBackgroundEffects } from "./features/background/background-effects.js";
 
+function applyWindowModeClass(data) {
+  const maximized = !!data?.maximized;
+  document.body.dataset.windowMode = maximized ? 'maximized' : 'restored';
+}
+
 if (window.electronAPI) {
   try {
     const result = await window.electronAPI.loadSettings();
@@ -140,6 +145,11 @@ if (window.electronAPI) {
     console.error('[Main] Failed to load settings from SettingsManager:', e);
   }
 }
+
+if (window.electronAPI?.onWindowStateChanged) {
+  window.electronAPI.onWindowStateChanged(applyWindowModeClass);
+}
+applyWindowModeClass({ maximized: window.outerWidth >= screen.availWidth - 20 && window.outerHeight >= screen.availHeight - 20 });
 
 renderAppShell();
 

@@ -1,6 +1,23 @@
 ﻿import { state, actions } from "../../core/app-state.js";
 
 export function initModpacksFeature({ switchView }) {
+  // Safe JSON parser for API responses
+  async function safeJson(resp, fallback = null) {
+    if (!resp) return fallback;
+    if (!resp.ok) {
+      let body = "";
+      try { body = await resp.text(); } catch (_) {}
+      throw new Error(`API error ${resp.status}: ${resp.statusText}. ${body.slice(0, 200)}`);
+    }
+    try {
+      return await resp.json();
+    } catch (e) {
+      let body = "";
+      try { body = await resp.text(); } catch (_) {}
+      throw new Error(`Invalid JSON from API: ${body.slice(0, 200)}`);
+    }
+  }
+
   // === MODPACK MANAGER =====================================
   // =========================================================
   state.modpacks = JSON.parse(localStorage.getItem("idk_modpacks") || "[]");
@@ -125,6 +142,10 @@ export function initModpacksFeature({ switchView }) {
             const existing =
               existingById.get(diskMp.id) ||
               existingByName.get(diskMp.name?.toLowerCase().trim());
+            const existingValidMcVersion =
+              existing?.mcVersion && isValidMcVersion(existing.mcVersion)
+                ? existing.mcVersion
+                : null;
 
             return {
               id: diskMp.id,
@@ -135,7 +156,7 @@ export function initModpacksFeature({ switchView }) {
               mcVersion:
                 diskMp.mcVersion !== "Unknown"
                   ? diskMp.mcVersion
-                  : existing?.mcVersion || diskMp.mcVersion,
+                  : existingValidMcVersion || diskMp.mcVersion,
               loader:
                 diskMp.loader !== "Vanilla"
                   ? diskMp.loader
@@ -208,6 +229,12 @@ export function initModpacksFeature({ switchView }) {
   state.activeModpackId = null;
   state.browserMode = "mod"; // 'mod' | 'resourcepack' | 'shader' | 'modpack'
   state.currentProvider = "modrinth";
+  state.browserFilters = {
+    category: "all",
+    sort: "relevance",
+    loader: "all",
+    version: "all",
+  };
 
   function mpSave() {
     // Filter out temporary modpacks before saving to localStorage
@@ -225,6 +252,53 @@ export function initModpacksFeature({ switchView }) {
 
   function mpGet() {
     return state.modpacks.find((m) => m.id === state.activeModpackId) || null;
+  }
+
+  async function ensureVersionOptions(selectEl) {
+    if (!selectEl) return [];
+    const current = Array.from(selectEl.options).map((opt) => opt.value);
+    if (current.length > 0) return current;
+
+    const versions = (state.allVersions || []).filter((v) => v.type === "release");
+    const sorted = [...versions]
+      .sort((a, b) => {
+        const aDl = state.downloadedVersions.includes(a.id) ? 0 : 1;
+        const bDl = state.downloadedVersions.includes(b.id) ? 0 : 1;
+        if (aDl !== bDl) return aDl - bDl;
+        return state.allVersions.indexOf(a) - state.allVersions.indexOf(b);
+      })
+      .slice(0, 40);
+
+    if (sorted.length > 0) {
+      selectEl.innerHTML = "";
+      sorted.forEach((v) => {
+        const o = document.createElement("option");
+        o.value = v.id;
+        o.textContent = state.downloadedVersions.includes(v.id) ? `✓ ${v.id}` : v.id;
+        selectEl.appendChild(o);
+      });
+      return Array.from(selectEl.options).map((opt) => opt.value);
+    }
+
+    if (window.electronAPI?.scanDownloadedVersions) {
+      try {
+        const result = await window.electronAPI.scanDownloadedVersions();
+        const installed = (result?.versions || []).filter((v) => v && v.id);
+        if (installed.length > 0) {
+          selectEl.innerHTML = "";
+          installed.forEach((v) => {
+            const o = document.createElement("option");
+            o.value = v.id;
+            o.textContent = v.id;
+            selectEl.appendChild(o);
+          });
+        }
+      } catch (e) {
+        console.warn("[Modpacks] Failed to refresh version options:", e);
+      }
+    }
+
+    return Array.from(selectEl.options).map((opt) => opt.value);
   }
 
   function mpRenderList() {
@@ -276,6 +350,8 @@ export function initModpacksFeature({ switchView }) {
         el.addEventListener("click", () => {
           state.activeVersionForMods = v.id;
           state.activeModpackId = null;
+          state.selectedVersion = v.id;
+          state.selectedLoader = vSettings.loader;
           mpRenderList();
           mpRenderDetail();
         });
@@ -314,7 +390,11 @@ export function initModpacksFeature({ switchView }) {
           state.activeVersionForMods = null;
           mpRenderList();
           mpRenderDetail();
-          loadProfilesFromDisk();
+          await loadProfilesFromDisk();
+          // Sync selectedVersion/selectedLoader AFTER disk sync so profile.json values win
+          const freshMp = state.modpacks.find(m => m.id === mp.id);
+          state.selectedVersion = freshMp?.mcVersion || mp.mcVersion;
+          state.selectedLoader = freshMp?.loader || mp.loader;
         });
         list.appendChild(el);
       });
@@ -397,6 +477,14 @@ export function initModpacksFeature({ switchView }) {
   function getRenderableIconUrl(iconUrl) {
     if (!iconUrl || iconUrl.startsWith("file://")) return "";
     return iconUrl;
+  }
+
+  // Validate that a version string looks like a real Minecraft version (not a modpack version)
+  function isValidMcVersion(version) {
+    if (!version || typeof version !== 'string') return false;
+    const releasePattern = /^\d+\.\d+(\.\d+)?$/;
+    const snapshotPattern = /^\d{2}w\d{2}[a-z]$/i;
+    return releasePattern.test(version) || snapshotPattern.test(version);
   }
 
   // Batch extract icons for all items in a modpack (for legacy profiles)
@@ -549,13 +637,13 @@ export function initModpacksFeature({ switchView }) {
       const firstLetter = (item.name || "M").charAt(0).toUpperCase();
       const iconHtml = renderableIconUrl
         ? `<img src="${renderableIconUrl}" class="mod-icon" onerror="this.style.display='none'" />`
-        : `<div class="mod-icon-placeholder" style="display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;color:rgba(255,255,255,0.6);">${firstLetter}</div>`;
+        : `<div class="mod-icon-placeholder" style="display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;color:rgba(255,255,255,0.5);">${firstLetter}</div>`;
 
       el.innerHTML = `
       ${iconHtml}
       <div class="installed-mod-info"><strong>${item.name}</strong><span>${version}</span></div>
       <button class="remove-mod-btn" title="Remove">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
@@ -893,21 +981,29 @@ export function initModpacksFeature({ switchView }) {
   }
 
   // --- Create Modpack ---
-  document.getElementById("btn-new-modpack").addEventListener("click", () => {
+  function openCreateModpackModal(preSelectedVersion) {
     const sel = document.getElementById("new-mp-version");
-    if (sel.options.length === 0 && state.allVersions.length > 0) {
-      state.allVersions
-        .filter((v) => v.type === "release")
-        .slice(0, 30)
-        .forEach((v) => {
-          const o = document.createElement("option");
-          o.value = v.id;
-          o.textContent = v.id;
-          sel.appendChild(o);
-        });
+    ensureVersionOptions(sel).then(() => {
+      // Pre-select the given version, or the first downloaded version, or the first option
+      if (preSelectedVersion && [...sel.options].some(o => o.value === preSelectedVersion)) {
+        sel.value = preSelectedVersion;
+      } else if (!preSelectedVersion) {
+        const firstDl = [...sel.options].find(o =>
+          state.downloadedVersions.includes(o.value)
+        );
+        if (firstDl) sel.value = firstDl.value;
+      }
+    });
+    // Pre-select immediately if already present
+    if (preSelectedVersion && [...sel.options].some(o => o.value === preSelectedVersion)) {
+      sel.value = preSelectedVersion;
     }
     document.getElementById("mp-create-modal").classList.add("active");
     document.getElementById("new-mp-name").focus();
+  }
+
+  document.getElementById("btn-new-modpack").addEventListener("click", () => {
+    openCreateModpackModal();
   });
   document
     .getElementById("btn-cancel-create-mp")
@@ -934,9 +1030,6 @@ export function initModpacksFeature({ switchView }) {
       state.modpacks.push(newMp);
       mpSave();
 
-      // Profile metadata is managed by the main process via IPC
-      // No need to save to disk here - the main process handles profile.json files
-
       document.getElementById("mp-create-modal").classList.remove("active");
       document.getElementById("new-mp-name").value = "";
       state.activeModpackId = newMp.id;
@@ -944,10 +1037,250 @@ export function initModpacksFeature({ switchView }) {
       mpRenderDetail();
     });
 
+  // --- Version Download Wizard ---
+  let currentDlTab = 'release';
+  let versionLoaderCache = {}; // versionId → loader name, populated from scan
+
+  function getLoaderForVersion(versionId) {
+    if (versionLoaderCache[versionId]) return versionLoaderCache[versionId];
+    const vs = state.versionSettings[versionId];
+    if (vs && vs.loader && vs.loader !== 'Vanilla') {
+      versionLoaderCache[versionId] = vs.loader;
+      return vs.loader;
+    }
+    return 'Vanilla';
+  }
+
+  // Populate loader cache from scan results
+  async function refreshLoaderCache() {
+    if (window.electronAPI?.scanDownloadedVersions) {
+      try {
+        const scan = await window.electronAPI.scanDownloadedVersions();
+        if (scan.success && scan.versionDetails) {
+          const installed = {};
+          Object.keys(scan.versionDetails).forEach(v => {
+            const loader = scan.versionDetails[v].loader || 'Vanilla';
+            versionLoaderCache[v] = loader;
+            installed[v] = loader;
+            // Also sync to state.versionSettings so play dropdown can read it
+            if (!state.versionSettings[v]) state.versionSettings[v] = {};
+            if (!state.versionSettings[v].loader || state.versionSettings[v].loader === 'Vanilla') {
+              state.versionSettings[v].loader = loader;
+            }
+          });
+          localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+          // Store truth source: actual installed loaders from disk
+          window.__installedLoaders = installed;
+        }
+      } catch (e) { /* ignore */ }
+    }
+  }
+  refreshLoaderCache();
+
+  function renderVersionDownloadGrid() {
+    const grid = document.getElementById('mp-version-download-grid');
+    if (!grid) return;
+    const releases = (state.allVersions || []).filter(v => v.type === 'release').slice(0, 8);
+    grid.innerHTML = '';
+    releases.forEach(v => {
+      const isDownloaded = state.downloadedVersions.includes(v.id);
+      const loader = isDownloaded ? getLoaderForVersion(v.id) : null;
+      const item = document.createElement('div');
+      item.className = 'mp-version-download-item' + (isDownloaded ? ' downloaded' : '');
+      if (isDownloaded) {
+        item.style.cursor = 'pointer';
+        item.title = 'Click to create a modpack with this version';
+      }
+      item.innerHTML = `
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span class="version-name">${v.id}</span>
+          ${isDownloaded ? `<span class="mp-dl-loader-badge">${loader}</span>` : ''}
+          <span class="version-type" style="font-size:9px;text-transform:uppercase;color:var(--text-muted);">Release</span>
+        </span>
+        <button class="mp-dl-btn${isDownloaded ? ' downloaded' : ''}" data-version="${v.id}">
+          ${isDownloaded ? 'Use' : 'Download'}
+        </button>
+      `;
+      const btn = item.querySelector('.mp-dl-btn');
+      if (isDownloaded) {
+        // Click the item or button → open create modal with this version pre-selected
+        const handler = (e) => {
+          e.stopPropagation();
+          openCreateModpackModal(v.id);
+        };
+        btn.addEventListener('click', handler);
+        item.addEventListener('click', handler);
+      } else {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!window.electronAPI) return;
+          btn.classList.add('downloading');
+          btn.textContent = 'Downloading…';
+          btn.disabled = true;
+          const result = await window.electronAPI.downloadVersion({ version: v.id });
+          if (result.success) {
+            if (!state.downloadedVersions.includes(v.id)) {
+              state.downloadedVersions.push(v.id);
+              localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
+            }
+            await refreshLoaderCache();
+            renderVersionDownloadGrid();
+            renderAllVersionsModal(currentDlTab);
+          } else {
+            btn.classList.remove('downloading');
+            btn.textContent = 'Failed';
+            setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
+          }
+        });
+      }
+      grid.appendChild(item);
+    });
+  }
+
+  function renderAllVersionsModal(tab) {
+    const list = document.getElementById('mp-all-version-list');
+    if (!list) return;
+    const filtered = (state.allVersions || []).filter(v => {
+      if (tab === 'release') return v.type === 'release';
+      if (tab === 'snapshot') return v.type === 'snapshot';
+      if (tab === 'old') return v.type === 'old_beta' || v.type === 'old_alpha';
+      return true;
+    });
+    list.innerHTML = '';
+    filtered.forEach(v => {
+      const isDownloaded = state.downloadedVersions.includes(v.id);
+      const loader = isDownloaded ? getLoaderForVersion(v.id) : null;
+      const label = v.type === 'release' ? 'Release' : v.type === 'snapshot' ? 'Snapshot' : 'Old';
+      const item = document.createElement('div');
+      item.className = 'mp-version-download-item' + (isDownloaded ? ' downloaded' : '');
+      if (isDownloaded) {
+        item.style.cursor = 'pointer';
+        item.title = 'Click to create a modpack with this version';
+      }
+      item.innerHTML = `
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span class="version-name">${v.id}</span>
+          ${isDownloaded ? `<span class="mp-dl-loader-badge">${loader}</span>` : ''}
+          <span class="version-type">${label}</span>
+        </span>
+        <button class="mp-dl-btn${isDownloaded ? ' downloaded' : ''}" data-version="${v.id}">
+          ${isDownloaded ? 'Use' : 'Download'}
+        </button>
+      `;
+      const btn = item.querySelector('.mp-dl-btn');
+      if (isDownloaded) {
+        const handler = (e) => {
+          e.stopPropagation();
+          openCreateModpackModal(v.id);
+        };
+        btn.addEventListener('click', handler);
+        item.addEventListener('click', handler);
+      } else {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!window.electronAPI) return;
+          btn.classList.add('downloading');
+          btn.textContent = 'Downloading…';
+          btn.disabled = true;
+          const result = await window.electronAPI.downloadVersion({ version: v.id });
+          if (result.success) {
+            if (!state.downloadedVersions.includes(v.id)) {
+              state.downloadedVersions.push(v.id);
+              localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
+            }
+            await refreshLoaderCache();
+            renderVersionDownloadGrid();
+            renderAllVersionsModal(currentDlTab);
+          } else {
+            btn.classList.remove('downloading');
+            btn.textContent = 'Failed';
+            setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
+          }
+        });
+      }
+      list.appendChild(item);
+    });
+  }
+
+  // Expose for external use (e.g. play dropdown "All versions")
+  window.showVersionPickerModal = () => {
+    currentDlTab = 'release';
+    document.querySelectorAll('[data-dl-tab]').forEach(b => b.classList.remove('active'));
+    const tabBtn = document.getElementById('mp-dl-tab-release');
+    if (tabBtn) tabBtn.classList.add('active');
+    renderAllVersionsModal('release');
+    document.getElementById('mp-all-versions-modal')?.classList.add('active');
+  };
+
+  // Populate version grid when no-modpack is visible
+  const noModpackMsg = document.getElementById('no-modpack-msg');
+  if (noModpackMsg) {
+    const observer = new MutationObserver(() => {
+      if (noModpackMsg.style.display !== 'none') {
+        renderVersionDownloadGrid();
+      }
+    });
+    observer.observe(noModpackMsg, { attributes: true, attributeFilter: ['style'] });
+    // Initial render if already visible
+    if (noModpackMsg.style.display !== 'none') {
+      renderVersionDownloadGrid();
+    }
+  }
+  // Re-render grid when async version fetch completes
+  window.addEventListener('versions-loaded', () => {
+    renderVersionDownloadGrid();
+  });
+
+  // "Show all versions" button
+  const showAllBtn = document.getElementById('btn-show-all-versions');
+  if (showAllBtn) {
+    showAllBtn.addEventListener('click', () => {
+      currentDlTab = 'release';
+      renderAllVersionsModal('release');
+      document.getElementById('mp-all-versions-modal')?.classList.add('active');
+    });
+  }
+
+  // Tab switching in all-versions modal
+  ['release', 'snapshot', 'old'].forEach(tab => {
+    const btn = document.getElementById(`mp-dl-tab-${tab}`);
+    if (btn) {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-dl-tab]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentDlTab = tab;
+        renderAllVersionsModal(tab);
+      });
+    }
+  });
+
+  // Close all versions modal
+  const closeBtn = document.getElementById('btn-close-all-versions');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      document.getElementById('mp-all-versions-modal')?.classList.remove('active');
+    });
+  }
+  // Close on backdrop click
+  const allVersionsModal = document.getElementById('mp-all-versions-modal');
+  if (allVersionsModal) {
+    allVersionsModal.addEventListener('click', (e) => {
+      if (e.target === allVersionsModal) allVersionsModal.classList.remove('active');
+    });
+  }
+
+  // Wire up wizard buttons to existing handlers
+  const wizardNew = document.getElementById('btn-new-modpack-wizard');
+  if (wizardNew) wizardNew.addEventListener('click', () => document.getElementById('btn-new-modpack')?.click());
+  const wizardImport = document.getElementById('btn-import-modpack-wizard');
+  if (wizardImport) wizardImport.addEventListener('click', () => document.getElementById('btn-import-modpack')?.click());
+  const wizardBrowse = document.getElementById('btn-browse-modpacks-wizard');
+  if (wizardBrowse) wizardBrowse.addEventListener('click', () => document.getElementById('btn-browse-modpacks')?.click());
+
   // --- Modpack Settings ---
   document
     .getElementById("btn-modpack-settings")
-    .addEventListener("click", () => {
+    .addEventListener("click", async () => {
       const mp = mpGet();
       const isViewingVersion =
         state.activeVersionForMods && !state.activeModpackId;
@@ -1003,8 +1336,15 @@ export function initModpacksFeature({ switchView }) {
         document.getElementById("mp-settings-name").value = mp.name;
         document.getElementById("mp-settings-description").value =
           mp.description || "";
-        document.getElementById("mp-settings-version").value =
-          mp.mcVersion || "";
+        const versionSelect = document.getElementById("mp-settings-version");
+        await ensureVersionOptions(versionSelect);
+        if (mp.mcVersion && [...versionSelect.options].some((o) => o.value === mp.mcVersion)) {
+          versionSelect.value = mp.mcVersion;
+        } else if (state.downloadedVersions.includes(mp.mcVersion)) {
+          versionSelect.value = mp.mcVersion;
+        } else if (versionSelect.options.length > 0) {
+          versionSelect.value = versionSelect.options[0].value;
+        }
         document.getElementById("mp-settings-loader").value =
           mp.loader || "Vanilla";
         document.getElementById("mp-settings-loader-version").value =
@@ -1071,7 +1411,8 @@ export function initModpacksFeature({ switchView }) {
         mp.description = document
           .getElementById("mp-settings-description")
           .value.trim();
-        mp.mcVersion = document.getElementById("mp-settings-version").value;
+        const selectedMcVersion = document.getElementById("mp-settings-version").value;
+        if (selectedMcVersion) mp.mcVersion = selectedMcVersion;
         mp.loader = document.getElementById("mp-settings-loader").value;
         mp.loaderVersion = document.getElementById(
           "mp-settings-loader-version",
@@ -1254,7 +1595,8 @@ export function initModpacksFeature({ switchView }) {
               : "Vanilla";
         const loaderVerMatch = rawLoaderId.match(/^[a-z]+-(.+)$/i);
         const loaderVersion = loaderVerMatch ? loaderVerMatch[1] : "";
-        const mcVersion = manifest.minecraft?.version || "1.20.4";
+        const manifestMc = manifest.minecraft?.version || "";
+        const mcVersion = isValidMcVersion(manifestMc) ? manifestMc : "Unknown";
 
         // Parse modpack name from zip filename
         const zipName = zipPath
@@ -1304,7 +1646,7 @@ export function initModpacksFeature({ switchView }) {
               return;
             }
 
-            const fData = await fRes.json();
+            const fData = await safeJson(fRes);
             if (!fData.data) return;
             const mf = fData.data;
 
@@ -1334,7 +1676,7 @@ export function initModpacksFeature({ switchView }) {
             let classId = 6;
             try {
               if (projRes.ok) {
-                const pj = await projRes.json();
+                const pj = await safeJson(projRes);
                 classId = pj.data?.classId ?? 6;
               }
             } catch (e) {
@@ -1446,11 +1788,11 @@ export function initModpacksFeature({ switchView }) {
         else mpData2.push(newMp);
         localStorage.setItem("idk_modpacks", JSON.stringify(mpData2));
         mpRenderDetail();
-        launchFill.style.width = "100%";
-        overlay.classList.remove("active");
+        updateDlPanel("Import complete.", 100);
+        hideDlPanel();
         actions.showWarningToast(`"${newMp.name}" imported successfully!`);
       } catch (e) {
-        overlay.classList.remove("active");
+        hideDlPanel();
         actions.showWarningToast("Import failed: " + e.message);
       }
     });
@@ -1524,6 +1866,128 @@ export function initModpacksFeature({ switchView }) {
     });
 
   // --- Unified Browser ---
+  // Official Modrinth taxonomy for each content type
+  const MODRINTH_FILTERS = {
+    mod: {
+      Category: ["adventure", "cursed", "decoration", "economy", "equipment", "food", "game-mechanics", "magic", "management", "misc", "mobs", "optimization", "performance", "social", "storage", "technology", "transportation", "utility", "world-gen"],
+      Loader: ["fabric", "forge", "neoforge", "quilt", "babric", "rift"],
+    },
+    modpack: {
+      Category: ["adventure", "challenging", "combat", "kitchen-sink", "lightweight", "magic", "multiplayer", "optimization", "quests", "technology"],
+    },
+    datapack: {
+      Category: ["adventure", "challenging", "combat", "decoration", "economy", "food", "game-mechanics", "magic", "minigame", "mobs", "optimization", "performance", "technology", "transportation", "tweaks", "utility", "world-gen"],
+      Loader: ["datapack"],
+    },
+    resourcepack: {
+      Category: ["16x", "32x", "64x", "128x", "256x", "512x"],
+      Loader: ["resourcepack"],
+    },
+    shader: {
+      Category: ["pbr", "path-traced", "realistic", "semi-realistic", "vanilla-plus", "vibrant"],
+      Loader: ["shader"],
+    },
+  };
+
+  function populateBrowserFilters(mode) {
+    // Reset filter state
+    state.browserFilters = { category: "all", sort: "relevance", loader: "all", version: "all", features: "all", resolution: "all", performance: "all" };
+
+    const provider = state.currentProvider;
+
+    // Determine which filter set to use
+    const isModrinth = provider === "modrinth";
+    const isCurseForgeModpack = provider === "curseforge" && mode === "modpack";
+
+    // --- Category filter ---
+    const categoryContainer = document.getElementById("filter-category");
+    if (categoryContainer) {
+      let cats = ["all"];
+      if (isModrinth && MODRINTH_FILTERS[mode]?.Category) {
+        cats = ["all", ...MODRINTH_FILTERS[mode].Category];
+      } else if (isCurseForgeModpack) {
+        cats = ["all", "adventure", "magic", "tech", "quest", "skyblock", "vanilla+", "hardcore", "combat", "exploration"];
+      }
+      categoryContainer.innerHTML = cats.map(c =>
+        `<button class="browser-filter-pill${c === "all" ? " active" : ""}" data-filter-category="${c}">${c === "all" ? "All" : c.charAt(0).toUpperCase() + c.slice(1)}</button>`
+      ).join("");
+    }
+
+    // --- Loader filter ---
+    const loaderContainer = document.getElementById("filter-loader");
+    const loaderSection = loaderContainer?.closest(".browser-filter-section");
+    if (loaderContainer) {
+      let loaders = [];
+      if (isModrinth && MODRINTH_FILTERS[mode]?.Loader) {
+        loaders = ["all", ...MODRINTH_FILTERS[mode].Loader];
+      } else if (mode !== "modpack") {
+        loaders = ["all", "fabric", "forge", "neoforge", "quilt", "vanilla"];
+      }
+      if (loaders.length) {
+        loaderContainer.innerHTML = loaders.map(l =>
+          `<button class="browser-filter-pill${l === "all" ? " active" : ""}" data-filter-loader="${l}">${l === "all" ? "All" : l.charAt(0).toUpperCase() + l.slice(1)}</button>`
+        ).join("");
+        if (loaderSection) loaderSection.style.display = "";
+      } else {
+        loaderContainer.innerHTML = "";
+        if (loaderSection) loaderSection.style.display = "none";
+      }
+    }
+
+    // --- Populate version filter from state ---
+    const versionSelect = document.getElementById("filter-version");
+    if (versionSelect) {
+      const versions = state.allVersions?.filter(v => v.type === "release")?.slice(0, 30) || [];
+      versionSelect.innerHTML = `<option value="all">All Versions</option>` +
+        versions.map(v => `<option value="${v.id}">${v.id}</option>`).join("");
+      versionSelect.value = "all";
+    }
+
+    // Reset sort
+    const sortSelect = document.getElementById("filter-sort");
+    if (sortSelect) sortSelect.value = "relevance";
+  }
+
+  function setupBrowserFilterHandlers() {
+    // Category filter pills
+    document.getElementById("filter-category")?.addEventListener("click", (e) => {
+      const pill = e.target.closest(".browser-filter-pill[data-filter-category]");
+      if (!pill) return;
+      document.querySelectorAll("#filter-category .browser-filter-pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      state.browserFilters.category = pill.dataset.filterCategory;
+      mpBrowse(document.getElementById("mod-search").value, 0);
+    });
+
+    // Loader filter pills
+    document.getElementById("filter-loader")?.addEventListener("click", (e) => {
+      const pill = e.target.closest(".browser-filter-pill[data-filter-loader]");
+      if (!pill) return;
+      document.querySelectorAll("#filter-loader .browser-filter-pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      state.browserFilters.loader = pill.dataset.filterLoader;
+      mpBrowse(document.getElementById("mod-search").value, 0);
+    });
+
+    // Sort select
+    document.getElementById("filter-sort")?.addEventListener("change", (e) => {
+      state.browserFilters.sort = e.target.value;
+      mpBrowse(document.getElementById("mod-search").value, 0);
+    });
+
+    // Version select
+    document.getElementById("filter-version")?.addEventListener("change", (e) => {
+      state.browserFilters.version = e.target.value;
+      mpBrowse(document.getElementById("mod-search").value, 0);
+    });
+
+    // Clear filters
+    document.getElementById("btn-clear-filters")?.addEventListener("click", () => {
+      populateBrowserFilters(state.browserMode);
+      mpBrowse(document.getElementById("mod-search").value, 0);
+    });
+  }
+
   function openBrowser(mode) {
     state.browserMode = mode;
     const titles = {
@@ -1543,7 +2007,6 @@ export function initModpacksFeature({ switchView }) {
       placeholders[mode] || "Search...";
 
     if (mode === "modpack") {
-      // For modpacks, show both providers with Modrinth as default
       state.currentProvider = "modrinth";
       document
         .querySelectorAll(".provider-pill")
@@ -1552,15 +2015,19 @@ export function initModpacksFeature({ switchView }) {
       document.getElementById("pill-modrinth").style.display = "inline-block";
       document.getElementById("pill-curseforge").style.display = "inline-block";
     } else {
-      // For mods, only show Modrinth
       document.getElementById("pill-modrinth").style.display = "inline-block";
       document.getElementById("pill-curseforge").style.display = "none";
     }
+
+    populateBrowserFilters(mode);
 
     document.getElementById("mod-browser").classList.add("active");
     document.getElementById("mod-search").value = "";
     mpBrowse("");
   }
+
+  // Initialize filter handlers once
+  setupBrowserFilterHandlers();
   document
     .getElementById("btn-browse-mods")
     .addEventListener("click", () => openBrowser("mod"));
@@ -1637,35 +2104,54 @@ export function initModpacksFeature({ switchView }) {
       const offset = page * pageSize;
 
       if (state.currentProvider === "modrinth") {
-        let facets;
+        const facetGroups = [];
+
+        // Project type facet
         if (state.browserMode === "mod")
-          facets = encodeURIComponent(
-            JSON.stringify([
-              [`categories:${mp.loader.toLowerCase()}`],
-              [`versions:${mp.mcVersion}`],
-              [`project_type:mod`],
-            ]),
-          );
+          facetGroups.push([`project_type:mod`]);
         else if (state.browserMode === "resourcepack")
-          facets = encodeURIComponent(
-            JSON.stringify([
-              [`versions:${mp.mcVersion}`],
-              [`project_type:resourcepack`],
-            ]),
-          );
+          facetGroups.push([`project_type:resourcepack`]);
         else if (state.browserMode === "shader")
-          facets = encodeURIComponent(
-            JSON.stringify([[`project_type:shader`]]),
-          );
+          facetGroups.push([`project_type:shader`]);
         else if (state.browserMode === "modpack")
-          facets = encodeURIComponent(
-            JSON.stringify([[`project_type:modpack`]]),
-          );
+          facetGroups.push([`project_type:modpack`]);
+
+        // Loader facet from filter
+        if (state.browserFilters.loader !== "all" && state.browserMode !== "modpack") {
+          facetGroups.push([`categories:${state.browserFilters.loader}`]);
+        } else if (mp && state.browserMode !== "modpack") {
+          // Fallback to current modpack's loader
+          facetGroups.push([`categories:${mp.loader.toLowerCase()}`]);
+        }
+
+        // Version facet from filter or context
+        if (state.browserFilters.version !== "all") {
+          facetGroups.push([`versions:${state.browserFilters.version}`]);
+        } else if (mp && state.browserMode !== "modpack") {
+          facetGroups.push([`versions:${mp.mcVersion}`]);
+        }
+
+        // Category facet from filter
+        if (state.browserFilters.category !== "all") {
+          facetGroups.push([`categories:${state.browserFilters.category}`]);
+        }
+
+        const facets = encodeURIComponent(JSON.stringify(facetGroups));
+
+        // Sort parameter
+        const sortMap = {
+          relevance: "",
+          downloads: "&index=downloads",
+          updated: "&index=updated",
+          follows: "",
+        };
+        const sortParam = sortMap[state.browserFilters.sort] || "";
+
         const res = await fetch(
-          `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=${pageSize}&offset=${offset}`,
+          `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=${pageSize}&offset=${offset}${sortParam}`,
         );
         if (!res.ok) throw new Error(`Modrinth API error: ${res.status}`);
-        const data = await res.json();
+        const data = await safeJson(res);
         hits = (data.hits || []).map((m) => ({
           project_id: m.project_id,
           title: m.title,
@@ -1681,15 +2167,22 @@ export function initModpacksFeature({ switchView }) {
         if (state.browserMode === "resourcepack") classId = 12;
         else if (state.browserMode === "shader") classId = 6552;
         else if (state.browserMode === "modpack") classId = 4471;
-        const gameVerStr =
-          mp && state.browserMode !== "modpack"
-            ? `&gameVersion=${mp.mcVersion}`
-            : "";
+
+        // Game version from filter or context
+        const curseGameVer = state.browserFilters.version !== "all"
+          ? state.browserFilters.version
+          : (mp && state.browserMode !== "modpack" ? mp.mcVersion : "");
+        const gameVerStr = curseGameVer ? `&gameVersion=${curseGameVer}` : "";
+
+        // Sort field: 2=downloads, 3=updated, 4=last updated
+        const sortFieldMap = { relevance: 2, downloads: 2, updated: 3, follows: 4 };
+        const sortField = sortFieldMap[state.browserFilters.sort] || 2;
+
         const res = await fetch(
-          `https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=${classId}&searchFilter=${encodeURIComponent(query)}${gameVerStr}&sortField=2&sortOrder=desc&pageSize=${pageSize}&index=${offset}`,
+          `https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=${classId}&searchFilter=${encodeURIComponent(query)}${gameVerStr}&sortField=${sortField}&sortOrder=desc&pageSize=${pageSize}&index=${offset}`,
         );
         if (!res.ok) throw new Error(`CurseForge API error: ${res.status}`);
-        const data = await res.json();
+        const data = await safeJson(res);
         hits = (data.data || []).map((m) => ({
           project_id: m.id.toString(),
           title: m.name,
@@ -1703,7 +2196,7 @@ export function initModpacksFeature({ switchView }) {
       }
       results.innerHTML = "";
       if (!hits.length) {
-        results.innerHTML = `<div class="mp-loading">No results found for "${query}" | Debug: classId ${classId}, provider ${state.currentProvider}</div>`;
+        results.innerHTML = `<div class="mp-loading">No results found for "${query}"</div>`;
         return;
       }
 
@@ -1801,13 +2294,20 @@ export function initModpacksFeature({ switchView }) {
         const installed = installedIds.includes(mod.project_id);
         const el = document.createElement("div");
         el.className = "mod-result-card";
-        // Get first letter of title for placeholder
         const firstLetter = (mod.title || "M").charAt(0).toUpperCase();
+        const dlStr = mod.downloads >= 1000000
+          ? (mod.downloads / 1000000).toFixed(1) + "M"
+          : mod.downloads >= 1000
+            ? (mod.downloads / 1000).toFixed(0) + "K"
+            : String(mod.downloads);
+        const followsStr = mod.follows >= 1000
+          ? (mod.follows / 1000).toFixed(0) + "K"
+          : String(mod.follows || 0);
         el.innerHTML = `
-        ${mod.icon_url ? `<img class="mod-result-icon" src="${mod.icon_url}" onerror="this.style.display='none'" />` : `<div class="mod-result-icon mod-icon-placeholder" style="width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:20px;color:rgba(255,255,255,0.6);">${firstLetter}</div>`}
+        ${mod.icon_url ? `<img class="mod-result-icon" src="${mod.icon_url}" onerror="this.style.display='none'" />` : `<div class="mod-result-icon mod-icon-placeholder" style="width:56px;height:56px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:22px;color:rgba(255,255,255,0.6);">${firstLetter}</div>`}
         <div class="mod-result-info">
           <strong>${mod.title}</strong><span>${mod.description}</span>
-          <div class="mod-result-meta"><span>\u2193 ${mod.downloads >= 1000 ? (mod.downloads / 1000).toFixed(0) + "K" : mod.downloads}</span></div>
+          <div class="mod-result-meta"><span>\u2193 ${dlStr}</span>${mod.follows ? `<span>\u2605 ${followsStr}</span>` : ""}<span>${mod.provider === "modrinth" ? "Modrinth" : "CurseForge"}</span></div>
         </div>
         <button class="add-mod-btn ${installed ? "installed" : ""}" ${installed ? "disabled" : ""}>${installed ? "\u2713 Added" : state.browserMode === "modpack" ? "+ Import" : "+ Add"}</button>`;
         if (!installed)
@@ -1882,18 +2382,19 @@ export function initModpacksFeature({ switchView }) {
   }
 
   async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
-    // ---- MODPACK IMPORT FLOW ----
-    if (state.browserMode === "modpack" && !isDependency) {
+    const provider =
+      typeof mod === "string" ? "modrinth" : mod.provider || "modrinth";
+
+    // ---- CURSEFORGE MODPACK IMPORT FLOW ----
+    if (state.browserMode === "modpack" && provider === "curseforge" && !isDependency) {
       if (btn) {
         btn.textContent = "Fetching...";
         btn.disabled = true;
       }
-      showImportOverlay("Resolving modpack metadata...", 2);
+      const projectId = typeof mod === "string" ? mod : mod.project_id;
+      const modName = typeof mod === "string" ? "Modpack" : mod.title;
+      showDlPanel("Resolving modpack metadata...", 2, modName);
       try {
-        const projectId = typeof mod === "string" ? mod : mod.project_id;
-        const modName = typeof mod === "string" ? "Modpack" : mod.title;
-        const provider =
-          typeof mod === "string" ? "modrinth" : mod.provider || "modrinth";
 
         // Fetch modpack details to get icon
         let modpackIcon = "";
@@ -1901,7 +2402,7 @@ export function initModpacksFeature({ switchView }) {
           const modDetailsRes = await fetch(
             `https://api.curse.tools/v1/cf/mods/${projectId}`,
           );
-          const modDetails = await modDetailsRes.json();
+          const modDetails = await safeJson(modDetailsRes);
           if (modDetails.data?.logo?.thumbnailUrl) {
             modpackIcon = modDetails.data.logo.thumbnailUrl;
           }
@@ -1912,11 +2413,11 @@ export function initModpacksFeature({ switchView }) {
         const filesRes = await fetch(
           `https://api.curse.tools/v1/cf/mods/${projectId}/files`,
         );
-        const filesData = await filesRes.json();
+        const filesData = await safeJson(filesRes);
         let files = filesData.data || [];
         files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
         if (!files.length) {
-          hideImportOverlay();
+          hideDlPanel();
           actions.showWarningToast("No downloadable files found.");
           if (btn) {
             btn.textContent = "+ Import";
@@ -1925,25 +2426,31 @@ export function initModpacksFeature({ switchView }) {
           return;
         }
         const fileObj = files[0];
+        const dlFileName = fileObj.fileName || "modpack.zip";
         let dlUrl = fileObj.downloadUrl;
         if (!dlUrl) {
           const p1 = Math.floor(fileObj.id / 1000);
           const p2 = (fileObj.id % 1000).toString().padStart(3, "0");
-          dlUrl = `https://edge.forgecdn.net/files/${p1}/${p2}/${encodeURIComponent(fileObj.fileName)}`;
+          dlUrl = `https://edge.forgecdn.net/files/${p1}/${p2}/${encodeURIComponent(dlFileName)}`;
         }
         document.getElementById("mod-browser").classList.remove("active");
-        showImportOverlay("Downloading modpack archive...", 5);
+        showDlPanel(`Downloading ${dlFileName}...`, 5, modName);
         if (!window.electronAPI) {
-          hideImportOverlay();
+          hideDlPanel();
           actions.showWarningToast("Only available in the desktop app.");
           return;
         }
+        const onDlProg = (p) => updateDlPanel(p.status || "Downloading...", p.percent, p.speed, p.eta, dlFileName);
+        if (window.electronAPI.onDownloadProgress) window.electronAPI.onDownloadProgress(onDlProg);
         const importRes = await window.electronAPI.downloadCurseforgeModpack({
           downloadUrl: dlUrl,
         });
         if (!importRes.success)
           throw new Error(importRes.error || "Import failed");
         const manifest = importRes.manifest;
+        const mpTitle = manifest.name || modName;
+        const mpVersion = manifest.version || "";
+        document.getElementById("ddp-title").innerText = mpVersion ? `${mpTitle} v${mpVersion}` : mpTitle;
         const rawLoaderId = manifest.minecraft?.modLoaders?.[0]?.id || "";
         const loaderStr = rawLoaderId.toLowerCase();
         const loader = loaderStr.includes("fabric")
@@ -1956,7 +2463,8 @@ export function initModpacksFeature({ switchView }) {
         // Extract pinned version: 'forge-14.23.5.2860' \u2192 '14.23.5.2860', 'fabric-0.15.11' \u2192 '0.15.11'
         const loaderVerMatch = rawLoaderId.match(/^[a-z]+-(.+)$/i);
         const loaderVersion = loaderVerMatch ? loaderVerMatch[1] : "";
-        const mcVersion = manifest.minecraft?.version || "1.20.4";
+        const manifestMc = manifest.minecraft?.version || "";
+        const mcVersion = isValidMcVersion(manifestMc) ? manifestMc : "Unknown";
         const newMp = {
           id: importRes.modpackId,
           name: manifest.name || modName,
@@ -1992,7 +2500,7 @@ export function initModpacksFeature({ switchView }) {
               ),
               fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}`),
             ]);
-            const fData = await fRes.json();
+            const fData = await safeJson(fRes);
             if (!fData.data) return;
             const mf = fData.data;
             let mUrl = mf.downloadUrl;
@@ -2005,7 +2513,7 @@ export function initModpacksFeature({ switchView }) {
             let classId = 6;
             let projectIcon = ""; // Fetch icon from project data
             try {
-              const pj = await projRes.json();
+              const pj = await safeJson(projRes);
               classId = pj.data?.classId ?? 6;
               projectIcon = pj.data?.logo?.thumbnailUrl || ""; // Get icon from project
             } catch (_) {}
@@ -2063,9 +2571,12 @@ export function initModpacksFeature({ switchView }) {
             const percent = manifestFiles.length
               ? 5 + (completedCount / manifestFiles.length) * 90
               : 95;
-            setImportProgress(
-              `Downloading file ${completedCount} / ${manifestFiles.length}...`,
+            updateDlPanel(
+              `Downloading mods (${completedCount} / ${manifestFiles.length})...`,
               percent,
+              null,
+              null,
+              mf.fileName,
             );
           }
         };
@@ -2082,7 +2593,7 @@ export function initModpacksFeature({ switchView }) {
           });
         await Promise.all(workers);
         // --- Catalog resource packs / shaders / extra mods from overrides -----
-        setImportProgress("Cataloging overrides...", 96);
+        updateDlPanel("Cataloging overrides...", 96, null, null, "Overrides");
         (importRes.resourcepackFiles || []).forEach((rp) => {
           newMp.resourcepacks.push({
             modrinthId: "override-" + rp.filename,
@@ -2122,11 +2633,11 @@ export function initModpacksFeature({ switchView }) {
         else mpData2.push(newMp);
         localStorage.setItem("idk_modpacks", JSON.stringify(mpData2));
         mpRenderDetail();
-        setImportProgress("Import complete.", 100);
-        hideImportOverlay();
+        updateDlPanel("Import complete.", 100);
+        hideDlPanel();
         actions.showWarningToast(`"${newMp.name}" imported successfully!`);
       } catch (e) {
-        hideImportOverlay();
+        hideDlPanel();
         actions.showWarningToast("Import failed: " + e.message);
         if (btn) {
           btn.textContent = "+ Import";
@@ -2139,26 +2650,26 @@ export function initModpacksFeature({ switchView }) {
     // ---- MODRINTH MODPACK IMPORT FLOW ----
     if (
       state.browserMode === "modpack" &&
-      mod.provider === "modrinth" &&
+      provider === "modrinth" &&
       !isDependency
     ) {
       if (btn) {
         btn.textContent = "Fetching...";
         btn.disabled = true;
       }
-      showImportOverlay("Resolving modpack metadata...", 2);
+      const projectId = typeof mod === "string" ? mod : mod.project_id;
+      const modName = typeof mod === "string" ? "Modpack" : mod.title;
+      const modpackIcon = mod.icon_url || "";
+      showDlPanel("Resolving modpack metadata...", 2, modName);
       try {
-        const projectId = typeof mod === "string" ? mod : mod.project_id;
-        const modName = typeof mod === "string" ? "Modpack" : mod.title;
-        const modpackIcon = mod.icon_url || "";
 
         // Fetch Modrinth modpack versions
         const versionsRes = await fetch(
-          `https://api.modrinth.com/v2/project/${projectId}/versions`,
+          `https://api.modrinth.com/v2/project/${projectId}/version`,
         );
-        const versions = await versionsRes.json();
+        const versions = await safeJson(versionsRes);
         if (!Array.isArray(versions) || !versions.length) {
-          hideImportOverlay();
+          hideDlPanel();
           actions.showWarningToast("No versions found.");
           if (btn) {
             btn.textContent = "+ Import";
@@ -2172,7 +2683,7 @@ export function initModpacksFeature({ switchView }) {
         const files = latestVersion.files || [];
         const primaryFile = files.find((f) => f.primary) || files[0];
         if (!primaryFile) {
-          hideImportOverlay();
+          hideDlPanel();
           actions.showWarningToast("No downloadable file found.");
           if (btn) {
             btn.textContent = "+ Import";
@@ -2180,23 +2691,29 @@ export function initModpacksFeature({ switchView }) {
           }
           return;
         }
+        const dlFileName = primaryFile.filename || latestVersion.name || latestVersion.version_number || "modpack.mrpack";
 
         const dlUrl = primaryFile.url;
         document.getElementById("mod-browser").classList.remove("active");
-        showImportOverlay("Downloading modpack archive...", 5);
+        showDlPanel(`Downloading ${dlFileName}...`, 5, modName);
         if (!window.electronAPI) {
-          hideImportOverlay();
+          hideDlPanel();
           actions.showWarningToast("Only available in the desktop app.");
           return;
         }
 
+        const onDlProg = (p) => updateDlPanel(p.status || "Downloading...", p.percent, p.speed, p.eta, dlFileName);
+        if (window.electronAPI.onDownloadProgress) window.electronAPI.onDownloadProgress(onDlProg);
         const importRes = await window.electronAPI.downloadModrinthModpack({
           downloadUrl: dlUrl,
         });
         if (!importRes.success)
           throw new Error(importRes.error || "Import failed");
         const manifest = importRes.manifest;
-        const mcVersion = manifest.minecraft?.version || "1.20.4";
+        const mpVersionManifest = manifest.version || latestVersion.version_number || "";
+        document.getElementById("ddp-title").innerText = mpVersionManifest ? `${modName} v${mpVersionManifest}` : modName;
+        const manifestMc = manifest.minecraft?.version || "";
+        const mcVersion = isValidMcVersion(manifestMc) ? manifestMc : "Unknown";
         const rawLoaderId = manifest.minecraft?.modLoaders?.[0]?.id || "";
         const loaderStr = rawLoaderId.toLowerCase();
         const loader = loaderStr.includes("fabric")
@@ -2255,7 +2772,7 @@ export function initModpacksFeature({ switchView }) {
                   `https://api.modrinth.com/v2/project/${f.project_id}`,
                 );
                 if (projRes.ok) {
-                  const projData = await projRes.json();
+                  const projData = await safeJson(projRes);
                   projectIcon = projData.icon_url || "";
                 }
               } catch (e) {
@@ -2309,16 +2826,19 @@ export function initModpacksFeature({ switchView }) {
                 filename,
               });
             }
-          } catch (me) {
+            } catch (me) {
             console.warn("Failed file", f.path, me);
           } finally {
             completedCount++;
             const percent = manifestFiles.length
               ? 5 + (completedCount / manifestFiles.length) * 90
               : 95;
-            setImportProgress(
-              `Downloading file ${completedCount} / ${manifestFiles.length}...`,
+            updateDlPanel(
+              `Downloading mods (${completedCount} / ${manifestFiles.length})...`,
               percent,
+              null,
+              null,
+              filename,
             );
           }
         };
@@ -2342,11 +2862,11 @@ export function initModpacksFeature({ switchView }) {
         else mpData2.push(newMp);
         localStorage.setItem("idk_modpacks", JSON.stringify(mpData2));
         mpRenderDetail();
-        setImportProgress("Import complete.", 100);
-        hideImportOverlay();
+        updateDlPanel("Import complete.", 100, null, null, "Done");
+        hideDlPanel();
         actions.showWarningToast(`"${newMp.name}" imported successfully!`);
       } catch (e) {
-        hideImportOverlay();
+        hideDlPanel();
         actions.showWarningToast("Import failed: " + e.message);
         if (btn) {
           btn.textContent = "+ Import";
@@ -2413,7 +2933,7 @@ export function initModpacksFeature({ switchView }) {
           );
           if (!filesRes.ok)
             throw new Error(`CurseForge API error: ${filesRes.status}`);
-          const filesData = await filesRes.json();
+          const filesData = await safeJson(filesRes);
 
           let files = filesData.data || [];
           files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
@@ -2496,7 +3016,7 @@ export function initModpacksFeature({ switchView }) {
                 `https://api.curse.tools/v1/cf/mods/${projectId}`,
               );
               if (projRes.ok) {
-                const projData = await projRes.json();
+                const projData = await safeJson(projRes);
                 projectIcon = projData.data?.logo?.thumbnailUrl || "";
               }
             } catch (e) {
@@ -2583,7 +3103,7 @@ export function initModpacksFeature({ switchView }) {
           );
           if (!filesRes.ok)
             throw new Error(`CurseForge API error: ${filesRes.status}`);
-          const filesData = await filesRes.json();
+          const filesData = await safeJson(filesRes);
 
           let files = filesData.data || [];
           files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
@@ -2648,7 +3168,7 @@ export function initModpacksFeature({ switchView }) {
           );
           if (!filesRes.ok)
             throw new Error(`CurseForge API error: ${filesRes.status}`);
-          const filesData = await filesRes.json();
+          const filesData = await safeJson(filesRes);
 
           let files = filesData.data || [];
           files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
@@ -2701,7 +3221,7 @@ export function initModpacksFeature({ switchView }) {
             throw new Error(
               `Modrinth API error: ${res.status} ${res.statusText}`,
             );
-          versions = await res.json();
+          versions = await safeJson(res);
           if (!versions.length) {
             if (btn) {
               actions.showWarningToast(
@@ -2724,7 +3244,7 @@ export function initModpacksFeature({ switchView }) {
                 `https://api.modrinth.com/v2/project/${projectId}`,
               );
               if (projRes.ok) {
-                const projData = await projRes.json();
+                const projData = await safeJson(projRes);
                 projectIcon = projData.icon_url || "";
               }
             } catch (e) {
@@ -2819,7 +3339,7 @@ export function initModpacksFeature({ switchView }) {
             throw new Error(
               `Modrinth API error: ${res.status} ${res.statusText}`,
             );
-          versions = await res.json();
+          versions = await safeJson(res);
           if (!versions.length) {
             actions.showWarningToast(
               `${modTitle} has no version for MC ${mp.mcVersion}`,
@@ -2858,7 +3378,7 @@ export function initModpacksFeature({ switchView }) {
             throw new Error(
               `Modrinth API error: ${res.status} ${res.statusText}`,
             );
-          versions = await res.json();
+          versions = await safeJson(res);
           if (!versions.length) {
             actions.showWarningToast(
               `${modTitle} has no downloadable version.`,
@@ -2914,6 +3434,148 @@ export function initModpacksFeature({ switchView }) {
     }
   }
 
+  // --- Download panel helpers ---
+  function positionDlPanel() {
+    const btn = document.getElementById("nav-download-btn");
+    const panel = document.getElementById("download-detail-panel");
+    if (!btn || !panel) return;
+    const rect = btn.getBoundingClientRect();
+    panel.style.left = "";
+    panel.style.right = "";
+    panel.style.top = "";
+    panel.className = "download-detail-panel panel-top-right visible";
+  }
+
+  function formatSpeed(bytesPerSec) {
+    if (!bytesPerSec || bytesPerSec <= 0) return "\u2014";
+    if (bytesPerSec >= 1048576) return (bytesPerSec / 1048576).toFixed(1) + " MB/s";
+    if (bytesPerSec >= 1024) return (bytesPerSec / 1024).toFixed(0) + " KB/s";
+    return bytesPerSec.toFixed(0) + " B/s";
+  }
+
+  function formatEta(seconds) {
+    if (!seconds || seconds <= 0 || !isFinite(seconds)) return "\u2014";
+    if (seconds >= 3600) return Math.floor(seconds / 3600) + "h " + Math.floor((seconds % 3600) / 60) + "m";
+    if (seconds >= 60) return Math.floor(seconds / 60) + "m " + Math.floor(seconds % 60) + "s";
+    return Math.floor(seconds) + "s";
+  }
+
+  function showDlPanel(status, percent = 5, title = null) {
+    const navBtn = document.getElementById("nav-download-btn");
+    const panel = document.getElementById("download-detail-panel");
+    if (navBtn) {
+      navBtn.style.display = "";
+      navBtn.classList.add("visible");
+    }
+    if (panel) {
+      document.getElementById("ddp-status").innerText = status;
+      document.getElementById("ddp-progress-fill").style.width = percent + "%";
+      if (title) document.getElementById("ddp-title").innerText = title;
+      positionDlPanel();
+      panel.classList.add("visible");
+    }
+  }
+
+  function hideDlPanel() {
+    const navBtn = document.getElementById("nav-download-btn");
+    const panel = document.getElementById("download-detail-panel");
+    if (navBtn) {
+      navBtn.style.display = "none";
+      navBtn.classList.remove("visible");
+    }
+    if (panel) {
+      panel.classList.remove("visible");
+    }
+    const ring = document.getElementById("nav-dl-ring");
+    if (ring) ring.style.strokeDashoffset = "69.12";
+    // Reset title for next use
+    document.getElementById("ddp-title").innerText = "Downloading Modpack";
+    document.getElementById("ddp-current-item").innerText = "";
+  }
+
+  function updateDlPanel(status, percent, speed, eta, item) {
+    const panel = document.getElementById("download-detail-panel");
+    if (panel && !panel.classList.contains("visible")) {
+      showDlPanel(status, percent);
+      return;
+    }
+    const statusEl = document.getElementById("ddp-status");
+    const fillEl = document.getElementById("ddp-progress-fill");
+    const ring = document.getElementById("nav-dl-ring");
+    const percentEl = document.getElementById("ddp-percent");
+    const speedEl = document.getElementById("ddp-speed");
+    const etaEl = document.getElementById("ddp-eta");
+    const itemEl = document.getElementById("ddp-current-item");
+    if (statusEl) statusEl.innerText = status;
+    if (fillEl && Number.isFinite(percent))
+      fillEl.style.width = Math.max(0, Math.min(100, percent)) + "%";
+    if (ring && Number.isFinite(percent)) {
+      const offset = 69.12 - (percent / 100) * 69.12;
+      ring.style.strokeDashoffset = offset;
+    }
+    if (percentEl) percentEl.innerText = Math.round(percent) + "%";
+    if (speedEl) speedEl.innerText = formatSpeed(speed);
+    if (etaEl) etaEl.innerText = formatEta(eta);
+    if (itemEl && item) itemEl.innerText = item;
+  }
+
+  window.showDownloadPanel = showDlPanel;
+  window.updateDownloadPanel = updateDlPanel;
+  window.hideDownloadPanel = hideDlPanel;
+
+  // Expose import function for inline onclick in content-feature trending modpacks
+  let pendingTrendingMod = null;
+  window.clickTrendingMod = async (mod) => {
+    state.browserMode = "modpack";
+    pendingTrendingMod = mod;
+    const modal = document.getElementById("dl-confirm-modal");
+    const nameEl = document.getElementById("dl-confirm-name");
+    if (nameEl) nameEl.textContent = mod.title || "Download Modpack?";
+    if (modal) modal.classList.add("active");
+  };
+
+  document.getElementById("btn-dl-confirm-cancel").addEventListener("click", () => {
+    document.getElementById("dl-confirm-modal").classList.remove("active");
+    pendingTrendingMod = null;
+  });
+
+  document.getElementById("btn-dl-confirm-start").addEventListener("click", async () => {
+    document.getElementById("dl-confirm-modal").classList.remove("active");
+    const mod = pendingTrendingMod;
+    pendingTrendingMod = null;
+    if (mod) {
+      showDlPanel("Resolving modpack metadata...", 2, mod.title || "Modpack");
+      await mpAddItem(mod, null);
+      hideDlPanel();
+    }
+  });
+
+  // --- Download panel controls ---
+  document.getElementById("nav-download-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const panel = document.getElementById("download-detail-panel");
+    if (panel) panel.classList.toggle("visible");
+  });
+
+  document.getElementById("btn-ddp-close").addEventListener("click", () => {
+    document.getElementById("download-detail-panel").classList.remove("visible");
+  });
+
+  document.getElementById("btn-ddp-cancel").addEventListener("click", () => {
+    hideDlPanel();
+  });
+
+  // Close panel when clicking outside
+  document.addEventListener("click", (e) => {
+    const panel = document.getElementById("download-detail-panel");
+    const btn = document.getElementById("nav-download-btn");
+    if (panel && panel.classList.contains("visible")) {
+      if (btn && !btn.contains(e.target) && !panel.contains(e.target)) {
+        panel.classList.remove("visible");
+      }
+    }
+  });
+
   // --- Play Modpack ---
   // IPC listeners are already registered globally above \u2014 no setup needed here.
   document.getElementById("btn-play-modpack").addEventListener("click", () => {
@@ -2924,6 +3586,13 @@ export function initModpacksFeature({ switchView }) {
     if (!mp && !isViewingVersion) return;
 
     switchView("main");
+    const fallbackVersion = state.downloadedVersions?.[0] || state.selectedVersion || "1.20.1";
+    const resolvedModpackVersion = mp?.mcVersion && isValidMcVersion(mp.mcVersion)
+      ? mp.mcVersion
+      : (state.versionSettings?.[mp?.id]?.mcVersion && isValidMcVersion(state.versionSettings[mp.id].mcVersion)
+        ? state.versionSettings[mp.id].mcVersion
+        : fallbackVersion);
+    state.selectedVersion = isViewingVersion ? state.activeVersionForMods : resolvedModpackVersion;
     actions.beginLaunchOverlay?.("Launching...");
     const authData =
       state.authMode === "elyby"
@@ -2955,12 +3624,13 @@ export function initModpacksFeature({ switchView }) {
         });
       }
     } else if (window.electronAPI) {
+      const versionSettings = state.versionSettings?.[mp?.id] || {};
       window.electronAPI.launchModpack({
         username: state.currentUser,
         modpackId: mp.id,
         modpackName: mp.name,
-        mcVersion: mp.mcVersion,
-        loader: mp.loader,
+        mcVersion: resolvedModpackVersion,
+        loader: versionSettings.loader || mp.loader,
         loaderVersion: mp.loaderVersion || "",
         javaPath: state.javaPath,
         maxMemory: `${state.maxMemoryGB}G`,

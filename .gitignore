@@ -34,3 +34,4 @@ node_modules
 idk-backend/
 scratch/
 .agent
+.opencode

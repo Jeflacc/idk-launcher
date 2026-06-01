@@ -1,0 +1,6 @@
+
+[Window] ready-to-show event fired
+[Window] Closing splash, showing main window
+[Renderer] [Modpacks] scanProfiles returned: success=true profiles=1 | My 26.1.2 Modpack:mods=69rp=16sh=8
+[Renderer] [Modpacks] After rebuild: My 26.1.2 Modpack: mods=69 rp=16 sh=8
+[Window] Main window closed

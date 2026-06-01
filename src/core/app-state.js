@@ -30,7 +30,7 @@ export const state = {
     localStorage.getItem("idk_compact_mode") === "true",
   enableOverlay: localStorage.getItem("idk_enable_overlay") === "true",
   language: localStorage.getItem("idk_language") || "en",
-  backgroundEffect: localStorage.getItem("idk_background_effect") || "none",
+  backgroundEffect: localStorage.getItem("idk_background_effect") || "particles",
   backgroundIntensity: parseInt(localStorage.getItem("idk_background_intensity") || "50"),
   concurrentDownloads: parseInt(localStorage.getItem("idk_concurrent_downloads") || "4"),
   concurrentIO: Math.min(parseInt(localStorage.getItem("idk_concurrent_io") || "2"), 8),
