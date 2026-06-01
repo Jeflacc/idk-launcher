@@ -2509,6 +2509,10 @@ export function initModpacksFeature({ switchView }) {
                 mp2 = (mf.id % 1000).toString().padStart(3, "0");
               mUrl = `https://edge.forgecdn.net/files/${mp1}/${mp2}/${encodeURIComponent(mf.fileName)}`;
             }
+            if (/^(fabric|forge|neoforge|quilt)-loader-.*\.jar$/i.test(mf.fileName || "")) {
+              console.info("Skipping bundled loader artifact:", mf.fileName);
+              return;
+            }
             // Determine type from classId: 6=Mod, 12=ResourcePack, 6552=Shader
             let classId = 6;
             let projectIcon = ""; // Fetch icon from project data
@@ -2763,6 +2767,10 @@ export function initModpacksFeature({ switchView }) {
 
             const filename =
               f.path?.split("/").pop() || f.filename || "file.jar";
+            if (/^(fabric|forge|neoforge|quilt)-loader-.*\.jar$/i.test(filename)) {
+              console.info("Skipping bundled loader artifact:", filename);
+              return;
+            }
 
             // Try to fetch project icon from Modrinth API if we have a project ID
             let projectIcon = "";

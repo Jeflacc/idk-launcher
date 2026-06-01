@@ -498,6 +498,9 @@ ipcMain.on('toggle-devtools', () => {
 });
 // Mod install IPC (for modpack manager)
 ipcMain.handle('install-mod', async (event, { modpackId, downloadUrl, filename }) => {
+  if (/^(fabric|forge|neoforge|quilt)-loader-.*\.jar$/i.test(filename || '')) {
+    return { success: true, skipped: true, reason: 'loader-artifact' };
+  }
   const rootPath = getMinecraftDataPath();
   const modsPath = path.join(rootPath, 'profiles', `modpack-${modpackId}`, 'mods');
   if (!fs.existsSync(modsPath)) fs.mkdirSync(modsPath, { recursive: true });
@@ -524,6 +527,9 @@ function resolveVersionDir(versionsPath, version) {
 
 // Install mod directly to a version's mods folder
 ipcMain.handle('install-mod-to-version', async (event, { version, downloadUrl, filename }) => {
+  if (/^(fabric|forge|neoforge|quilt)-loader-.*\.jar$/i.test(filename || '')) {
+    return { success: true, skipped: true, reason: 'loader-artifact' };
+  }
   const rootPath = getMinecraftDataPath();
   const versionsPath = path.join(rootPath, 'versions');
   const versionDir = resolveVersionDir(versionsPath, version);
