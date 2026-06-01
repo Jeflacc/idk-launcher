@@ -142,6 +142,10 @@ export function initModpacksFeature({ switchView }) {
             const existing =
               existingById.get(diskMp.id) ||
               existingByName.get(diskMp.name?.toLowerCase().trim());
+            const existingValidMcVersion =
+              existing?.mcVersion && isValidMcVersion(existing.mcVersion)
+                ? existing.mcVersion
+                : null;
 
             return {
               id: diskMp.id,
@@ -152,7 +156,7 @@ export function initModpacksFeature({ switchView }) {
               mcVersion:
                 diskMp.mcVersion !== "Unknown"
                   ? diskMp.mcVersion
-                  : existing?.mcVersion || diskMp.mcVersion,
+                  : existingValidMcVersion || diskMp.mcVersion,
               loader:
                 diskMp.loader !== "Vanilla"
                   ? diskMp.loader
@@ -248,6 +252,53 @@ export function initModpacksFeature({ switchView }) {
 
   function mpGet() {
     return state.modpacks.find((m) => m.id === state.activeModpackId) || null;
+  }
+
+  async function ensureVersionOptions(selectEl) {
+    if (!selectEl) return [];
+    const current = Array.from(selectEl.options).map((opt) => opt.value);
+    if (current.length > 0) return current;
+
+    const versions = (state.allVersions || []).filter((v) => v.type === "release");
+    const sorted = [...versions]
+      .sort((a, b) => {
+        const aDl = state.downloadedVersions.includes(a.id) ? 0 : 1;
+        const bDl = state.downloadedVersions.includes(b.id) ? 0 : 1;
+        if (aDl !== bDl) return aDl - bDl;
+        return state.allVersions.indexOf(a) - state.allVersions.indexOf(b);
+      })
+      .slice(0, 40);
+
+    if (sorted.length > 0) {
+      selectEl.innerHTML = "";
+      sorted.forEach((v) => {
+        const o = document.createElement("option");
+        o.value = v.id;
+        o.textContent = state.downloadedVersions.includes(v.id) ? `✓ ${v.id}` : v.id;
+        selectEl.appendChild(o);
+      });
+      return Array.from(selectEl.options).map((opt) => opt.value);
+    }
+
+    if (window.electronAPI?.scanDownloadedVersions) {
+      try {
+        const result = await window.electronAPI.scanDownloadedVersions();
+        const installed = (result?.versions || []).filter((v) => v && v.id);
+        if (installed.length > 0) {
+          selectEl.innerHTML = "";
+          installed.forEach((v) => {
+            const o = document.createElement("option");
+            o.value = v.id;
+            o.textContent = v.id;
+            selectEl.appendChild(o);
+          });
+        }
+      } catch (e) {
+        console.warn("[Modpacks] Failed to refresh version options:", e);
+      }
+    }
+
+    return Array.from(selectEl.options).map((opt) => opt.value);
   }
 
   function mpRenderList() {
@@ -433,9 +484,7 @@ export function initModpacksFeature({ switchView }) {
     if (!version || typeof version !== 'string') return false;
     const releasePattern = /^\d+\.\d+(\.\d+)?$/;
     const snapshotPattern = /^\d{2}w\d{2}[a-z]$/i;
-    if (!releasePattern.test(version) && !snapshotPattern.test(version)) return false;
-    const major = parseInt(version.split('.')[0], 10);
-    return major < 2; // Minecraft has never reached 2.x
+    return releasePattern.test(version) || snapshotPattern.test(version);
   }
 
   // Batch extract icons for all items in a modpack (for legacy profiles)
@@ -934,33 +983,20 @@ export function initModpacksFeature({ switchView }) {
   // --- Create Modpack ---
   function openCreateModpackModal(preSelectedVersion) {
     const sel = document.getElementById("new-mp-version");
-    // Populate version dropdown if empty
-    if (sel.options.length === 0 && state.allVersions.length > 0) {
-      // Sort: downloaded versions first, then by manifest order
-      const sorted = [...state.allVersions]
-        .filter((v) => v.type === "release")
-        .sort((a, b) => {
-          const aDl = state.downloadedVersions.includes(a.id) ? 0 : 1;
-          const bDl = state.downloadedVersions.includes(b.id) ? 0 : 1;
-          if (aDl !== bDl) return aDl - bDl;
-          return state.allVersions.indexOf(a) - state.allVersions.indexOf(b);
-        })
-        .slice(0, 40);
-      sorted.forEach((v) => {
-        const o = document.createElement("option");
-        o.value = v.id;
-        o.textContent = state.downloadedVersions.includes(v.id) ? `✓ ${v.id}` : v.id;
-        sel.appendChild(o);
-      });
-    }
-    // Pre-select the given version, or the first downloaded version, or the first option
-    if (preSelectedVersion && state.downloadedVersions.includes(preSelectedVersion)) {
+    ensureVersionOptions(sel).then(() => {
+      // Pre-select the given version, or the first downloaded version, or the first option
+      if (preSelectedVersion && [...sel.options].some(o => o.value === preSelectedVersion)) {
+        sel.value = preSelectedVersion;
+      } else if (!preSelectedVersion) {
+        const firstDl = [...sel.options].find(o =>
+          state.downloadedVersions.includes(o.value)
+        );
+        if (firstDl) sel.value = firstDl.value;
+      }
+    });
+    // Pre-select immediately if already present
+    if (preSelectedVersion && [...sel.options].some(o => o.value === preSelectedVersion)) {
       sel.value = preSelectedVersion;
-    } else if (!preSelectedVersion) {
-      const firstDl = [...sel.options].find(o =>
-        state.downloadedVersions.includes(o.value)
-      );
-      if (firstDl) sel.value = firstDl.value;
     }
     document.getElementById("mp-create-modal").classList.add("active");
     document.getElementById("new-mp-name").focus();
@@ -1244,7 +1280,7 @@ export function initModpacksFeature({ switchView }) {
   // --- Modpack Settings ---
   document
     .getElementById("btn-modpack-settings")
-    .addEventListener("click", () => {
+    .addEventListener("click", async () => {
       const mp = mpGet();
       const isViewingVersion =
         state.activeVersionForMods && !state.activeModpackId;
@@ -1300,8 +1336,15 @@ export function initModpacksFeature({ switchView }) {
         document.getElementById("mp-settings-name").value = mp.name;
         document.getElementById("mp-settings-description").value =
           mp.description || "";
-        document.getElementById("mp-settings-version").value =
-          mp.mcVersion || "";
+        const versionSelect = document.getElementById("mp-settings-version");
+        await ensureVersionOptions(versionSelect);
+        if (mp.mcVersion && [...versionSelect.options].some((o) => o.value === mp.mcVersion)) {
+          versionSelect.value = mp.mcVersion;
+        } else if (state.downloadedVersions.includes(mp.mcVersion)) {
+          versionSelect.value = mp.mcVersion;
+        } else if (versionSelect.options.length > 0) {
+          versionSelect.value = versionSelect.options[0].value;
+        }
         document.getElementById("mp-settings-loader").value =
           mp.loader || "Vanilla";
         document.getElementById("mp-settings-loader-version").value =
@@ -1368,7 +1411,8 @@ export function initModpacksFeature({ switchView }) {
         mp.description = document
           .getElementById("mp-settings-description")
           .value.trim();
-        mp.mcVersion = document.getElementById("mp-settings-version").value;
+        const selectedMcVersion = document.getElementById("mp-settings-version").value;
+        if (selectedMcVersion) mp.mcVersion = selectedMcVersion;
         mp.loader = document.getElementById("mp-settings-loader").value;
         mp.loaderVersion = document.getElementById(
           "mp-settings-loader-version",
@@ -3475,6 +3519,10 @@ export function initModpacksFeature({ switchView }) {
     if (itemEl && item) itemEl.innerText = item;
   }
 
+  window.showDownloadPanel = showDlPanel;
+  window.updateDownloadPanel = updateDlPanel;
+  window.hideDownloadPanel = hideDlPanel;
+
   // Expose import function for inline onclick in content-feature trending modpacks
   let pendingTrendingMod = null;
   window.clickTrendingMod = async (mod) => {
@@ -3538,8 +3586,13 @@ export function initModpacksFeature({ switchView }) {
     if (!mp && !isViewingVersion) return;
 
     switchView("main");
-    state.selectedVersion = isViewingVersion ? state.activeVersionForMods : mp.mcVersion;
-    state.selectedLoader = isViewingVersion ? versionSettings.loader : mp.loader;
+    const fallbackVersion = state.downloadedVersions?.[0] || state.selectedVersion || "1.20.1";
+    const resolvedModpackVersion = mp?.mcVersion && isValidMcVersion(mp.mcVersion)
+      ? mp.mcVersion
+      : (state.versionSettings?.[mp?.id]?.mcVersion && isValidMcVersion(state.versionSettings[mp.id].mcVersion)
+        ? state.versionSettings[mp.id].mcVersion
+        : fallbackVersion);
+    state.selectedVersion = isViewingVersion ? state.activeVersionForMods : resolvedModpackVersion;
     actions.beginLaunchOverlay?.("Launching...");
     const authData =
       state.authMode === "elyby"
@@ -3571,12 +3624,13 @@ export function initModpacksFeature({ switchView }) {
         });
       }
     } else if (window.electronAPI) {
+      const versionSettings = state.versionSettings?.[mp?.id] || {};
       window.electronAPI.launchModpack({
         username: state.currentUser,
         modpackId: mp.id,
         modpackName: mp.name,
-        mcVersion: mp.mcVersion,
-        loader: mp.loader,
+        mcVersion: resolvedModpackVersion,
+        loader: versionSettings.loader || mp.loader,
         loaderVersion: mp.loaderVersion || "",
         javaPath: state.javaPath,
         maxMemory: `${state.maxMemoryGB}G`,

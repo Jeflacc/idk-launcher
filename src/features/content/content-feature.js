@@ -109,6 +109,7 @@ export function initContentFeature() {
         const thumb = mp.logo
           ? mp.logo.thumbnailUrl.replace("https://", "idk-cache://")
           : "";
+        const initial = (mp.name || "M").charAt(0).toUpperCase();
         const dl =
           mp.downloadCount >= 1e6
             ? (mp.downloadCount / 1e6).toFixed(1) + "M"
@@ -126,7 +127,7 @@ export function initContentFeature() {
           provider: "curseforge",
         }).replace(/"/g, "&quot;");
         grid.innerHTML += `<div class="trending-mp-card" onclick="clickTrendingMod(JSON.parse('${modObj}'));" style="cursor:pointer;">
-        <div class="trending-mp-thumb" style="background-image:url('${thumb}');background-size:cover;background-position:center;"></div>
+        ${thumb ? `<img class="trending-mp-thumb" src="${thumb}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'trending-mp-thumb trending-mp-thumb-fallback',textContent:'${initial}'}))" />` : `<div class="trending-mp-thumb trending-mp-thumb-fallback">${initial}</div>`}
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
           <div class="trending-mp-meta"><span>&#x2B07; ${dl}</span>${loader ? '<span class="trending-mp-tag">' + loader + "</span>" : ""}</div>
         </div></div>`;
@@ -141,7 +142,7 @@ export function initContentFeature() {
           provider: "curseforge",
         }).replace(/"/g, "&quot;");
         grid.innerHTML += `<div class="trending-mp-card" onclick="clickTrendingMod(JSON.parse('${modObj}'));" style="cursor:pointer;">
-        <div class="trending-mp-thumb" style="background-image:url('${thumbCached}');background-size:cover;background-position:center;"></div>
+        <img class="trending-mp-thumb" src="${thumbCached}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'trending-mp-thumb trending-mp-thumb-fallback',textContent:'${mp.name.charAt(0).toUpperCase()}'}))" />
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
           <div class="trending-mp-meta"><span>&#x2B07; ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>
         </div></div>`;

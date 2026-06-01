@@ -1526,10 +1526,16 @@ export function renderAppShell() {
 
   <!-- LAUNCH OVERLAY -->
   <div class="launch-overlay" id="launch-overlay">
-    <img src="./loading.gif" class="launch-spinner-gif" alt="Loading...">
-    <div class="launch-status" id="launch-status">Preparing game...</div>
-    <div class="launch-bar">
-      <div class="launch-fill" id="launch-fill"></div>
+    <div class="launch-overlay-card">
+      <img src="./loading.gif" class="launch-spinner-gif" alt="Loading...">
+      <div class="launch-status" id="launch-status">Preparing game...</div>
+      <div class="launch-bar">
+        <div class="launch-fill" id="launch-fill"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;">
+        <span style="font-size:11px;color:var(--text-muted);">You can keep using the launcher while this runs.</span>
+        <button class="modal-btn" id="btn-cancel-launch" style="padding:8px 12px;">Cancel</button>
+      </div>
     </div>
   </div>
 

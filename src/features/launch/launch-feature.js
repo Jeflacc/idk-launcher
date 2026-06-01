@@ -163,10 +163,26 @@ function renderForLaunchVersionsModal(tab) {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!window.electronAPI) return;
+        const panelShow = window.showDownloadPanel || window.showDlPanel;
+        const panelUpdate = window.updateDownloadPanel || window.updateDlPanel;
+        const panelHide = window.hideDownloadPanel || window.hideDlPanel;
+        panelShow?.(`Downloading ${v.id}...`, 5, 'Downloading Minecraft Version');
         btn.classList.add('downloading');
         btn.textContent = 'Downloading…';
         btn.disabled = true;
+        const progressHandler = (data) => {
+          const payload = data?.downloadId ? data : (data || {});
+          panelUpdate?.(
+            payload.status || `Downloading ${v.id}...`,
+            Number.isFinite(payload.percent) ? payload.percent : 5,
+            payload.speed,
+            payload.eta,
+            payload.item || v.id
+          );
+        };
+        const removeProgress = window.electronAPI.onDownloadProgress?.(progressHandler);
         const result = await window.electronAPI.downloadVersion({ version: v.id });
+        removeProgress?.();
         if (result.success) {
           if (!state.downloadedVersions.includes(v.id)) {
             state.downloadedVersions.push(v.id);
@@ -176,10 +192,12 @@ function renderForLaunchVersionsModal(tab) {
           btn.classList.add('downloaded');
           btn.textContent = 'Use';
           btn.disabled = false;
+          panelHide?.();
           renderForLaunchVersionsModal(currentLaunchTab);
         } else {
           btn.classList.remove('downloading');
           btn.textContent = 'Failed';
+          panelHide?.();
           setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
         }
       });
@@ -269,6 +287,7 @@ const playBtn = document.getElementById('play-btn');
 const overlay = document.getElementById('launch-overlay');
 const launchStatus = document.getElementById('launch-status');
 const launchFill = document.getElementById('launch-fill');
+const cancelLaunchBtn = document.getElementById('btn-cancel-launch');
 
 const mcFunStatuses = [
   "Waking up the Iron Golems...",
@@ -408,6 +427,16 @@ if (window.electronAPI) {
   });
 }
 
+if (cancelLaunchBtn && window.electronAPI) {
+  cancelLaunchBtn.addEventListener('click', () => {
+    window.electronAPI.cancelLaunch?.();
+    overlay.classList.remove('active');
+    playBtn.innerText = 'PLAY';
+    playBtn.classList.remove('running');
+    playBtn.disabled = false;
+  });
+}
+
 playBtn.addEventListener('click', () => {
   localStorage.setItem('idk_last_played', JSON.stringify({ version: state.selectedVersion, loader: state.selectedLoader }));
   if (window.electronAPI) {
@@ -425,7 +454,7 @@ playBtn.addEventListener('click', () => {
       height: state.defaultWindowHeight,
       fullscreen: state.defaultFullscreen,
       enableOverlay: state.enableOverlay,
-      hideLauncher: state.hideLauncher !== false
+      hideLauncher: state.hideLauncher === true
     };
     window.electronAPI.launchMinecraft(
       state.currentUser,

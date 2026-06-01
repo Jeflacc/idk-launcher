@@ -42,6 +42,7 @@ let mainWindow;
 let overlayWindow = null;
 let overlayActive = false;
 let overlaySessionData = null;
+let activeLaunchProcess = null;
 
 let boundsTrackerProcess = null;
 
@@ -168,13 +169,17 @@ while($true) {
   }
 
   overlayWindow.once('ready-to-show', () => {
-    // Open DevTools in detached window so we can see overlay console errors
-    overlayWindow.webContents.openDevTools({ mode: 'detach' });
     const sendData = () => {
       if (overlayWindow) overlayWindow.webContents.send('overlay-init', overlaySessionData);
     };
     sendData();
     setTimeout(sendData, 1000);
+    if (overlaySessionData?.autoOpen) {
+      overlayActive = true;
+      overlayWindow.setIgnoreMouseEvents(false);
+      overlayWindow.showInactive();
+      overlayWindow.webContents.send('toggle-overlay-ui', true);
+    }
   });
 
   globalShortcut.register('Shift+Tab', () => {
@@ -207,6 +212,18 @@ ipcMain.on('resume-game', () => {
     overlayWindow.setIgnoreMouseEvents(true, { forward: true });
     overlayWindow.hide();
     overlayWindow.webContents.send('toggle-overlay-ui', false);
+  }
+});
+
+ipcMain.on('cancel-launch', () => {
+  try {
+    if (activeLaunchProcess && typeof activeLaunchProcess.kill === 'function') {
+      activeLaunchProcess.kill();
+    }
+  } catch (e) {
+    console.warn('[Launch] Failed to cancel active launch:', e.message);
+  } finally {
+    activeLaunchProcess = null;
   }
 });
 
@@ -359,6 +376,9 @@ function createWindow() {
   // Once main window is ready to show, wait a bit for splash animation then swap
   mainWindow.once('ready-to-show', () => {
     console.log('[Window] ready-to-show event fired');
+    try {
+      mainWindow.webContents.send('window-state-changed', { maximized: mainWindow.isMaximized() });
+    } catch {}
     setTimeout(() => {
       console.log('[Window] Closing splash, showing main window');
       splashWindow.close();
@@ -373,6 +393,17 @@ function createWindow() {
 
   mainWindow.on('close', (e) => {
   });
+
+  const syncWindowState = () => {
+    try {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('window-state-changed', { maximized: mainWindow.isMaximized() });
+      }
+    } catch {}
+  };
+  mainWindow.on('maximize', syncWindowState);
+  mainWindow.on('unmaximize', syncWindowState);
+  mainWindow.on('resize', syncWindowState);
 }
 
 app.whenReady().then(() => {
@@ -1264,6 +1295,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
   // Always read mcVersion and loader from profile.json on disk — it's the source of truth.
   // This prevents stale localStorage values from causing wrong-version launches.
   const profileJsonPath = path.join(getMinecraftDataPath(), 'profiles', `modpack-${modpackId}`, 'profile.json');
+  const profilePath = path.join(getMinecraftDataPath(), 'profiles', `modpack-${modpackId}`);
   if (fs.existsSync(profileJsonPath)) {
     try {
       let raw = fs.readFileSync(profileJsonPath, 'utf8');
@@ -1282,12 +1314,19 @@ ipcMain.on('launch-modpack', async (event, args) => {
     }
   }
 
+  if (!isValidMcVersion(mcVersion)) {
+    const detectedMcVersion = detectMcVersionFromMods(path.join(profilePath, 'mods'));
+    if (detectedMcVersion) {
+      mcVersion = detectedMcVersion;
+    }
+  }
+
   if (username) lastActiveUsername = username;
   const mpName = modpackName || 'Modpack';
   const loaderName = loader || 'Vanilla';
 
-  // Validate mcVersion — reject clearly invalid values (e.g. modpack version numbers like 2.0.0, 26.1.2)
-  if (!isValidMcVersion(mcVersion)) {
+  // Accept versions that are either valid by format or already installed on disk.
+  if (!isValidMcVersion(mcVersion) && !versionExistsOnDisk(rootPath, mcVersion)) {
     safeSend('launch-error', { message: `Invalid Minecraft version "${mcVersion}". This version does not exist. The modpack manifest may have incorrect metadata.`, version: mcVersion, loader: loaderName });
     return;
   }
@@ -1301,7 +1340,6 @@ ipcMain.on('launch-modpack', async (event, args) => {
     loaderName
   );
   const rootPath = getMinecraftDataPath();
-  const profilePath = path.join(rootPath, 'profiles', `modpack-${modpackId}`);
   if (!fs.existsSync(profilePath)) fs.mkdirSync(profilePath, { recursive: true });
 
   const maxMem = maxMemory || '4G';
@@ -1488,6 +1526,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
 
 
     const mcProcess = await launchClient.launch(opts);
+    activeLaunchProcess = mcProcess;
     
     // CPU Priority Tuning
     if (mcProcess && mcProcess.pid) {
@@ -1502,7 +1541,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
     
     // Destroy UI to free memory
     if (mainWindow) {
-      const hideLauncher = !(windowSize && windowSize.hideLauncher === false);
+      const hideLauncher = windowSize && windowSize.hideLauncher === true;
       if (hideLauncher) {
         mainWindow.hide();
         setTimeout(() => {
@@ -1518,7 +1557,8 @@ ipcMain.on('launch-modpack', async (event, args) => {
         server: quickConnect ? `${quickConnect.host}:${quickConnect.port}` : 'Singleplayer / LAN',
         username: (authData && authData.selectedProfile) ? authData.selectedProfile.name : (username || 'Player'),
         authMode: (authData && authData.accessToken) ? 'elyby' : 'offline',
-        isFullscreen: isLaunchFullscreen
+        isFullscreen: isLaunchFullscreen,
+        autoOpen: true
       });
     }
     updateDiscordPresence(
@@ -1531,6 +1571,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
       loaderName
     );
   } catch (err) {
+    activeLaunchProcess = null;
     safeSend('launch-error', { message: err.message, version: mcVersion, loader: loaderName });
     updateDiscordPresence('In Main Menu', 'Idle in Launcher');
   }
@@ -1546,13 +1587,24 @@ ipcMain.on('launch-minecraft', async (event, args) => {
   const loaderName = loader || 'Vanilla';
 
   // Validate version before attempting any launch
+  const rootPath = getMinecraftDataPath();
+  const profilePath = path.join(rootPath, 'profiles', version);
   if (!isValidMcVersion(version)) {
+    const detectedVersion = detectMcVersionFromMods(path.join(profilePath, 'mods'));
+    if (detectedVersion) {
+      args.version = detectedVersion;
+    }
+  }
+  const launchVersion = isValidMcVersion(args.version) || versionExistsOnDisk(rootPath, args.version)
+    ? args.version
+    : version;
+  if (!isValidMcVersion(launchVersion) && !versionExistsOnDisk(rootPath, launchVersion)) {
     safeSend('launch-error', { message: `Invalid Minecraft version "${version}". This version does not exist.`, version, loader: loaderName });
     return;
   }
 
   updateDiscordPresence(
-    `Launching Minecraft ${version}`,
+    `Launching Minecraft ${launchVersion}`,
     `Mod Loader: ${loaderName}`,
     'icon',
     'Indkingdom Launcher',
@@ -1561,8 +1613,6 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     loaderName
   );
 
-  const rootPath = getMinecraftDataPath();
-  const profilePath = path.join(rootPath, 'profiles', version);
   if (!fs.existsSync(profilePath)) fs.mkdirSync(profilePath, { recursive: true });
 
   const maxMem = maxMemory || '4G';
@@ -1583,7 +1633,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
       gameDirectory: profilePath,
       cwd: profilePath
     },
-    version: { number: version, type: 'release' },
+    version: { number: launchVersion, type: 'release' },
     memory: { max: maxMem, min: minMem }
   };
 
@@ -1616,7 +1666,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
       host: quickConnect.host,
       port: quickConnect.port
     };
-    if (isModernVersion(version)) {
+    if (isModernVersion(launchVersion)) {
       if (!opts.customLaunchArgs) {
         opts.customLaunchArgs = [];
       }
@@ -1648,11 +1698,11 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     opts.javaPath = javaPath;
   } else {
     try {
-      opts.javaPath = await ensureJava(version, rootPath, loader, (progress) => {
+      opts.javaPath = await ensureJava(launchVersion, rootPath, loader, (progress) => {
         safeSend('launch-progress', progress);
       });
     } catch (e) {
-      safeSend('launch-error', { message: 'Java Auto-Install Failed: ' + e.message, version, loader: loaderName });
+      safeSend('launch-error', { message: 'Java Auto-Install Failed: ' + e.message, version: launchVersion, loader: loaderName });
       return;
     }
   }
@@ -1664,12 +1714,12 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     if (!opts.customArgs) opts.customArgs = [];
 
     if (loaderNameLC === 'fabric') {
-      const existing = findExistingLoaderOnDisk(rootPath, version, 'fabric');
+      const existing = findExistingLoaderOnDisk(rootPath, launchVersion, 'fabric');
       if (existing) {
         opts.version.custom = existing;
       } else {
         safeSend('launch-progress', { status: 'Downloading Fabric loader...', percent: 10 });
-        const fabricVersion = await installFabric(version, rootPath);
+        const fabricVersion = await installFabric(launchVersion, rootPath);
         opts.version.custom = fabricVersion;
       }
 
@@ -1677,17 +1727,17 @@ ipcMain.on('launch-minecraft', async (event, args) => {
         safeSend('launch-progress', { status: 'Downloading Sodium...', percent: 20 });
         const sodiumInstalled = await installSodium(version, profilePath);
         if (!sodiumInstalled) {
-          safeSend('launch-warning', `Sodium is not available for Minecraft ${version}. The game will launch without it.`);
+          safeSend('launch-warning', `Sodium is not available for Minecraft ${launchVersion}. The game will launch without it.`);
         }
       }
     } else if (loaderNameLC === 'forge') {
       try {
-        const existing = findExistingLoaderOnDisk(rootPath, version, 'forge');
+        const existing = findExistingLoaderOnDisk(rootPath, launchVersion, 'forge');
         if (existing) {
           opts.version.custom = existing;
         } else {
           safeSend('launch-progress', { status: 'Installing Forge (this may take a moment)...', percent: 10 });
-          const forgeVersionId = await installForge(version, rootPath, opts.javaPath, (p) => safeSend('launch-progress', p));
+          const forgeVersionId = await installForge(launchVersion, rootPath, opts.javaPath, (p) => safeSend('launch-progress', p));
           opts.version.custom = forgeVersionId;
         }
       } catch (err) {
@@ -1695,25 +1745,25 @@ ipcMain.on('launch-minecraft', async (event, args) => {
         const msg = isNetwork
           ? 'Failed to install Forge: No internet connection or Mojang servers are unreachable. Check your connection and try again.'
           : 'Failed to install Forge: ' + err.message;
-        safeSend('launch-error', { message: msg, version, loader: loaderName });
+        safeSend('launch-error', { message: msg, version: launchVersion, loader: loaderName });
         return;
       }
     } else if (loaderNameLC === 'neoforge') {
-      const existing = findExistingLoaderOnDisk(rootPath, version, 'neoforge');
+      const existing = findExistingLoaderOnDisk(rootPath, launchVersion, 'neoforge');
       if (existing) {
         opts.version.custom = existing;
       } else {
         safeSend('launch-progress', { status: 'Installing NeoForge (this may take a moment)...', percent: 10 });
-        const neoVersionId = await installNeoForge(version, rootPath, opts.javaPath, (p) => safeSend('launch-progress', p));
+        const neoVersionId = await installNeoForge(launchVersion, rootPath, opts.javaPath, (p) => safeSend('launch-progress', p));
         opts.version.custom = neoVersionId;
       }
     } else if (loaderNameLC === 'quilt') {
-      const existing = findExistingLoaderOnDisk(rootPath, version, 'quilt');
+      const existing = findExistingLoaderOnDisk(rootPath, launchVersion, 'quilt');
       if (existing) {
         opts.version.custom = existing;
       } else {
         safeSend('launch-progress', { status: 'Setting up Quilt loader...', percent: 10 });
-        const quiltVersionId = await installQuilt(version, rootPath);
+        const quiltVersionId = await installQuilt(launchVersion, rootPath);
         opts.version.custom = quiltVersionId;
       }
     }
@@ -1725,7 +1775,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     }
   } catch (err) {
     const errMsg = typeof err === 'string' ? err : (err.message || String(err));
-    safeSend('launch-error', { message: 'Failed to install mod loader: ' + errMsg, version, loader: loaderName });
+    safeSend('launch-error', { message: 'Failed to install mod loader: ' + errMsg, version: launchVersion, loader: loaderName });
     return;
   }
 
@@ -1847,6 +1897,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     
 
     const mcProcess = await launchClient.launch(opts);
+    activeLaunchProcess = mcProcess;
     
     // CPU Priority Tuning
     if (mcProcess && mcProcess.pid) {
@@ -1861,7 +1912,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     
     // Destroy UI to free memory
     if (mainWindow) {
-      const hideLauncher = !(windowSize && windowSize.hideLauncher === false);
+      const hideLauncher = windowSize && windowSize.hideLauncher === true;
       if (hideLauncher) {
         mainWindow.hide();
         setTimeout(() => {
@@ -1877,7 +1928,8 @@ ipcMain.on('launch-minecraft', async (event, args) => {
         server: quickConnect ? `${quickConnect.host}:${quickConnect.port}` : 'Singleplayer / LAN',
         username: (authData && authData.selectedProfile) ? authData.selectedProfile.name : (username || 'Player'),
         authMode: (authData && authData.accessToken) ? 'elyby' : 'offline',
-        isFullscreen: isLaunchFullscreen
+        isFullscreen: isLaunchFullscreen,
+        autoOpen: true
       });
     }
     updateDiscordPresence(
@@ -1890,6 +1942,7 @@ ipcMain.on('launch-minecraft', async (event, args) => {
       loaderName
     );
   } catch (err) {
+    activeLaunchProcess = null;
     console.error('Failed to launch', err);
     safeSend('launch-error', { message: err.message, version, loader: loaderName });
     updateDiscordPresence('In Main Menu', 'Idle in Launcher');
@@ -1905,12 +1958,50 @@ function isValidMcVersion(version) {
   // Snapshots (newer format): 1.21-rc1, etc.
   const releasePattern = /^\d+\.\d+(\.\d+)?$/;
   const snapshotPattern = /^\d{2}w\d{2}[a-z]$/i;
-  if (!releasePattern.test(version) && !snapshotPattern.test(version)) return false;
-  // Reject versions that are clearly not Minecraft: too high (MC hasn't reached 2.0),
-  // or versions that are clearly modpack versions (e.g. 26.1.2, 2.0.0)
-  const parts = version.split('.').map(Number);
-  if (parts[0] >= 2) return false; // No Minecraft 2.x or higher exists
-  return true;
+  return releasePattern.test(version) || snapshotPattern.test(version);
+}
+
+function versionExistsOnDisk(rootPath, version) {
+  if (!rootPath || !version) return false;
+  try {
+    const versionDir = path.join(rootPath, 'versions', version);
+    const versionJsonPath = path.join(versionDir, `${version}.json`);
+    const versionJarPath = path.join(versionDir, `${version}.jar`);
+    return fs.existsSync(versionDir) && (fs.existsSync(versionJsonPath) || fs.existsSync(versionJarPath));
+  } catch {
+    return false;
+  }
+}
+
+function detectMcVersionFromMods(modsPath) {
+  if (!modsPath || !fs.existsSync(modsPath)) return null;
+  const mods = fs.readdirSync(modsPath).filter(f => f.endsWith('.jar'));
+  const versionPatterns = [
+    /[_\-+]mc([0-9]+\.[0-9]+(?:\.[0-9]+)?)/i,
+    /[_\-+]([0-9]+\.[0-9]+\.[0-9]+)[_\-+.]/,
+    /[_\-+]([0-9]+\.[0-9]+\.[0-9]+)$/i,
+    /[_\-+]([0-9]+\.[0-9]+)[_\-+]/,
+  ];
+  const versionCounts = {};
+  for (const mod of mods) {
+    for (const pattern of versionPatterns) {
+      const match = mod.match(pattern);
+      if (match) {
+        const v = match[1];
+        if (isValidMcVersion(v)) {
+          versionCounts[v] = (versionCounts[v] || 0) + 1;
+        }
+        break;
+      }
+    }
+  }
+  const versions = Object.keys(versionCounts);
+  if (versions.length === 0) return null;
+  const filtered = versions.filter(v => !versions.some(other => other !== v && other.startsWith(v + '.')));
+  const sorted = filtered
+    .map(v => [v, versionCounts[v]])
+    .sort((a, b) => b[1] - a[1]);
+  return sorted.length > 0 ? sorted[0][0] : null;
 }
 
 async function ensureAuthlibInjector(rootPath) {
@@ -2855,7 +2946,14 @@ ipcMain.handle('scan-downloaded-versions', async () => {
         const versionJsonPath = path.join(versionsPath, versionId, `${versionId}.json`);
         
         if (fs.existsSync(versionJsonPath)) {
-          // Extract the actual game version from the directory name
+          let versionJson = null;
+          try {
+            let raw = fs.readFileSync(versionJsonPath, 'utf8');
+            if (raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1);
+            versionJson = JSON.parse(raw);
+          } catch (_) {}
+
+          // Extract the actual game version from the directory name or JSON
           let gameVersion = versionId;
           let loader = 'Vanilla';
           
@@ -2875,6 +2973,16 @@ ipcMain.handle('scan-downloaded-versions', async () => {
           const loaderMatch = versionId.match(/-([\d.]+)$/);
           if (loaderMatch) {
             gameVersion = loaderMatch[1];
+          }
+
+          // Prefer the explicit minecraft version inside the JSON if present
+          const jsonGameVersion =
+            versionJson?.inheritsFrom ||
+            versionJson?.minecraftVersion ||
+            versionJson?.jar ||
+            versionJson?.id;
+          if (jsonGameVersion && isValidMcVersion(String(jsonGameVersion))) {
+            gameVersion = String(jsonGameVersion);
           }
           
           downloadedVersions.push(gameVersion);
@@ -2897,11 +3005,24 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
     const versionDir = path.join(mcDataPath, 'versions', version);
     const versionJsonPath = path.join(versionDir, `${version}.json`);
     const versionJarPath = path.join(versionDir, `${version}.jar`);
+    const sendProgress = (status, percent) => {
+      try {
+        event.sender.send('download-progress', {
+          downloadId: `version:${version}`,
+          status,
+          percent,
+          item: version,
+        });
+      } catch {}
+    };
 
     // Check if already downloaded
     if (fs.existsSync(versionJsonPath) && fs.existsSync(versionJarPath) && fs.statSync(versionJarPath).size > 0) {
+      sendProgress(`Minecraft ${version} already downloaded`, 100);
+      try { event.sender.send('download-complete', `version:${version}`, { success: true, alreadyDownloaded: true }); } catch {}
       return { success: true, alreadyDownloaded: true };
     }
+    sendProgress(`Fetching Minecraft ${version} manifest...`, 5);
 
     // Fetch version manifest to get the version URL
     const manifest = await new Promise((resolve, reject) => {
@@ -2915,6 +3036,7 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
 
     const versionEntry = manifest.versions.find(v => v.id === version);
     if (!versionEntry) throw new Error(`Minecraft version ${version} not found`);
+    sendProgress(`Downloading Minecraft ${version} metadata...`, 15);
 
     // Download version JSON
     const versionData = await new Promise((resolve, reject) => {
@@ -2931,6 +3053,7 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
     // Download client JAR
     const clientUrl = versionData.downloads?.client?.url;
     if (!clientUrl) throw new Error(`No client download URL for Minecraft ${version}`);
+    sendProgress(`Downloading Minecraft ${version} client...`, 45);
 
     const downloadFile = (url, destPath) => new Promise((resolve, reject) => {
       const file = fs.createWriteStream(destPath);
@@ -2947,10 +3070,13 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
     });
 
     await downloadFile(clientUrl, versionJarPath);
+    sendProgress(`Finalizing Minecraft ${version}...`, 95);
 
+    try { event.sender.send('download-complete', `version:${version}`, { success: true, alreadyDownloaded: false }); } catch {}
     return { success: true, alreadyDownloaded: false };
   } catch (e) {
     console.error('[Download Version] Failed:', e);
+    try { event.sender.send('download-error', `version:${version}`, { message: e.message, error: e.message }); } catch {}
     return { success: false, error: e.message };
   }
 });
@@ -3456,10 +3582,6 @@ ipcMain.handle('scan-profiles', async () => {
       if (!mcVersion || mcVersion === 'Unknown') {
         const detected = detectVersionFromMods(modsPath);
         mcVersion = detected && isValidMcVersion(detected) ? detected : 'Unknown';
-      }
-      // Also validate existing mcVersion from profile.json — reject bad values
-      if (mcVersion && mcVersion !== 'Unknown' && !isValidMcVersion(mcVersion)) {
-        mcVersion = 'Unknown';
       }
       if (!loader || loader === 'Vanilla') {
         loader = detectLoaderFromMods(modsPath)

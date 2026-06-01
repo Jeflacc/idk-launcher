@@ -1972,6 +1972,7 @@ input[type="checkbox"]:checked + .switch::after {
     min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
+    flex-wrap: wrap;
 }
 
 .mods-header-actions::-webkit-scrollbar {
@@ -2011,6 +2012,8 @@ input[type="checkbox"]:checked + .switch::after {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-height: 30px;
+    box-sizing: border-box;
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -2568,6 +2571,12 @@ input[type="checkbox"]:checked + .switch::after {
     font-weight: 700;
     font-variant: small-caps;
     text-transform: lowercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    box-sizing: border-box;
+    white-space: nowrap;
 }
 
 .mp-action-btn.browse:hover {
@@ -3366,7 +3375,9 @@ input[type="checkbox"]:checked + .switch::after {
     overflow: hidden;
     transition: all 0.2s ease;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 84px;
 }
 
 .trending-mp-card:hover {
@@ -3377,36 +3388,41 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .trending-mp-thumb {
-    width: 100%;
-    height: 90px;
-    background-size: cover;
+    width: 84px;
+    min-width: 84px;
+    height: auto;
+    object-fit: cover;
+    background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.24), rgba(0, 0, 0, 0.35));
     background-position: center;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-size: cover;
+    flex-shrink: 0;
 }
 
 .trending-mp-info {
-    padding: 12px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-width: 0;
+    justify-content: center;
 }
 
 .trending-mp-info strong {
     font-size: 13px;
     color: white;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 .trending-mp-info p {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
-    line-height: 1.4;
-    margin-bottom: 10px;
+    line-height: 1.25;
+    margin-bottom: 6px;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -3424,6 +3440,17 @@ input[type="checkbox"]:checked + .switch::after {
     padding: 1px 6px;
     border-radius: 3px;
     color: var(--text-muted);
+}
+
+.trending-mp-thumb-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.75);
+    font-family: var(--font-title);
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
 /* Modpack creation modal */
@@ -3655,6 +3682,19 @@ input[type="checkbox"]:checked + .switch::after {
     pointer-events: all;
 }
 
+.launch-overlay-card {
+    width: min(560px, calc(100vw - 24px));
+    min-height: min(380px, calc(100vh - 24px));
+    background: rgba(10, 10, 12, 0.94);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.18);
+    border-radius: 12px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
 .launch-spinner-gif {
     width: 80px;
     height: 80px;
@@ -3665,18 +3705,19 @@ input[type="checkbox"]:checked + .switch::after {
 
 .launch-status {
     font-family: var(--font-title);
-    font-size: 17px;
+    font-size: 13px;
     font-weight: 700;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     color: white;
     letter-spacing: 0.3px;
 }
 
 .launch-bar {
-    width: 280px;
-    height: 3px;
+    width: 100%;
+    max-width: 420px;
+    height: 8px;
     background: rgba(255, 255, 255, 0.08);
-    border-radius: 2px;
+    border-radius: 999px;
     overflow: hidden;
 }
 
@@ -3685,7 +3726,7 @@ input[type="checkbox"]:checked + .switch::after {
     width: 0%;
     background: linear-gradient(90deg, var(--theme-accent), var(--theme-accent-bright));
     transition: width 0.25s ease;
-    border-radius: 2px;
+    border-radius: 999px;
 }
 
 /* =========================================================
@@ -4806,6 +4847,54 @@ input[type="checkbox"]:checked + .switch::after {
     .news-grid {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
+
+    .modpacks-sidebar {
+        width: 250px;
+    }
+
+    .modpack-content-header {
+        gap: 16px;
+    }
+
+    .modpack-header-actions {
+        gap: 8px;
+    }
+
+    .mp-wizard-columns {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .mp-wizard-header {
+        flex-wrap: wrap;
+        gap: 6px 10px;
+    }
+
+    .mp-wizard-header h3 {
+        font-size: 12px;
+        line-height: 1.05;
+    }
+
+    .mp-wizard-note {
+        white-space: normal;
+        text-align: left;
+        max-width: 100%;
+        margin-left: 0;
+        line-height: 1.25;
+    }
+
+    .mp-wizard-buttons .mp-action-btn.browse {
+        flex-basis: 100%;
+    }
+}
+
+
+body[data-window-mode="restored"] .mp-wizard-buttons .mp-action-btn.browse {
+    flex-basis: 100%;
+}
+
+body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
+    min-width: 100%;
 }
 
 @media (max-width: 1100px) {
@@ -4862,6 +4951,34 @@ input[type="checkbox"]:checked + .switch::after {
     .main-hero-banner {
         height: 420px;
         padding: 20px;
+    }
+
+    .modpacks-sidebar {
+        width: 220px;
+    }
+
+    .modpack-content-header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .modpack-content-header > div:first-child {
+        flex: 1 1 100%;
+    }
+
+    .modpack-header-actions {
+        width: 100%;
+        align-items: flex-start;
+    }
+
+    .modpack-header-actions .mp-action-icon-row {
+        justify-content: flex-end;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .modpack-header-actions .mp-action-btn.play {
+        min-width: 100%;
     }
 
     .details-content {
@@ -4998,8 +5115,116 @@ input[type="checkbox"]:checked + .switch::after {
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
+    .mp-wizard-header {
+        align-items: flex-start;
+    }
+
+    .mp-wizard-note {
+        max-width: none;
+        text-align: left;
+    }
+
+    .mp-wizard-header h3 {
+        font-size: 11px;
+    }
+
     .modpack-detail {
         width: 100%;
+    }
+
+    .modpack-item {
+        padding: 6px 10px;
+        margin: 2px 6px;
+        gap: 8px;
+    }
+
+    .mp-scroll-area {
+        padding: 16px;
+    }
+
+    .browser-sidebar {
+        width: 180px;
+    }
+
+    .mod-browser-header {
+        padding: 8px 12px;
+        gap: 6px;
+    }
+
+    .mod-browser-header-actions {
+        flex: 1;
+        min-width: 0;
+        justify-content: flex-end;
+    }
+
+    .mod-browser-header h3 {
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+
+    .provider-pill-group {
+        overflow-x: auto;
+        scrollbar-width: none;
+        flex-shrink: 1;
+        min-width: 0;
+    }
+
+    .provider-pill {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .mod-browser-close {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+
+    .mod-browser-results {
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .mod-result-card {
+        padding: 8px;
+        gap: 8px;
+        min-height: 0;
+    }
+
+    .mod-result-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .mod-result-info strong {
+        font-size: 12px;
+    }
+
+    .add-mod-btn {
+        padding: 4px 10px;
+        font-size: 10px;
+    }
+
+    .browser-search-bar {
+        padding: 8px 12px;
+        gap: 6px;
+    }
+
+    .browser-pagination-bar {
+        font-size: 10px;
+    }
+
+    .browser-filter-section {
+        padding: 6px 10px;
+    }
+
+    .browser-filter-pill {
+        padding: 3px 7px;
+        font-size: 9px;
+    }
+
+    .browser-filter-options {
+        gap: 4px;
     }
 
     .trending-modpacks-grid {
@@ -5093,16 +5318,106 @@ input[type="checkbox"]:checked + .switch::after {
         box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
     }
 
+    .mp-scroll-area {
+        padding: 10px;
+    }
+
     .mods-page-header {
-        padding: 14px 12px 10px;
+        flex-wrap: wrap;
+        padding: 8px 6px;
+        gap: 4px;
     }
 
     .mods-page-header h2.view-title {
-        font-size: 18px;
+        font-size: 14px;
     }
 
     .mods-header-actions {
+        gap: 3px;
+    }
+
+    .create-modpack-btn {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+
+    .modpack-item {
+        padding: 3px 6px;
+        margin: 1px 3px;
+        gap: 5px;
+    }
+
+    .mp-item-info strong {
+        font-size: 11px;
+    }
+
+    .mod-browser-header {
+        padding: 6px 6px;
         gap: 4px;
+    }
+
+    .mod-browser-header h3 {
+        font-size: 11px;
+    }
+
+    .mod-browser-header-actions {
+        gap: 4px;
+    }
+
+    .provider-pill {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+
+    .mod-browser-close {
+        width: 22px;
+        height: 22px;
+    }
+
+    .mod-browser-results {
+        padding: 6px;
+        gap: 6px;
+    }
+
+    .mod-result-card {
+        padding: 6px;
+        gap: 6px;
+    }
+
+    .mod-result-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .add-mod-btn {
+        font-size: 9px;
+        padding: 3px 8px;
+    }
+
+    .mod-result-info strong {
+        font-size: 11px;
+    }
+
+    .browser-sidebar {
+        width: 140px;
+    }
+
+    .browser-search-bar {
+        padding: 6px 8px;
+        gap: 4px;
+    }
+
+    .browser-filter-section {
+        padding: 4px 8px;
+    }
+
+    .browser-filter-pill {
+        padding: 2px 6px;
+        font-size: 8px;
+    }
+
+    .browser-filter-options {
+        gap: 3px;
     }
 
     .mp-wizard-columns {
@@ -8089,8 +8404,8 @@ body[data-launcher-performance="balanced"] .mc-logo {
 .profile-stat-mini {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 6px;
+    padding: 8px 10px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     background: linear-gradient(
@@ -8102,6 +8417,8 @@ body[data-launcher-performance="balanced"] .mc-logo {
         inset 0 1px 0 rgba(255, 255, 255, 0.06),
         0 2px 8px rgba(0, 0, 0, 0.2);
     transition: all 0.2s ease;
+    flex: 1 1 calc(50% - 3px);
+    min-width: 0;
 }
 
 .profile-stat-mini:hover {
@@ -9555,9 +9872,6 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     margin: 0;
     color: rgba(255, 255, 255, 0.9);
     font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     flex: 1;
     min-width: 0;
 }
@@ -9578,10 +9892,11 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     display: flex;
     gap: 10px;
     padding: 10px 18px 16px;
+    flex-wrap: wrap;
 }
 
 .mp-wizard-buttons .mp-action-btn.browse {
-    flex: 1;
+    flex: 1 1 160px;
     font-size: 12px;
     padding: 8px 14px;
     border-radius: 6px;

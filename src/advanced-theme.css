@@ -937,22 +937,25 @@ body.ui-advanced .news-card,
 body.ui-advanced .stat-card,
 body.ui-advanced .trending-mp-card,
 body.ui-advanced .mod-result-card {
-    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    min-height: 68px;
     background: #08080c;
     border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
     border-radius: 6px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    padding: 6px 10px;
+    padding: 8px 10px;
+    gap: 10px;
 }
 
 body.ui-advanced .installed-mod-card {
-    min-height: 0;
+    min-height: 68px;
     background: #08080c;
     border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
     border-radius: 6px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    padding: 6px 10px;
-    gap: 8px;
+    padding: 8px 10px;
+    gap: 10px;
 }
 
 body.ui-advanced .news-card:hover,
@@ -975,22 +978,51 @@ body.ui-advanced .mod-result-info strong {
     font-weight: 700;
     color: #fff;
     letter-spacing: 0;
+    line-height: 1.15;
 }
 
 body.ui-advanced .mod-result-info > span {
-    font-size: 11px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    font-size: 10px;
     color: rgba(255, 255, 255, 0.55);
-    line-height: 1.35;
-    margin-top: 2px;
+    line-height: 1.2;
+    margin-top: 1px;
+    overflow: hidden;
+    max-height: 1.2em;
 }
 
 body.ui-advanced .mod-result-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     margin-top: 5px;
     padding-top: 5px;
     border-top: 1px solid rgba(var(--theme-accent-rgb), 0.1);
     font-size: 10px;
     color: rgba(255, 255, 255, 0.4);
     font-family: var(--font-title);
+    gap: 6px 10px;
+    min-width: 0;
+}
+
+body.ui-advanced .mod-result-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+body.ui-advanced .mod-result-card .add-mod-btn {
+    align-self: center;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+body.ui-advanced .mod-result-card {
+    width: 100%;
 }
 
 body.ui-advanced .news-img {
@@ -1062,6 +1094,23 @@ body.ui-advanced .profile-page-content {
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
 }
 
+body.ui-advanced .settings-content-wrapper {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 18px 24px 22px;
+    background: rgba(8, 8, 12, 0.86);
+}
+
+body.ui-advanced .settings-tab-bar {
+    margin-bottom: 18px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+body.ui-advanced .settings-tab-bar::-webkit-scrollbar {
+    display: none;
+}
+
 body.ui-advanced .view-title,
 body.ui-advanced .mods-page-header h2.view-title {
     font-size: 14px;
@@ -1103,6 +1152,11 @@ body.ui-advanced .provider-pill,
 body.ui-advanced .mem-preset-btn,
 body.ui-advanced .download-control-btn,
 body.ui-advanced .friends-share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    box-sizing: border-box;
     border-radius: calc(var(--theme-radius) * 0.4);
     border: 1px solid rgba(var(--theme-accent-rgb), 0.42);
     background: rgba(var(--theme-accent-rgb), 0.18);
@@ -1113,6 +1167,11 @@ body.ui-advanced .friends-share-btn {
     font-size: 11px;
     letter-spacing: 0.8px;
     text-transform: uppercase;
+    padding: 5px 10px;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 0;
 }
 
 body.ui-advanced .create-modpack-btn:hover,
@@ -1275,9 +1334,9 @@ body.ui-advanced .mod-browser-results {
 
 body.ui-advanced .installed-mod-card,
 body.ui-advanced .mod-result-card {
-    min-height: 0;
-    padding: 6px 10px;
-    gap: 8px;
+    min-height: 68px;
+    padding: 8px 10px;
+    gap: 10px;
 }
 
 
@@ -1315,11 +1374,29 @@ body.ui-advanced .mod-browser {
 
 body.ui-advanced .mod-browser-header {
     border-color: rgba(var(--theme-accent-rgb), 0.2);
+    min-width: 0;
 }
 
 body.ui-advanced .mod-browser-header-actions .provider-pill-group {
     border-color: rgba(var(--theme-accent-rgb), 0.25);
     background: rgba(var(--theme-accent-rgb), 0.08);
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+body.ui-advanced .mod-browser-header-actions .provider-pill-group::-webkit-scrollbar {
+    display: none;
+}
+
+body.ui-advanced .mod-browser-header-actions {
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow: hidden;
 }
 
 /* Browser body */
@@ -1345,12 +1422,20 @@ body.ui-advanced .browser-filter-title {
 }
 
 body.ui-advanced .browser-filter-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
     background: rgba(var(--theme-accent-rgb), 0.06);
     border: 1px solid rgba(var(--theme-accent-rgb), 0.18);
     color: rgba(255, 255, 255, 0.55);
     border-radius: calc(var(--theme-radius) * 0.3);
     font-family: var(--font-title);
     letter-spacing: 0.5px;
+    line-height: 1;
+    padding: 4px 9px;
+    box-sizing: border-box;
+    white-space: nowrap;
 }
 
 body.ui-advanced .browser-filter-pill:hover {
@@ -1369,6 +1454,8 @@ body.ui-advanced .browser-filter-section .clean-select {
     background: rgba(var(--theme-accent-rgb), 0.06);
     border: 1px solid rgba(var(--theme-accent-rgb), 0.18);
     border-radius: calc(var(--theme-radius) * 0.3);
+    min-height: 28px;
+    box-sizing: border-box;
 }
 
 body.ui-advanced .browser-filter-clear {
@@ -1376,6 +1463,8 @@ body.ui-advanced .browser-filter-clear {
     color: rgba(255, 255, 255, 0.45);
     border-radius: calc(var(--theme-radius) * 0.3);
     font-family: var(--font-title);
+    min-height: 28px;
+    box-sizing: border-box;
 }
 
 body.ui-advanced .browser-filter-clear:hover {
@@ -1388,6 +1477,46 @@ body.ui-advanced .browser-results {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+body.ui-advanced .browser-filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 0;
+}
+
+body.ui-advanced .mods-header-actions {
+    flex-wrap: wrap;
+    overflow: visible;
+}
+
+body.ui-advanced .mp-wizard-buttons {
+    flex-wrap: wrap;
+}
+
+body.ui-advanced .mp-wizard-buttons .mp-action-btn.browse {
+    flex: 1 1 160px;
+    min-width: 0;
+}
+
+body.ui-advanced .browser-pagination-bar {
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+body.ui-advanced .browser-page-btn,
+body.ui-advanced .browser-page-info,
+body.ui-advanced .browser-page-btn-lg,
+body.ui-advanced .browser-page-info-lg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    box-sizing: border-box;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 /* Cyberpunk mods manager enhancements */
@@ -1599,6 +1728,7 @@ body.ui-advanced .profile-main-stage {
     border-bottom: none;
     background: var(--theme-bg);
     box-shadow: none;
+    overflow: hidden;
 }
 
 body.ui-advanced .profile-main-stage::before,
@@ -1612,8 +1742,8 @@ body.ui-advanced .profile-stage-grid::after {
 body.ui-advanced .profile-stage-character {
     align-items: center;
     justify-content: flex-start;
-    padding: 40px 24px 24px;
-    gap: 20px;
+    padding: 34px 24px 20px;
+    gap: 16px;
     flex-direction: column;
 }
 
@@ -1633,7 +1763,7 @@ body.ui-advanced .profile-stage-heading::before {
 body.ui-advanced .profile-character-name {
     text-align: center;
     font-family: var(--font-title);
-    font-size: 32px;
+    font-size: clamp(24px, 3vw, 34px);
     font-weight: 900;
     letter-spacing: 2.4px;
     text-transform: uppercase;
@@ -1646,8 +1776,8 @@ body.ui-advanced .profile-character-name {
 body.ui-advanced .profile-skin-viewer-wrapper {
     flex: 1 1 auto;
     height: auto;
-    min-height: 380px;
-    max-height: calc(100vh - 280px);
+    min-height: 320px;
+    max-height: calc(100vh - 260px);
     width: 100%;
     display: flex;
     align-items: center;
@@ -1668,8 +1798,8 @@ body.ui-advanced .profile-stage-bar {
 }
 
 body.ui-advanced .profile-stage-bar-combined {
-    height: 48px;
-    width: 280px;
+    height: 46px;
+    width: 260px;
     padding: 0;
     gap: 0;
     border-radius: calc(var(--theme-radius) * 1.2);
@@ -1715,13 +1845,13 @@ body.ui-advanced .profile-stage-bar-export-icon:hover {
 body.ui-advanced .profile-sidebar {
     position: relative;
     overflow-y: auto;
-    padding: 24px 40px;
+    padding: 18px 20px 20px;
     display: flex;
     flex-direction: column;
     border-left: 1px solid rgba(255, 255, 255, 0.08);
     background: var(--theme-bg);
     box-shadow: none;
-    gap: 24px;
+    gap: 16px;
 }
 
 body.ui-advanced .profile-section-title {
@@ -1729,7 +1859,7 @@ body.ui-advanced .profile-section-title {
     padding: 0;
     position: relative;
     font-family: var(--font-main);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 900;
     color: #8b95a8;
     text-transform: uppercase;
@@ -1742,15 +1872,16 @@ body.ui-advanced .profile-stat-mini-list {
     display: flex;
     flex-direction: row;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 body.ui-advanced .profile-stat-mini {
-    flex: 1 1 0;
+    flex: 1 1 calc(50% - 4px);
     min-width: 0;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 14px 10px;
+    gap: 6px;
+    padding: 12px 10px;
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.02);
@@ -1796,7 +1927,7 @@ body.ui-advanced .profile-stat-mini-label {
 body.ui-advanced .profile-actions-section {
     position: relative;
     padding: 0;
-    gap: 8px;
+    gap: 6px;
     flex: 0 0 auto;
     min-height: 0;
     border: 0;
@@ -1805,8 +1936,8 @@ body.ui-advanced .profile-actions-section {
 }
 
 body.ui-advanced .profile-quick-action {
-    min-height: 40px;
-    padding: 10px 18px;
+    min-height: 38px;
+    padding: 10px 14px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     color: #b0b8c8;
@@ -1852,7 +1983,7 @@ body.ui-advanced .profile-friends-section {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 body.ui-advanced .profile-friends-list {
@@ -2292,7 +2423,7 @@ body.ui-advanced .profile-stat-mini:nth-child(2) {
 }
 
 body.ui-advanced .profile-stat-mini {
-    flex: 1 1 0;
+    flex: 1 1 calc(50% - 4px);
     min-width: 0;
     flex-direction: row;
     align-items: center;
