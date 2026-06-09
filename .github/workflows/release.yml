@@ -9,19 +9,27 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            platform: win
-          - os: macos-latest
-            platform: mac
-          - os: ubuntu-latest
-            platform: linux
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
+      - name: Delete Old Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete ${{ github.ref_name }} --yes || true
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create ${{ github.ref_name }} --title "${{ github.ref_name }}" --generate-notes
+
+  build-windows:
+    name: Build (Windows x64)
+    needs: create-release
+    runs-on: windows-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -35,77 +43,88 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build Web Assets
+      - name: Build
         run: npm run build
 
-      - name: Build Electron Binaries
-        run: npx electron-builder --publish never
+      - name: Build Installer
+        run: npx electron-builder --win --publish never
 
-      - name: Prepare Windows Release
-        if: matrix.platform == 'win'
+      - name: Upload to Release
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $version = (Get-Content package.json | ConvertFrom-Json).version
-          New-Item -ItemType Directory -Force -Path release | Out-Null
-          Get-ChildItem dist-electron -File | Where-Object { $_.Name -match 'Setup.*\.exe$' -and $_.Name -notmatch 'uninstaller' } | ForEach-Object {
-            Copy-Item $_.FullName "release\IDK-Launcher-$version-Windows-x64.exe"
+          $exe = Get-ChildItem dist-electron -File | Where-Object { $_.Name -match 'Setup.*\.exe$' -and $_.Name -notmatch 'uninstaller' } | Select-Object -First 1
+          if ($exe) {
+            $dest = "IDK-Launcher-$version-Windows-x64.exe"
+            Copy-Item $exe.FullName $dest
+            gh release upload ${{ github.ref_name }} $dest --clobber
           }
 
-      - name: Prepare macOS Release
-        if: matrix.platform == 'mac'
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          mkdir -p release
-          for f in dist-electron/*.dmg; do
-            [ -f "$f" ] && cp "$f" "release/IDK-Launcher-$VERSION-macOS.dmg"
-          done
-
-      - name: Prepare Linux Release
-        if: matrix.platform == 'linux'
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          mkdir -p release
-          for f in dist-electron/*.AppImage; do
-            [ -f "$f" ] && cp "$f" "release/IDK-Launcher-$VERSION-Linux-x64.AppImage"
-          done
-          for f in dist-electron/*.deb; do
-            [ -f "$f" ] && cp "$f" "release/IDK-Launcher-$VERSION-Linux-x64.deb"
-          done
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.platform }}-build
-          path: release/*
-          retention-days: 5
-
-  release:
-    name: Create GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-
+  build-mac:
+    name: Build (macOS)
+    needs: create-release
+    runs-on: macos-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Download All Artifacts
-        uses: actions/download-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: artifacts
+          node-version: 20
+          cache: 'npm'
 
-      - name: List Release Files
-        run: find artifacts -type f
+      - name: Install Dependencies
+        run: npm ci
 
-      - name: Delete Existing Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release delete ${{ github.ref_name }} --yes --cleanup-tag || true
+      - name: Build
+        run: npm run build
 
-      - name: Create GitHub Release
+      - name: Build DMG
+        run: npx electron-builder --mac --publish never
+
+      - name: Upload to Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.ref_name }} \
-            --title "${{ github.ref_name }}" \
-            --generate-notes \
-            artifacts/*/*
+          VERSION=$(node -p "require('./package.json').version")
+          for f in dist-electron/*.dmg; do
+            [ -f "$f" ] && cp "$f" "IDK-Launcher-$VERSION-macOS.dmg" && gh release upload ${{ github.ref_name }} "IDK-Launcher-$VERSION-macOS.dmg" --clobber
+          done
+
+  build-linux:
+    name: Build (Linux x64)
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Build Packages
+        run: npx electron-builder --linux --publish never
+
+      - name: Upload to Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          for f in dist-electron/*.AppImage; do
+            [ -f "$f" ] && cp "$f" "IDK-Launcher-$VERSION-Linux-x64.AppImage" && gh release upload ${{ github.ref_name }} "IDK-Launcher-$VERSION-Linux-x64.AppImage" --clobber
+          done
+          for f in dist-electron/*.deb; do
+            [ -f "$f" ] && cp "$f" "IDK-Launcher-$VERSION-Linux-x64.deb" && gh release upload ${{ github.ref_name }} "IDK-Launcher-$VERSION-Linux-x64.deb" --clobber
+          done
