@@ -37,7 +37,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
   getElybyAuthData: () => ipcRenderer.invoke('get-elyby-auth-data'),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
-  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate:   () => ipcRenderer.invoke('update:download'),
+  installUpdate:    () => ipcRenderer.invoke('update:install'),
+  onUpdateAvailable:  (cb) => ipcRenderer.on('update-available',  (_e, data) => cb(data)),
+  onUpdateProgress:   (cb) => ipcRenderer.on('update-progress',   (_e, data) => cb(data)),
+  onUpdateDownloaded: (cb) => ipcRenderer.on('update-downloaded', (_e, data) => cb(data)),
+  onUpdateError:      (cb) => ipcRenderer.on('update-error',      (_e, data) => cb(data)),
 
   // Mod / resourcepack / shader management
   installMod:          (data) => ipcRenderer.invoke('install-mod',         data),

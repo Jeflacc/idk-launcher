@@ -83,6 +83,7 @@
   "dependencies": {
     "cross-env": "^10.1.0",
     "discord-rpc": "^4.0.1",
+    "electron-updater": "^6.8.9",
     "jszip": "^3.10.1",
     "minecraft-launcher-core": "^3.18.2",
     "skinview3d": "^3.4.2",

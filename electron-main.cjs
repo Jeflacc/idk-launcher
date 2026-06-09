@@ -1321,42 +1321,96 @@ ipcMain.handle('fetch-image-base64', async (event, imageUrl) => {
   });
 });
 
-// Auto Update Check (query latest GitHub release)
-ipcMain.handle('check-for-updates', async () => {
-  return new Promise((resolve) => {
-    const currentVersion = app.getVersion();
-    const repo = 'Jeflacc/idk-launcher';
-    const url = `https://api.github.com/repos/${repo}/releases/latest`;
+// Auto Update — electron-updater with GitHub provider
+const { autoUpdater } = require('electron-updater');
+autoUpdater.logger = { info: (m) => console.log('[AutoUpdater]', m), warn: (m) => console.warn('[AutoUpdater]', m), error: (m) => console.error('[AutoUpdater]', m) };
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = true;
 
-    https.get(url, { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          if (res.statusCode !== 200) {
-            return resolve({ updateAvailable: false, error: 'Status ' + res.statusCode });
-          }
-          const json = JSON.parse(data);
-          const latestVersion = json.tag_name.replace(/^v/, '');
-          const cleanCurrent = currentVersion.replace(/^v/, '');
+let updateDownloaded = false;
+let updateVersionInfo = null;
 
-          const updateAvailable = isNewerVersion(cleanCurrent, latestVersion);
-
-          resolve({
-            updateAvailable,
-            currentVersion: cleanCurrent,
-            latestVersion,
-            releaseUrl: json.html_url,
-            releaseNotes: json.body || ''
-          });
-        } catch (e) {
-          resolve({ updateAvailable: false, error: e.message });
-        }
-      });
-    }).on('error', (e) => {
-      resolve({ updateAvailable: false, error: e.message });
+autoUpdater.on('update-available', (info) => {
+  console.log(`[AutoUpdater] Update available: ${info.version}`);
+  updateVersionInfo = info;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-available', {
+      currentVersion: app.getVersion(),
+      latestVersion: info.version,
+      releaseNotes: info.releaseNotes || ''
     });
-  });
+  }
+});
+
+autoUpdater.on('update-not-available', () => {
+  console.log('[AutoUpdater] No update available');
+  updateVersionInfo = null;
+});
+
+autoUpdater.on('download-progress', (progress) => {
+  console.log(`[AutoUpdater] Download progress: ${Math.round(progress.percent)}%`);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-progress', {
+      percent: Math.round(progress.percent),
+      bytesPerSecond: progress.bytesPerSecond,
+      transferred: progress.transferred,
+      total: progress.total
+    });
+  }
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  console.log(`[AutoUpdater] Update downloaded: ${info.version}`);
+  updateDownloaded = true;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-downloaded', { version: info.version });
+  }
+});
+
+autoUpdater.on('error', (err) => {
+  console.error('[AutoUpdater] Error:', err.message);
+  updateVersionInfo = null;
+  updateDownloaded = false;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-error', { message: err.message });
+  }
+});
+
+ipcMain.handle('update:check', async () => {
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    if (result && result.updateInfo) {
+      const info = result.updateInfo;
+      return {
+        updateAvailable: true,
+        currentVersion: app.getVersion(),
+        latestVersion: info.version,
+        releaseNotes: info.releaseNotes || ''
+      };
+    }
+    return { updateAvailable: false, currentVersion: app.getVersion() };
+  } catch (e) {
+    console.error('[AutoUpdater] Check failed:', e.message);
+    return { updateAvailable: false, error: e.message, currentVersion: app.getVersion() };
+  }
+});
+
+ipcMain.handle('update:download', async () => {
+  if (updateDownloaded) return { alreadyDownloaded: true };
+  if (!updateVersionInfo) return { error: 'No update available to download' };
+  try {
+    await autoUpdater.downloadUpdate();
+    return { success: true };
+  } catch (e) {
+    console.error('[AutoUpdater] Download failed:', e.message);
+    return { error: e.message };
+  }
+});
+
+ipcMain.handle('update:install', () => {
+  if (updateDownloaded) {
+    autoUpdater.quitAndInstall(false, true);
+  }
 });
 
 function isNewerVersion(current, latest) {

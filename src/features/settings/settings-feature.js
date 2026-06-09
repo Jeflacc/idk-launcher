@@ -1176,10 +1176,9 @@ export function initSettingsFeature({ switchView }) {
         if (window.electronAPI?.checkForUpdates) {
           const result = await window.electronAPI.checkForUpdates();
           if (result.updateAvailable) {
-            actions.showWarningToast(`Update available: ${result.latestVersion}`);
-            if (confirm(`A new version (${result.latestVersion}) is available. Open the release page?`)) {
-              window.electronAPI.openExternal(result.releaseUrl);
-            }
+            const modal = document.getElementById("update-modal");
+            if (modal) modal.classList.add("active");
+            else actions.showWarningToast(`Update available: ${result.latestVersion}`);
           } else {
             actions.showWarningToast('You are running the latest version!');
           }
@@ -1221,10 +1220,9 @@ export function initSettingsFeature({ switchView }) {
         if (window.electronAPI?.checkForUpdates) {
           const result = await window.electronAPI.checkForUpdates();
           if (result.updateAvailable) {
-            actions.showWarningToast(`Update available: ${result.latestVersion}`);
-            if (confirm(`A new version (${result.latestVersion}) is available. Open the release page?`)) {
-              window.electronAPI.openExternal(result.releaseUrl);
-            }
+            const modal = document.getElementById("update-modal");
+            if (modal) modal.classList.add("active");
+            else actions.showWarningToast(`Update available: ${result.latestVersion}`);
           } else {
             actions.showWarningToast("You are running the latest version!");
           }

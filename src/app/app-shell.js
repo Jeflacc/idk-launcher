@@ -1654,13 +1654,23 @@ export function renderAppShell() {
       <div class="modal-icon update-icon">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
       </div>
-      <h3>New Update Available!</h3>
+      <h3 id="update-modal-title">New Update Available!</h3>
       <p id="update-version-info">A new update is available.</p>
       <div class="update-notes-container" id="update-notes">
         <!-- Injected release notes -->
       </div>
+      <div id="update-progress-container" style="display:none;width:100%;margin-top:15px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--text-muted);">
+          <span id="update-progress-text">Downloading...</span>
+          <span id="update-progress-percent">0%</span>
+        </div>
+        <div style="width:100%;height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+          <div id="update-progress-bar" style="height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width 0.3s;"></div>
+        </div>
+      </div>
       <div style="display:flex;gap:10px;margin-top:20px;width:100%;">
-        <button class="submit-btn" id="btn-download-update" style="flex:1;">Get Update</button>
+        <button class="submit-btn" id="btn-download-update" style="flex:1;">Download & Install</button>
+        <button class="submit-btn" id="btn-install-update" style="flex:1;display:none;">Install & Restart</button>
         <button class="modal-btn" id="btn-ignore-update" style="flex:1;">Later</button>
       </div>
     </div>
