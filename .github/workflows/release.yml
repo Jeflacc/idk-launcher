@@ -9,8 +9,18 @@ permissions:
   contents: write
 
 jobs:
+  cleanup-release:
+    name: Cleanup Existing Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete existing release if present
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete ${{ github.ref_name }} --yes --cleanup-tag=false || true
+
   build:
     name: Build (${{ matrix.os }})
+    needs: cleanup-release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
