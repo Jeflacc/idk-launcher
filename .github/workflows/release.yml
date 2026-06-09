@@ -46,11 +46,9 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Content package.json | ConvertFrom-Json).version
-          $release = "release"
-          New-Item -ItemType Directory -Force -Path $release | Out-Null
+          New-Item -ItemType Directory -Force -Path release | Out-Null
           Get-ChildItem dist-electron -File | Where-Object { $_.Name -match 'Setup.*\.exe$' -and $_.Name -notmatch 'uninstaller' } | ForEach-Object {
-            Copy-Item $_.FullName "$release\IDK-Launcher-$version-Windows-x64.exe"
-            Write-Host "Copied: $($_.Name) -> IDK-Launcher-$version-Windows-x64.exe"
+            Copy-Item $_.FullName "release\IDK-Launcher-$version-Windows-x64.exe"
           }
 
       - name: Prepare macOS Release
@@ -59,7 +57,7 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           mkdir -p release
           for f in dist-electron/*.dmg; do
-            [ -f "$f" ] && cp "$f" "release/IDK-Launcher-$VERSION-macOS.dmg" && echo "Copied: $(basename $f)"
+            [ -f "$f" ] && cp "$f" "release/IDK-Launcher-$VERSION-macOS.dmg"
           done
 
       - name: Prepare Linux Release
@@ -68,10 +66,10 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           mkdir -p release
           for f in dist-electron/*.AppImage; do
-            [ -f "$f" ] && cp "$f" "release/IDK-Launcher-$VERSION-Linux-x64.AppImage" && echo "Copied: $(basename $f)"
+            [ -f "$f" ] && cp "$f" "release/IDK-Launcher-$VERSION-Linux-x64.AppImage"
           done
           for f in dist-electron/*.deb; do
-            [ -f "$f" ] && cp "$f" "release/IDK-Launcher-$VERSION-Linux-x64.deb" && echo "Copied: $(basename $f)"
+            [ -f "$f" ] && cp "$f" "release/IDK-Launcher-$VERSION-Linux-x64.deb"
           done
 
       - name: Upload Artifacts
@@ -87,17 +85,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          merge-multiple: true
 
       - name: List Release Files
-        run: ls -la artifacts/
+        run: find artifacts -type f
+
+      - name: Delete Existing Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete ${{ github.ref_name }} --yes --cleanup-tag || true
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          files: artifacts/*
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} \
+            --title "${{ github.ref_name }}" \
+            --generate-notes \
+            artifacts/*/*
