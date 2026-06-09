@@ -12,7 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // All IPC listeners — registered once at startup
   onLaunchProgress:  (cb) => ipcRenderer.on('launch-progress',  (_e, data)  => cb(data)),
   onGameLaunched:    (cb) => ipcRenderer.on('game-launched',    ()          => cb()),
-  onLaunchClosed:    (cb) => ipcRenderer.on('launch-closed',    ()          => cb()),
+  onLaunchClosed:    (cb) => ipcRenderer.on('launch-closed',    (_e, data)  => cb(data)),
   onLaunchError:     (cb) => ipcRenderer.on('launch-error',     (_e, error) => cb(error)),
   onLaunchWarning:   (cb) => ipcRenderer.on('launch-warning',   (_e, msg)   => cb(msg)),
   onClearJavaPath:   (cb) => ipcRenderer.on('clear-java-path',  ()          => cb()),
@@ -22,7 +22,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onOverlayInit:     (cb) => ipcRenderer.on('overlay-init',     (_e, data)  => cb(data)),
   onToggleOverlay:   (cb) => ipcRenderer.on('toggle-overlay-ui',(_e, state) => cb(state)),
   resumeGame:        ()   => ipcRenderer.send('resume-game'),
-  getOverlayData:    ()   => ipcRenderer.invoke('get-overlay-data'),
 
   openMinecraftFolder: () => ipcRenderer.send('open-minecraft-folder'),
   selectMinecraftFolder: () => ipcRenderer.invoke('select-minecraft-folder'),
@@ -36,6 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   downloadVersion: (data) => ipcRenderer.invoke('download-version', data),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
+  getElybyAuthData: () => ipcRenderer.invoke('get-elyby-auth-data'),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
 
@@ -57,7 +57,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   launchModpack: (args) => ipcRenderer.send('launch-modpack', args),
   toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
   scanProfiles: () => ipcRenderer.invoke('scan-profiles'),
-  deleteModpackFolder: (data) => ipcRenderer.invoke('delete-modpack-folder', data),
 
   // Overlay System IPC Bridge
   setIdkConnectData: (data) => ipcRenderer.send('set-idk-connect-data', data),
@@ -69,17 +68,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   hideOverlayWindow: () => ipcRenderer.send('hide-overlay-window'),
 
   onDownloadProgress: (cb) => {
-    if (globalThis.__dlProgCb) ipcRenderer.removeListener('download-progress', globalThis.__dlProgCb);
-    globalThis.__dlProgCb = (_e, ...args) => {
-      if (args.length === 1) {
-        cb(args[0]);
-      } else if (args.length >= 2) {
-        cb({ downloadId: args[0], ...args[1] });
-      } else {
-        cb();
-      }
-    };
-    ipcRenderer.on('download-progress', globalThis.__dlProgCb);
+    const handler = (_e, downloadId, progress) => cb({ downloadId, ...(progress || {}) });
+    ipcRenderer.on('download-progress', handler);
+    return () => { ipcRenderer.removeListener('download-progress', handler); };
   },
 
   // FRPC Multiplayer Tunneling
@@ -102,6 +93,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Delete modpack folder from disk
   deleteModpackFolder: (modpackId) => ipcRenderer.invoke('delete-modpack-folder', { modpackId }),
 
+  // Update modpack profile.json on disk (sync user settings to disk)
+  updateModpackProfile: (data) => ipcRenderer.invoke('update-modpack-profile', data),
+
   // Debug: forward renderer logs to terminal
   rendererLog: (msg) => ipcRenderer.send('renderer-log', msg),
 
@@ -116,8 +110,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('cancel-download', downloadId),
   
   // Download progress event listeners
-  onDownloadProgress: (cb) => 
-    ipcRenderer.on('download-progress', (_e, downloadId, progress) => cb({ downloadId, ...(progress || {}) })),
   onDownloadComplete: (cb) => 
     ipcRenderer.on('download-complete', (_e, downloadId, result) => cb(downloadId, result)),
   onDownloadError: (cb) => 

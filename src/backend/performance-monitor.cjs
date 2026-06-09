@@ -42,10 +42,10 @@ class PerformanceMonitor {
     
     this.metrics = {
       cpuUsage: this._calculateCPUUsage(),
-      memoryUsage: Math.round(memUsage.heapUsed / 1024 / 1024), // MB
+      memoryUsage: Math.round(memUsage.heapUsed / 1024 / 1024),
       memoryPercent: Math.round((totalMemory - freeMemory) / totalMemory * 100),
-      networkUsage: 0, // Would need network monitoring library
-      fps: 60, // Would need frame rate monitoring
+      networkUsage: this._calculateNetworkUsage(),
+      fps: null,
       timestamp: Date.now()
     };
     
@@ -156,6 +156,10 @@ class PerformanceMonitor {
    * @private
    * @returns {number} CPU usage percentage (0-100)
    */
+  _calculateNetworkUsage() {
+    return null;
+  }
+
   _calculateCPUUsage() {
     const cpus = os.cpus();
     let totalIdle = 0;

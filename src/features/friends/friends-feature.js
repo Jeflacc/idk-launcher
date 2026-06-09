@@ -1,3 +1,4 @@
+import { safeParse } from "../../core/safe-parse.js";
 import { state, actions } from "../../core/app-state.js";
 import { loadAvatarForUser } from "../../core/skin-texture.js";
 
@@ -5,10 +6,10 @@ export function initFriendsFeature() {
   // === IDK CONNECT - PREMIUM FRIENDS & CLOUDFLARED LAN SHARING CLIENT ENGINE ===
   // ============================================================================
   (function initFriendsSystem() {
-    let IDK_BACKEND_URL = "https://api.somniac.me";
+    let IDK_BACKEND_URL = localStorage.getItem("idk_backend_url") || "https://api.somniac.me";
     let idkToken = localStorage.getItem("idk_connect_token") || "";
-    let idkUser = JSON.parse(
-      localStorage.getItem("idk_connect_user") || "null",
+    let idkUser = safeParse(
+      localStorage.getItem("idk_connect_user"),
     );
     let idkAuthTab = "login";
     let activeTunnelUrl = null;
@@ -204,9 +205,16 @@ export function initFriendsFeature() {
         body: body ? JSON.stringify(body) : null,
       });
 
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Server request failed");
-      return json;
+      if (!res.ok) {
+        try {
+          const err = await res.json();
+          throw new Error(err.error || `Server error ${res.status}`);
+        } catch (e) {
+          if (e.message.startsWith("Server error")) throw e;
+          throw new Error(`Server error ${res.status}`);
+        }
+      }
+      return res.json();
     }
 
     // --- UI CONTROLLERS ---
@@ -765,20 +773,17 @@ export function initFriendsFeature() {
       let connectAddressText;
 
       const hostPort = friend.cloudflaredUrl.replace(/^(tcp|https?):\/\//i, "");
-      const parts = hostPort.split(":");
-      host = parts[0];
-      port = parseInt(parts[1]);
-      if (isNaN(port)) {
-        port = 25565;
-        connectAddressText = `${host}:${port}`;
+      const colonIdx = hostPort.lastIndexOf(":");
+      if (colonIdx > 0) {
+        host = hostPort.substring(0, colonIdx);
+        port = parseInt(hostPort.substring(colonIdx + 1));
+        if (isNaN(port)) port = null;
       } else {
-        connectAddressText = hostPort;
+        host = hostPort;
+        port = null;
       }
 
-      if (isNaN(port)) {
-        actions.showWarningToast("Failed to parse friend's server port.");
-        return;
-      }
+      connectAddressText = port ? `${host}:${port}` : host;
 
       // Copy IP as fallback
       navigator.clipboard.writeText(connectAddressText);
@@ -1083,7 +1088,7 @@ export function initFriendsFeature() {
     let lastUnreadTotals = {};
     let isFirstUnreadPoll = true;
     const unreadDot = document.getElementById("friends-unread-dot");
-    setInterval(async () => {
+    const pollInterval = setInterval(async () => {
       if (!idkToken || !idkUser) return;
       try {
         const res = await idkRequest("/api/friends");
@@ -1105,5 +1110,7 @@ export function initFriendsFeature() {
         isFirstUnreadPoll = false;
       } catch (_) {}
     }, 15000);
+    actions.friendsCleanup = () => clearInterval(pollInterval);
+    actions.stopFriendsPolling = () => clearInterval(pollInterval);
   })();
 }

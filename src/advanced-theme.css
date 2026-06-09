@@ -2984,7 +2984,7 @@ body.ui-advanced .advanced-settings {
     display: block;
     max-width: 720px;
     margin: 0 auto;
-    padding: 0 20px 40px;
+    padding: 0 20px 80px;
 }
 
 body.ui-advanced .settings-content-wrapper {
@@ -2994,31 +2994,37 @@ body.ui-advanced .settings-content-wrapper {
 /* Advanced tab bar */
 body.ui-advanced .advanced-tab-bar {
     display: flex;
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 100;
     gap: 0;
-    margin-bottom: 28px;
-    background: rgba(255, 255, 255, 0.03);
+    margin: 12px 0 28px;
+    background: rgba(20, 20, 24, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-radius: calc(var(--theme-radius) * 1.2);
     padding: 4px;
     border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 body.ui-advanced .advanced-tab {
     position: relative;
     z-index: 1;
-    flex: 1;
+    flex: 0 0 auto;
     padding: 10px 16px;
     border: none;
     background: transparent;
     color: rgba(255, 255, 255, 0.4);
     font-family: var(--font-title);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.2px;
     cursor: pointer;
     border-radius: var(--theme-radius);
     transition: color 0.2s;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
 body.ui-advanced .advanced-tab:hover {
@@ -3062,7 +3068,8 @@ body.ui-advanced .adv-section {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: calc(var(--theme-radius) * 1.2);
-    padding: 20px 24px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
     transition: all 0.2s ease;
 }
 
@@ -3072,7 +3079,7 @@ body.ui-advanced .adv-section:hover {
 }
 
 body.ui-advanced .adv-section-header {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 body.ui-advanced .adv-section-header h3 {
@@ -3547,3 +3554,203 @@ body.ui-advanced #view-settings {
     }
 }
 
+
+
+/* =========================================================
+   Advanced UX - input fields, buttons, action rows
+   Used by the JAVA & LAUNCH and ABOUT tabs in the Advanced UI.
+   ========================================================= */
+
+.adv-input-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.adv-input-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.adv-input {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: white;
+    font-family: var(--font-main);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.adv-input:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.adv-input:focus {
+    border-color: rgba(var(--theme-accent-rgb), 0.5);
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), 0.12), 0 0 12px rgba(var(--theme-accent-rgb), 0.08);
+}
+
+.adv-input::placeholder {
+    color: var(--text-dim);
+}
+
+.adv-input--sm {
+    max-width: 110px;
+    text-align: center;
+    flex: none;
+    padding: 7px 10px;
+    font-size: 12px;
+}
+
+.adv-input[readonly] {
+    opacity: 0.85;
+    cursor: default;
+}
+
+.adv-btn {
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
+    border-radius: 6px;
+    padding: 8px 16px;
+    color: var(--theme-accent-text);
+    font-family: var(--font-main);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1.2;
+}
+
+.adv-btn:hover:not(:disabled) {
+    background: rgba(var(--theme-accent-rgb), 0.2);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 12px rgba(var(--theme-accent-rgb), 0.1);
+}
+
+.adv-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.adv-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.adv-btn--danger {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+.adv-btn--danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.45);
+}
+
+.adv-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-wrap: wrap;
+}
+
+.adv-action-row:last-child {
+    border-bottom: none;
+}
+
+.adv-action-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.adv-action-label span {
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+}
+
+.adv-action-label small {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Tighter gap between the action row and the next section in the About tab */
+.adv-section .adv-action-row:first-child {
+    padding-top: 0;
+}
+
+/* Reuse the .adv-toggle-row + .adv-toggle-track (defined in style.css)
+   for the Advanced toggles. The 2-column grid layout comes naturally. */
+#adv-toggles-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* "OPEN DIRECTORY" button inside the advanced tab bar */
+.adv-open-dir-link {
+    margin-left: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--theme-radius);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.adv-open-dir-link:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+.adv-open-dir-link svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+    width: 12px;
+    height: 12px;
+}
+.adv-open-dir-link:hover svg {
+    opacity: 1;
+}
+
+#adv-launcher-theme-picker .theme-choice-card {
+    min-width: 88px;
+}
+
+/* Reuse the existing .adv-toggle-row + .adv-toggle-track (defined in style.css)
+   for the Advanced toggles. The 2-column grid layout comes naturally. */
+#adv-toggles-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}

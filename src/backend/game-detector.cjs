@@ -16,7 +16,7 @@ class GameDetector {
   constructor() {
     this.isGameRunning = false;
     this.lastCheckTime = 0;
-    this.checkInterval = 2000; // Check every 2 seconds
+    this.checkInterval = 5000; // Check every 5 seconds
     this.monitoringActive = false;
   }
 

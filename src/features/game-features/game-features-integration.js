@@ -3,6 +3,7 @@
  * Integrates all game-related features into the UI
  */
 
+import { esc } from '../../core/safe-parse.js';
 import { state, actions } from '../../core/app-state.js';
 import { checkModUpdates, getModChangelog, installModUpdate } from '../mod-updates/mod-updates-feature.js';
 import { analyzeCrash, formatAnalysis } from '../crash-analyzer/crash-analyzer-feature.js';
@@ -130,38 +131,10 @@ async function handleCheckUpdatesClick() {
     if (updates.length === 0) {
       content.innerHTML = renderNoUpdates(mp);
       return;
-      content.innerHTML = `
-        <div style="text-align: center; padding: 20px;">
-          <div style="font-size: 14px; color: var(--theme-accent); margin-bottom: 8px;">&#x2713; All mods are up to date</div>
-          <div style="font-size: 12px; color: #a0a0a0;">No updates available</div>
-        </div>
-      `;
-      return;
     }
 
     renderUpdateResults(content, mp, updates);
     return;
-
-    let html = `<div style="display: flex; flex-direction: column; gap: 12px;">`;
-    
-    for (const update of updates) {
-      html += `
-        <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 6px; border-left: 4px solid #f97316;">
-          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-            <div>
-              <strong style="color: white; font-size: 13px;">${update.name}</strong>
-              <div style="font-size: 11px; color: #a0a0a0; margin-top: 2px;">
-                ${update.currentVersion} &rarr; <span style="color: var(--theme-accent);">${update.latestVersion}</span>
-              </div>
-            </div>
-            <button class="submit-btn" style="padding: 6px 12px; font-size: 11px; white-space: nowrap;" onclick="alert('Update feature coming soon')">Update</button>
-          </div>
-        </div>
-      `;
-    }
-
-    html += '</div>';
-    content.innerHTML = html;
   } catch (e) {
     console.error('[GameFeatures] Update check failed:', e);
     content.innerHTML = `<div style="color: #ef4444; padding: 20px; text-align: center;">Failed to check for updates: ${e.message}</div>`;
@@ -236,8 +209,26 @@ function renderUpdateResults(content, mp, updates) {
     </div>
   `;
 
-  content.querySelectorAll('[data-update-index]').forEach(button => {
-    button.addEventListener('click', () => installSingleUpdate(Number(button.dataset.updateIndex), button));
+  content.querySelectorAll('[data-update-index]').forEach(el => {
+    if (el.tagName === 'BUTTON') {
+      el.addEventListener('click', () => installSingleUpdate(Number(el.dataset.updateIndex), el));
+    }
+  });
+
+  // Update the filename line when the user picks a different version
+  content.querySelectorAll('.updates-version-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const idx = sel.dataset.updateIndex;
+      const card = sel.closest('[data-update-card]');
+      if (!card) return;
+      const avCount = parseInt(card.dataset.avCount || '0', 10);
+      if (avCount <= 1) return;
+      const update = currentModUpdates[Number(idx)];
+      if (!update?.availableVersions) return;
+      const ver = update.availableVersions[parseInt(sel.value, 10)];
+      const fnEl = document.getElementById(`updates-filename-${idx}`);
+      if (fnEl) fnEl.textContent = ver?.filename || '';
+    });
   });
 
   content.querySelector('#btn-update-all-mods')?.addEventListener('click', () => installAllUpdates(content));
@@ -248,8 +239,18 @@ function renderUpdateCard(update, index) {
   const icon = update.iconUrl
     ? `<img class="updates-icon-image" src="${escapeHtml(update.iconUrl)}" alt="">`
     : `<span class="updates-icon-fallback">${escapeHtml(getUpdateGlyph(update.type))}</span>`;
+
+  // Build version dropdown — always shown so the user can pick any version
+  const versions = update.availableVersions && update.availableVersions.length > 0
+    ? update.availableVersions
+    : [{ versionNumber: update.latestVersion, filename: update.latestFilename, downloadUrl: update.downloadUrl }];
+  const defaultIdx = Math.max(0, versions.findIndex(v => v.versionNumber === update.currentVersion));
+  const opts = versions.map((v, vi) =>
+    `<option value="${vi}"${vi === defaultIdx ? ' selected' : ''}>${escapeHtml(v.versionNumber)}</option>`
+  ).join('');
+
   return `
-    <div class="updates-card" data-update-card="${index}">
+    <div class="updates-card" data-update-card="${index}" data-av-count="${versions.length}">
       <div class="updates-icon">${icon}</div>
       <div class="updates-card-main">
         <div class="updates-card-header">
@@ -258,11 +259,11 @@ function renderUpdateCard(update, index) {
         </div>
         <strong>${escapeHtml(update.name)}</strong>
         <div class="updates-version-row">
-          <span class="updates-version-old" title="${escapeHtml(update.currentVersion)}">${escapeHtml(formatVersionLabel(update.currentVersion))}</span>
-          <span class="updates-version-arrow">-></span>
-          <span class="updates-version-new" title="${escapeHtml(update.latestVersion)}">${escapeHtml(formatVersionLabel(update.latestVersion))}</span>
+          <span class="updates-version-old">${escapeHtml(formatVersionLabel(update.currentVersion))}</span>
+          <span class="updates-version-arrow">→</span>
+          <select class="updates-version-select" data-update-index="${index}">${opts}</select>
         </div>
-        <div class="updates-filename" title="${escapeHtml(update.latestFilename || '')}">${escapeHtml(update.latestFilename || 'Ready to download')}</div>
+        <div class="updates-filename" id="updates-filename-${index}">${escapeHtml(versions[defaultIdx].filename || '')}</div>
       </div>
       <button class="updates-action-btn" data-update-index="${index}">Update</button>
     </div>
@@ -273,9 +274,22 @@ async function installSingleUpdate(index, button) {
   const update = currentModUpdates[index];
   if (!update || !button) return;
 
+  // If there's a version dropdown, use the user-selected version instead of the default latest
+  const card = button.closest('.updates-card');
+  const versionSelect = card?.querySelector('.updates-version-select');
+  if (versionSelect && update.availableVersions) {
+    const selectedIndex = parseInt(versionSelect.value, 10);
+    const ver = update.availableVersions[selectedIndex];
+    if (ver) {
+      // Override the update with the selected version's details
+      update.latestVersion = ver.versionNumber;
+      update.latestFilename = ver.filename;
+      update.downloadUrl = ver.downloadUrl;
+    }
+  }
+
   button.disabled = true;
   button.textContent = 'Installing';
-  const card = button.closest('.updates-card');
   card?.classList.add('installing');
 
   try {
@@ -334,14 +348,7 @@ function getUpdateGlyph(type) {
   return 'MD';
 }
 
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+const escapeHtml = esc;
 
 /**
  * Setup Crash Log Analyzer

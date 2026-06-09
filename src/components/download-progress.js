@@ -277,6 +277,17 @@ class DownloadProgressTracker {
     // Update percentage text (Requirement 2.2)
     this.elements.percentText.textContent = `${Math.round(percent)}%`;
 
+    // Announce progress at milestones for screen readers
+    const rounded = Math.round(percent / 25) * 25;
+    if (rounded > 0 && rounded !== this._lastAnnouncedMilestone) {
+      this._lastAnnouncedMilestone = rounded;
+      accessibilityManager.announceProgressUpdate(
+        this.progress.itemsCompleted,
+        this.progress.totalItems,
+        rounded
+      );
+    }
+
     // Update current item text (Requirement 2.3)
     this.elements.currentItemText.textContent = 
       this.progress.currentItem || 'Preparing...';

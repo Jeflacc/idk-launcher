@@ -136,7 +136,7 @@ function renderForLaunchVersionsModal(tab) {
         ${isDownloaded && installedLoader ? `<span class="mp-dl-loader-badge">${installedLoader}</span>` : ''}
         <span class="version-type">${label}</span>
       </span>
-      <button class="mp-dl-btn${isDownloaded ? ' downloaded' : ''}" data-version="${v.id}">
+      <button type="button" class="mp-dl-btn${isDownloaded ? ' downloaded' : ''}" data-version="${v.id}">
         ${isDownloaded ? 'Use' : 'Download'}
       </button>
     `;
@@ -160,15 +160,20 @@ function renderForLaunchVersionsModal(tab) {
       btn.addEventListener('click', handler);
       item.addEventListener('click', handler);
     } else {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        if (!window.electronAPI) return;
+      const startDownload = async (e) => {
+        e?.stopPropagation?.();
+        e?.preventDefault?.();
+        if (!window.electronAPI?.downloadVersion) {
+          console.warn('[Launch] downloadVersion API is unavailable');
+          return;
+        }
+        document.getElementById('mp-all-versions-modal')?.classList.remove('active');
         const panelShow = window.showDownloadPanel || window.showDlPanel;
         const panelUpdate = window.updateDownloadPanel || window.updateDlPanel;
         const panelHide = window.hideDownloadPanel || window.hideDlPanel;
         panelShow?.(`Downloading ${v.id}...`, 5, 'Downloading Minecraft Version');
         btn.classList.add('downloading');
-        btn.textContent = 'Downloading…';
+        btn.textContent = 'Downloading...';
         btn.disabled = true;
         const progressHandler = (data) => {
           const payload = data?.downloadId ? data : (data || {});
@@ -181,9 +186,9 @@ function renderForLaunchVersionsModal(tab) {
           );
         };
         const removeProgress = window.electronAPI.onDownloadProgress?.(progressHandler);
-        const result = await window.electronAPI.downloadVersion({ version: v.id });
-        removeProgress?.();
-        if (result.success) {
+        try {
+          const result = await window.electronAPI.downloadVersion({ version: v.id });
+          if (!result?.success) throw new Error(result?.error || `Failed to download Minecraft ${v.id}`);
           if (!state.downloadedVersions.includes(v.id)) {
             state.downloadedVersions.push(v.id);
             localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
@@ -194,13 +199,18 @@ function renderForLaunchVersionsModal(tab) {
           btn.disabled = false;
           panelHide?.();
           renderForLaunchVersionsModal(currentLaunchTab);
-        } else {
+        } catch (err) {
+          console.error('[Launch] Version download failed:', err);
           btn.classList.remove('downloading');
           btn.textContent = 'Failed';
           panelHide?.();
           setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
+        } finally {
+          removeProgress?.();
         }
-      });
+      };
+      btn.addEventListener('click', startDownload);
+      item.addEventListener('click', startDownload);
     }
     list.appendChild(item);
   });
@@ -339,11 +349,16 @@ function getFunStatus(status) {
 if (window.electronAPI) {
   window.electronAPI.onLaunchProgress((data) => {
     if (data.percent !== undefined) launchFill.style.width = `${data.percent}%`;
-    if (data.status) launchStatus.innerText = getFunStatus(data.status);
+    const text = data.status ? getFunStatus(data.status) : '';
+    if (text) {
+      launchStatus.innerText = text;
+      setMiniText(text);
+    }
   });
   window.electronAPI.onGameLaunched(() => {
     // Smart UI Offloading
     document.body.classList.add('game-running');
+    gameStartTime = Date.now();
     document.querySelectorAll('video').forEach(v => v.pause());
     const mojangNewsGrid = document.getElementById('mojang-news-grid');
     if (mojangNewsGrid) mojangNewsGrid.innerHTML = '';
@@ -355,7 +370,7 @@ if (window.electronAPI) {
       state.downloadedVersions.push(state.selectedVersion);
       localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
     }
-    
+
     // Update lastPlayed timestamp for the current modpack
     const mp = actions.modpacks?.mpGet?.();
     if (mp) {
@@ -363,22 +378,59 @@ if (window.electronAPI) {
       actions.modpacks?.mpSave?.();
       actions.modpacks?.mpRenderDetail?.();
     }
-    
+
     launchFill.style.width = '100%';
     launchStatus.innerText = 'Game is running!';
+    // Hide the mini-indicator — the game is now running independently.
+    if (miniIndicator) miniIndicator.classList.remove('visible');
     setTimeout(() => {
       overlay.classList.remove('active');
+      overlay.classList.remove('minimized');
       playBtn.innerText = 'RUNNING';
       playBtn.classList.add('running');
       playBtn.disabled = true;
     }, 800);
   });
-  window.electronAPI.onLaunchClosed(() => {
+  window.electronAPI.onLaunchClosed((data) => {
     document.body.classList.remove('game-running');
     window.dispatchEvent(new Event('reload-content'));
-    playBtn.innerText = 'PLAY';
-    playBtn.classList.remove('running');
-    playBtn.disabled = false;
+    // Always dismiss the launch overlay regardless of which play button
+    // initiated the launch (main page or modpack page).
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.classList.remove('minimized');
+    }
+    if (miniIndicator) miniIndicator.classList.remove('visible');
+    if (playBtn) {
+      playBtn.innerText = 'PLAY';
+      playBtn.classList.remove('running');
+      playBtn.disabled = false;
+    }
+    const mpPlayBtn = document.getElementById('btn-play-modpack');
+    if (mpPlayBtn) {
+      mpPlayBtn.innerText = 'PLAY';
+      mpPlayBtn.classList.remove('running');
+      mpPlayBtn.disabled = false;
+    }
+
+    // Crash / quick-exit detection
+    const code = data?.code;
+    const output = data?.output || '';
+    const elapsed = gameStartTime ? (Date.now() - gameStartTime) / 1000 : Infinity;
+    gameStartTime = 0;
+    if (code !== undefined && code !== null && code !== 0) {
+      const isQuickExit = elapsed < 15;
+      const header = isQuickExit
+        ? 'Game exited unexpectedly right after launch.'
+        : `Game exited with code ${code}.`;
+      const hint = output
+        ? `\n\nLast output:\n${output.slice(-800)}`
+        : '';
+      showWarningToast(header + hint);
+    } else if (output && /Exception|FATAL|Error:/.test(output) && elapsed < 15) {
+      showWarningToast('Game crashed shortly after launch. Check the logs for details.');
+    }
+
     updatePlaytime();
     updateAchievementsDisplay();
   });
@@ -386,10 +438,22 @@ if (window.electronAPI) {
     const errMsg = typeof error === 'string' ? error : (error?.message || 'An unknown error occurred.');
     const attemptedVersion = error?.version || state.selectedVersion || 'this version';
     const attemptedLoader = error?.loader || state.selectedLoader || 'Unknown';
-    overlay.classList.remove('active');
-    playBtn.innerText = 'PLAY';
-    playBtn.classList.remove('running');
-    playBtn.disabled = false;
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.classList.remove('minimized');
+    }
+    if (miniIndicator) miniIndicator.classList.remove('visible');
+    if (playBtn) {
+      playBtn.innerText = 'PLAY';
+      playBtn.classList.remove('running');
+      playBtn.disabled = false;
+    }
+    const mpPlayBtn = document.getElementById('btn-play-modpack');
+    if (mpPlayBtn) {
+      mpPlayBtn.innerText = 'PLAY';
+      mpPlayBtn.classList.remove('running');
+      mpPlayBtn.disabled = false;
+    }
 
     // Smart loader-unavailable handling
     const loaderUnavailablePattern = /(Fabric|Forge|NeoForge|Quilt).*?(not available|No.*?builds found)/i;
@@ -431,22 +495,92 @@ if (cancelLaunchBtn && window.electronAPI) {
   cancelLaunchBtn.addEventListener('click', () => {
     window.electronAPI.cancelLaunch?.();
     overlay.classList.remove('active');
+    overlay.classList.remove('minimized');
     playBtn.innerText = 'PLAY';
     playBtn.classList.remove('running');
     playBtn.disabled = false;
   });
 }
 
-playBtn.addEventListener('click', () => {
+// --- Minimize / restore the launch overlay ---
+// When minimized, the full overlay (backdrop + card) is completely
+// hidden via display:none, and a small floating "launch-mini-indicator"
+// pill is shown at bottom-right. Clicking the pill restores the full
+// overlay. Clicking the X on the pill dismisses the indicator only
+// (the launch continues in the background).
+const minimizeLaunchBtn = document.getElementById('btn-minimize-launch');
+const restoreLaunchBtn = document.getElementById('btn-restore-launch');
+const miniIndicator = document.getElementById('launch-mini-indicator');
+const miniText = document.getElementById('launch-mini-text');
+const miniClose = document.getElementById('btn-mini-close');
+let miniIndicatorDismissed = false;
+
+function setLaunchMinimized(minimized) {
+  if (!overlay) return;
+  overlay.classList.toggle('minimized', !!minimized);
+  if (minimizeLaunchBtn) minimizeLaunchBtn.style.display = minimized ? 'none' : '';
+  if (restoreLaunchBtn) restoreLaunchBtn.style.display = minimized ? '' : 'none';
+  if (miniIndicator && !miniIndicatorDismissed) {
+    miniIndicator.classList.toggle('visible', !!minimized);
+  }
+}
+function setMiniText(text) {
+  if (miniText) miniText.textContent = text;
+}
+if (minimizeLaunchBtn) minimizeLaunchBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  miniIndicatorDismissed = false;
+  setLaunchMinimized(true);
+});
+if (restoreLaunchBtn) restoreLaunchBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  setLaunchMinimized(false);
+});
+// Clicking the mini-indicator pill restores the full overlay.
+if (miniIndicator) {
+  miniIndicator.addEventListener('click', (e) => {
+    if (e.target.closest('#btn-mini-close')) return;
+    setLaunchMinimized(false);
+  });
+  miniIndicator.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setLaunchMinimized(false);
+    }
+  });
+}
+// X button on the mini-indicator: dismiss the indicator only
+// (launch keeps running in the background, no visible UI).
+if (miniClose) {
+  miniClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    miniIndicatorDismissed = true;
+    miniIndicator.classList.remove('visible');
+  });
+}
+
+playBtn.addEventListener('click', async (e) => {
+  e.stopPropagation();
+  if (overlay?.classList.contains('active') && !overlay.classList.contains('minimized')) {
+    return;
+  }
   localStorage.setItem('idk_last_played', JSON.stringify({ version: state.selectedVersion, loader: state.selectedLoader }));
   if (window.electronAPI) {
     window.electronAPI.saveSettings({ lastPlayedVersion: state.selectedVersion, lastPlayedLoader: state.selectedLoader }).catch(console.error);
   }
+  overlay.classList.remove('minimized');
   overlay.classList.add('active');
   gameStartTime = Date.now();
   launchFill.style.width = '0%';
   launchStatus.innerText = 'Initializing...';
-  const authData = state.authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
+  let authData = null;
+  try {
+    if (state.authMode === 'elyby' && window.electronAPI?.getElybyAuthData) {
+      authData = (await window.electronAPI.getElybyAuthData()).data || null;
+    }
+  } catch (e) {
+    console.warn('[Launch] Ely.by auth retrieval failed:', e);
+  }
 
   if (window.electronAPI) {
     const windowSize = {
@@ -664,10 +798,13 @@ if (viewMain && bgSlider) {
   Object.assign(actions, {
     showWarningToast,
     beginLaunchOverlay(status = 'Initializing...') {
+      overlay.classList.remove('minimized');
       overlay.classList.add('active');
       gameStartTime = Date.now();
       launchFill.style.width = '0%';
       launchStatus.innerText = status;
+      if (minimizeLaunchBtn) minimizeLaunchBtn.style.display = '';
+      if (restoreLaunchBtn) restoreLaunchBtn.style.display = 'none';
     },
     playGame: () => playBtn.click(),
     getPlayButton: () => playBtn,

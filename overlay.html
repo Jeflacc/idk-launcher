@@ -1211,8 +1211,8 @@
       }
 
       // If multiplayer connect details exist
-      if (session.quickConnect) {
-        sessionServer.innerText = `${session.quickConnect.host}:${session.quickConnect.port}`;
+      if (session.server && session.server !== 'Singleplayer / LAN') {
+        sessionServer.innerText = session.server;
       } else {
         sessionServer.innerText = 'Singleplayer / LAN';
       }

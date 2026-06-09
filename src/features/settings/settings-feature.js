@@ -133,6 +133,14 @@ async function persistVisualSettings() {
         betaUpdates: state.betaUpdates,
         openLogsAfterLaunch: state.openLogsAfterLaunch,
         analyticsEnabled: state.analyticsEnabled,
+        maxMemoryGB: state.maxMemoryGB,
+        enableOverlay: state.enableOverlay,
+        defaultFullscreen: state.defaultFullscreen,
+        defaultWindowWidth: state.defaultWindowWidth,
+        defaultWindowHeight: state.defaultWindowHeight,
+        javaPath: state.javaPath,
+        globalJavaArgs: state.globalJavaArgs,
+        customMinecraftPath: state.customMinecraftPath,
       });
     } catch (e) {
       console.error("[Settings] Failed to persist visual settings:", e);
@@ -331,6 +339,7 @@ function setMemory(gb) {
   document.querySelectorAll(".mem-preset-btn").forEach((b) => {
     b.classList.toggle("active", parseInt(b.dataset.gb) === gb);
   });
+  persistVisualSettings();
 }
 
 export function initSettingsFeature({ switchView }) {
@@ -374,6 +383,16 @@ export function initSettingsFeature({ switchView }) {
     actions.modpacks?.mpRenderList?.();
   });
   document.getElementById("btn-close-mods")?.addEventListener("click", () => switchView("main"));
+
+  // Reset settings to main (general) tab when entering the settings view
+  document.addEventListener("idk:view-changed", (e) => {
+    if (e.detail?.viewName === "settings") {
+      const classicTab = document.querySelector('.settings-tab[data-settings-tab="general"]');
+      if (classicTab) classicTab.click();
+      const advTab = document.querySelector('.advanced-tab[data-adv-tab="general"]');
+      if (advTab) advTab.click();
+    }
+  });
 
   // UI mode toggle (shared between classic/advanced)
   function bindUiModeToggle(containerSelector) {
@@ -598,6 +617,7 @@ export function initSettingsFeature({ switchView }) {
       javaPathInput.addEventListener("input", (e) => {
         state.javaPath = e.target.value;
         localStorage.setItem("craftlaunch_javaPath", state.javaPath);
+        persistVisualSettings();
       });
     }
 
@@ -608,6 +628,7 @@ export function initSettingsFeature({ switchView }) {
       globalJavaArgsInput.addEventListener("input", (e) => {
         state.globalJavaArgs = e.target.value;
         localStorage.setItem("idk_global_java_args", state.globalJavaArgs);
+        persistVisualSettings();
       });
     }
 
@@ -622,6 +643,7 @@ export function initSettingsFeature({ switchView }) {
       defaultWidthInput.addEventListener("input", (e) => {
         state.defaultWindowWidth = parseInt(e.target.value) || 1024;
         localStorage.setItem("idk_default_window_width", state.defaultWindowWidth);
+        persistVisualSettings();
       });
     }
     if (defaultHeightInput) {
@@ -629,6 +651,7 @@ export function initSettingsFeature({ switchView }) {
       defaultHeightInput.addEventListener("input", (e) => {
         state.defaultWindowHeight = parseInt(e.target.value) || 768;
         localStorage.setItem("idk_default_window_height", state.defaultWindowHeight);
+        persistVisualSettings();
       });
     }
     if (fullscreenToggle) {
@@ -636,6 +659,7 @@ export function initSettingsFeature({ switchView }) {
       fullscreenToggle.addEventListener("change", (e) => {
         state.defaultFullscreen = e.target.checked;
         localStorage.setItem("idk_default_fullscreen", state.defaultFullscreen);
+        persistVisualSettings();
       });
     }
     if (overlayToggle) {
@@ -643,6 +667,7 @@ export function initSettingsFeature({ switchView }) {
       overlayToggle.addEventListener("change", (e) => {
         state.enableOverlay = e.target.checked;
         localStorage.setItem("idk_enable_overlay", state.enableOverlay);
+        persistVisualSettings();
       });
     }
 
@@ -960,6 +985,217 @@ export function initSettingsFeature({ switchView }) {
       line.textContent = `[IDK Launcher] Advanced UI initialized. Theme: ${state.launcherTheme}, Border: ${state.launcherBorderRadius}px`;
       term.appendChild(line);
     }
+
+
+    // Animation speed (Advanced)
+    const advAnim = document.getElementById('adv-animation-speed');
+    const advAnimVal = document.getElementById('adv-animation-speed-value');
+    if (advAnim) {
+      advAnim.value = state.launcherAnimationSpeed;
+      if (advAnimVal) advAnimVal.textContent = `${parseFloat(state.launcherAnimationSpeed).toFixed(1)}x`;
+      advAnim.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        applyAnimationSpeed(v);
+        if (advAnimVal) advAnimVal.textContent = `${v.toFixed(1)}x`;
+        const classicAnim = document.getElementById('animation-speed-slider');
+        const classicAnimVal = document.getElementById('animation-speed-value');
+        if (classicAnim) classicAnim.value = v;
+        if (classicAnimVal) classicAnimVal.textContent = `${v.toFixed(1)}x`;
+        const accessAnim = document.getElementById('access-animation-speed-slider');
+        if (accessAnim) accessAnim.value = v;
+      });
+    }
+
+    // Font scale (Advanced)
+    const advFont = document.getElementById('adv-font-scale');
+    const advFontVal = document.getElementById('adv-font-scale-value');
+    if (advFont) {
+      advFont.value = state.launcherFontScale;
+      if (advFontVal) advFontVal.textContent = `${Math.round(state.launcherFontScale * 100)}%`;
+      advFont.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        applyFontScale(v);
+        if (advFontVal) advFontVal.textContent = `${Math.round(v * 100)}%`;
+      });
+    }
+
+    // Blur intensity (Advanced)
+    const advBlurGroup = document.getElementById('adv-blur-choices');
+    if (advBlurGroup) {
+      advBlurGroup.querySelectorAll('.blur-choice-card').forEach((card) => {
+        card.classList.toggle('active', card.dataset.blur === state.launcherBlurIntensity);
+        card.addEventListener('click', () => {
+          applyBlurIntensity(card.dataset.blur);
+          advBlurGroup.querySelectorAll('.blur-choice-card').forEach((c) => {
+            c.classList.toggle('active', c.dataset.blur === card.dataset.blur);
+          });
+        });
+      });
+    }
+
+    // Advanced duplicate border-radius / compact-mode (cross-sync only; primary controls are in the General tab)
+    const advBorder2 = document.getElementById('adv-border-radius-2');
+    const advBorder2Val = document.getElementById('adv-border-radius-value-2');
+    if (advBorder2) {
+      advBorder2.value = state.launcherBorderRadius;
+      if (advBorder2Val) advBorder2Val.textContent = `${state.launcherBorderRadius}px`;
+      advBorder2.addEventListener('input', (e) => {
+        const v = parseInt(e.target.value);
+        applyLauncherBorderRadius(v);
+        if (advBorder2Val) advBorder2Val.textContent = `${v}px`;
+      });
+    }
+    const advCompact2 = document.getElementById('adv-compact-mode-toggle-2');
+    if (advCompact2) {
+      advCompact2.checked = state.launcherCompactMode;
+      advCompact2.addEventListener('change', (e) => applyCompactMode(e.target.checked));
+    }
+
+    // Java path / global args / window size / overlay / custom Minecraft path
+    const advJavaPath = document.getElementById('adv-java-path');
+    if (advJavaPath) {
+      advJavaPath.value = state.javaPath || '';
+      advJavaPath.addEventListener('input', (e) => {
+        state.javaPath = e.target.value;
+        localStorage.setItem('craftlaunch_javaPath', state.javaPath);
+        const classic = document.getElementById('java-path');
+        if (classic) classic.value = e.target.value;
+        persistVisualSettings();
+      });
+    }
+    const advGlobalArgs = document.getElementById('adv-global-java-args');
+    if (advGlobalArgs) {
+      advGlobalArgs.value = state.globalJavaArgs || '';
+      advGlobalArgs.addEventListener('input', (e) => {
+        state.globalJavaArgs = e.target.value;
+        localStorage.setItem('idk_global_java_args', state.globalJavaArgs);
+        const classic = document.getElementById('global-java-args');
+        if (classic) classic.value = e.target.value;
+        persistVisualSettings();
+      });
+    }
+    const advWidth = document.getElementById('adv-default-window-width');
+    const advHeight = document.getElementById('adv-default-window-height');
+    const advSizeVal = document.getElementById('adv-window-size-value');
+    function syncAdvSizeLabel() {
+      if (advSizeVal) advSizeVal.textContent = `${state.defaultWindowWidth || 1024} x ${state.defaultWindowHeight || 768}`;
+    }
+    if (advWidth) {
+      advWidth.value = state.defaultWindowWidth || 1024;
+      advWidth.addEventListener('input', (e) => {
+        state.defaultWindowWidth = parseInt(e.target.value) || 1024;
+        localStorage.setItem('idk_default_window_width', state.defaultWindowWidth);
+        syncAdvSizeLabel();
+        const classic = document.getElementById('default-window-width');
+        if (classic) classic.value = e.target.value;
+        persistVisualSettings();
+      });
+    }
+    if (advHeight) {
+      advHeight.value = state.defaultWindowHeight || 768;
+      advHeight.addEventListener('input', (e) => {
+        state.defaultWindowHeight = parseInt(e.target.value) || 768;
+        localStorage.setItem('idk_default_window_height', state.defaultWindowHeight);
+        syncAdvSizeLabel();
+        const classic = document.getElementById('default-window-height');
+        if (classic) classic.value = e.target.value;
+        persistVisualSettings();
+      });
+    }
+    syncAdvSizeLabel();
+
+    const advFullscreen = document.getElementById('adv-fullscreen-toggle');
+    if (advFullscreen) {
+      advFullscreen.checked = state.defaultFullscreen || false;
+      advFullscreen.addEventListener('change', (e) => {
+        state.defaultFullscreen = e.target.checked;
+        localStorage.setItem('idk_default_fullscreen', state.defaultFullscreen);
+        const classic = document.getElementById('fullscreen-toggle');
+        if (classic) classic.checked = e.target.checked;
+        persistVisualSettings();
+      });
+    }
+    const advOverlay = document.getElementById('adv-overlay-toggle');
+    if (advOverlay) {
+      advOverlay.checked = state.enableOverlay || false;
+      advOverlay.addEventListener('change', (e) => {
+        state.enableOverlay = e.target.checked;
+        localStorage.setItem('idk_enable_overlay', state.enableOverlay);
+        const classic = document.getElementById('overlay-toggle');
+        if (classic) classic.checked = e.target.checked;
+        persistVisualSettings();
+      });
+    }
+
+    // Custom Minecraft path (browse + clear)
+    const advCustomPath = document.getElementById('adv-custom-minecraft-path');
+    if (advCustomPath) {
+      advCustomPath.value = state.customMinecraftPath || '';
+      const advBrowse = document.getElementById('adv-btn-browse-minecraft-path');
+      if (advBrowse) advBrowse.addEventListener('click', async () => {
+        if (window.electronAPI?.selectMinecraftFolder) {
+          const result = await window.electronAPI.selectMinecraftFolder();
+          if (result && result.success && result.filePath) {
+            state.customMinecraftPath = result.filePath;
+            advCustomPath.value = state.customMinecraftPath;
+            localStorage.setItem('idk_custom_minecraft_path', state.customMinecraftPath);
+            await window.electronAPI.saveSettings({ customMinecraftPath: state.customMinecraftPath });
+            const classic = document.getElementById('custom-minecraft-path');
+            if (classic) classic.value = result.filePath;
+            if (actions.scanDownloadedVersions) await actions.scanDownloadedVersions();
+          }
+        }
+      });
+      const advClear = document.getElementById('adv-btn-clear-minecraft-path');
+      if (advClear) advClear.addEventListener('click', async () => {
+        state.customMinecraftPath = '';
+        advCustomPath.value = '';
+        localStorage.setItem('idk_custom_minecraft_path', '');
+        if (window.electronAPI) await window.electronAPI.saveSettings({ customMinecraftPath: '' });
+        const classic = document.getElementById('custom-minecraft-path');
+        if (classic) classic.value = '';
+        if (actions.scanDownloadedVersions) await actions.scanDownloadedVersions();
+      });
+    }
+
+    // About tab buttons (reuse bindSharedTools but with the new adv- IDs)
+    document.getElementById('adv-btn-open-folder')?.addEventListener('click', () => {
+      if (window.electronAPI) window.electronAPI.openMinecraftFolder();
+      else alert('This feature is only available in the desktop app.');
+    });
+    document.getElementById('adv-btn-open-folder-top')?.addEventListener('click', () => {
+      if (window.electronAPI) window.electronAPI.openMinecraftFolder();
+      else alert('This feature is only available in the desktop app.');
+    });
+    const advCheckUpdates = document.getElementById('adv-btn-check-launcher-updates');
+    if (advCheckUpdates) advCheckUpdates.addEventListener('click', async () => {
+      const original = advCheckUpdates.innerText;
+      advCheckUpdates.innerText = 'Checking...';
+      advCheckUpdates.disabled = true;
+      try {
+        if (window.electronAPI?.checkForUpdates) {
+          const result = await window.electronAPI.checkForUpdates();
+          if (result.updateAvailable) {
+            actions.showWarningToast(`Update available: ${result.latestVersion}`);
+            if (confirm(`A new version (${result.latestVersion}) is available. Open the release page?`)) {
+              window.electronAPI.openExternal(result.releaseUrl);
+            }
+          } else {
+            actions.showWarningToast('You are running the latest version!');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to check for updates:', e);
+        actions.showWarningToast('Failed to check for updates');
+      } finally {
+        advCheckUpdates.innerText = original;
+        advCheckUpdates.disabled = false;
+      }
+    });
+    document.getElementById('adv-btn-toggle-devtools')?.addEventListener('click', () => {
+      if (window.electronAPI) window.electronAPI.toggleDevTools();
+      else alert('Debug console is only available in the desktop app.');
+    });
 
     // Shared tools
     bindSharedTools();

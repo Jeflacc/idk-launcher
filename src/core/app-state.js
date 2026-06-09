@@ -1,6 +1,8 @@
-const lastPlayed = JSON.parse(
-  localStorage.getItem("idk_last_played") ||
-    '{"version": null, "loader": "Vanilla"}',
+import { safeParse } from "./safe-parse.js";
+
+const lastPlayed = safeParse(
+  localStorage.getItem("idk_last_played"),
+  { version: null, loader: "Vanilla" },
 );
 
 export const state = {
@@ -53,9 +55,10 @@ export const state = {
   allVersions: [],
   sodiumSupportedVersions: new Set(),
   downloadedVersions: [],
-  modpacks: JSON.parse(localStorage.getItem("idk_modpacks") || "[]"),
-  versionSettings: JSON.parse(
-    localStorage.getItem("idk_version_settings") || "{}",
+  modpacks: safeParse(localStorage.getItem("idk_modpacks"), []),
+  versionSettings: safeParse(
+    localStorage.getItem("idk_version_settings"),
+    {},
   ),
   activeModpackId: null,
   activeVersionForMods: null,
