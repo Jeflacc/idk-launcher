@@ -186,13 +186,23 @@ class AccessibilityManager {
   setupARIALabels() {
     if (typeof document === 'undefined') return;
 
-    // Wait for download progress container to be created
-    const checkAndSetupLabels = () => {
-      const container = document.getElementById('download-progress-container');
-      if (!container) {
-        setTimeout(checkAndSetupLabels, 100);
-        return;
-      }
+    // Wait for download progress container to be created (using MutationObserver instead of polling)
+    const container = document.getElementById('download-progress-container');
+    if (!container) {
+      const observer = new MutationObserver(() => {
+        const c = document.getElementById('download-progress-container');
+        if (c) {
+          observer.disconnect();
+          this._setupDownloadLabels(c);
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      return;
+    }
+    this._setupDownloadLabels(container);
+  }
+
+  _setupDownloadLabels(container) {
 
       // Setup ARIA labels for buttons
       const pauseBtn = container.querySelector('.download-pause-btn');
@@ -260,9 +270,6 @@ class AccessibilityManager {
       if (currentItemText) {
         currentItemText.setAttribute('aria-label', 'Currently downloading');
       }
-    };
-
-    checkAndSetupLabels();
   }
 
   /**

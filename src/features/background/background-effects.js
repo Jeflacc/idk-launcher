@@ -430,7 +430,28 @@ function startEffect(effect) {
   if (typeof def.init === "function") {
     def.init();
   }
+  let lastFrame = 0;
+  const fps = 30;
+  const interval = 1000 / fps;
+  let hidden = false;
+  const onVisibility = () => {
+    hidden = document.hidden;
+    if (hidden) {
+      if (animId) { cancelAnimationFrame(animId); animId = null; }
+    } else {
+      lastFrame = 0;
+      animId = requestAnimationFrame(frame);
+    }
+  };
+  document.addEventListener("visibilitychange", onVisibility);
   function frame(now) {
+    if (hidden) return;
+    const elapsed = now - lastFrame;
+    if (elapsed < interval) {
+      animId = requestAnimationFrame(frame);
+      return;
+    }
+    lastFrame = now - (elapsed % interval);
     time = now * 0.001;
     const intensity = getIntensity();
     def.draw(intensity);

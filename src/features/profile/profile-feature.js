@@ -11,6 +11,42 @@ let homeSkinViewerInstance = null;
 let homeSkinResizeObserver = null;
 let profileReturnView = "main";
 
+// Some GPUs (notably older Intel iGPUs) reject WebGL2 3D texture uploads
+// with FLIP_Y or PREMULTIPLY_ALPHA. Detect this once and skip the 3D
+// viewer entirely on affected devices.
+let _3dTextureSupport = null;
+function canUse3DTextures() {
+  if (_3dTextureSupport !== null) return _3dTextureSupport;
+  try {
+    const testCanvas = document.createElement("canvas");
+    const gl = testCanvas.getContext("webgl2");
+    if (!gl) {
+      _3dTextureSupport = false;
+      return false;
+    }
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_3D, tex);
+    gl.texImage3D(
+      gl.TEXTURE_3D,
+      0,
+      gl.RGBA,
+      2,
+      2,
+      2,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      new Uint8Array(2 * 2 * 2 * 4),
+    );
+    const err = gl.getError();
+    gl.deleteTexture(tex);
+    _3dTextureSupport = err === gl.NO_ERROR;
+  } catch (_) {
+    _3dTextureSupport = false;
+  }
+  return _3dTextureSupport;
+}
+
 function formatPlaytimeHours() {
   const totalMs = parseInt(localStorage.getItem("idk_playtime") || "0", 10);
   return `${(totalMs / (1000 * 60 * 60)).toFixed(1)}h`;
@@ -251,11 +287,19 @@ async function initHomeSkinViewer() {
     const { SkinViewer } = await import("skinview3d");
     const THREE = await import("three");
 
+    // Detect GPUs/drivers that reject 3D texture uploads with FLIP_Y
+    // (e.g. some Intel iGPUs). In that case skip the 3D viewer and show
+    // a static 2D preview instead.
+    if (!canUse3DTextures()) {
+      throw new Error("3D textures unsupported on this GPU");
+    }
+
     homeSkinViewerInstance = new SkinViewer({
       canvas: canvasEl,
       width,
       height,
       skin: texture,
+      preserveDrawingBuffer: true,
     });
 
     canvasEl.width = width;

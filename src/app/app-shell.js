@@ -372,371 +372,304 @@ export function renderAppShell() {
 
       <!-- GENERAL TAB -->
       <div class="settings-tab-panel active" id="settings-panel-general">
+        <div class="settings-page">
 
-        <div class="settings-glass-card">
-          <div class="settings-card-header">
-            <div class="settings-card-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <circle cx="12" cy="12" r="4"></circle>
-              </svg>
+          <h3 class="settings-section-title">Theme & Appearance</h3>
+          <p class="settings-section-desc">Color scheme, UI mode, and accent customization</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Theme Presets</span>
+              <small>Complete color atmospheres</small>
             </div>
-            <div>
-              <h3>Theme & Appearance</h3>
-              <p>Color scheme, UI mode, and accent customization</p>
-            </div>
-          </div>
-          <div class="settings-card-body">
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Theme Presets</span>
-                <small>Complete color atmospheres</small>
-              </div>
-              <div class="theme-palette-grid" id="launcher-theme-picker">
-                <button type="button" class="theme-choice-card" data-theme="emerald" aria-label="Emerald theme">
-                  <span class="theme-swatch" style="--swatch:#4cb837;"></span>
-                  <span class="theme-name">Emerald</span>
-                </button>
-                <button type="button" class="theme-choice-card" data-theme="amethyst" aria-label="Amethyst theme">
-                  <span class="theme-swatch" style="--swatch:#8b5cf6;"></span>
-                  <span class="theme-name">Amethyst</span>
-                </button>
-                <button type="button" class="theme-choice-card" data-theme="ocean" aria-label="Ocean theme">
-                  <span class="theme-swatch" style="--swatch:#3b82f6;"></span>
-                  <span class="theme-name">Ocean</span>
-                </button>
-                <button type="button" class="theme-choice-card" data-theme="sunset" aria-label="Sunset theme">
-                  <span class="theme-swatch" style="--swatch:#f97316;"></span>
-                  <span class="theme-name">Sunset</span>
-                </button>
-                <button type="button" class="theme-choice-card" data-theme="custom" aria-label="Custom color">
-                  <span class="theme-swatch custom-swatch" style="--swatch:var(--theme-accent);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                  </span>
-                  <span class="theme-name">Custom</span>
-                </button>
-              </div>
-            </div>
-            <div class="settings-row" id="custom-color-row">
-              <div class="settings-row-label">
-                <span>Accent Color</span>
-                <small>Custom picker for the "Custom" theme</small>
-              </div>
-              <div class="color-picker-wrap">
-                <input type="color" id="custom-accent-picker" class="color-picker-input" value="#4cb837" />
-                <span class="color-hex-label" id="custom-accent-hex">#4cb837</span>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>UI Mode</span>
-                <small>Classic layout or advanced sidebar</small>
-              </div>
-              <div class="pill-switch" id="launcher-ui-modes">
-                <button type="button" class="pill-switch-option" data-ui-mode="classic">Classic</button>
-                <button type="button" class="pill-switch-option" data-ui-mode="advanced">Advanced</button>
-              </div>
+            <div class="theme-palette-grid" id="launcher-theme-picker">
+              <button type="button" class="theme-choice-card" data-theme="emerald" aria-label="Emerald theme">
+                <span class="theme-swatch" style="--swatch:#4cb837;"></span>
+                <span class="theme-name">Emerald</span>
+              </button>
+              <button type="button" class="theme-choice-card" data-theme="amethyst" aria-label="Amethyst theme">
+                <span class="theme-swatch" style="--swatch:#8b5cf6;"></span>
+                <span class="theme-name">Amethyst</span>
+              </button>
+              <button type="button" class="theme-choice-card" data-theme="ocean" aria-label="Ocean theme">
+                <span class="theme-swatch" style="--swatch:#3b82f6;"></span>
+                <span class="theme-name">Ocean</span>
+              </button>
+              <button type="button" class="theme-choice-card" data-theme="sunset" aria-label="Sunset theme">
+                <span class="theme-swatch" style="--swatch:#f97316;"></span>
+                <span class="theme-name">Sunset</span>
+              </button>
+              <button type="button" class="theme-choice-card" data-theme="custom" aria-label="Custom color">
+                <span class="theme-swatch custom-swatch" style="--swatch:var(--theme-accent);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </span>
+                <span class="theme-name">Custom</span>
+              </button>
             </div>
           </div>
+          <div class="settings-row" id="custom-color-row">
+            <div class="settings-row-label">
+              <span>Accent Color</span>
+              <small>Custom picker for the "Custom" theme</small>
+            </div>
+            <div class="color-picker-wrap">
+              <input type="color" id="custom-accent-picker" class="color-picker-input" value="#4cb837" />
+              <span class="color-hex-label" id="custom-accent-hex">#4cb837</span>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>UI Mode</span>
+              <small>Classic layout or advanced sidebar</small>
+            </div>
+            <div class="pill-switch" id="launcher-ui-modes">
+              <button type="button" class="pill-switch-option" data-ui-mode="classic">Classic</button>
+              <button type="button" class="pill-switch-option" data-ui-mode="advanced">Advanced</button>
+            </div>
+          </div>
+
+          <h3 class="settings-section-title">Visual Tuning</h3>
+          <p class="settings-section-desc">Border radius, animation, and compact mode</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Border Radius</span>
+              <small>How rounded are UI elements</small>
+            </div>
+            <div class="slider-group">
+              <input type="range" id="border-radius-slider" min="0" max="40" step="1" value="10" class="glass-slider" />
+              <span class="slider-value" id="border-radius-value">10px</span>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Animation Speed</span>
+              <small>UI motion multiplier (0 = off)</small>
+            </div>
+            <div class="slider-group">
+              <input type="range" id="animation-speed-slider" min="0" max="2" step="0.1" value="1" class="glass-slider" />
+              <span class="slider-value" id="animation-speed-value">1.0x</span>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Compact Mode</span>
+              <small>Reduced padding for a denser UI</small>
+            </div>
+            <label class="tg-switch">
+              <input type="checkbox" id="compact-mode-toggle" />
+              <span class="tg-slider"></span>
+            </label>
+          </div>
+
         </div>
-
-        <div class="settings-glass-card">
-          <div class="settings-card-header">
-            <div class="settings-card-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 3v18M3 12h18M8 8l8 8M16 8l-8 8"/>
-              </svg>
-            </div>
-            <div>
-              <h3>Visual Tuning</h3>
-              <p>Border radius, animation, blur, and compact mode</p>
-            </div>
-          </div>
-          <div class="settings-card-body">
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Border Radius</span>
-                <small>How rounded are UI elements</small>
-              </div>
-              <div class="slider-group">
-                <input type="range" id="border-radius-slider" min="0" max="40" step="1" value="10" class="glass-slider" />
-                <span class="slider-value" id="border-radius-value">10px</span>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Animation Speed</span>
-                <small>UI motion multiplier (0 = off)</small>
-              </div>
-              <div class="slider-group">
-                <input type="range" id="animation-speed-slider" min="0" max="2" step="0.1" value="1" class="glass-slider" />
-                <span class="slider-value" id="animation-speed-value">1.0x</span>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Compact Mode</span>
-                <small>Reduced padding for a denser UI</small>
-              </div>
-              <label class="tg-switch">
-                <input type="checkbox" id="compact-mode-toggle" />
-                <span class="tg-slider"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-
       </div>
 
       <!-- PERFORMANCE TAB -->
       <div class="settings-tab-panel" id="settings-panel-performance">
+        <div class="settings-page">
 
-        <div class="settings-glass-card">
-          <div class="settings-card-header">
-            <div class="settings-card-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-              </svg>
+          <h3 class="settings-section-title">Memory & Performance</h3>
+          <p class="settings-section-desc">RAM allocation, launcher smoothness, and mod optimization</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Memory Allocation</span>
+              <small>RAM for Minecraft (max ~80% of system)</small>
             </div>
-            <div>
-              <h3>Memory & Performance</h3>
-              <p>RAM allocation, launcher smoothness, and mod optimization</p>
-            </div>
-          </div>
-          <div class="settings-card-body">
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Memory Allocation</span>
-                <small>RAM for Minecraft (max ~80% of system)</small>
-              </div>
-              <div class="slider-group">
-                <input type="range" id="memory-slider" min="1" max="16" step="1" value="4" class="glass-slider" />
-                <span class="slider-value mem-value" id="memory-value-label">4 GB</span>
-              </div>
-              <div class="memory-presets">
-                <button class="mem-preset-btn" data-gb="2">2</button>
-                <button class="mem-preset-btn" data-gb="4">4</button>
-                <button class="mem-preset-btn" data-gb="6">6</button>
-                <button class="mem-preset-btn" data-gb="8">8</button>
-                <button class="mem-preset-btn" data-gb="12">12</button>
-                <button class="mem-preset-btn" data-gb="16">16</button>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Launcher Performance</span>
-                <small>Animation & background rendering load</small>
-              </div>
-              <div class="pill-switch" id="launcher-performance-modes">
-                <button class="pill-switch-option" data-performance-mode="quality">Quality</button>
-                <button class="pill-switch-option active" data-performance-mode="balanced">Balanced</button>
-                <button class="pill-switch-option" data-performance-mode="eco">Eco</button>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Performance Boost Pack</span>
-                <small>Auto-install Fabric optimization mods (Sodium, Lithium, etc.)</small>
-              </div>
-              <label class="tg-switch">
-                <input type="checkbox" id="auto-optimization" />
-                <span class="tg-slider"></span>
-              </label>
+            <div class="slider-group">
+              <input type="range" id="memory-slider" min="1" max="16" step="1" value="4" class="glass-slider" />
+              <span class="slider-value mem-value" id="memory-value-label">4 GB</span>
             </div>
           </div>
+          <div class="memory-presets">
+            <button class="mem-preset-btn" data-gb="2">2</button>
+            <button class="mem-preset-btn" data-gb="4">4</button>
+            <button class="mem-preset-btn" data-gb="6">6</button>
+            <button class="mem-preset-btn" data-gb="8">8</button>
+            <button class="mem-preset-btn" data-gb="12">12</button>
+            <button class="mem-preset-btn" data-gb="16">16</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Launcher Performance</span>
+              <small>Animation & background rendering load</small>
+            </div>
+            <div class="pill-switch" id="launcher-performance-modes">
+              <button class="pill-switch-option" data-performance-mode="quality">Quality</button>
+              <button class="pill-switch-option active" data-performance-mode="balanced">Balanced</button>
+              <button class="pill-switch-option" data-performance-mode="eco">Eco</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Performance Boost Pack</span>
+              <small>Auto-install Fabric optimization mods (Sodium, Lithium, etc.)</small>
+            </div>
+            <label class="tg-switch">
+              <input type="checkbox" id="auto-optimization" />
+              <span class="tg-slider"></span>
+            </label>
+          </div>
+
         </div>
-
       </div>
 
       <!-- JAVA & LAUNCH TAB -->
       <div class="settings-tab-panel" id="settings-panel-launch">
+        <div class="settings-page">
 
-        <div class="settings-glass-card">
-          <div class="settings-card-header">
-            <div class="settings-card-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="16 18 22 12 16 6"></polyline>
-                <polyline points="8 6 2 12 8 18"></polyline>
-              </svg>
+          <h3 class="settings-section-title">Java & Launch</h3>
+          <p class="settings-section-desc">Executable path, JVM arguments, and game launch defaults</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Java Path</span>
+              <small>Path to javaw.exe (leave empty for system default)</small>
             </div>
-            <div>
-              <h3>Java & Launch Configuration</h3>
-              <p>Executable path, JVM arguments, and game launch defaults</p>
-            </div>
+            <input type="text" class="glass-input" id="java-path" placeholder="Use System Default" />
           </div>
-          <div class="settings-card-body">
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Java Path</span>
-                <small>Path to javaw.exe (leave empty for system default)</small>
-              </div>
-              <input type="text" class="glass-input" id="java-path" placeholder="Use System Default" />
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Java Arguments</span>
+              <small>Global JVM flags for all launches</small>
             </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Java Arguments</span>
-                <small>Global JVM flags for all launches</small>
-              </div>
-              <input type="text" class="glass-input" id="global-java-args" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
+            <input type="text" class="glass-input" id="global-java-args" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Window Size</span>
+              <small>Default game resolution</small>
             </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Window Size</span>
-                <small>Default game resolution</small>
-              </div>
-              <div class="window-size-group">
-                <input type="number" class="glass-input sm" id="default-window-width" value="1024" />
-                <span class="win-size-x">&times;</span>
-                <input type="number" class="glass-input sm" id="default-window-height" value="768" />
-                <label class="tg-switch" style="margin-left:8px;">
-                  <input type="checkbox" id="fullscreen-toggle" />
-                  <span class="tg-slider"></span>
-                  <span class="tg-label">Fullscreen</span>
-                </label>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Hide on Launch</span>
-                <small>Auto-hide launcher when game starts</small>
-              </div>
-              <label class="tg-switch">
-                <input type="checkbox" id="hide-launcher-toggle" />
+            <div class="window-size-group">
+              <input type="number" class="glass-input sm" id="default-window-width" value="1024" />
+              <span class="win-size-x">&times;</span>
+              <input type="number" class="glass-input sm" id="default-window-height" value="768" />
+              <label class="tg-switch" style="margin-left:8px;">
+                <input type="checkbox" id="fullscreen-toggle" />
                 <span class="tg-slider"></span>
+                <span class="tg-label">Fullscreen</span>
               </label>
             </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>In-Game Overlay</span>
-                <small>Browser & friends overlay (experimental, requires fullscreen)</small>
-              </div>
-              <label class="tg-switch">
-                <input type="checkbox" id="overlay-toggle" />
-                <span class="tg-slider"></span>
-              </label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Hide on Launch</span>
+              <small>Auto-hide launcher when game starts</small>
             </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Custom Minecraft Location</span>
-                <small>Override the default game data folder</small>
-              </div>
-              <div class="folder-row">
-                <input type="text" class="glass-input" id="custom-minecraft-path" placeholder="Default Location" readonly />
-                <button class="glass-btn" id="btn-browse-minecraft-path">Browse</button>
-                <button class="glass-btn danger" id="btn-clear-minecraft-path" title="Reset">&times;</button>
-              </div>
+            <label class="tg-switch">
+              <input type="checkbox" id="hide-launcher-toggle" />
+              <span class="tg-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>In-Game Overlay</span>
+              <small>Browser & friends overlay (experimental, requires fullscreen)</small>
+            </div>
+            <label class="tg-switch">
+              <input type="checkbox" id="overlay-toggle" />
+              <span class="tg-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Custom Minecraft Location</span>
+              <small>Override the default game data folder</small>
+            </div>
+            <div class="folder-row">
+              <input type="text" class="glass-input" id="custom-minecraft-path" placeholder="Default Location" readonly />
+              <button class="glass-btn" id="btn-browse-minecraft-path">Browse</button>
+              <button class="glass-btn danger" id="btn-clear-minecraft-path" title="Reset">&times;</button>
             </div>
           </div>
+
         </div>
-
       </div>
 
       <!-- ACCESSIBILITY TAB -->
       <div class="settings-tab-panel" id="settings-panel-accessibility">
+        <div class="settings-page">
 
-        <div class="settings-glass-card">
-          <div class="settings-card-header">
-            <div class="settings-card-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 8v4l3 3M12 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"></path>
-              </svg>
+          <h3 class="settings-section-title">Accessibility</h3>
+          <p class="settings-section-desc">Font size, blur, animation reduction, and visual comfort</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Font Scale</span>
+              <small>Overall UI text size (80% to 140%)</small>
             </div>
-            <div>
-              <h3>Accessibility</h3>
-              <p>Font size, blur, animation reduction, and visual comfort</p>
-            </div>
-          </div>
-          <div class="settings-card-body">
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Font Scale</span>
-                <small>Overall UI text size (80% to 140%)</small>
-              </div>
-              <div class="slider-group">
-                <input type="range" id="font-scale-slider" min="0.8" max="1.4" step="0.05" value="1" class="glass-slider" />
-                <span class="slider-value" id="font-scale-value">100%</span>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Blur Intensity</span>
-                <small>Backdrop blur effect on glass panels</small>
-              </div>
-              <div class="blur-choice-group">
-                <button class="blur-choice-card" data-blur="none">None</button>
-                <button class="blur-choice-card" data-blur="light">Light</button>
-                <button class="blur-choice-card active" data-blur="medium">Medium</button>
-                <button class="blur-choice-card" data-blur="heavy">Heavy</button>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Animation Speed</span>
-                <small>Reduce motion (0 = no animations)</small>
-              </div>
-              <div class="slider-group">
-                <input type="range" id="access-animation-speed-slider" min="0" max="2" step="0.1" value="1" class="glass-slider" />
-                <span class="slider-value" id="access-animation-speed-value">1.0x</span>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Compact Mode</span>
-                <small>Reduced spacing for less scrolling</small>
-              </div>
-              <label class="tg-switch">
-                <input type="checkbox" id="access-compact-toggle" />
-                <span class="tg-slider"></span>
-              </label>
+            <div class="slider-group">
+              <input type="range" id="font-scale-slider" min="0.8" max="1.4" step="0.05" value="1" class="glass-slider" />
+              <span class="slider-value" id="font-scale-value">100%</span>
             </div>
           </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Blur Intensity</span>
+              <small>Backdrop blur effect on glass panels</small>
+            </div>
+            <div class="blur-choice-group">
+              <button class="blur-choice-card" data-blur="none">None</button>
+              <button class="blur-choice-card" data-blur="light">Light</button>
+              <button class="blur-choice-card active" data-blur="medium">Medium</button>
+              <button class="blur-choice-card" data-blur="heavy">Heavy</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Animation Speed</span>
+              <small>Reduce motion (0 = no animations)</small>
+            </div>
+            <div class="slider-group">
+              <input type="range" id="access-animation-speed-slider" min="0" max="2" step="0.1" value="1" class="glass-slider" />
+              <span class="slider-value" id="access-animation-speed-value">1.0x</span>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Compact Mode</span>
+              <small>Reduced spacing for less scrolling</small>
+            </div>
+            <label class="tg-switch">
+              <input type="checkbox" id="access-compact-toggle" />
+              <span class="tg-slider"></span>
+            </label>
+          </div>
+
         </div>
-
       </div>
 
       <!-- ABOUT TAB -->
       <div class="settings-tab-panel" id="settings-panel-about">
+        <div class="settings-page">
 
-        <div class="settings-glass-card">
-          <div class="settings-card-header">
-            <div class="settings-card-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
+          <h3 class="settings-section-title">About & Tools</h3>
+          <p class="settings-section-desc">Version info, updates, debugging, and quick actions</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Launcher Updates</span>
+              <small>Check for new versions</small>
             </div>
-            <div>
-              <h3>About & Tools</h3>
-              <p>Version info, updates, debugging, and quick actions</p>
-            </div>
+            <button class="glass-btn" id="btn-check-launcher-updates">Check for Updates</button>
           </div>
-          <div class="settings-card-body">
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Launcher Updates</span>
-                <small>Check for new versions</small>
-              </div>
-              <button class="glass-btn" id="btn-check-launcher-updates">Check for Updates</button>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Open Game Directory</span>
+              <small>Browse your Minecraft files</small>
             </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Open Game Directory</span>
-                <small>Browse your Minecraft files</small>
-              </div>
-              <button class="glass-btn" id="btn-open-folder">Open Folder</button>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Developer Tools</span>
-                <small>Chrome DevTools for debugging</small>
-              </div>
-              <button class="glass-btn" id="btn-toggle-devtools">Open DevTools</button>
-            </div>
+            <button class="glass-btn" id="btn-open-folder">Open Folder</button>
           </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Developer Tools</span>
+              <small>Chrome DevTools for debugging</small>
+            </div>
+            <button class="glass-btn" id="btn-toggle-devtools">Open DevTools</button>
+          </div>
+
         </div>
-
       </div>
 
     </div>
@@ -748,8 +681,14 @@ export function renderAppShell() {
       <button class="advanced-tab active" data-adv-tab="general">GENERAL</button>
       <button class="advanced-tab" data-adv-tab="background">BACKGROUND</button>
       <button class="advanced-tab" data-adv-tab="advanced">ADVANCED</button>
+      <button class="advanced-tab" data-adv-tab="launch">LAUNCH</button>
+      <button class="advanced-tab" data-adv-tab="about">ABOUT</button>
       <button class="advanced-tab" data-adv-tab="debug">DEBUG</button>
       <div class="advanced-tab-indicator"></div>
+      <button type="button" class="adv-open-dir-link" id="adv-btn-open-folder-top">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        OPEN DIRECTORY
+      </button>
     </div>
 
     <!-- GENERAL -->
@@ -804,6 +743,17 @@ export function renderAppShell() {
 
       <div class="adv-section">
         <div class="adv-section-header">
+          <h3>UI Mode</h3>
+          <p>Switch between Classic and Advanced interface</p>
+        </div>
+        <div class="pill-switch" id="adv-launcher-ui-modes">
+          <button type="button" class="pill-switch-option" data-ui-mode="classic">Classic</button>
+          <button type="button" class="pill-switch-option" data-ui-mode="advanced">Advanced</button>
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
           <h3>General Preferences</h3>
           <p>Toggle launcher behavior options</p>
         </div>
@@ -841,16 +791,64 @@ export function renderAppShell() {
         </div>
       </div>
 
+
+
       <div class="adv-section">
         <div class="adv-section-header">
-          <h3>UI Mode</h3>
-          <p>Switch between Classic and Advanced interface</p>
+          <h3>Visual Tuning</h3>
+          <p>Animation speed, font scale, backdrop blur, border radius, and compact mode</p>
         </div>
-        <div class="pill-switch" id="adv-launcher-ui-modes">
-          <button type="button" class="pill-switch-option" data-ui-mode="classic">Classic</button>
-          <button type="button" class="pill-switch-option" data-ui-mode="advanced">Advanced</button>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Animation Speed</span>
+            <span class="adv-slider-field-value" id="adv-animation-speed-value">1.0x</span>
+          </div>
+          <input type="range" id="adv-animation-speed" min="0" max="2" step="0.1" value="1" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>0x</span>
+            <span>2x</span>
+          </div>
         </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Font Scale</span>
+            <span class="adv-slider-field-value" id="adv-font-scale-value">100%</span>
+          </div>
+          <input type="range" id="adv-font-scale" min="0.8" max="1.4" step="0.05" value="1" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>80%</span>
+            <span>140%</span>
+          </div>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Border Radius</span>
+            <span class="adv-slider-field-value" id="adv-border-radius-value">10px</span>
+          </div>
+          <input type="range" id="adv-border-radius" min="0" max="40" step="1" value="10" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>0px</span>
+            <span>40px</span>
+          </div>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Backdrop Blur</span>
+          </div>
+          <div class="blur-choice-group" id="adv-blur-choices">
+            <button type="button" class="blur-choice-card" data-blur="none">None</button>
+            <button type="button" class="blur-choice-card" data-blur="light">Light</button>
+            <button type="button" class="blur-choice-card active" data-blur="medium">Medium</button>
+            <button type="button" class="blur-choice-card" data-blur="heavy">Heavy</button>
+          </div>
+        </div>
+        <label class="adv-toggle-row" style="margin-top:12px;">
+          <span>Compact Mode</span>
+          <input type="checkbox" id="adv-compact-mode-toggle" />
+          <span class="adv-toggle-track"></span>
+        </label>
       </div>
+
     </div>
 
     <!-- BACKGROUND -->
@@ -971,27 +969,96 @@ export function renderAppShell() {
         </label>
       </div>
 
+    </div>
+
+    <!-- JAVA & LAUNCH -->
+    <div class="advanced-tab-panel" data-adv-panel="launch">
       <div class="adv-section">
         <div class="adv-section-header">
-          <h3>Visual</h3>
-          <p>UI border radius and compact mode</p>
+          <h3>Java Runtime</h3>
+          <p>Path to javaw.exe and JVM flags applied to every launch</p>
+        </div>
+        <div class="adv-input-field">
+          <label class="adv-input-label" for="adv-java-path">Java Path</label>
+          <input type="text" class="adv-input" id="adv-java-path" placeholder="Use System Default" />
+        </div>
+        <div class="adv-input-field" style="margin-top:10px;">
+          <label class="adv-input-label" for="adv-global-java-args">Global Java Arguments</label>
+          <input type="text" class="adv-input" id="adv-global-java-args" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Game Window</h3>
+          <p>Default resolution, fullscreen, and in-game overlay</p>
         </div>
         <div class="adv-slider-field">
           <div class="adv-slider-field-header">
-            <span>Border Radius</span>
-            <span class="adv-slider-field-value" id="adv-border-radius-value">10px</span>
+            <span>Window Size</span>
+            <span class="adv-slider-field-value" id="adv-window-size-value">1024 x 768</span>
           </div>
-          <input type="range" id="adv-border-radius" min="0" max="40" step="1" value="10" class="adv-slider" />
-          <div class="adv-slider-range">
-            <span>0px</span>
-            <span>40px</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <input type="number" id="adv-default-window-width" class="adv-input adv-input--sm" min="640" max="7680" value="1024" />
+            <span class="adv-slider-label">x</span>
+            <input type="number" id="adv-default-window-height" class="adv-input adv-input--sm" min="480" max="4320" value="768" />
           </div>
         </div>
-        <label class="adv-toggle-row" style="margin-top:12px;">
-          <span>Compact Mode</span>
-          <input type="checkbox" id="adv-compact-mode-toggle" />
-          <span class="adv-toggle-track"></span>
-        </label>
+        <div class="adv-toggles" style="margin-top:12px;">
+          <label class="adv-toggle-row">
+            <span>Launch in Fullscreen</span>
+            <input type="checkbox" id="adv-fullscreen-toggle" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>In-Game Overlay</span>
+            <input type="checkbox" id="adv-overlay-toggle" />
+            <span class="adv-toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Custom Minecraft Location</h3>
+          <p>Override the default game data folder</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" class="adv-input" id="adv-custom-minecraft-path" placeholder="Default Location" readonly style="flex:1;min-width:0;" />
+          <button type="button" class="adv-btn" id="adv-btn-browse-minecraft-path">Browse</button>
+          <button type="button" class="adv-btn adv-btn--danger" id="adv-btn-clear-minecraft-path" title="Reset">&times;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="advanced-tab-panel" data-adv-panel="about">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Launcher</h3>
+          <p>Version info, updates, and quick actions</p>
+        </div>
+        <div class="adv-action-row">
+          <div class="adv-action-label">
+            <span>Launcher Updates</span>
+            <small>Check for new versions</small>
+          </div>
+          <button type="button" class="adv-btn" id="adv-btn-check-launcher-updates">Check for Updates</button>
+        </div>
+        <div class="adv-action-row">
+          <div class="adv-action-label">
+            <span>Open Game Directory</span>
+            <small>Browse your Minecraft files</small>
+          </div>
+          <button type="button" class="adv-btn" id="adv-btn-open-folder">Open Folder</button>
+        </div>
+        <div class="adv-action-row">
+          <div class="adv-action-label">
+            <span>Developer Tools</span>
+            <small>Chrome DevTools for debugging</small>
+          </div>
+          <button type="button" class="adv-btn" id="adv-btn-toggle-devtools">Open DevTools</button>
+        </div>
       </div>
     </div>
 
@@ -1248,8 +1315,7 @@ export function renderAppShell() {
 
             <div class="mp-welcome-hero">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-              <h2>Welcome! Let's set up your first modpack</h2>
-              <p>Pick a Minecraft version below, then create or browse a modpack.</p>
+              <h2>Set up your modpack</h2>
             </div>
 
             <div class="mp-wizard-columns">
@@ -1258,7 +1324,6 @@ export function renderAppShell() {
                 <div class="mp-wizard-header">
                   <span class="mp-wizard-step">Step 1</span>
                   <h3>Download a Minecraft Version</h3>
-                  <span class="mp-wizard-note">You need at least one version to play</span>
                 </div>
                 <div class="mp-version-download-grid" id="mp-version-download-grid">
                   <!-- Injected by JS -->
@@ -1272,7 +1337,6 @@ export function renderAppShell() {
                 <div class="mp-wizard-header">
                   <span class="mp-wizard-step">Step 2</span>
                   <h3>Create or Import a Modpack</h3>
-                  <span class="mp-wizard-note">Add mods, resource packs, and shaders</span>
                 </div>
                 <div class="mp-wizard-buttons">
                   <button class="mp-action-btn browse" id="btn-new-modpack-wizard">+ New Modpack</button>
@@ -1398,9 +1462,13 @@ export function renderAppShell() {
             <div class="browser-results" id="mod-browser-results"></div>
           </div>
           <div class="browser-sidebar" id="browser-sidebar">
-            <div class="browser-filter-section">
+            <div class="browser-filter-section" id="section-category">
               <h4 class="browser-filter-title">Category</h4>
               <div class="browser-filter-options" id="filter-category"></div>
+            </div>
+            <div class="browser-filter-section" id="section-resolution" style="display:none">
+              <h4 class="browser-filter-title">Resolution</h4>
+              <div class="browser-filter-options" id="filter-resolution"></div>
             </div>
             <div class="browser-filter-section">
               <h4 class="browser-filter-title">Sort By</h4>
@@ -1411,7 +1479,7 @@ export function renderAppShell() {
                 <option value="follows">Most Follows</option>
               </select>
             </div>
-            <div class="browser-filter-section">
+            <div class="browser-filter-section" id="section-loader">
               <h4 class="browser-filter-title">Loader</h4>
               <div class="browser-filter-options" id="filter-loader"></div>
             </div>
@@ -1527,16 +1595,39 @@ export function renderAppShell() {
   <!-- LAUNCH OVERLAY -->
   <div class="launch-overlay" id="launch-overlay">
     <div class="launch-overlay-card">
-      <img src="./loading.gif" class="launch-spinner-gif" alt="Loading...">
-      <div class="launch-status" id="launch-status">Preparing game...</div>
+      <div class="launch-card-header">
+        <img src="./loading.gif" class="launch-spinner-gif" alt="Loading...">
+        <div class="launch-status" id="launch-status">Preparing game...</div>
+        <div class="launch-card-controls">
+          <button type="button" class="launch-icon-btn" id="btn-minimize-launch"
+                  data-action="minimize" title="Minimize (keep using the launcher)" aria-label="Minimize launch overlay">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <button type="button" class="launch-icon-btn" id="btn-restore-launch"
+                  data-action="restore" title="Expand" aria-label="Expand launch overlay" style="display:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
       <div class="launch-bar">
         <div class="launch-fill" id="launch-fill"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;">
-        <span style="font-size:11px;color:var(--text-muted);">You can keep using the launcher while this runs.</span>
+      <div class="launch-card-footer">
+        <span class="launch-hint">You can keep using the launcher while this runs.</span>
         <button class="modal-btn" id="btn-cancel-launch" style="padding:8px 12px;">Cancel</button>
       </div>
     </div>
+  </div>
+
+  <!-- MINI INDICATOR (shown when launch overlay is minimized) -->
+  <div class="launch-mini-indicator" id="launch-mini-indicator" role="button" tabindex="0" title="Restore launch overlay" aria-label="Restore launch overlay">
+    <span class="launch-mini-spinner" aria-hidden="true"></span>
+    <span class="launch-mini-text" id="launch-mini-text">Launching…</span>
+    <button type="button" class="launch-mini-close" id="btn-mini-close" title="Hide indicator (launch continues in background)" aria-label="Hide indicator">×</button>
   </div>
 
   <!-- ERROR MODAL -->
@@ -1842,8 +1933,8 @@ export function renderAppShell() {
   <!-- DOWNLOAD DETAIL PANEL -->
   <div class="download-detail-panel" id="download-detail-panel">
     <div class="ddp-header">
-      <span class="ddp-title">Downloading Modpack</span>
-      <button class="ddp-close" id="btn-ddp-close">
+      <span class="ddp-title" id="ddp-title">Downloading Modpack</span>
+      <button type="button" class="ddp-close" id="btn-ddp-close" aria-label="Close download panel">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -1870,6 +1961,8 @@ export function renderAppShell() {
     </div>
     <div class="ddp-actions">
       <button class="ddp-btn ddp-cancel" id="btn-ddp-cancel">Cancel</button>
+      <button class="ddp-btn ddp-retry" id="btn-ddp-retry" style="display:none;">Retry</button>
+      <button class="ddp-btn ddp-dismiss" id="btn-ddp-dismiss" style="display:none;">Dismiss</button>
     </div>
   </div>
 

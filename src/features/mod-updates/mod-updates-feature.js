@@ -84,37 +84,51 @@ async function checkSingleModUpdate(item) {
       return null;
     }
 
-    // Get the latest version
-    const latest = versions[0];
-    const latestVersion = latest.version_number;
-    const latestFile = latest.files?.find(f => f.primary) || latest.files?.[0];
-    console.log('[ModUpdates] Latest version for', item.name, ':', latestVersion, 'Current:', currentVersion);
+    // Collect all downloadable versions for the version picker dropdown
+    const availableVersions = [];
+    for (const ver of versions) {
+      const file = ver.files?.find(f => f.primary) || ver.files?.[0];
+      if (ver.version_number && file?.url && file?.filename) {
+        availableVersions.push({
+          versionNumber: ver.version_number,
+          filename: file.filename,
+          downloadUrl: file.url
+        });
+      }
+      // Limit to 20 entries so the dropdown doesn't overflow
+      if (availableVersions.length >= 20) break;
+    }
 
-    if (!latestVersion || !latestFile?.url || !latestFile?.filename) {
-      console.warn('[ModUpdates] No downloadable version in latest version for', item.name);
+    // The "latest" is the first entry that has a downloadable file
+    const latest = availableVersions[0];
+    if (!latest) {
+      console.warn('[ModUpdates] No downloadable version found for', item.name);
       return null;
     }
 
-    if (isSameInstalledFile(item.filename, latestFile.filename) || versionsAreEquivalent(currentVersion, latestVersion, item)) {
+    console.log('[ModUpdates] Latest version for', item.name, ':', latest.versionNumber, 'Current:', currentVersion);
+
+    if (isSameInstalledFile(item.filename, latest.filename) || versionsAreEquivalent(currentVersion, latest.versionNumber, item)) {
       console.log('[ModUpdates] No update for', item.name, '- versions match');
       return null;
     }
 
     if (currentVersion) {
-      console.log('[ModUpdates] UPDATE AVAILABLE:', item.name, currentVersion, '->', latestVersion);
+      console.log('[ModUpdates] UPDATE AVAILABLE:', item.name, currentVersion, '->', latest.versionNumber);
       return {
         name: project.title,
         filename: item.filename,
         currentVersion: currentVersion || 'Unknown',
-        latestVersion: latestVersion,
-        latestFilename: latestFile.filename,
-        downloadUrl: latestFile.url,
+        latestVersion: latest.versionNumber,
+        latestFilename: latest.filename,
+        downloadUrl: latest.downloadUrl,
         modrinthId: projectId,
         iconUrl: item.iconUrl || project.icon_url || '',
         installedItem: item,
         type: item.type,
         hasUpdate: true,
-        changelog: latest.changelog || 'No changelog available'
+        availableVersions,
+        changelog: ''
       };
     }
   } catch (e) {
@@ -200,7 +214,10 @@ function buildSearchFacets(item) {
   }
 
   const mcVersion = getMinecraftVersion(item);
-  if (mcVersion) facets.push([`versions:${mcVersion}`]);
+  if (mcVersion && item.type !== 'shader') {
+    const candidates = buildMcVersionCandidates(mcVersion);
+    facets.push(candidates.map(v => `versions:${v}`));
+  }
   return facets;
 }
 
@@ -209,7 +226,10 @@ function buildVersionsUrl(projectId, item) {
   const mcVersion = item.versionFilter || getMinecraftVersion(item);
   const loader = getLoader(item);
 
-  if (mcVersion) params.set('game_versions', JSON.stringify([mcVersion]));
+  if (mcVersion && item.type !== 'shader') {
+    const candidates = buildMcVersionCandidates(mcVersion);
+    params.set('game_versions', JSON.stringify(candidates));
+  }
   if (item.type === 'mod' && loader) params.set('loaders', JSON.stringify([loader]));
 
   const query = params.toString();
@@ -217,16 +237,11 @@ function buildVersionsUrl(projectId, item) {
 }
 
 async function fetchProjectVersions(projectId, item) {
+  // A single call now passes all candidate game_versions (exact → major.minor → ±2).
+  // The Modrinth API returns versions that match ANY of the candidates.
   const versions = await requestProjectVersions(projectId, item);
-  if (versions.length > 0) return versions;
-
-  const mcVersion = getMinecraftVersion(item);
-  const majorMinor = mcVersion.split('.').slice(0, 2).join('.');
-  if (majorMinor && majorMinor !== mcVersion) {
-    return requestProjectVersions(projectId, { ...item, versionFilter: majorMinor });
-  }
-
-  return versions;
+  if (!Array.isArray(versions)) return [];
+  return versions.sort((a, b) => new Date(b.date_published || 0) - new Date(a.date_published || 0));
 }
 
 async function requestProjectVersions(projectId, item) {
@@ -244,6 +259,17 @@ async function requestProjectVersions(projectId, item) {
 function getMinecraftVersion(item) {
   const version = item.mcVersion || item.modpackMcVersion;
   return isMinecraftVersion(version) ? version : '';
+}
+
+// Build candidate versions: exact version + major.minor only (matching the browser discover pattern).
+function buildMcVersionCandidates(mcVersion) {
+  if (!mcVersion || typeof mcVersion !== 'string') return [];
+  const candidates = new Set([mcVersion]);
+  const parts = mcVersion.split('.');
+  if (parts.length >= 2) {
+    candidates.add(`${parts[0]}.${parts[1]}`);
+  }
+  return [...candidates];
 }
 
 function getLoader(item) {

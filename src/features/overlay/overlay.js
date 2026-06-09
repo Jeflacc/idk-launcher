@@ -32,9 +32,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const requestsList = document.getElementById("requests-list");
 
   // State
-  let IDK_BACKEND_URL = "https://play.somniac.me";
+  let IDK_BACKEND_URL = localStorage.getItem("idk_backend_url") || "https://play.somniac.me";
   let idkToken = localStorage.getItem("idk_connect_token") || "";
-  let idkUser = JSON.parse(localStorage.getItem("idk_connect_user") || "null");
+  let idkUser = (() => { try { return JSON.parse(localStorage.getItem("idk_connect_user")); } catch { return null; } })();
 
   let activeTunnelUrl = null;
   let activeSharePort = null;
@@ -126,15 +126,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       body: body ? JSON.stringify(body) : null,
     });
 
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.error || "Request failed");
-    return json;
+    if (!res.ok) {
+      try {
+        const err = await res.json();
+        throw new Error(err.error || `Server error ${res.status}`);
+      } catch (e) {
+        if (e.message.startsWith("Server error")) throw e;
+        throw new Error(`Server error ${res.status}`);
+      }
+    }
+    return res.json();
   }
 
   // --- AUTH UI SYNC ---
   function updateAuthUI() {
     idkToken = localStorage.getItem("idk_connect_token") || "";
-    idkUser = JSON.parse(localStorage.getItem("idk_connect_user") || "null");
+    try { idkUser = JSON.parse(localStorage.getItem("idk_connect_user")); } catch { idkUser = null; }
 
     if (idkToken && idkUser) {
       loggedOutPanel.style.display = "none";
@@ -508,10 +515,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   function joinFriendWorld(friend) {
     if (!friend.cloudflaredUrl) return;
 
-    let connectAddressText = friend.cloudflaredUrl.replace(/^(tcp|https?):\/\//i, '');
-    if (!connectAddressText.includes(':')) {
-      connectAddressText += ':25565';
-    }
+    const connectAddressText = friend.cloudflaredUrl.replace(/^(tcp|https?):\/\//i, '');
 
     navigator.clipboard.writeText(connectAddressText);
     showToast(

@@ -1,16 +1,28 @@
 import "./style.css";
 import "./advanced-theme.css";
-import { downloadProgressTracker } from "./components/download-progress.js";
-import { accessibilityManager } from "./components/accessibility-manager.js";
-import { errorDisplay } from "./components/error-display.js";
+import "./launch-overlay-fix.css";
+// Side-effect imports: constructors register UI and IPC behavior
+import "./components/download-progress.js";
+import "./components/accessibility-manager.js";
+import "./components/error-display.js";
 import { renderAppShell } from "./app/app-shell.js";
 import { state, actions } from "./core/app-state.js";
 import { createViewController, initWindowControls } from "./core/views.js";
 import { initBackgroundEffects } from "./features/background/background-effects.js";
+import { initGameFeaturesIntegration } from "./features/game-features/game-features-integration.js";
 
 function applyWindowModeClass(data) {
   const maximized = !!data?.maximized;
   document.body.dataset.windowMode = maximized ? 'maximized' : 'restored';
+}
+
+function applyModpackUiScale() {
+  const root = document.documentElement;
+  const width = root.clientWidth || window.innerWidth || 1366;
+  const height = root.clientHeight || window.innerHeight || 768;
+  const minDim = Math.min(width, height);
+  const scale = Math.max(0.88, Math.min(1, minDim / 900));
+  root.style.setProperty("--mods-ui-scale", scale.toFixed(3));
 }
 
 if (window.electronAPI) {
@@ -70,17 +82,7 @@ if (window.electronAPI) {
       state.launcherUiMode = getMigrated('launcherUiMode', 'idk_launcher_ui_mode', 'classic');
 
       if (s.elybyData !== undefined && s.elybyData !== null) {
-        localStorage.setItem('craftlaunch_elybydata', JSON.stringify(s.elybyData));
-      } else {
-        const localEly = localStorage.getItem('craftlaunch_elybydata');
-        if (localEly) {
-          try {
-            const parsed = JSON.parse(localEly);
-            if (parsed && Object.keys(parsed).length > 0) {
-              migrate.elybyData = parsed;
-            }
-          } catch(e) {}
-        }
+        migrate.elybyData = s.elybyData;
       }
       
       if (s.lastPlayedVersion !== undefined && s.lastPlayedVersion) {
@@ -150,13 +152,10 @@ if (window.electronAPI?.onWindowStateChanged) {
   window.electronAPI.onWindowStateChanged(applyWindowModeClass);
 }
 applyWindowModeClass({ maximized: window.outerWidth >= screen.availWidth - 20 && window.outerHeight >= screen.availHeight - 20 });
+applyModpackUiScale();
+window.addEventListener("resize", applyModpackUiScale);
 
 renderAppShell();
-
-// Keep these singletons alive; their constructors register UI and IPC behavior.
-void downloadProgressTracker;
-void accessibilityManager;
-void errorDisplay;
 
 const { switchView, getReturnView } = createViewController();
 actions.switchView = switchView;
@@ -201,4 +200,5 @@ initContentFeature();
 initDesktopHelpers();
 initFriendsFeature();
 initProfileFeature({ switchView, getReturnView });
+initGameFeaturesIntegration();
 initBackgroundEffects();

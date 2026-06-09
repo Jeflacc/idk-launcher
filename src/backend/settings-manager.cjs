@@ -535,8 +535,10 @@ class SettingsManager extends EventEmitter {
         fs.mkdirSync(this.userDataPath, { recursive: true });
       }
       
-      // Write to disk
-      fs.writeFileSync(this.settingsPath, JSON.stringify(this.settings, null, 2), 'utf-8');
+      // Write to disk (atomic: write to temp, then rename)
+      const tmpFile = this.settingsPath + '.tmp';
+      fs.writeFileSync(tmpFile, JSON.stringify(this.settings, null, 2), 'utf-8');
+      fs.renameSync(tmpFile, this.settingsPath);
       
       this.emit('settings-changed', this._extractSettingsValues());
     } catch (error) {
@@ -559,8 +561,10 @@ class SettingsManager extends EventEmitter {
         fs.mkdirSync(this.userDataPath, { recursive: true });
       }
       
-      // Write defaults to disk
-      fs.writeFileSync(this.settingsPath, JSON.stringify(this.settings, null, 2), 'utf-8');
+      // Write defaults to disk (atomic: write to temp, then rename)
+      const tmpFile = this.settingsPath + '.tmp';
+      fs.writeFileSync(tmpFile, JSON.stringify(this.settings, null, 2), 'utf-8');
+      fs.renameSync(tmpFile, this.settingsPath);
       
       this.emit('settings-changed', this._extractSettingsValues());
     } catch (error) {
