@@ -41,14 +41,38 @@ jobs:
       - name: Build Electron Binaries
         run: npx electron-builder --publish never
 
+      - name: Rename Windows Artifacts
+        if: matrix.platform == 'win'
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          Get-ChildItem dist-electron -File | Where-Object { $_.Name -match 'Setup.*\.exe$' -and $_.Name -notmatch 'uninstaller' } | ForEach-Object {
+            Rename-Item $_.FullName -NewName "IDK-Launcher-$version-Windows-x64.exe"
+          }
+          Get-ChildItem dist-electron -File | Where-Object { $_.Name -match '\.blockmap$' } | Remove-Item -Force
+
+      - name: Rename macOS Artifacts
+        if: matrix.platform == 'mac'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          cd dist-electron
+          for f in *.dmg; do [ -f "$f" ] && mv "$f" "IDK-Launcher-$VERSION-macOS.dmg"; done
+          for f in *.zip; do [ -f "$f" ] && mv "$f" "IDK-Launcher-$VERSION-macOS.zip"; done
+
+      - name: Rename Linux Artifacts
+        if: matrix.platform == 'linux'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          cd dist-electron
+          for f in *.AppImage; do [ -f "$f" ] && mv "$f" "IDK-Launcher-$VERSION-Linux-x64.AppImage"; done
+          for f in *.deb; do [ -f "$f" ] && mv "$f" "IDK-Launcher-$VERSION-Linux-x64.deb"; done
+
       - name: Upload Windows Artifacts
         if: matrix.platform == 'win'
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: |
-            dist-electron/*.exe
-            dist-electron/*.exe.blockmap
+          path: dist-electron/*.exe
           retention-days: 5
 
       - name: Upload macOS Artifacts
