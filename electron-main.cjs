@@ -1379,7 +1379,7 @@ autoUpdater.on('error', (err) => {
 ipcMain.handle('update:check', async () => {
   try {
     const result = await autoUpdater.checkForUpdates();
-    if (result && result.updateInfo) {
+    if (result && result.downloadPromise) {
       const info = result.updateInfo;
       return {
         updateAvailable: true,
