@@ -82,5 +82,5 @@ jobs:
           echo "Uploading:"
           ls -la upload/
 
-          gh release upload "$TAG" upload/* --clobber --repo ${{ github.repository }}
+          gh release create "$TAG" upload/* --repo ${{ github.repository }} --title "$TAG" --generate-notes || gh release upload "$TAG" upload/* --clobber --repo ${{ github.repository }}
           echo "Done"
