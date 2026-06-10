@@ -92,7 +92,6 @@ export function initAuthFeature({ switchView }) {
         state.authMode = "elyby";
         localStorage.setItem("craftlaunch_username", state.currentUser);
         localStorage.setItem("craftlaunch_authmode", state.authMode);
-        localStorage.setItem("craftlaunch_elybydata", JSON.stringify(data));
         if (window.electronAPI) {
           window.electronAPI
             .saveSettings({

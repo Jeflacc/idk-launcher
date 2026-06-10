@@ -49,7 +49,7 @@ async function getModDependencies(modrinthId) {
     const dependencies = [];
 
     // Get all versions to find dependencies
-    const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${modrinthId}/versions`);
+    const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${modrinthId}/version`);
     if (!versionsRes.ok) return [];
 
     const versions = await versionsRes.json();
@@ -102,7 +102,7 @@ export async function resolveDependencies(modpackId, modId) {
           const modData = await modRes.json();
           
           // Get download URL for latest version
-          const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${dep.projectId}/versions`);
+          const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${dep.projectId}/version`);
           if (!versionsRes.ok) {
             failed.push({ name: modData.title, reason: 'No versions found' });
             continue;

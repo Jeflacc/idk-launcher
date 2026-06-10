@@ -1,11 +1,303 @@
 import { state, actions } from '../../core/app-state.js';
 
+function updateSetupDisplay() {
+  const el = document.getElementById('play-dd-setup-value');
+  if (el) {
+    el.textContent = `${state.selectedVersion || '—'} · ${state.selectedLoader || 'Vanilla'}`;
+  }
+}
+
+function populateVersionList() {
+  const list = document.getElementById('play-dd-version-list');
+  if (!list) return;
+
+  const downloadedList = (state.allVersions || []).filter(v =>
+    state.downloadedVersions.includes(v.id)
+  );
+
+  if (downloadedList.length === 0) {
+    list.innerHTML = `
+      <div style="padding:12px 8px;text-align:center;color:rgba(255,255,255,0.5);font-size:11px;line-height:1.5;">
+        No versions installed yet.<br>
+        <span style="display:inline-block;margin-top:8px;padding:6px 14px;border-radius:4px;background:rgba(var(--theme-accent-rgb),0.15);color:var(--theme-accent-bright);cursor:pointer;font-family:var(--font-title);font-size:11px;letter-spacing:0.5px;" id="play-dd-go-modpacks">
+          Download a Version
+        </span>
+      </div>
+    `;
+    const goBtn = document.getElementById('play-dd-go-modpacks');
+    if (goBtn) {
+      goBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pd = document.getElementById('play-dropdown');
+        const pdt = document.getElementById('play-dropdown-trigger');
+        if (pd) pd.classList.remove('active');
+        if (pdt) pdt.classList.remove('active');
+        if (actions.switchView) actions.switchView('mods');
+      });
+    }
+    return;
+  }
+
+  // Show up to 8 downloaded versions (latest first)
+  const sorted = [...downloadedList].sort((a, b) => {
+    const idxA = state.allVersions.indexOf(a);
+    const idxB = state.allVersions.indexOf(b);
+    return idxA - idxB;
+  }).slice(0, 8);
+
+  function getLoaderForVersion(verId) {
+    // Truth source: actual installed loader from disk scan
+    if (window.__installedLoaders && window.__installedLoaders[verId]) return window.__installedLoaders[verId];
+    return 'Vanilla';
+  }
+
+  list.innerHTML = '';
+  sorted.forEach(v => {
+    const loader = getLoaderForVersion(v.id);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'play-dd-version-wrapper';
+    wrapper.innerHTML = `
+      <button class="play-dd-version-btn${v.id === state.selectedVersion ? ' active' : ''}" data-version="${v.id}">
+        <span class="play-dd-version-id">${v.id}</span>
+        <span class="play-dd-version-loader">${loader}</span>
+      </button>
+    `;
+    const btn = wrapper.querySelector('.play-dd-version-btn');
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.selectedVersion = v.id;
+      const txt = document.getElementById('selected-version-text');
+      if (txt) txt.textContent = `Version: ${v.id}`;
+      localStorage.setItem('idk_last_played', JSON.stringify({ version: state.selectedVersion, loader: state.selectedLoader }));
+      // Use the actual installed loader from disk, not user preference
+      const installedLoader = (window.__installedLoaders && window.__installedLoaders[v.id]) || 'Vanilla';
+      state.selectedLoader = installedLoader;
+      localStorage.setItem('idk_selected_loader', state.selectedLoader);
+      updateLoaderUIFromDropdown(state.selectedLoader);
+      updateSetupDisplay();
+      populateVersionList();
+      document.getElementById('version-dropdown')?.classList.remove('open');
+      if (window.electronAPI) {
+        window.electronAPI.saveSettings({ lastPlayedVersion: state.selectedVersion, lastPlayedLoader: state.selectedLoader }).catch(console.error);
+      }
+      if (actions.updateLoaderUI) actions.updateLoaderUI(state.selectedLoader);
+      if (actions.renderVersions) actions.renderVersions();
+    });
+    list.appendChild(wrapper);
+  });
+  // "More" button that opens the full version dropdown
+  const moreBtn = document.createElement('button');
+  moreBtn.className = 'play-dd-version-btn play-dd-version-more';
+  moreBtn.textContent = 'All versions…';
+  moreBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const pd = document.getElementById('play-dropdown');
+    const pdt = document.getElementById('play-dropdown-trigger');
+    if (pd) pd.classList.remove('active');
+    if (pdt) pdt.classList.remove('active');
+    if (window.showLaunchVersionPicker) {
+      window.showLaunchVersionPicker();
+    } else {
+      // Fallback: try to open the old version-dropdown
+      const versionDropdown = document.getElementById('version-dropdown');
+      if (versionDropdown) {
+        versionDropdown.classList.add('open');
+        document.getElementById('selected-version-text')?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  });
+  list.appendChild(moreBtn);
+}
+
+// Own renderer for play-dropdown "All versions" modal — selects version for launch
+function renderForLaunchVersionsModal(tab) {
+  const list = document.getElementById('mp-all-version-list');
+  if (!list) return;
+  const filtered = (state.allVersions || []).filter(v => {
+    if (tab === 'release') return v.type === 'release';
+    if (tab === 'snapshot') return v.type === 'snapshot';
+    if (tab === 'old') return v.type === 'old_beta' || v.type === 'old_alpha';
+    return true;
+  });
+  list.innerHTML = '';
+  filtered.forEach(v => {
+    const isDownloaded = state.downloadedVersions.includes(v.id);
+    const installedLoader = (window.__installedLoaders && window.__installedLoaders[v.id]) || null;
+    const label = v.type === 'release' ? 'Release' : v.type === 'snapshot' ? 'Snapshot' : 'Old';
+    const item = document.createElement('div');
+    item.className = 'mp-version-download-item' + (isDownloaded ? ' downloaded' : '');
+    if (isDownloaded) {
+      item.style.cursor = 'pointer';
+      item.title = 'Click to select this version for launch';
+    }
+    item.innerHTML = `
+      <span style="display:flex;align-items:center;gap:8px;">
+        <span class="version-name">${v.id}</span>
+        ${isDownloaded && installedLoader ? `<span class="mp-dl-loader-badge">${installedLoader}</span>` : ''}
+        <span class="version-type">${label}</span>
+      </span>
+      <button type="button" class="mp-dl-btn${isDownloaded ? ' downloaded' : ''}" data-version="${v.id}">
+        ${isDownloaded ? 'Use' : 'Download'}
+      </button>
+    `;
+    const btn = item.querySelector('.mp-dl-btn');
+    if (isDownloaded) {
+      const handler = (e) => {
+        e.stopPropagation();
+        state.selectedVersion = v.id;
+        const txt = document.getElementById('selected-version-text');
+        if (txt) txt.textContent = `Version: ${v.id}`;
+        const loader = installedLoader || 'Vanilla';
+        state.selectedLoader = loader;
+        localStorage.setItem('idk_last_played', JSON.stringify({ version: v.id, loader }));
+        localStorage.setItem('idk_selected_loader', loader);
+        if (window.electronAPI) {
+          window.electronAPI.saveSettings({ lastPlayedVersion: v.id, lastPlayedLoader: loader }).catch(console.error);
+        }
+        if (actions.updateLoaderUI) actions.updateLoaderUI(loader);
+        document.getElementById('mp-all-versions-modal')?.classList.remove('active');
+      };
+      btn.addEventListener('click', handler);
+      item.addEventListener('click', handler);
+    } else {
+      const startDownload = async (e) => {
+        e?.stopPropagation?.();
+        e?.preventDefault?.();
+        if (!window.electronAPI?.downloadVersion) {
+          console.warn('[Launch] downloadVersion API is unavailable');
+          return;
+        }
+        document.getElementById('mp-all-versions-modal')?.classList.remove('active');
+        const panelShow = window.showDownloadPanel || window.showDlPanel;
+        const panelUpdate = window.updateDownloadPanel || window.updateDlPanel;
+        const panelHide = window.hideDownloadPanel || window.hideDlPanel;
+        panelShow?.(`Downloading ${v.id}...`, 5, 'Downloading Minecraft Version');
+        btn.classList.add('downloading');
+        btn.textContent = 'Downloading...';
+        btn.disabled = true;
+        const progressHandler = (data) => {
+          const payload = data?.downloadId ? data : (data || {});
+          panelUpdate?.(
+            payload.status || `Downloading ${v.id}...`,
+            Number.isFinite(payload.percent) ? payload.percent : 5,
+            payload.speed,
+            payload.eta,
+            payload.item || v.id
+          );
+        };
+        const removeProgress = window.electronAPI.onDownloadProgress?.(progressHandler);
+        try {
+          const result = await window.electronAPI.downloadVersion({ version: v.id });
+          if (!result?.success) throw new Error(result?.error || `Failed to download Minecraft ${v.id}`);
+          if (!state.downloadedVersions.includes(v.id)) {
+            state.downloadedVersions.push(v.id);
+            localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
+          }
+          btn.classList.remove('downloading');
+          btn.classList.add('downloaded');
+          btn.textContent = 'Use';
+          btn.disabled = false;
+          panelHide?.();
+          renderForLaunchVersionsModal(currentLaunchTab);
+        } catch (err) {
+          console.error('[Launch] Version download failed:', err);
+          btn.classList.remove('downloading');
+          btn.textContent = 'Failed';
+          panelHide?.();
+          setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
+        } finally {
+          removeProgress?.();
+        }
+      };
+      btn.addEventListener('click', startDownload);
+      item.addEventListener('click', startDownload);
+    }
+    list.appendChild(item);
+  });
+}
+let currentLaunchTab = 'release';
+window.showLaunchVersionPicker = () => {
+  document.getElementById('mp-all-versions-modal')?.classList.add('active');
+  // Clone-replace tab buttons to strip modpacks-feature's event listeners
+  document.querySelectorAll('#mp-all-versions-modal [data-dl-tab]').forEach(oldBtn => {
+    const clone = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(clone, oldBtn);
+    clone.addEventListener('click', () => {
+      document.querySelectorAll('[data-dl-tab]').forEach(b => b.classList.remove('active'));
+      clone.classList.add('active');
+      renderForLaunchVersionsModal(clone.getAttribute('id').replace('mp-dl-tab-', ''));
+    });
+  });
+  renderForLaunchVersionsModal('release');
+};
+
+function updateLoaderUIFromDropdown(loaderName) {
+  document.querySelectorAll('.play-dd-loader-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-loader') === loaderName);
+  });
+}
+
 export function initLaunchFeature() {
+// --- PLAY BUTTON DROPDOWN ---
+const playDropdown = document.getElementById('play-dropdown');
+const playDropdownTrigger = document.getElementById('play-dropdown-trigger');
+
+if (playDropdownTrigger && playDropdown) {
+  playDropdownTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    playDropdown.classList.toggle('active');
+    playDropdownTrigger.classList.toggle('active');
+    if (playDropdown.classList.contains('active')) {
+      updateSetupDisplay();
+      populateVersionList();
+      updateLoaderUIFromDropdown(state.selectedLoader);
+    }
+  });
+
+  document.getElementById('play-dd-modpacks').addEventListener('click', () => {
+    playDropdown.classList.remove('active');
+    playDropdownTrigger.classList.remove('active');
+    actions.switchView('mods');
+  });
+
+  // Loader buttons
+  document.querySelectorAll('.play-dd-loader-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const loader = btn.getAttribute('data-loader');
+      state.selectedLoader = loader;
+      localStorage.setItem('idk_selected_loader', loader);
+      if (state.selectedVersion) {
+        if (!state.versionSettings[state.selectedVersion]) {
+          state.versionSettings[state.selectedVersion] = {};
+        }
+        state.versionSettings[state.selectedVersion].loader = loader;
+        localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
+      }
+      if (window.electronAPI) {
+        window.electronAPI.saveSettings({ lastPlayedLoader: loader, versionSettings: state.versionSettings }).catch(console.error);
+      }
+      updateLoaderUIFromDropdown(loader);
+      updateSetupDisplay();
+      if (actions.updateLoaderUI) actions.updateLoaderUI(loader);
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    const wrapper = document.getElementById('play-btn-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      playDropdown.classList.remove('active');
+      playDropdownTrigger.classList.remove('active');
+    }
+  });
+}
+
 // --- PLAY LOGIC ---
 const playBtn = document.getElementById('play-btn');
 const overlay = document.getElementById('launch-overlay');
 const launchStatus = document.getElementById('launch-status');
 const launchFill = document.getElementById('launch-fill');
+const cancelLaunchBtn = document.getElementById('btn-cancel-launch');
 
 const mcFunStatuses = [
   "Waking up the Iron Golems...",
@@ -57,11 +349,16 @@ function getFunStatus(status) {
 if (window.electronAPI) {
   window.electronAPI.onLaunchProgress((data) => {
     if (data.percent !== undefined) launchFill.style.width = `${data.percent}%`;
-    if (data.status) launchStatus.innerText = getFunStatus(data.status);
+    const text = data.status ? getFunStatus(data.status) : '';
+    if (text) {
+      launchStatus.innerText = text;
+      setMiniText(text);
+    }
   });
   window.electronAPI.onGameLaunched(() => {
     // Smart UI Offloading
     document.body.classList.add('game-running');
+    gameStartTime = Date.now();
     document.querySelectorAll('video').forEach(v => v.pause());
     const mojangNewsGrid = document.getElementById('mojang-news-grid');
     if (mojangNewsGrid) mojangNewsGrid.innerHTML = '';
@@ -73,7 +370,7 @@ if (window.electronAPI) {
       state.downloadedVersions.push(state.selectedVersion);
       localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
     }
-    
+
     // Update lastPlayed timestamp for the current modpack
     const mp = actions.modpacks?.mpGet?.();
     if (mp) {
@@ -81,32 +378,97 @@ if (window.electronAPI) {
       actions.modpacks?.mpSave?.();
       actions.modpacks?.mpRenderDetail?.();
     }
-    
+
     launchFill.style.width = '100%';
     launchStatus.innerText = 'Game is running!';
+    // Hide the mini-indicator — the game is now running independently.
+    if (miniIndicator) miniIndicator.classList.remove('visible');
     setTimeout(() => {
       overlay.classList.remove('active');
+      overlay.classList.remove('minimized');
       playBtn.innerText = 'RUNNING';
       playBtn.classList.add('running');
       playBtn.disabled = true;
     }, 800);
   });
-  window.electronAPI.onLaunchClosed(() => {
+  window.electronAPI.onLaunchClosed((data) => {
     document.body.classList.remove('game-running');
     window.dispatchEvent(new Event('reload-content'));
-    playBtn.innerText = 'PLAY';
-    playBtn.classList.remove('running');
-    playBtn.disabled = false;
+    // Always dismiss the launch overlay regardless of which play button
+    // initiated the launch (main page or modpack page).
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.classList.remove('minimized');
+    }
+    if (miniIndicator) miniIndicator.classList.remove('visible');
+    if (playBtn) {
+      playBtn.innerText = 'PLAY';
+      playBtn.classList.remove('running');
+      playBtn.disabled = false;
+    }
+    const mpPlayBtn = document.getElementById('btn-play-modpack');
+    if (mpPlayBtn) {
+      mpPlayBtn.innerText = 'PLAY';
+      mpPlayBtn.classList.remove('running');
+      mpPlayBtn.disabled = false;
+    }
+
+    // Crash / quick-exit detection
+    const code = data?.code;
+    const output = data?.output || '';
+    const elapsed = gameStartTime ? (Date.now() - gameStartTime) / 1000 : Infinity;
+    gameStartTime = 0;
+    if (code !== undefined && code !== null && code !== 0) {
+      const isQuickExit = elapsed < 15;
+      const header = isQuickExit
+        ? 'Game exited unexpectedly right after launch.'
+        : `Game exited with code ${code}.`;
+      const hint = output
+        ? `\n\nLast output:\n${output.slice(-800)}`
+        : '';
+      showWarningToast(header + hint);
+    } else if (output && /Exception|FATAL|Error:/.test(output) && elapsed < 15) {
+      showWarningToast('Game crashed shortly after launch. Check the logs for details.');
+    }
+
     updatePlaytime();
     updateAchievementsDisplay();
   });
   window.electronAPI.onLaunchError((error) => {
-    document.getElementById('error-message').innerText = error;
+    const errMsg = typeof error === 'string' ? error : (error?.message || 'An unknown error occurred.');
+    const attemptedVersion = error?.version || state.selectedVersion || 'this version';
+    const attemptedLoader = error?.loader || state.selectedLoader || 'Unknown';
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.classList.remove('minimized');
+    }
+    if (miniIndicator) miniIndicator.classList.remove('visible');
+    if (playBtn) {
+      playBtn.innerText = 'PLAY';
+      playBtn.classList.remove('running');
+      playBtn.disabled = false;
+    }
+    const mpPlayBtn = document.getElementById('btn-play-modpack');
+    if (mpPlayBtn) {
+      mpPlayBtn.innerText = 'PLAY';
+      mpPlayBtn.classList.remove('running');
+      mpPlayBtn.disabled = false;
+    }
+
+    // Smart loader-unavailable handling
+    const loaderUnavailablePattern = /(Fabric|Forge|NeoForge|Quilt).*?(not available|No.*?builds found)/i;
+    const match = errMsg.match(loaderUnavailablePattern);
+    if (match) {
+      document.getElementById('error-message').innerHTML = `
+        <strong>${attemptedLoader}</strong> is not available for Minecraft <strong>${attemptedVersion}</strong>.<br><br>
+        This version may not have a ${attemptedLoader} release. Use the dropdown to switch to a different loader or version, then try again.
+      `;
+      document.getElementById('error-modal').classList.add('active');
+      return;
+    }
+
+    document.getElementById('error-message').innerText = errMsg;
     document.getElementById('error-modal').classList.add('active');
-    overlay.classList.remove('active');
-    playBtn.innerText = 'PLAY';
-    playBtn.classList.remove('running');
-    playBtn.disabled = false;
   });
   window.electronAPI.onLaunchWarning((msg) => showWarningToast(msg));
 
@@ -129,16 +491,96 @@ if (window.electronAPI) {
   });
 }
 
-playBtn.addEventListener('click', () => {
+if (cancelLaunchBtn && window.electronAPI) {
+  cancelLaunchBtn.addEventListener('click', () => {
+    window.electronAPI.cancelLaunch?.();
+    overlay.classList.remove('active');
+    overlay.classList.remove('minimized');
+    playBtn.innerText = 'PLAY';
+    playBtn.classList.remove('running');
+    playBtn.disabled = false;
+  });
+}
+
+// --- Minimize / restore the launch overlay ---
+// When minimized, the full overlay (backdrop + card) is completely
+// hidden via display:none, and a small floating "launch-mini-indicator"
+// pill is shown at bottom-right. Clicking the pill restores the full
+// overlay. Clicking the X on the pill dismisses the indicator only
+// (the launch continues in the background).
+const minimizeLaunchBtn = document.getElementById('btn-minimize-launch');
+const restoreLaunchBtn = document.getElementById('btn-restore-launch');
+const miniIndicator = document.getElementById('launch-mini-indicator');
+const miniText = document.getElementById('launch-mini-text');
+const miniClose = document.getElementById('btn-mini-close');
+let miniIndicatorDismissed = false;
+
+function setLaunchMinimized(minimized) {
+  if (!overlay) return;
+  overlay.classList.toggle('minimized', !!minimized);
+  if (minimizeLaunchBtn) minimizeLaunchBtn.style.display = minimized ? 'none' : '';
+  if (restoreLaunchBtn) restoreLaunchBtn.style.display = minimized ? '' : 'none';
+  if (miniIndicator && !miniIndicatorDismissed) {
+    miniIndicator.classList.toggle('visible', !!minimized);
+  }
+}
+function setMiniText(text) {
+  if (miniText) miniText.textContent = text;
+}
+if (minimizeLaunchBtn) minimizeLaunchBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  miniIndicatorDismissed = false;
+  setLaunchMinimized(true);
+});
+if (restoreLaunchBtn) restoreLaunchBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  setLaunchMinimized(false);
+});
+// Clicking the mini-indicator pill restores the full overlay.
+if (miniIndicator) {
+  miniIndicator.addEventListener('click', (e) => {
+    if (e.target.closest('#btn-mini-close')) return;
+    setLaunchMinimized(false);
+  });
+  miniIndicator.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setLaunchMinimized(false);
+    }
+  });
+}
+// X button on the mini-indicator: dismiss the indicator only
+// (launch keeps running in the background, no visible UI).
+if (miniClose) {
+  miniClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    miniIndicatorDismissed = true;
+    miniIndicator.classList.remove('visible');
+  });
+}
+
+playBtn.addEventListener('click', async (e) => {
+  e.stopPropagation();
+  if (overlay?.classList.contains('active') && !overlay.classList.contains('minimized')) {
+    return;
+  }
   localStorage.setItem('idk_last_played', JSON.stringify({ version: state.selectedVersion, loader: state.selectedLoader }));
   if (window.electronAPI) {
     window.electronAPI.saveSettings({ lastPlayedVersion: state.selectedVersion, lastPlayedLoader: state.selectedLoader }).catch(console.error);
   }
+  overlay.classList.remove('minimized');
   overlay.classList.add('active');
   gameStartTime = Date.now();
   launchFill.style.width = '0%';
   launchStatus.innerText = 'Initializing...';
-  const authData = state.authMode === 'elyby' ? JSON.parse(localStorage.getItem('craftlaunch_elybydata') || '{}') : null;
+  let authData = null;
+  try {
+    if (state.authMode === 'elyby' && window.electronAPI?.getElybyAuthData) {
+      authData = (await window.electronAPI.getElybyAuthData()).data || null;
+    }
+  } catch (e) {
+    console.warn('[Launch] Ely.by auth retrieval failed:', e);
+  }
 
   if (window.electronAPI) {
     const windowSize = {
@@ -146,7 +588,7 @@ playBtn.addEventListener('click', () => {
       height: state.defaultWindowHeight,
       fullscreen: state.defaultFullscreen,
       enableOverlay: state.enableOverlay,
-      hideLauncher: state.hideLauncher !== false
+      hideLauncher: state.hideLauncher === true
     };
     window.electronAPI.launchMinecraft(
       state.currentUser,
@@ -356,10 +798,13 @@ if (viewMain && bgSlider) {
   Object.assign(actions, {
     showWarningToast,
     beginLaunchOverlay(status = 'Initializing...') {
+      overlay.classList.remove('minimized');
       overlay.classList.add('active');
       gameStartTime = Date.now();
       launchFill.style.width = '0%';
       launchStatus.innerText = status;
+      if (minimizeLaunchBtn) minimizeLaunchBtn.style.display = '';
+      if (restoreLaunchBtn) restoreLaunchBtn.style.display = 'none';
     },
     playGame: () => playBtn.click(),
     getPlayButton: () => playBtn,

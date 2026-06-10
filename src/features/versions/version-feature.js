@@ -108,11 +108,15 @@ async function scanDownloadedVersions() {
     
     state.downloadedVersions = result.versions || [];
     console.log(`[Versions] Scanned ${state.downloadedVersions.length} downloaded versions:`, state.downloadedVersions);
+
+    // Store truth source: actual installed loaders from disk
+    window.__installedLoaders = {};
     
     // Update versionSettings with detected loaders
     if (result.versionDetails) {
       Object.keys(result.versionDetails).forEach(version => {
         const details = result.versionDetails[version];
+        window.__installedLoaders[version] = details.loader || 'Vanilla';
         if (!state.versionSettings[version]) {
           state.versionSettings[version] = {};
         }
@@ -131,6 +135,13 @@ async function scanDownloadedVersions() {
     // Re-render versions if they're already loaded
     if (state.allVersions && state.allVersions.length > 0) {
       renderVersions();
+    }
+
+    // Update loader display to reflect actual installed loader for current version
+    if (state.selectedVersion && window.__installedLoaders && window.__installedLoaders[state.selectedVersion]) {
+      state.selectedLoader = window.__installedLoaders[state.selectedVersion];
+      localStorage.setItem('idk_selected_loader', state.selectedLoader);
+      updateLoaderUI(state.selectedLoader);
     }
   } catch (e) {
     console.warn('[Versions] Failed to scan downloaded versions:', e);
@@ -163,6 +174,7 @@ async function fetchVersions() {
     state.allVersions = data.versions;
     if (!state.selectedVersion) state.selectedVersion = data.latest.release;
     renderVersions();
+    window.dispatchEvent(new CustomEvent('versions-loaded'));
   } catch (err) {
     selectedText.innerText = "1.20.4 (Offline)";
   }
@@ -227,9 +239,9 @@ function renderVersions() {
       selectedText.innerText = `Version: ${v.id}`;
       versionDropdown.classList.remove('open');
 
-      // Auto-load loader settings for this version if available
-      const versionSettings = state.versionSettings[v.id] || { loader: 'Vanilla' };
-      state.selectedLoader = versionSettings.loader || 'Vanilla';
+      // Use the actual installed loader from disk, not user preference
+      const installedLoader = (window.__installedLoaders && window.__installedLoaders[v.id]) || 'Vanilla';
+      state.selectedLoader = installedLoader;
       localStorage.setItem('idk_selected_loader', state.selectedLoader);
       if (window.electronAPI) {
         window.electronAPI.saveSettings({ lastPlayedLoader: state.selectedLoader }).catch(console.error);

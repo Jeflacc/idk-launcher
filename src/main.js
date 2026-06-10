@@ -1,14 +1,30 @@
 import "./style.css";
 import "./advanced-theme.css";
-import { downloadProgressTracker } from "./components/download-progress.js";
-import { accessibilityManager } from "./components/accessibility-manager.js";
-import { errorDisplay } from "./components/error-display.js";
-import SettingsUI from "./components/settings-ui.js";
+import "./launch-overlay-fix.css";
+// Side-effect imports: constructors register UI and IPC behavior
+import "./components/download-progress.js";
+import "./components/accessibility-manager.js";
+import "./components/error-display.js";
 import { renderAppShell } from "./app/app-shell.js";
 import { state, actions } from "./core/app-state.js";
 import { createViewController, initWindowControls } from "./core/views.js";
+import { initBackgroundEffects } from "./features/background/background-effects.js";
+import { initGameFeaturesIntegration } from "./features/game-features/game-features-integration.js";
 
-// Load persistent settings from settings.json via Electron IPC
+function applyWindowModeClass(data) {
+  const maximized = !!data?.maximized;
+  document.body.dataset.windowMode = maximized ? 'maximized' : 'restored';
+}
+
+function applyModpackUiScale() {
+  const root = document.documentElement;
+  const width = root.clientWidth || window.innerWidth || 1366;
+  const height = root.clientHeight || window.innerHeight || 768;
+  const minDim = Math.min(width, height);
+  const scale = Math.max(0.88, Math.min(1, minDim / 900));
+  root.style.setProperty("--mods-ui-scale", scale.toFixed(3));
+}
+
 if (window.electronAPI) {
   try {
     const result = await window.electronAPI.loadSettings();
@@ -16,7 +32,6 @@ if (window.electronAPI) {
       const s = result.settings;
       const migrate = {};
 
-      // Helper for migration from localStorage if setting has default/empty value
       const getMigrated = (key, localKey, defaultValue, isBool = false, isInt = false) => {
         const backendVal = s[key];
         const localValRaw = localStorage.getItem(localKey);
@@ -41,28 +56,35 @@ if (window.electronAPI) {
       state.defaultWindowHeight = getMigrated('defaultWindowHeight', 'idk_default_window_height', 768, false, true);
       state.defaultFullscreen = getMigrated('defaultFullscreen', 'idk_default_fullscreen', false, true);
       state.enableOverlay = getMigrated('enableOverlay', 'idk_enable_overlay', false, true);
+      state.language = getMigrated('language', 'idk_language', 'en');
+      state.backgroundEffect = getMigrated('backgroundEffect', 'idk_background_effect', 'none');
+      state.backgroundIntensity = getMigrated('backgroundIntensity', 'idk_background_intensity', 50, false, true);
+      state.concurrentDownloads = getMigrated('concurrentDownloads', 'idk_concurrent_downloads', 4, false, true);
+      state.concurrentIO = Math.min(getMigrated('concurrentIO', 'idk_concurrent_io', 2, false, true), 8);
+      state.autoUpdates = getMigrated('autoUpdates', 'idk_auto_updates', true, true);
+      state.discordPresence = getMigrated('discordPresence', 'idk_discord_presence', true, true);
+      state.betaUpdates = getMigrated('betaUpdates', 'idk_beta_updates', false, true);
+      state.openLogsAfterLaunch = getMigrated('openLogsAfterLaunch', 'idk_open_logs', false, true);
+      state.analyticsEnabled = getMigrated('analyticsEnabled', 'idk_analytics', false, true);
       state.hideLauncher = getMigrated('hideLauncher', 'idk_hide_launcher', true, true);
       state.maxMemoryGB = getMigrated('maxMemoryGB', 'craftlaunch_maxMemory', 4, false, true);
       state.launcherPerformanceMode = getMigrated('launcherPerformanceMode', 'idk_launcher_performance_mode', 'balanced');
       state.autoOptimization = getMigrated('autoOptimization', 'craftlaunch_autoOptimization', false, true);
       state.currentUser = getMigrated('currentUser', 'craftlaunch_username', '');
       state.authMode = getMigrated('authMode', 'craftlaunch_authmode', 'offline');
+      state.launcherTheme = getMigrated('launcherTheme', 'idk_launcher_theme', 'emerald');
+      state.launcherAccentColor = getMigrated('launcherAccentColor', 'idk_accent_color', '#4cb837');
+      state.launcherBorderRadius = getMigrated('launcherBorderRadius', 'idk_border_radius', 10, false, true);
+      state.launcherAnimationSpeed = getMigrated('launcherAnimationSpeed', 'idk_animation_speed', 1, false, true);
+      state.launcherFontScale = getMigrated('launcherFontScale', 'idk_font_scale', 1, false, true);
+      state.launcherBlurIntensity = getMigrated('launcherBlurIntensity', 'idk_blur_intensity', 'medium');
+      state.launcherCompactMode = getMigrated('launcherCompactMode', 'idk_compact_mode', false, true);
+      state.launcherUiMode = getMigrated('launcherUiMode', 'idk_launcher_ui_mode', 'classic');
 
       if (s.elybyData !== undefined && s.elybyData !== null) {
-        localStorage.setItem('craftlaunch_elybydata', JSON.stringify(s.elybyData));
-      } else {
-        const localEly = localStorage.getItem('craftlaunch_elybydata');
-        if (localEly) {
-          try {
-            const parsed = JSON.parse(localEly);
-            if (parsed && Object.keys(parsed).length > 0) {
-              migrate.elybyData = parsed;
-            }
-          } catch(e) {}
-        }
+        migrate.elybyData = s.elybyData;
       }
       
-      // Load lastPlayed if present
       if (s.lastPlayedVersion !== undefined && s.lastPlayedVersion) {
         state.selectedVersion = s.lastPlayedVersion;
       } else {
@@ -93,7 +115,6 @@ if (window.electronAPI) {
         }
       }
       
-      // Load versionSettings if present
       if (s.versionSettings !== undefined && s.versionSettings !== null && Object.keys(s.versionSettings).length > 0) {
         state.versionSettings = s.versionSettings;
       } else {
@@ -106,7 +127,6 @@ if (window.electronAPI) {
         }
       }
       
-      // Load playtime if present
       const backendPlaytime = s.playtime !== undefined ? s.playtime : 0;
       const localPlaytimeRaw = localStorage.getItem('idk_playtime');
       let finalPlaytime = backendPlaytime;
@@ -119,26 +139,23 @@ if (window.electronAPI) {
       }
       localStorage.setItem('idk_playtime', finalPlaytime);
       
-      // Save migrated settings back to file
       if (Object.keys(migrate).length > 0) {
-        console.log('[Main] Migrating settings from localStorage to settings.json:', migrate);
         window.electronAPI.saveSettings(migrate).catch(console.error);
       }
-      
-      console.log('[Main] Persistent settings loaded and applied to state.');
     }
   } catch (e) {
     console.error('[Main] Failed to load settings from SettingsManager:', e);
   }
 }
 
-renderAppShell();
+if (window.electronAPI?.onWindowStateChanged) {
+  window.electronAPI.onWindowStateChanged(applyWindowModeClass);
+}
+applyWindowModeClass({ maximized: window.outerWidth >= screen.availWidth - 20 && window.outerHeight >= screen.availHeight - 20 });
+applyModpackUiScale();
+window.addEventListener("resize", applyModpackUiScale);
 
-// Keep these singletons alive; their constructors register UI and IPC behavior.
-void downloadProgressTracker;
-void accessibilityManager;
-void errorDisplay;
-void SettingsUI;
+renderAppShell();
 
 const { switchView, getReturnView } = createViewController();
 actions.switchView = switchView;
@@ -183,3 +200,5 @@ initContentFeature();
 initDesktopHelpers();
 initFriendsFeature();
 initProfileFeature({ switchView, getReturnView });
+initGameFeaturesIntegration();
+initBackgroundEffects();

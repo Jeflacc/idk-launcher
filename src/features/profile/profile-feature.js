@@ -11,6 +11,42 @@ let homeSkinViewerInstance = null;
 let homeSkinResizeObserver = null;
 let profileReturnView = "main";
 
+// Some GPUs (notably older Intel iGPUs) reject WebGL2 3D texture uploads
+// with FLIP_Y or PREMULTIPLY_ALPHA. Detect this once and skip the 3D
+// viewer entirely on affected devices.
+let _3dTextureSupport = null;
+function canUse3DTextures() {
+  if (_3dTextureSupport !== null) return _3dTextureSupport;
+  try {
+    const testCanvas = document.createElement("canvas");
+    const gl = testCanvas.getContext("webgl2");
+    if (!gl) {
+      _3dTextureSupport = false;
+      return false;
+    }
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_3D, tex);
+    gl.texImage3D(
+      gl.TEXTURE_3D,
+      0,
+      gl.RGBA,
+      2,
+      2,
+      2,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      new Uint8Array(2 * 2 * 2 * 4),
+    );
+    const err = gl.getError();
+    gl.deleteTexture(tex);
+    _3dTextureSupport = err === gl.NO_ERROR;
+  } catch (_) {
+    _3dTextureSupport = false;
+  }
+  return _3dTextureSupport;
+}
+
 function formatPlaytimeHours() {
   const totalMs = parseInt(localStorage.getItem("idk_playtime") || "0", 10);
   return `${(totalMs / (1000 * 60 * 60)).toFixed(1)}h`;
@@ -47,12 +83,14 @@ function disposeHomeSkinViewer() {
 }
 
 function fitCanvasToStage(canvasEl, stageEl) {
-  const maxW = stageEl.clientWidth + 200;
-  const maxH = stageEl.clientHeight + 200;
-  let width = Math.min(1400, maxW);
-  let height = Math.min(1400, maxH);
+  const maxW = 600;
+  const maxH = 800;
+  const width = Math.max(300, Math.min(maxW, stageEl.clientWidth));
+  const height = Math.max(400, Math.min(maxH, stageEl.clientHeight));
   canvasEl.style.width = `${width}px`;
   canvasEl.style.height = `${height}px`;
+  canvasEl.style.margin = "0 auto";
+  canvasEl.style.display = "block";
   return { width, height };
 }
 
@@ -76,8 +114,6 @@ function applyViewerCamera(viewer) {
 
   if (viewer.playerObject) {
     viewer.playerObject.rotation.y = 0.3;
-    viewer.playerObject.rotation.z= 0;
-    viewer.playerObject.position.y = 0;
   }
 
   if (typeof viewer.zoom === "number") {
@@ -85,13 +121,108 @@ function applyViewerCamera(viewer) {
   }
 }
 
+// === Player Pose System ===
+// Uses skinview3d animations for character poses
+const POSE_ANIMATIONS = {};
+const POSE_SPEEDS = {
+  idle: 0.55,
+  walking: 0.7,
+  running: 1.0,
+  flying: 0.6,
+  wave: 0.8,
+  crouch: 0.5,
+  swim: 0.5,
+};
+
+function getSavedPose() {
+  return localStorage.getItem("idk_player_pose") || "idle";
+}
+
+function savePose(poseName) {
+  localStorage.setItem("idk_player_pose", poseName);
+}
+
+async function ensureAnimationsLoaded() {
+  if (Object.keys(POSE_ANIMATIONS).length > 0) return;
+  const {
+    IdleAnimation,
+    WalkingAnimation,
+    RunningAnimation,
+    FlyingAnimation,
+    WaveAnimation,
+    CrouchAnimation,
+    SwimAnimation,
+    FunctionAnimation,
+  } = await import("skinview3d");
+
+  POSE_ANIMATIONS.idle = () => {
+    const anim = new FunctionAnimation((player, progress, delta) => {
+      const headLook = Math.sin(progress * Math.PI * 0.5) * 0.06;
+      const sway = Math.sin(progress * Math.PI * 0.4) * 0.02;
+      player.skin.head.rotation.y = headLook;
+      player.skin.head.rotation.x = Math.sin(progress * Math.PI * 0.3 + 1) * 0.04;
+      player.skin.leftArm.rotation.x = -0.04 + sway;
+      player.skin.leftArm.rotation.z = -0.02;
+      player.skin.rightArm.rotation.x = 0.04 - sway;
+      player.skin.rightArm.rotation.z = 0.02;
+      player.skin.leftLeg.rotation.x = -sway * 0.3;
+      player.skin.rightLeg.rotation.x = sway * 0.3;
+    });
+    anim.speed = 0.4;
+    return anim;
+  };
+  POSE_ANIMATIONS.walking = () => new WalkingAnimation();
+  POSE_ANIMATIONS.running = () => new RunningAnimation();
+  POSE_ANIMATIONS.flying = () => new FlyingAnimation();
+  POSE_ANIMATIONS.wave = () => new WaveAnimation("right");
+  POSE_ANIMATIONS.crouch = () => new CrouchAnimation();
+  POSE_ANIMATIONS.swim = () => new SwimAnimation();
+}
+
+function applyPose(viewer, poseName) {
+  if (!viewer) return;
+  if (!POSE_ANIMATIONS[poseName]) {
+    viewer.animation = null;
+    return;
+  }
+  const poseAnim = POSE_ANIMATIONS[poseName]();
+  if (poseAnim) {
+    poseAnim.speed = POSE_SPEEDS[poseName] || 0.5;
+    viewer.animation = poseAnim;
+  }
+}
+
+function setupPoseSelector(viewer) {
+  const selector = document.getElementById("pose-selector");
+  if (!selector) return;
+
+  const savedPose = getSavedPose();
+
+  selector.querySelectorAll(".pose-btn").forEach((btn) => {
+    const pose = btn.dataset.pose;
+    if (pose === savedPose) {
+      selector.querySelectorAll(".pose-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    }
+
+    btn.addEventListener("click", () => {
+      selector.querySelectorAll(".pose-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyPose(viewer, pose);
+      savePose(pose);
+    });
+  });
+}
+
 function fitHomeCanvasToStage(canvasEl, stageEl) {
-  const maxW = Math.max(240, stageEl.clientWidth - 16);
-  const maxH = Math.max(360, stageEl.clientHeight - 16);
-  const width = Math.min(500, maxW);
-  const height = Math.min(640, maxH);
+  const maxW = 400;
+  const maxH = 600;
+  const width = Math.max(200, Math.min(maxW, stageEl.clientWidth));
+  const height = Math.max(300, Math.min(maxH, stageEl.clientHeight));
   canvasEl.style.width = `${width}px`;
   canvasEl.style.height = `${height}px`;
+  canvasEl.style.margin = "0 auto";
+  canvasEl.style.display = "block";
   return { width, height };
 }
 
@@ -114,7 +245,6 @@ function applyHomeViewerCamera(viewer) {
 
   if (viewer.playerObject) {
     viewer.playerObject.rotation.y = -0.28;
-    viewer.playerObject.position.y = 0;
   }
 
   if (typeof viewer.zoom === "number") {
@@ -154,14 +284,22 @@ async function initHomeSkinViewer() {
   const { width, height } = fitHomeCanvasToStage(canvasEl, stage);
 
   try {
-    const { SkinViewer, IdleAnimation } = await import("skinview3d");
+    const { SkinViewer } = await import("skinview3d");
     const THREE = await import("three");
+
+    // Detect GPUs/drivers that reject 3D texture uploads with FLIP_Y
+    // (e.g. some Intel iGPUs). In that case skip the 3D viewer and show
+    // a static 2D preview instead.
+    if (!canUse3DTextures()) {
+      throw new Error("3D textures unsupported on this GPU");
+    }
 
     homeSkinViewerInstance = new SkinViewer({
       canvas: canvasEl,
       width,
       height,
       skin: texture,
+      preserveDrawingBuffer: true,
     });
 
     canvasEl.width = width;
@@ -191,9 +329,9 @@ async function initHomeSkinViewer() {
 
     applyHomeViewerCamera(homeSkinViewerInstance);
 
-    const ambientAnimation = new IdleAnimation();
-    ambientAnimation.speed = 0.48;
-    homeSkinViewerInstance.animation = ambientAnimation;
+    await ensureAnimationsLoaded();
+    const savedPose = getSavedPose();
+    applyPose(homeSkinViewerInstance, savedPose);
 
     if (loaderEl) loaderEl.style.display = "none";
     canvasEl.classList.add("is-ready");
@@ -235,7 +373,7 @@ async function initProfileSkinViewer() {
   const { width, height } = fitCanvasToStage(canvasEl, stage);
 
   try {
-    const { SkinViewer, IdleAnimation } = await import("skinview3d");
+    const { SkinViewer } = await import("skinview3d");
 
     skinViewerInstance = new SkinViewer({
       canvas: canvasEl,
@@ -276,9 +414,10 @@ async function initProfileSkinViewer() {
 
     applyViewerCamera(skinViewerInstance);
 
-    const ambientAnimation = new IdleAnimation();
-    ambientAnimation.speed = 0.55;
-    skinViewerInstance.animation = ambientAnimation;
+    await ensureAnimationsLoaded();
+    const savedPose = getSavedPose();
+    applyPose(skinViewerInstance, savedPose);
+    setupPoseSelector(skinViewerInstance);
 
     if (loaderEl) loaderEl.style.display = "none";
     canvasEl.classList.add("is-ready");
@@ -372,13 +511,28 @@ async function loadProfileFriendsList() {
     friendCards.forEach(card => {
       const nameEl = card.querySelector(".friend-info strong");
       const statusEl = card.querySelector(".friend-status-text");
-      const avatarEl = card.querySelector(".friend-avatar canvas");
+      const removeBtn = card.querySelector(".friend-remove-btn");
+      const unreadBadge = card.querySelector(".friend-unread-badge");
       
+      // Extract friend ID from data-id on remove button or from canvas id
+      let friendId = removeBtn ? removeBtn.getAttribute("data-id") : null;
+      if (!friendId) {
+        const canvas = card.querySelector(".friend-avatar canvas");
+        if (canvas) {
+          const canvasId = canvas.id;
+          if (canvasId && canvasId.startsWith("friend-avatar-")) {
+            friendId = canvasId.replace("friend-avatar-", "");
+          }
+        }
+      }
+
       if (nameEl) {
         friends.push({
+          id: friendId,
           username: nameEl.textContent.trim(),
           status: statusEl ? statusEl.textContent.trim() : "Offline",
-          element: card
+          element: card,
+          unreadCount: unreadBadge ? parseInt(unreadBadge.innerText) || 0 : 0
         });
       }
     });
@@ -390,7 +544,7 @@ async function loadProfileFriendsList() {
 
     // Render friends in profile sidebar (limit to 8)
     friendsListEl.innerHTML = friends.slice(0, 8).map(friend => `
-      <div class="profile-friend-item" title="${friend.username}">
+      <div class="profile-friend-item" title="${friend.username}" data-friend-id="${friend.id || ""}">
         <div class="profile-friend-avatar">
           <canvas width="24" height="24" data-friend-username="${friend.username}"></canvas>
         </div>
@@ -398,14 +552,44 @@ async function loadProfileFriendsList() {
           <span class="profile-friend-name">${friend.username}</span>
           <span class="profile-friend-status ${friend.status.toLowerCase().includes("playing") || friend.status.toLowerCase().includes("hosting") ? "online" : "offline"}">${friend.status}</span>
         </div>
+        ${friend.unreadCount > 0 ? `<span class="profile-friend-unread">${friend.unreadCount}</span>` : ""}
       </div>
     `).join("");
 
-    // Load friend avatars
+    // Load friend avatars and attach click handlers
     friends.slice(0, 8).forEach(friend => {
       const canvas = friendsListEl.querySelector(`canvas[data-friend-username="${friend.username}"]`);
       if (canvas) {
         loadAvatarForUser(canvas, friend.username, "elyby");
+      }
+
+      // Attach click handler to open chat with this friend
+      const item = friendsListEl.querySelector(`.profile-friend-item[data-friend-id="${friend.id}"]`);
+      if (item) {
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          // Open the friends sidebar
+          actions.openFriendsSidebar?.();
+          // Build the friend object for enterChat
+          const friendData = {
+            id: friend.id,
+            username: friend.username,
+            status: friend.status === "Offline" ? "offline" : "online",
+          };
+          // Copy status-related fields from the original friend card's data
+          const card = friend.element;
+          if (card) {
+            const joinBtn = card.querySelector(".friend-join-btn");
+            const statusEl = card.querySelector(".friend-status-text");
+            if (joinBtn) friendData.cloudflaredUrl = true;
+            if (statusEl && statusEl.classList.contains("playing")) {
+              friendData.playingVersion = "Minecraft";
+            } else if (statusEl && statusEl.classList.contains("hosting")) {
+              friendData.playingVersion = "Minecraft";
+            }
+          }
+          setTimeout(() => actions.openChatWithFriend?.(friendData), 200);
+        });
       }
     });
   } catch (err) {

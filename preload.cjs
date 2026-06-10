@@ -7,20 +7,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   launchMinecraft: (username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect, windowSize, globalJavaArgs) =>
     ipcRenderer.send('launch-minecraft', { username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect, windowSize, globalJavaArgs }),
+  cancelLaunch: () => ipcRenderer.send('cancel-launch'),
 
   // All IPC listeners — registered once at startup
   onLaunchProgress:  (cb) => ipcRenderer.on('launch-progress',  (_e, data)  => cb(data)),
   onGameLaunched:    (cb) => ipcRenderer.on('game-launched',    ()          => cb()),
-  onLaunchClosed:    (cb) => ipcRenderer.on('launch-closed',    ()          => cb()),
+  onLaunchClosed:    (cb) => ipcRenderer.on('launch-closed',    (_e, data)  => cb(data)),
   onLaunchError:     (cb) => ipcRenderer.on('launch-error',     (_e, error) => cb(error)),
   onLaunchWarning:   (cb) => ipcRenderer.on('launch-warning',   (_e, msg)   => cb(msg)),
   onClearJavaPath:   (cb) => ipcRenderer.on('clear-java-path',  ()          => cb()),
+  onWindowStateChanged: (cb) => ipcRenderer.on('window-state-changed', (_e, data) => cb(data)),
 
   // Overlay IPC
   onOverlayInit:     (cb) => ipcRenderer.on('overlay-init',     (_e, data)  => cb(data)),
   onToggleOverlay:   (cb) => ipcRenderer.on('toggle-overlay-ui',(_e, state) => cb(state)),
   resumeGame:        ()   => ipcRenderer.send('resume-game'),
-  getOverlayData:    ()   => ipcRenderer.invoke('get-overlay-data'),
 
   openMinecraftFolder: () => ipcRenderer.send('open-minecraft-folder'),
   selectMinecraftFolder: () => ipcRenderer.invoke('select-minecraft-folder'),
@@ -31,10 +32,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   scanVersionMods: (version) => ipcRenderer.invoke('scan-version-mods', version),
   scanProfileAchievements: (data) => ipcRenderer.invoke('scan-profile-achievements', data),
   scanAllAchievements: () => ipcRenderer.invoke('scan-all-achievements'),
+  downloadVersion: (data) => ipcRenderer.invoke('download-version', data),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
+  getElybyAuthData: () => ipcRenderer.invoke('get-elyby-auth-data'),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
-  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate:   () => ipcRenderer.invoke('update:download'),
+  installUpdate:    () => ipcRenderer.invoke('update:install'),
+  onUpdateAvailable:  (cb) => ipcRenderer.on('update-available',  (_e, data) => cb(data)),
+  onUpdateProgress:   (cb) => ipcRenderer.on('update-progress',   (_e, data) => cb(data)),
+  onUpdateDownloaded: (cb) => ipcRenderer.on('update-downloaded', (_e, data) => cb(data)),
+  onUpdateError:      (cb) => ipcRenderer.on('update-error',      (_e, data) => cb(data)),
 
   // Mod / resourcepack / shader management
   installMod:          (data) => ipcRenderer.invoke('install-mod',         data),
@@ -44,6 +53,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectExportZip:     (data) => ipcRenderer.invoke('select-export-zip',   data),
   exportModpack:       (data) => ipcRenderer.invoke('export-modpack',      data),
   downloadCurseforgeModpack: (data) => ipcRenderer.invoke('download-curseforge-modpack', data),
+  downloadModrinthModpack:   (data) => ipcRenderer.invoke('download-modrinth-modpack',   data),
   removeMod:           (data) => ipcRenderer.invoke('remove-mod',          data),
   installResourcepack: (data) => ipcRenderer.invoke('install-resourcepack', data),
   removeResourcepack:  (data) => ipcRenderer.invoke('remove-resourcepack',  data),
@@ -53,7 +63,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   launchModpack: (args) => ipcRenderer.send('launch-modpack', args),
   toggleDevTools: () => ipcRenderer.send('toggle-devtools'),
   scanProfiles: () => ipcRenderer.invoke('scan-profiles'),
-  deleteModpackFolder: (data) => ipcRenderer.invoke('delete-modpack-folder', data),
 
   // Overlay System IPC Bridge
   setIdkConnectData: (data) => ipcRenderer.send('set-idk-connect-data', data),
@@ -63,6 +72,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onOverlaySyncConnect: (cb) => ipcRenderer.on('overlay-sync-connect', (_e, data) => cb(data)),
   onShowStartupNotification: (cb) => ipcRenderer.on('show-startup-notification', (_e, data) => cb(data)),
   hideOverlayWindow: () => ipcRenderer.send('hide-overlay-window'),
+
+  onDownloadProgress: (cb) => {
+    const handler = (_e, downloadId, progress) => cb({ downloadId, ...(progress || {}) });
+    ipcRenderer.on('download-progress', handler);
+    return () => { ipcRenderer.removeListener('download-progress', handler); };
+  },
 
   // FRPC Multiplayer Tunneling
   ensureFrpc: () => ipcRenderer.invoke('ensure-frpc'),
@@ -84,6 +99,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Delete modpack folder from disk
   deleteModpackFolder: (modpackId) => ipcRenderer.invoke('delete-modpack-folder', { modpackId }),
 
+  // Update modpack profile.json on disk (sync user settings to disk)
+  updateModpackProfile: (data) => ipcRenderer.invoke('update-modpack-profile', data),
+
   // Debug: forward renderer logs to terminal
   rendererLog: (msg) => ipcRenderer.send('renderer-log', msg),
 
@@ -98,8 +116,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('cancel-download', downloadId),
   
   // Download progress event listeners
-  onDownloadProgress: (cb) => 
-    ipcRenderer.on('download-progress', (_e, downloadId, progress) => cb(downloadId, progress)),
   onDownloadComplete: (cb) => 
     ipcRenderer.on('download-complete', (_e, downloadId, result) => cb(downloadId, result)),
   onDownloadError: (cb) => 

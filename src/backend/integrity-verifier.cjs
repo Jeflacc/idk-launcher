@@ -36,7 +36,7 @@ class IntegrityVerifier extends EventEmitter {
    * @returns {Promise<Object>} IntegrityReport with verification results
    */
   async verifyDownload(downloadId, items, downloadPath) {
-    console.log(`[IntegrityVerifier] Starting verification for download: ${downloadId}`);
+
     
     if (!downloadId || !items || items.length === 0 || !downloadPath) {
       throw new Error('Invalid verification parameters: downloadId, items, and downloadPath required');
@@ -81,8 +81,6 @@ class IntegrityVerifier extends EventEmitter {
     } else {
       report.status = 'failed';
     }
-
-    console.log(`[IntegrityVerifier] Verification complete: ${report.status} (${report.validItems}/${report.totalItems} valid)`);
 
     return report;
   }
@@ -204,7 +202,6 @@ class IntegrityVerifier extends EventEmitter {
 
       // All checks passed
       detail.status = 'valid';
-      console.log(`[IntegrityVerifier] Verified: ${item.filename}`);
       return detail;
 
     } catch (error) {

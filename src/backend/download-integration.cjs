@@ -53,7 +53,6 @@ class DownloadIntegration extends EventEmitter {
       const isGameRunning = await this.gameDetector.checkGameRunning();
       
       if (isGameRunning) {
-        console.log('[DownloadIntegration] Game detected - reducing concurrency to 1');
         return 1; // Single download during gameplay
       }
       
@@ -96,7 +95,7 @@ class DownloadIntegration extends EventEmitter {
    * @returns {Promise<Object>} Download result with integrity report
    */
   async startDownload(downloadId, items, options, onProgress) {
-    console.log(`[DownloadIntegration] Starting download session: ${downloadId}`);
+
     
     if (!downloadId || !items || items.length === 0) {
       throw new Error('Invalid download parameters');
@@ -162,7 +161,7 @@ class DownloadIntegration extends EventEmitter {
         
         // Auto-retry if enabled
         if (adaptiveOptions.autoRetry && adaptiveOptions.maxRetries > 0) {
-          console.log(`[DownloadIntegration] Auto-retrying ${failedDownloads.length} failed items`);
+
           const retryResults = await this._retryFailedDownloads(
             downloadId,
             failedDownloads,
@@ -183,7 +182,7 @@ class DownloadIntegration extends EventEmitter {
       // Verify integrity if enabled
       let integrityReport = null;
       if (adaptiveOptions.verifyIntegrity) {
-        console.log(`[DownloadIntegration] Verifying integrity of downloaded files`);
+
         integrityReport = await this.integrityVerifier.verifyDownload(
           downloadId,
           items,
@@ -214,7 +213,6 @@ class DownloadIntegration extends EventEmitter {
         performanceMetrics: this.performanceMetrics.get(downloadId)
       };
 
-      console.log(`[DownloadIntegration] Download session completed: ${result.success ? 'SUCCESS' : 'PARTIAL'}`);
       return result;
 
     } catch (error) {
@@ -404,7 +402,6 @@ class DownloadIntegration extends EventEmitter {
           );
 
           results.push(result);
-          console.log(`[DownloadIntegration] Retry successful for ${failedItem.filename} (attempt ${attempt + 1})`);
           break;
 
         } catch (error) {
@@ -432,7 +429,6 @@ class DownloadIntegration extends EventEmitter {
     const session = this.activeSessions.get(downloadId);
     if (session) {
       session.status = 'paused';
-      console.log(`[DownloadIntegration] Download paused: ${downloadId}`);
     }
   }
 
@@ -443,7 +439,6 @@ class DownloadIntegration extends EventEmitter {
     const session = this.activeSessions.get(downloadId);
     if (session) {
       session.status = 'downloading';
-      console.log(`[DownloadIntegration] Download resumed: ${downloadId}`);
     }
   }
 
@@ -454,7 +449,6 @@ class DownloadIntegration extends EventEmitter {
     const session = this.activeSessions.get(downloadId);
     if (session) {
       session.status = 'cancelled';
-      console.log(`[DownloadIntegration] Download cancelled: ${downloadId}`);
       // Note: Partial files are kept for resume capability
     }
   }

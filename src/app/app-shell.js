@@ -6,6 +6,7 @@ export function renderAppShell() {
     </video>
   </div>
   <div class="bg-overlay"></div>
+  <canvas id="bg-effects-canvas" class="bg-effects-canvas"></canvas>
 
   <!-- TOP TITLE BAR & NAVIGATION -->
   <div class="top-bar">
@@ -35,6 +36,18 @@ export function renderAppShell() {
     </div>
 
     <div class="top-bar-right">
+      <!-- DOWNLOAD STATUS BUTTON -->
+      <button class="download-status-btn" id="nav-download-btn" style="display:none;" title="Download Progress">
+        <svg class="ds-ring" width="28" height="28" viewBox="0 0 28 28">
+          <circle class="ds-ring-bg" cx="14" cy="14" r="11" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2.5"/>
+          <circle class="ds-ring-fill" id="nav-dl-ring" cx="14" cy="14" r="11" fill="none" stroke="var(--theme-accent)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="69.12" stroke-dashoffset="69.12" transform="rotate(-90 14 14)"/>
+        </svg>
+        <svg class="ds-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
       <!-- FRIENDS TOGGLE BUTTON -->
       <button class="friends-toggle-btn" id="btn-friends-toggle" title="Friends List" style="margin-right: 4px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -44,6 +57,7 @@ export function renderAppShell() {
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
         <span class="friends-badge" id="friends-pending-badge" style="display:none;">0</span>
+        <span class="friends-unread-dot" id="friends-unread-dot" style="display:none;"></span>
       </button>
 
       <div class="user-profile-wrapper">
@@ -138,10 +152,10 @@ export function renderAppShell() {
       <div class="main-center">
         <div class="advanced-home-player" aria-hidden="true">
           <h1 class="advanced-home-username" id="advanced-home-username">PLAYER</h1>
-          <div class="advanced-home-skin-viewer-wrapper" id="advanced-home-skin-stage">
-            <div class="advanced-home-skin-loading" id="advanced-home-skin-loading">Loading skin…</div>
-            <canvas id="advanced-home-skin-canvas"></canvas>
-          </div>
+           <div class="advanced-home-skin-viewer-wrapper" id="advanced-home-skin-stage" style="display:flex; justify-content:center; align-items:center; overflow:hidden;">
+             <div class="advanced-home-skin-loading" id="advanced-home-skin-loading">Loading skin…</div>
+             <canvas id="advanced-home-skin-canvas"></canvas>
+           </div>
         </div>
         <img src="./java.png" alt="Minecraft Java Edition" class="mc-logo" />
       </div>
@@ -219,7 +233,47 @@ export function renderAppShell() {
         </div>
 
         <div class="controls-right">
-          <button class="play-button" id="play-btn">PLAY</button>
+          <div class="play-button-wrapper" id="play-btn-wrapper">
+            <button class="play-button" id="play-btn">PLAY</button>
+            <button class="play-dropdown-trigger" id="play-dropdown-trigger" aria-label="More options">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="play-dropdown" id="play-dropdown">
+              <div class="play-dd-setup" id="play-dd-setup">
+                <span class="play-dd-setup-label">Current Setup</span>
+                <span class="play-dd-setup-value" id="play-dd-setup-value">—</span>
+              </div>
+
+              <div class="play-dropdown-divider"></div>
+
+              <div class="play-dd-section">
+                <div class="play-dd-section-header">Loader</div>
+                <div class="play-dd-loader-list" id="play-dd-loader-list">
+                  <button class="play-dd-loader-btn" data-loader="Vanilla">Vanilla</button>
+                  <button class="play-dd-loader-btn" data-loader="Forge">Forge</button>
+                  <button class="play-dd-loader-btn" data-loader="Fabric">Fabric</button>
+                  <button class="play-dd-loader-btn" data-loader="NeoForge">NeoForge</button>
+                  <button class="play-dd-loader-btn" data-loader="Quilt">Quilt</button>
+                </div>
+              </div>
+
+              <div class="play-dropdown-divider"></div>
+
+              <div class="play-dd-section">
+                <div class="play-dd-section-header">Version</div>
+                <div class="play-dd-version-list" id="play-dd-version-list">
+                  <!-- Injected by JS -->
+                </div>
+              </div>
+
+              <div class="play-dropdown-divider"></div>
+
+              <button class="play-dropdown-item" id="play-dd-modpacks">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Modpacks
+              </button>
+            </div>
+          </div>
           <button class="manage-mods-button" id="manage-mods-btn" style="display: none;">MANAGE MODS</button>
         </div>
       </div>
@@ -275,181 +329,757 @@ export function renderAppShell() {
     <div id="btn-close-settings" style="display:none;"></div>
 
     <div class="settings-content-wrapper">
-      <h2 class="view-title">Settings</h2>
 
-      <div class="settings-grid">
-        <div class="settings-section appearance-settings-section">
-          <h3>Appearance</h3>
-          <p>Choose the launcher color theme and switch between the current layout and the new advanced UI/UX.</p>
+      <!-- SETTINGS TAB BAR -->
+      <div class="settings-tab-bar" id="settings-tab-bar">
+        <button class="settings-tab active" data-settings-tab="general">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>General</span>
+        </button>
+        <button class="settings-tab" data-settings-tab="performance">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <span>Performance</span>
+        </button>
+        <button class="settings-tab" data-settings-tab="launch">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <span>Java & Launch</span>
+        </button>
+        <button class="settings-tab" data-settings-tab="accessibility">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 8v4l3 3M12 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"></path>
+          </svg>
+          <span>Accessibility</span>
+        </button>
+        <button class="settings-tab" data-settings-tab="about">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>About</span>
+        </button>
+        <div class="settings-tab-indicator" id="settings-tab-indicator"></div>
+      </div>
 
-          <div class="settings-subgroup">
-            <div class="settings-subgroup-heading">
-              <span>Theme</span>
-              <small>Each theme uses its own complete accent palette.</small>
+      <!-- GENERAL TAB -->
+      <div class="settings-tab-panel active" id="settings-panel-general">
+        <div class="settings-page">
+
+          <h3 class="settings-section-title">Theme & Appearance</h3>
+          <p class="settings-section-desc">Color scheme, UI mode, and accent customization</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Theme Presets</span>
+              <small>Complete color atmospheres</small>
             </div>
-            <div class="theme-picker-grid" id="launcher-theme-picker">
-              <button type="button" class="theme-choice-card" data-theme="green" aria-label="Use Green theme">
-                <span class="theme-choice-swatch" style="--swatch-a:#4cb837;--swatch-b:#122018;"></span>
-                <strong>Green</strong>
-                <small>Classic Minecraft green</small>
+            <div class="theme-palette-grid" id="launcher-theme-picker">
+              <button type="button" class="theme-choice-card" data-theme="emerald" aria-label="Emerald theme">
+                <span class="theme-swatch" style="--swatch:#4cb837;"></span>
+                <span class="theme-name">Emerald</span>
               </button>
-              <button type="button" class="theme-choice-card" data-theme="violet" aria-label="Use Violet theme">
-                <span class="theme-choice-swatch" style="--swatch-a:#8b5cf6;--swatch-b:#190b2f;"></span>
-                <strong>Violet</strong>
-                <small>Advanced purple grid</small>
+              <button type="button" class="theme-choice-card" data-theme="amethyst" aria-label="Amethyst theme">
+                <span class="theme-swatch" style="--swatch:#8b5cf6;"></span>
+                <span class="theme-name">Amethyst</span>
               </button>
-              <button type="button" class="theme-choice-card" data-theme="azure" aria-label="Use Profile Blue theme">
-                <span class="theme-choice-swatch" style="--swatch-a:#bad7ff;--swatch-b:#061827;"></span>
-                <strong>Profile Blue</strong>
-                <small>The profile-page wireframe blue</small>
+              <button type="button" class="theme-choice-card" data-theme="ocean" aria-label="Ocean theme">
+                <span class="theme-swatch" style="--swatch:#3b82f6;"></span>
+                <span class="theme-name">Ocean</span>
               </button>
-              <button type="button" class="theme-choice-card" data-theme="ember" aria-label="Use Ember theme">
-                <span class="theme-choice-swatch" style="--swatch-a:#f97316;--swatch-b:#241007;"></span>
-                <strong>Ember</strong>
-                <small>Warm orange glow</small>
+              <button type="button" class="theme-choice-card" data-theme="sunset" aria-label="Sunset theme">
+                <span class="theme-swatch" style="--swatch:#f97316;"></span>
+                <span class="theme-name">Sunset</span>
               </button>
-            </div>
-          </div>
-
-          <div class="settings-subgroup">
-            <div class="settings-subgroup-heading">
-              <span>UI/UX Mode</span>
-              <small>Classic keeps the current layout. Advanced enables the new sidebar/grid experience.</small>
-            </div>
-            <div class="ui-mode-grid" id="launcher-ui-modes">
-              <button type="button" class="ui-mode-card active" data-ui-mode="classic">
-                <strong>Current</strong>
-                <span>Existing Mojang-style launcher layout.</span>
-              </button>
-              <button type="button" class="ui-mode-card" data-ui-mode="advanced">
-                <strong>Advanced</strong>
-                <span>Sidebar navigation, pixel font, grid stages, and themed panels.</span>
+              <button type="button" class="theme-choice-card" data-theme="custom" aria-label="Custom color">
+                <span class="theme-swatch custom-swatch" style="--swatch:var(--theme-accent);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </span>
+                <span class="theme-name">Custom</span>
               </button>
             </div>
           </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Memory Allocation</h3>
-          <p>Set how much RAM Minecraft is allowed to use. More RAM = smoother gameplay, but don't exceed ~80% of your total system RAM.</p>
-          <div class="memory-slider-row">
-            <input type="range" id="memory-slider" min="1" max="16" step="1" value="4" class="memory-slider" />
-            <span class="memory-value-label" id="memory-value-label">4 GB</span>
+          <div class="settings-row" id="custom-color-row">
+            <div class="settings-row-label">
+              <span>Accent Color</span>
+              <small>Custom picker for the "Custom" theme</small>
+            </div>
+            <div class="color-picker-wrap">
+              <input type="color" id="custom-accent-picker" class="color-picker-input" value="#4cb837" />
+              <span class="color-hex-label" id="custom-accent-hex">#4cb837</span>
+            </div>
           </div>
-          <div class="memory-presets">
-            <button class="mem-preset-btn" data-gb="2">2 GB</button>
-            <button class="mem-preset-btn" data-gb="4">4 GB</button>
-            <button class="mem-preset-btn" data-gb="6">6 GB</button>
-            <button class="mem-preset-btn" data-gb="8">8 GB</button>
-            <button class="mem-preset-btn" data-gb="12">12 GB</button>
-            <button class="mem-preset-btn" data-gb="16">16 GB</button>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>UI Mode</span>
+              <small>Classic layout or advanced sidebar</small>
+            </div>
+            <div class="pill-switch" id="launcher-ui-modes">
+              <button type="button" class="pill-switch-option" data-ui-mode="classic">Classic</button>
+              <button type="button" class="pill-switch-option" data-ui-mode="advanced">Advanced</button>
+            </div>
           </div>
-        </div>
 
-        <div class="settings-section">
-          <h3>Java Executable Path</h3>
-          <p>Provide the absolute path to your javaw.exe file (e.g., C:\\\Program Files\\\Java\\\jdk-17\\\bin\\\javaw.exe). If left blank, the launcher will use the system default Java.</p>
-          <input type="text" class="clean-input" style="text-align: left;" id="java-path" placeholder="&lt;Use System Default&gt;" />
-        </div>
+          <h3 class="settings-section-title">Visual Tuning</h3>
+          <p class="settings-section-desc">Border radius, animation, and compact mode</p>
 
-        <div class="settings-section">
-          <h3>Custom Minecraft Location</h3>
-          <p>Choose where to store your Minecraft directories (profiles, versions, assets, and mods). If left blank, it will default to the standard location inside %appdata%/IDK Launcher/minecraft-data.</p>
-          <div style="display:flex; gap:8px;">
-            <input type="text" class="clean-input" style="text-align: left; flex:1;" id="custom-minecraft-path" placeholder="&lt;Use Default Location&gt;" readonly />
-            <button class="submit-btn" id="btn-browse-minecraft-path" style="width: auto; padding: 10px 20px; margin: 0;">Browse</button>
-            <button class="submit-btn" id="btn-clear-minecraft-path" style="width: auto; padding: 10px 15px; margin: 0; background: #ef4444;" title="Reset to default">&#x2715;</button>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Border Radius</span>
+              <small>How rounded are UI elements</small>
+            </div>
+            <div class="slider-group">
+              <input type="range" id="border-radius-slider" min="0" max="40" step="1" value="10" class="glass-slider" />
+              <span class="slider-value" id="border-radius-value">10px</span>
+            </div>
           </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Global Java Arguments</h3>
-          <p>Advanced JVM arguments applied to all modpacks. Example: -XX:+UseG1GC -XX:+ParallelRefProcEnabled</p>
-          <input type="text" class="clean-input" style="text-align: left; font-size:11px;" id="global-java-args" placeholder="Leave empty for defaults" />
-        </div>
-
-        <div class="settings-section">
-          <h3>Default Game Window Size</h3>
-          <p>Set the default window resolution when launching Minecraft.</p>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <input type="number" class="clean-input" id="default-window-width" placeholder="Width" style="text-align:center; flex:1;" value="1024" />
-            <span style="color:var(--text-muted);">&times;</span>
-            <input type="number" class="clean-input" id="default-window-height" placeholder="Height" style="text-align:center; flex:1;" value="768" />
-            <label class="toggle-switch" style="margin:0;">
-              <input type="checkbox" id="fullscreen-toggle" />
-              <div class="switch"></div>
-              <span style="color: var(--text-main); font-size: 12px; margin-left: 4px;">Fullscreen</span>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Animation Speed</span>
+              <small>UI motion multiplier (0 = off)</small>
+            </div>
+            <div class="slider-group">
+              <input type="range" id="animation-speed-slider" min="0" max="2" step="0.1" value="1" class="glass-slider" />
+              <span class="slider-value" id="animation-speed-value">1.0x</span>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Compact Mode</span>
+              <small>Reduced padding for a denser UI</small>
+            </div>
+            <label class="tg-switch">
+              <input type="checkbox" id="compact-mode-toggle" />
+              <span class="tg-slider"></span>
             </label>
           </div>
-        </div>
 
-        <div class="settings-section">
-          <h3>In-Game Overlay</h3>
-          <p>Enable the interactive in-game overlay featuring web browser, friends list, and discord status.</p>
-          <label class="toggle-switch" style="margin-top: 8px;">
-            <input type="checkbox" id="overlay-toggle" />
-            <div class="switch"></div>
-            <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Enable In-Game Overlay (Experimental, please turn on Fullscreen)</span>
-          </label>
-        </div>
-
-        <div class="settings-section">
-          <h3>Hide Launcher on Launch</h3>
-          <p>Hide the launcher window when the game is running to save system resources. The launcher will automatically reappear when you exit the game.</p>
-          <label class="toggle-switch" style="margin-top: 8px;">
-            <input type="checkbox" id="hide-launcher-toggle" />
-            <div class="switch"></div>
-            <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Hide launcher when launch</span>
-          </label>
-        </div>
-
-        <div class="settings-section">
-          <h3>Performance Boost Pack</h3>
-          <p>For Fabric launches, install a compatible optimization pack when available: Sodium, Lithium, FerriteCore, and EntityCulling.</p>
-          <label class="toggle-switch" style="margin-top: 8px;">
-            <input type="checkbox" id="auto-optimization" />
-            <div class="switch"></div>
-            <span style="color: var(--text-main); font-size: 14px; margin-left: 4px;">Auto-install Fabric performance mods</span>
-          </label>
-        </div>
-
-        <div class="settings-section performance-settings-section">
-          <h3>Launcher Performance</h3>
-          <p>Choose how much animation and background rendering the launcher should use while browsing.</p>
-          <div class="performance-mode-grid" id="launcher-performance-modes">
-            <button class="performance-mode-card" data-performance-mode="quality">
-              <strong>Quality</strong>
-              <span>Full motion and visual polish.</span>
-            </button>
-            <button class="performance-mode-card active" data-performance-mode="balanced">
-              <strong>Balanced</strong>
-              <span>Smooth UI with quieter background work.</span>
-            </button>
-            <button class="performance-mode-card" data-performance-mode="eco">
-              <strong>Eco</strong>
-              <span>Minimum animation and GPU usage.</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <h3>Game Directory</h3>
-          <p>Open the folder where your Minecraft game files, mods, and resource packs are stored.</p>
-          <button class="submit-btn" id="btn-open-folder" style="width: auto; padding: 10px 20px;">Open Minecraft Folder</button>
-        </div>
-
-        <div class="settings-section">
-          <h3>Launcher Updates</h3>
-          <p>Check for new versions of the IDK Launcher and stay up to date with the latest features.</p>
-          <button class="submit-btn" id="btn-check-launcher-updates" style="width: auto; padding: 10px 20px;">Check for Updates</button>
-        </div>
-
-        <div class="settings-section">
-          <h3>Developer Options</h3>
-          <p>Enable the debug console (DevTools) to troubleshoot issues. This is usually only needed for debugging.</p>
-          <button class="submit-btn" id="btn-toggle-devtools" style="width: auto; padding: 10px 20px; background: #4b5563;">Open Debug Console</button>
         </div>
       </div>
+
+      <!-- PERFORMANCE TAB -->
+      <div class="settings-tab-panel" id="settings-panel-performance">
+        <div class="settings-page">
+
+          <h3 class="settings-section-title">Memory & Performance</h3>
+          <p class="settings-section-desc">RAM allocation, launcher smoothness, and mod optimization</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Memory Allocation</span>
+              <small>RAM for Minecraft (max ~80% of system)</small>
+            </div>
+            <div class="slider-group">
+              <input type="range" id="memory-slider" min="1" max="16" step="1" value="4" class="glass-slider" />
+              <span class="slider-value mem-value" id="memory-value-label">4 GB</span>
+            </div>
+          </div>
+          <div class="memory-presets">
+            <button class="mem-preset-btn" data-gb="2">2</button>
+            <button class="mem-preset-btn" data-gb="4">4</button>
+            <button class="mem-preset-btn" data-gb="6">6</button>
+            <button class="mem-preset-btn" data-gb="8">8</button>
+            <button class="mem-preset-btn" data-gb="12">12</button>
+            <button class="mem-preset-btn" data-gb="16">16</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Launcher Performance</span>
+              <small>Animation & background rendering load</small>
+            </div>
+            <div class="pill-switch" id="launcher-performance-modes">
+              <button class="pill-switch-option" data-performance-mode="quality">Quality</button>
+              <button class="pill-switch-option active" data-performance-mode="balanced">Balanced</button>
+              <button class="pill-switch-option" data-performance-mode="eco">Eco</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Performance Boost Pack</span>
+              <small>Auto-install Fabric optimization mods (Sodium, Lithium, etc.)</small>
+            </div>
+            <label class="tg-switch">
+              <input type="checkbox" id="auto-optimization" />
+              <span class="tg-slider"></span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- JAVA & LAUNCH TAB -->
+      <div class="settings-tab-panel" id="settings-panel-launch">
+        <div class="settings-page">
+
+          <h3 class="settings-section-title">Java & Launch</h3>
+          <p class="settings-section-desc">Executable path, JVM arguments, and game launch defaults</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Java Path</span>
+              <small>Path to javaw.exe (leave empty for system default)</small>
+            </div>
+            <input type="text" class="glass-input" id="java-path" placeholder="Use System Default" />
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Java Arguments</span>
+              <small>Global JVM flags for all launches</small>
+            </div>
+            <input type="text" class="glass-input" id="global-java-args" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Window Size</span>
+              <small>Default game resolution</small>
+            </div>
+            <div class="window-size-group">
+              <input type="number" class="glass-input sm" id="default-window-width" value="1024" />
+              <span class="win-size-x">&times;</span>
+              <input type="number" class="glass-input sm" id="default-window-height" value="768" />
+              <label class="tg-switch" style="margin-left:8px;">
+                <input type="checkbox" id="fullscreen-toggle" />
+                <span class="tg-slider"></span>
+                <span class="tg-label">Fullscreen</span>
+              </label>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Hide on Launch</span>
+              <small>Auto-hide launcher when game starts</small>
+            </div>
+            <label class="tg-switch">
+              <input type="checkbox" id="hide-launcher-toggle" />
+              <span class="tg-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>In-Game Overlay</span>
+              <small>Browser & friends overlay (experimental, requires fullscreen)</small>
+            </div>
+            <label class="tg-switch">
+              <input type="checkbox" id="overlay-toggle" />
+              <span class="tg-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Custom Minecraft Location</span>
+              <small>Override the default game data folder</small>
+            </div>
+            <div class="folder-row">
+              <input type="text" class="glass-input" id="custom-minecraft-path" placeholder="Default Location" readonly />
+              <button class="glass-btn" id="btn-browse-minecraft-path">Browse</button>
+              <button class="glass-btn danger" id="btn-clear-minecraft-path" title="Reset">&times;</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ACCESSIBILITY TAB -->
+      <div class="settings-tab-panel" id="settings-panel-accessibility">
+        <div class="settings-page">
+
+          <h3 class="settings-section-title">Accessibility</h3>
+          <p class="settings-section-desc">Font size, blur, animation reduction, and visual comfort</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Font Scale</span>
+              <small>Overall UI text size (80% to 140%)</small>
+            </div>
+            <div class="slider-group">
+              <input type="range" id="font-scale-slider" min="0.8" max="1.4" step="0.05" value="1" class="glass-slider" />
+              <span class="slider-value" id="font-scale-value">100%</span>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Blur Intensity</span>
+              <small>Backdrop blur effect on glass panels</small>
+            </div>
+            <div class="blur-choice-group">
+              <button class="blur-choice-card" data-blur="none">None</button>
+              <button class="blur-choice-card" data-blur="light">Light</button>
+              <button class="blur-choice-card active" data-blur="medium">Medium</button>
+              <button class="blur-choice-card" data-blur="heavy">Heavy</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Animation Speed</span>
+              <small>Reduce motion (0 = no animations)</small>
+            </div>
+            <div class="slider-group">
+              <input type="range" id="access-animation-speed-slider" min="0" max="2" step="0.1" value="1" class="glass-slider" />
+              <span class="slider-value" id="access-animation-speed-value">1.0x</span>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Compact Mode</span>
+              <small>Reduced spacing for less scrolling</small>
+            </div>
+            <label class="tg-switch">
+              <input type="checkbox" id="access-compact-toggle" />
+              <span class="tg-slider"></span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ABOUT TAB -->
+      <div class="settings-tab-panel" id="settings-panel-about">
+        <div class="settings-page">
+
+          <h3 class="settings-section-title">About & Tools</h3>
+          <p class="settings-section-desc">Version info, updates, debugging, and quick actions</p>
+
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Launcher Updates</span>
+              <small>Check for new versions</small>
+            </div>
+            <button class="glass-btn" id="btn-check-launcher-updates">Check for Updates</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Open Game Directory</span>
+              <small>Browse your Minecraft files</small>
+            </div>
+            <button class="glass-btn" id="btn-open-folder">Open Folder</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Developer Tools</span>
+              <small>Chrome DevTools for debugging</small>
+            </div>
+            <button class="glass-btn" id="btn-toggle-devtools">Open DevTools</button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ADVANCED SETTINGS (only visible when body.ui-advanced) -->
+    <div class="advanced-settings">
+
+    <div class="advanced-tab-bar">
+      <button class="advanced-tab active" data-adv-tab="general">GENERAL</button>
+      <button class="advanced-tab" data-adv-tab="background">BACKGROUND</button>
+      <button class="advanced-tab" data-adv-tab="advanced">ADVANCED</button>
+      <button class="advanced-tab" data-adv-tab="launch">LAUNCH</button>
+      <button class="advanced-tab" data-adv-tab="about">ABOUT</button>
+      <button class="advanced-tab" data-adv-tab="debug">DEBUG</button>
+      <div class="advanced-tab-indicator"></div>
+      <button type="button" class="adv-open-dir-link" id="adv-btn-open-folder-top">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        OPEN DIRECTORY
+      </button>
+    </div>
+
+    <!-- GENERAL -->
+    <div class="advanced-tab-panel active" data-adv-panel="general">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Language</h3>
+          <p>Interface language preference</p>
+        </div>
+        <select class="adv-select" id="adv-language">
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+          <option value="es">Español</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+          <option value="zh">中文</option>
+          <option value="ja">日本語</option>
+        </select>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Accent Color</h3>
+          <p>Choose a custom accent color for the launcher</p>
+        </div>
+        <div class="accent-swatch-grid" id="adv-accent-grid">
+          <button type="button" class="accent-swatch" data-accent="#ff3b3b" style="--swatch:#ff3b3b" aria-label="Red"></button>
+          <button type="button" class="accent-swatch" data-accent="#ff6b3b" style="--swatch:#ff6b3b" aria-label="Orange"></button>
+          <button type="button" class="accent-swatch" data-accent="#ff9d3b" style="--swatch:#ff9d3b" aria-label="Warm orange"></button>
+          <button type="button" class="accent-swatch" data-accent="#ffeb3b" style="--swatch:#ffeb3b" aria-label="Yellow"></button>
+          <button type="button" class="accent-swatch" data-accent="#6bff6b" style="--swatch:#6bff6b" aria-label="Lime"></button>
+          <button type="button" class="accent-swatch" data-accent="#3bbaff" style="--swatch:#3bbaff" aria-label="Cyan"></button>
+          <button type="button" class="accent-swatch" data-accent="#3b5eff" style="--swatch:#3b5eff" aria-label="Blue"></button>
+
+          <button type="button" class="accent-swatch" data-accent="#9b3bff" style="--swatch:#9b3bff" aria-label="Purple"></button>
+          <button type="button" class="accent-swatch" data-accent="#ff3be6" style="--swatch:#ff3be6" aria-label="Pink"></button>
+          <button type="button" class="accent-swatch" data-accent="#e63e3e" style="--swatch:#e63e3e" aria-label="Crimson"></button>
+          <button type="button" class="accent-swatch" data-accent="#e68a3e" style="--swatch:#e68a3e" aria-label="Amber"></button>
+          <button type="button" class="accent-swatch" data-accent="#4cb837" style="--swatch:#4cb837" aria-label="Green"></button>
+          <button type="button" class="accent-swatch" data-accent="#8b5cf6" style="--swatch:#8b5cf6" aria-label="Violet"></button>
+          <button type="button" class="accent-swatch" data-accent="#3b82f6" style="--swatch:#3b82f6" aria-label="Ocean"></button>
+          <button type="button" class="accent-swatch" data-accent="#f97316" style="--swatch:#f97316" aria-label="Sunset"></button>
+          <button type="button" class="accent-swatch custom" id="adv-accent-custom" aria-label="Custom color">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
+        </div>
+        <div class="accent-custom-row" id="adv-accent-custom-row">
+          <input type="color" id="adv-accent-picker" class="accent-picker-input" value="#4cb837" />
+          <span class="accent-hex-label" id="adv-accent-hex">#4cb837</span>
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>UI Mode</h3>
+          <p>Switch between Classic and Advanced interface</p>
+        </div>
+        <div class="pill-switch" id="adv-launcher-ui-modes">
+          <button type="button" class="pill-switch-option" data-ui-mode="classic">Classic</button>
+          <button type="button" class="pill-switch-option" data-ui-mode="advanced">Advanced</button>
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>General Preferences</h3>
+          <p>Toggle launcher behavior options</p>
+        </div>
+        <div class="adv-toggles">
+          <label class="adv-toggle-row">
+            <span>Auto Updates</span>
+            <input type="checkbox" id="adv-toggle-updates" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>Discord Presence</span>
+            <input type="checkbox" id="adv-toggle-discord" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>Beta Updates</span>
+            <input type="checkbox" id="adv-toggle-beta" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>Open Logs After Launch</span>
+            <input type="checkbox" id="adv-toggle-logs" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>Hide Window on Launch</span>
+            <input type="checkbox" id="adv-toggle-hide" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>Analytics</span>
+            <input type="checkbox" id="adv-toggle-analytics" />
+            <span class="adv-toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Visual Tuning</h3>
+          <p>Animation speed, font scale, backdrop blur, border radius, and compact mode</p>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Animation Speed</span>
+            <span class="adv-slider-field-value" id="adv-animation-speed-value">1.0x</span>
+          </div>
+          <input type="range" id="adv-animation-speed" min="0" max="2" step="0.1" value="1" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>0x</span>
+            <span>2x</span>
+          </div>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Font Scale</span>
+            <span class="adv-slider-field-value" id="adv-font-scale-value">100%</span>
+          </div>
+          <input type="range" id="adv-font-scale" min="0.8" max="1.4" step="0.05" value="1" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>80%</span>
+            <span>140%</span>
+          </div>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Border Radius</span>
+            <span class="adv-slider-field-value" id="adv-border-radius-value">10px</span>
+          </div>
+          <input type="range" id="adv-border-radius" min="0" max="40" step="1" value="10" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>0px</span>
+            <span>40px</span>
+          </div>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Backdrop Blur</span>
+          </div>
+          <div class="blur-choice-group" id="adv-blur-choices">
+            <button type="button" class="blur-choice-card" data-blur="none">None</button>
+            <button type="button" class="blur-choice-card" data-blur="light">Light</button>
+            <button type="button" class="blur-choice-card active" data-blur="medium">Medium</button>
+            <button type="button" class="blur-choice-card" data-blur="heavy">Heavy</button>
+          </div>
+        </div>
+        <label class="adv-toggle-row" style="margin-top:12px;">
+          <span>Compact Mode</span>
+          <input type="checkbox" id="adv-compact-mode-toggle" />
+          <span class="adv-toggle-track"></span>
+        </label>
+      </div>
+
+    </div>
+
+    <!-- BACKGROUND -->
+    <div class="advanced-tab-panel" data-adv-panel="background">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Background Effects</h3>
+          <p>Select a dynamic background for the launcher</p>
+        </div>
+        <div class="bg-effects-grid" id="adv-bg-effects">
+          <button class="bg-effect-card active" data-effect="none">
+            <div class="bg-effect-preview bg-none"></div>
+            <span>None</span>
+          </button>
+          <button class="bg-effect-card" data-effect="matrix">
+            <div class="bg-effect-preview bg-matrix"></div>
+            <span>Matrix Rain</span>
+          </button>
+          <button class="bg-effect-card" data-effect="nebula">
+            <div class="bg-effect-preview bg-nebula"></div>
+            <span>Nebula Waves</span>
+          </button>
+          <button class="bg-effect-card" data-effect="liquid">
+            <div class="bg-effect-preview bg-liquid"></div>
+            <span>Liquid Chrome</span>
+          </button>
+          <button class="bg-effect-card" data-effect="starfield">
+            <div class="bg-effect-preview bg-starfield"></div>
+            <span>Starfield</span>
+          </button>
+          <button class="bg-effect-card" data-effect="particles">
+            <div class="bg-effect-preview bg-particles"></div>
+            <span>Particles</span>
+          </button>
+        </div>
+      </div>
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Intensity</h3>
+          <p>Control the effect's visual density</p>
+        </div>
+        <div class="adv-slider-group">
+          <span class="adv-slider-label">Low</span>
+          <input type="range" id="adv-bg-intensity" min="0" max="200" value="50" class="adv-slider" />
+          <span class="adv-slider-label">High</span>
+          <span class="adv-slider-value" id="adv-bg-intensity-value">50</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADVANCED -->
+    <div class="advanced-tab-panel" data-adv-panel="advanced">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Launcher Performance</h3>
+          <p>Animation & background rendering load</p>
+        </div>
+        <div class="pill-switch" id="adv-launcher-performance-modes">
+          <button type="button" class="pill-switch-option" data-performance-mode="quality">Quality</button>
+          <button type="button" class="pill-switch-option active" data-performance-mode="balanced">Balanced</button>
+          <button type="button" class="pill-switch-option" data-performance-mode="eco">Eco</button>
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Memory Allocation</h3>
+          <p>RAM for Minecraft (max ~80% of system)</p>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Allocated RAM</span>
+            <span class="adv-slider-field-value" id="adv-memory-value-label">4 GB</span>
+          </div>
+          <input type="range" id="adv-memory-slider" min="1" max="16" step="1" value="4" class="adv-slider" />
+          <div class="adv-slider-range" style="display:flex;gap:4px;justify-content:space-between;margin-top:8px;">
+            <button class="mem-preset-btn adv-mem-preset" data-gb="2">2</button>
+            <button class="mem-preset-btn adv-mem-preset" data-gb="4">4</button>
+            <button class="mem-preset-btn adv-mem-preset" data-gb="6">6</button>
+            <button class="mem-preset-btn adv-mem-preset" data-gb="8">8</button>
+            <button class="mem-preset-btn adv-mem-preset" data-gb="12">12</button>
+            <button class="mem-preset-btn adv-mem-preset" data-gb="16">16</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Optimization</h3>
+          <p>Download throughput and mod optimization</p>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Concurrent Downloads</span>
+            <span class="adv-slider-field-value" id="adv-concurrent-dl-value">4</span>
+          </div>
+          <input type="range" id="adv-concurrent-dl" min="1" max="10" step="1" value="4" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>1</span>
+            <span>10</span>
+          </div>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Concurrent I/O Operations</span>
+            <span class="adv-slider-field-value" id="adv-concurrent-io-value">2</span>
+          </div>
+          <input type="range" id="adv-concurrent-io" min="1" max="8" step="1" value="2" class="adv-slider" />
+          <div class="adv-slider-range">
+            <span>1</span>
+            <span>8</span>
+          </div>
+        </div>
+        <label class="adv-toggle-row" style="margin-top:12px;">
+          <span>Performance Boost Pack</span>
+          <input type="checkbox" id="adv-auto-optimization" />
+          <span class="adv-toggle-track"></span>
+        </label>
+      </div>
+
+    </div>
+
+    <!-- JAVA & LAUNCH -->
+    <div class="advanced-tab-panel" data-adv-panel="launch">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Java Runtime</h3>
+          <p>Path to javaw.exe and JVM flags applied to every launch</p>
+        </div>
+        <div class="adv-input-field">
+          <label class="adv-input-label" for="adv-java-path">Java Path</label>
+          <input type="text" class="adv-input" id="adv-java-path" placeholder="Use System Default" />
+        </div>
+        <div class="adv-input-field" style="margin-top:10px;">
+          <label class="adv-input-label" for="adv-global-java-args">Global Java Arguments</label>
+          <input type="text" class="adv-input" id="adv-global-java-args" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Game Window</h3>
+          <p>Default resolution, fullscreen, and in-game overlay</p>
+        </div>
+        <div class="adv-slider-field">
+          <div class="adv-slider-field-header">
+            <span>Window Size</span>
+            <span class="adv-slider-field-value" id="adv-window-size-value">1024 x 768</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <input type="number" id="adv-default-window-width" class="adv-input adv-input--sm" min="640" max="7680" value="1024" />
+            <span class="adv-slider-label">x</span>
+            <input type="number" id="adv-default-window-height" class="adv-input adv-input--sm" min="480" max="4320" value="768" />
+          </div>
+        </div>
+        <div class="adv-toggles" style="margin-top:12px;">
+          <label class="adv-toggle-row">
+            <span>Launch in Fullscreen</span>
+            <input type="checkbox" id="adv-fullscreen-toggle" />
+            <span class="adv-toggle-track"></span>
+          </label>
+          <label class="adv-toggle-row">
+            <span>In-Game Overlay</span>
+            <input type="checkbox" id="adv-overlay-toggle" />
+            <span class="adv-toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Custom Minecraft Location</h3>
+          <p>Override the default game data folder</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" class="adv-input" id="adv-custom-minecraft-path" placeholder="Default Location" readonly style="flex:1;min-width:0;" />
+          <button type="button" class="adv-btn" id="adv-btn-browse-minecraft-path">Browse</button>
+          <button type="button" class="adv-btn adv-btn--danger" id="adv-btn-clear-minecraft-path" title="Reset">&times;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="advanced-tab-panel" data-adv-panel="about">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Launcher</h3>
+          <p>Version info, updates, and quick actions</p>
+        </div>
+        <div class="adv-action-row">
+          <div class="adv-action-label">
+            <span>Launcher Updates</span>
+            <small>Check for new versions</small>
+          </div>
+          <button type="button" class="adv-btn" id="adv-btn-check-launcher-updates">Check for Updates</button>
+        </div>
+        <div class="adv-action-row">
+          <div class="adv-action-label">
+            <span>Open Game Directory</span>
+            <small>Browse your Minecraft files</small>
+          </div>
+          <button type="button" class="adv-btn" id="adv-btn-open-folder">Open Folder</button>
+        </div>
+        <div class="adv-action-row">
+          <div class="adv-action-label">
+            <span>Developer Tools</span>
+            <small>Chrome DevTools for debugging</small>
+          </div>
+          <button type="button" class="adv-btn" id="adv-btn-toggle-devtools">Open DevTools</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEBUG -->
+    <div class="advanced-tab-panel" data-adv-panel="debug">
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Log Output</h3>
+          <p>Real-time launcher debug information</p>
+        </div>
+        <div class="debug-terminal" id="adv-debug-terminal">
+          <div class="debug-line" style="color: #666;">[IDK Launcher] Debug console ready...</div>
+          <div class="debug-line" style="color: #666;">[System] Waiting for events...</div>
+        </div>
+        <div class="debug-actions">
+          <button class="adv-btn" id="adv-debug-clear">Clear</button>
+          <button class="adv-btn" id="adv-toggle-devtools">DevTools</button>
+        </div>
+      </div>
+    </div>
+
     </div>
   </div>
 
@@ -464,7 +1094,7 @@ export function renderAppShell() {
               <h1 class="profile-character-name" id="profile-page-username">MUZLIK_GAMER</h1>
             </div>
 
-            <div class="profile-skin-viewer-wrapper" id="profile-skin-stage">
+            <div class="profile-skin-viewer-wrapper" id="profile-skin-stage" style="display:flex; justify-content:center; align-items:center; overflow:hidden;">
               <div class="profile-skin-loading" id="profile-skin-loading">Loading skin…</div>
               <canvas id="profile-skin-canvas"></canvas>
             </div>
@@ -479,6 +1109,89 @@ export function renderAppShell() {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 </button>
               </div>
+            </div>
+            <div class="pose-selector" id="pose-selector">
+              <button class="pose-btn active" data-pose="idle" title="Idle">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="5" r="2.5"/>
+                  <line x1="12" y1="7.5" x2="12" y2="15"/>
+                  <line x1="12" y1="10" x2="8" y2="13"/>
+                  <line x1="12" y1="10" x2="16" y2="13"/>
+                  <line x1="12" y1="15" x2="9" y2="19"/>
+                  <line x1="12" y1="15" x2="15" y2="19"/>
+                </svg>
+                Idle
+              </button>
+              <button class="pose-btn" data-pose="walking" title="Walking">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="13" cy="4" r="2.5"/>
+                  <line x1="13" y1="6.5" x2="10" y2="13"/>
+                  <line x1="10" y1="13" x2="7" y2="19"/>
+                  <line x1="10" y1="13" x2="14" y2="15"/>
+                  <line x1="14" y1="15" x2="16" y2="19"/>
+                  <line x1="10" y1="10" x2="16" y2="11"/>
+                </svg>
+                Walk
+              </button>
+              <button class="pose-btn" data-pose="running" title="Running">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="14" cy="4" r="2.5"/>
+                  <line x1="14" y1="6.5" x2="11" y2="12"/>
+                  <line x1="11" y1="12" x2="7" y2="17"/>
+                  <line x1="11" y1="12" x2="16" y2="11"/>
+                  <line x1="16" y1="11" x2="19" y2="15"/>
+                  <line x1="9" y1="9" x2="12" y2="10"/>
+                  <line x1="16" y1="11" x2="18" y2="7"/>
+                </svg>
+                Run
+              </button>
+              <button class="pose-btn" data-pose="flying" title="Flying">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="4" r="2.5"/>
+                  <line x1="12" y1="6.5" x2="12" y2="14"/>
+                  <line x1="12" y1="9" x2="6" y2="6"/>
+                  <line x1="12" y1="9" x2="18" y2="6"/>
+                  <line x1="12" y1="14" x2="8" y2="18"/>
+                  <line x1="12" y1="14" x2="16" y2="18"/>
+                </svg>
+                Fly
+              </button>
+              <button class="pose-btn" data-pose="wave" title="Wave">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="4" r="2.5"/>
+                  <line x1="12" y1="6.5" x2="12" y2="15"/>
+                  <line x1="12" y1="15" x2="9" y2="19"/>
+                  <line x1="12" y1="15" x2="15" y2="19"/>
+                  <line x1="12" y1="8" x2="8" y2="5"/>
+                  <path d="M5 3c0 0-2 2-1 4s2 2 1 4"/>
+                  <path d="M1 1c0 0-2 2-1 4"/>
+                </svg>
+                Wave
+              </button>
+              <button class="pose-btn" data-pose="crouch" title="Crouch">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="4" r="2.5"/>
+                  <line x1="12" y1="6.5" x2="12" y2="11"/>
+                  <line x1="12" y1="11" x2="7" y2="14"/>
+                  <line x1="12" y1="11" x2="17" y2="14"/>
+                  <line x1="7" y1="14" x2="5" y2="18"/>
+                  <line x1="17" y1="14" x2="19" y2="18"/>
+                  <line x1="12" y1="11" x2="10" y2="8"/>
+                </svg>
+                Crouch
+              </button>
+              <button class="pose-btn" data-pose="swim" title="Swim">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="3" r="2.5"/>
+                  <line x1="12" y1="5.5" x2="12" y2="11"/>
+                  <line x1="12" y1="8" x2="7" y2="4"/>
+                  <line x1="12" y1="8" x2="17" y2="4"/>
+                  <line x1="12" y1="11" x2="7" y2="16"/>
+                  <line x1="12" y1="11" x2="16" y2="14"/>
+                  <path d="M4 17c2 0 3-1 5-1s3 1 5 1 3-1 5-1"/>
+                </svg>
+                Swim
+              </button>
             </div>
           </div>
         </section>
@@ -599,22 +1312,54 @@ export function renderAppShell() {
         </div>
         <div class="modpack-detail" id="modpack-detail">
           <div class="no-modpack-msg" id="no-modpack-msg">
-            <div style="text-align:center; padding: 40px 0;">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-              <p style="font-size:18px; font-family:var(--font-title);">Select or create a modpack to get started</p>
+
+            <div class="mp-welcome-hero">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+              <h2>Set up your modpack</h2>
             </div>
-            <div class="news-section" style="padding: 0 40px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-                <h2 class="section-title" style="margin-bottom:0;">Trending Modpacks</h2>
-                <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
-                  CurseForge
-                </span>
+
+            <div class="mp-wizard-columns">
+
+              <div class="mp-wizard-section" id="mp-version-wizard">
+                <div class="mp-wizard-header">
+                  <span class="mp-wizard-step">Step 1</span>
+                  <h3>Download a Minecraft Version</h3>
+                </div>
+                <div class="mp-version-download-grid" id="mp-version-download-grid">
+                  <!-- Injected by JS -->
+                </div>
+                <div class="mp-wizard-footer">
+                  <button class="mp-dl-btn" id="btn-show-all-versions">Show all versions…</button>
+                </div>
               </div>
-              <div class="trending-modpacks-grid" id="trending-mods-grid">
-                <div style="padding: 40px; text-align: center; color: var(--text-muted); width: 100%;">Loading modpacks...</div>
+
+              <div class="mp-wizard-section">
+                <div class="mp-wizard-header">
+                  <span class="mp-wizard-step">Step 2</span>
+                  <h3>Create or Import a Modpack</h3>
+                </div>
+                <div class="mp-wizard-buttons">
+                  <button class="mp-action-btn browse" id="btn-new-modpack-wizard">+ New Modpack</button>
+                  <button class="mp-action-btn browse" id="btn-import-modpack-wizard">Import Zip</button>
+                  <button class="mp-action-btn browse" id="btn-browse-modpacks-wizard">Browse Modpacks</button>
+                </div>
+
+                <div class="mp-trending-section">
+                  <div class="mp-trending-header">
+                    <h2 class="mp-trending-title">Trending Modpacks</h2>
+                    <span class="mp-trending-brand">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
+                      CurseForge
+                    </span>
+                  </div>
+                  <div class="trending-modpacks-grid" id="trending-mods-grid">
+                    <div class="mp-loading-placeholder">Loading modpacks...</div>
+                  </div>
+                </div>
               </div>
+
             </div>
+
           </div>
           <div class="modpack-content" id="modpack-content">
             <div class="modpack-content-header">
@@ -694,22 +1439,57 @@ export function renderAppShell() {
       <div class="mod-browser" id="mod-browser">
         <div class="mod-browser-header">
           <h3 id="browser-title">Browse Mods</h3>
-          <button class="mod-browser-close" id="btn-close-browser">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-        <div style="padding: 0 24px 12px; display:flex; align-items:center; gap:10px; justify-content:space-between;">
-          <div class="provider-pill-group" id="provider-pill-group">
-            <button class="provider-pill active" data-provider="modrinth" id="pill-modrinth">Modrinth</button>
-            <button class="provider-pill" data-provider="curseforge" id="pill-curseforge">CurseForge</button>
+          <div class="mod-browser-header-actions">
+            <div class="provider-pill-group" id="provider-pill-group">
+              <button class="provider-pill active" data-provider="modrinth" id="pill-modrinth">Modrinth</button>
+              <button class="provider-pill" data-provider="curseforge" id="pill-curseforge">CurseForge</button>
+            </div>
+            <button class="mod-browser-close" id="btn-close-browser">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
-          <div id="pagination-controls" style="display:flex;align-items:center;gap:6px;"></div>
         </div>
-        <input type="text" class="clean-input" id="mod-search" placeholder="Search..." style="margin:0 24px 16px;width:calc(100% - 48px);" />
-        <div class="mod-browser-results" id="mod-browser-results"></div>
+        <div class="browser-body">
+          <div class="browser-main">
+            <div class="browser-search-bar">
+              <svg class="browser-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" class="clean-input" id="mod-search" placeholder="Search mods..." />
+              <div id="pagination-controls" class="browser-pagination-bar"></div>
+            </div>
+            <div class="browser-results" id="mod-browser-results"></div>
+          </div>
+          <div class="browser-sidebar" id="browser-sidebar">
+            <div class="browser-filter-section" id="section-category">
+              <h4 class="browser-filter-title">Category</h4>
+              <div class="browser-filter-options" id="filter-category"></div>
+            </div>
+            <div class="browser-filter-section" id="section-resolution" style="display:none">
+              <h4 class="browser-filter-title">Resolution</h4>
+              <div class="browser-filter-options" id="filter-resolution"></div>
+            </div>
+            <div class="browser-filter-section">
+              <h4 class="browser-filter-title">Sort By</h4>
+              <select class="clean-select" id="filter-sort">
+                <option value="relevance">Relevance</option>
+                <option value="downloads">Most Downloads</option>
+                <option value="updated">Recently Updated</option>
+                <option value="follows">Most Follows</option>
+              </select>
+            </div>
+            <div class="browser-filter-section" id="section-loader">
+              <h4 class="browser-filter-title">Loader</h4>
+              <div class="browser-filter-options" id="filter-loader"></div>
+            </div>
+            <div class="browser-filter-section">
+              <h4 class="browser-filter-title">Minecraft Version</h4>
+              <select class="clean-select" id="filter-version"></select>
+            </div>
+            <button class="browser-filter-clear" id="btn-clear-filters">Clear Filters</button>
+          </div>
+        </div>
       </div>
       <div class="mp-create-modal" id="mp-create-modal">
         <div class="mp-create-box">
@@ -794,13 +1574,60 @@ export function renderAppShell() {
     </div>
   </div>
 
+  <!-- Version Download Modal -->
+  <div class="mp-create-modal" id="mp-all-versions-modal">
+    <div class="mp-create-box" style="width:480px;max-height:80vh;overflow-y:auto;">
+      <h3>All Minecraft Versions</h3>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="pill-switch-option active" id="mp-dl-tab-release" data-dl-tab="release">Release</button>
+        <button class="pill-switch-option" id="mp-dl-tab-snapshot" data-dl-tab="snapshot">Snapshots</button>
+        <button class="pill-switch-option" id="mp-dl-tab-old" data-dl-tab="old">Historical</button>
+      </div>
+      <div class="mods-grid" id="mp-all-version-list" style="max-height:400px;overflow-y:auto;">
+        <!-- Injected by JS -->
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="modal-btn" id="btn-close-all-versions" style="flex:1;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- LAUNCH OVERLAY -->
   <div class="launch-overlay" id="launch-overlay">
-    <img src="./loading.gif" class="launch-spinner-gif" alt="Loading...">
-    <div class="launch-status" id="launch-status">Preparing game...</div>
-    <div class="launch-bar">
-      <div class="launch-fill" id="launch-fill"></div>
+    <div class="launch-overlay-card">
+      <div class="launch-card-header">
+        <img src="./loading.gif" class="launch-spinner-gif" alt="Loading...">
+        <div class="launch-status" id="launch-status">Preparing game...</div>
+        <div class="launch-card-controls">
+          <button type="button" class="launch-icon-btn" id="btn-minimize-launch"
+                  data-action="minimize" title="Minimize (keep using the launcher)" aria-label="Minimize launch overlay">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <button type="button" class="launch-icon-btn" id="btn-restore-launch"
+                  data-action="restore" title="Expand" aria-label="Expand launch overlay" style="display:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="launch-bar">
+        <div class="launch-fill" id="launch-fill"></div>
+      </div>
+      <div class="launch-card-footer">
+        <span class="launch-hint">You can keep using the launcher while this runs.</span>
+        <button class="modal-btn" id="btn-cancel-launch" style="padding:8px 12px;">Cancel</button>
+      </div>
     </div>
+  </div>
+
+  <!-- MINI INDICATOR (shown when launch overlay is minimized) -->
+  <div class="launch-mini-indicator" id="launch-mini-indicator" role="button" tabindex="0" title="Restore launch overlay" aria-label="Restore launch overlay">
+    <span class="launch-mini-spinner" aria-hidden="true"></span>
+    <span class="launch-mini-text" id="launch-mini-text">Launching…</span>
+    <button type="button" class="launch-mini-close" id="btn-mini-close" title="Hide indicator (launch continues in background)" aria-label="Hide indicator">×</button>
   </div>
 
   <!-- ERROR MODAL -->
@@ -827,13 +1654,23 @@ export function renderAppShell() {
       <div class="modal-icon update-icon">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
       </div>
-      <h3>New Update Available!</h3>
+      <h3 id="update-modal-title">New Update Available!</h3>
       <p id="update-version-info">A new update is available.</p>
       <div class="update-notes-container" id="update-notes">
         <!-- Injected release notes -->
       </div>
+      <div id="update-progress-container" style="display:none;width:100%;margin-top:15px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--text-muted);">
+          <span id="update-progress-text">Downloading...</span>
+          <span id="update-progress-percent">0%</span>
+        </div>
+        <div style="width:100%;height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+          <div id="update-progress-bar" style="height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width 0.3s;"></div>
+        </div>
+      </div>
       <div style="display:flex;gap:10px;margin-top:20px;width:100%;">
-        <button class="submit-btn" id="btn-download-update" style="flex:1;">Get Update</button>
+        <button class="submit-btn" id="btn-download-update" style="flex:1;">Download & Install</button>
+        <button class="submit-btn" id="btn-install-update" style="flex:1;display:none;">Install & Restart</button>
         <button class="modal-btn" id="btn-ignore-update" style="flex:1;">Later</button>
       </div>
     </div>
@@ -1081,6 +1918,61 @@ export function renderAppShell() {
       <div id="dependencies-content" style="color: white;">
         <div style="text-align: center; padding: 20px; color: #a0a0a0;">Scanning for dependencies...</div>
       </div>
+    </div>
+  </div>
+
+  <!-- DOWNLOAD CONFIRMATION MODAL -->
+  <div class="custom-modal" id="dl-confirm-modal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <div id="dl-confirm-icon-wrap" style="width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.04);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+        </div>
+        <div style="min-width:0;">
+          <h3 id="dl-confirm-name" style="margin:0 0 3px;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Download Modpack?</h3>
+          <p style="margin:0;font-size:11px;color:var(--text-muted);">Import this modpack into your collection.</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="modal-btn" id="btn-dl-confirm-cancel" style="flex:1;">Cancel</button>
+        <button class="submit-btn" id="btn-dl-confirm-start" style="flex:2;">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOWNLOAD DETAIL PANEL -->
+  <div class="download-detail-panel" id="download-detail-panel">
+    <div class="ddp-header">
+      <span class="ddp-title" id="ddp-title">Downloading Modpack</span>
+      <button type="button" class="ddp-close" id="btn-ddp-close" aria-label="Close download panel">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="ddp-body">
+      <div class="ddp-status" id="ddp-status">Preparing...</div>
+      <div class="ddp-progress-bar">
+        <div class="ddp-progress-fill" id="ddp-progress-fill"></div>
+      </div>
+      <div class="ddp-current-item" id="ddp-current-item"></div>
+      <div class="ddp-metrics">
+        <div class="ddp-metric">
+          <span class="ddp-metric-label">Progress</span>
+          <span class="ddp-metric-value" id="ddp-percent">0%</span>
+        </div>
+        <div class="ddp-metric">
+          <span class="ddp-metric-label">Speed</span>
+          <span class="ddp-metric-value" id="ddp-speed">—</span>
+        </div>
+        <div class="ddp-metric">
+          <span class="ddp-metric-label">ETA</span>
+          <span class="ddp-metric-value" id="ddp-eta">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="ddp-actions">
+      <button class="ddp-btn ddp-cancel" id="btn-ddp-cancel">Cancel</button>
+      <button class="ddp-btn ddp-retry" id="btn-ddp-retry" style="display:none;">Retry</button>
+      <button class="ddp-btn ddp-dismiss" id="btn-ddp-dismiss" style="display:none;">Dismiss</button>
     </div>
   </div>
 

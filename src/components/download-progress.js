@@ -134,38 +134,67 @@ class DownloadProgressTracker {
       return;
     }
 
+    const normalizeDownloadEvent = (downloadId, progress) => {
+      if (downloadId && typeof downloadId === 'object' && !Array.isArray(downloadId)) {
+        return downloadId;
+      }
+      if (progress && typeof progress === 'object') {
+        return { downloadId, ...progress };
+      }
+      return { downloadId };
+    };
+
+    const shouldIgnoreDownload = (downloadId) => {
+      const id = typeof downloadId === 'object' && downloadId
+        ? downloadId.downloadId
+        : downloadId;
+      return typeof id === 'string' && id.startsWith('version:');
+    };
+
     // Listen for download progress updates
     window.electronAPI.onDownloadProgress?.((downloadId, progress) => {
-      this.updateProgress(downloadId, progress);
+      const payload = normalizeDownloadEvent(downloadId, progress);
+      if (shouldIgnoreDownload(payload)) return;
+      this.updateProgress(payload.downloadId, payload);
     });
 
     // Listen for download completion
     window.electronAPI.onDownloadComplete?.((downloadId, result) => {
-      this.completeDownload(downloadId, result);
+      const payload = normalizeDownloadEvent(downloadId, result);
+      if (shouldIgnoreDownload(payload)) return;
+      this.completeDownload(payload.downloadId, payload);
     });
 
     // Listen for download errors
     window.electronAPI.onDownloadError?.((downloadId, error) => {
-      this.handleDownloadError(downloadId, error);
+      const payload = normalizeDownloadEvent(downloadId, error);
+      if (shouldIgnoreDownload(payload)) return;
+      this.handleDownloadError(payload.downloadId, payload);
     });
 
     // Listen for pause/resume/cancel events
     window.electronAPI.onDownloadPaused?.((downloadId) => {
-      if (downloadId === this.currentDownloadId) {
+      const payload = normalizeDownloadEvent(downloadId);
+      if (shouldIgnoreDownload(payload)) return;
+      if (payload.downloadId === this.currentDownloadId) {
         this.state = 'paused';
         this.updateUI();
       }
     });
 
     window.electronAPI.onDownloadResumed?.((downloadId) => {
-      if (downloadId === this.currentDownloadId) {
+      const payload = normalizeDownloadEvent(downloadId);
+      if (shouldIgnoreDownload(payload)) return;
+      if (payload.downloadId === this.currentDownloadId) {
         this.state = 'downloading';
         this.updateUI();
       }
     });
 
     window.electronAPI.onDownloadCancelled?.((downloadId) => {
-      if (downloadId === this.currentDownloadId) {
+      const payload = normalizeDownloadEvent(downloadId);
+      if (shouldIgnoreDownload(payload)) return;
+      if (payload.downloadId === this.currentDownloadId) {
         this.state = 'cancelled';
         this.reset();
       }
@@ -247,6 +276,17 @@ class DownloadProgressTracker {
 
     // Update percentage text (Requirement 2.2)
     this.elements.percentText.textContent = `${Math.round(percent)}%`;
+
+    // Announce progress at milestones for screen readers
+    const rounded = Math.round(percent / 25) * 25;
+    if (rounded > 0 && rounded !== this._lastAnnouncedMilestone) {
+      this._lastAnnouncedMilestone = rounded;
+      accessibilityManager.announceProgressUpdate(
+        this.progress.itemsCompleted,
+        this.progress.totalItems,
+        rounded
+      );
+    }
 
     // Update current item text (Requirement 2.3)
     this.elements.currentItemText.textContent = 

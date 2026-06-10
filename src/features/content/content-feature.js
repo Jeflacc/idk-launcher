@@ -100,7 +100,7 @@ export function initContentFeature() {
       const json = await res.json();
       if (json.data && json.data.length > 0) packs = json.data;
     } catch (e) {
-      console.warn("CurseForge trending fetch failed:", e);
+      // offline — fall through to defaults
     }
 
     grid.innerHTML = "";
@@ -109,6 +109,7 @@ export function initContentFeature() {
         const thumb = mp.logo
           ? mp.logo.thumbnailUrl.replace("https://", "idk-cache://")
           : "";
+        const initial = (mp.name || "M").charAt(0).toUpperCase();
         const dl =
           mp.downloadCount >= 1e6
             ? (mp.downloadCount / 1e6).toFixed(1) + "M"
@@ -125,8 +126,8 @@ export function initContentFeature() {
           icon_url: thumb,
           provider: "curseforge",
         }).replace(/"/g, "&quot;");
-        grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
-        <div class="trending-mp-thumb" style="background-image:url('${thumb}');background-size:cover;background-position:center;"></div>
+        grid.innerHTML += `<div class="trending-mp-card" onclick="clickTrendingMod(JSON.parse('${modObj}'));" style="cursor:pointer;">
+        ${thumb ? `<img class="trending-mp-thumb" src="${thumb}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'trending-mp-thumb trending-mp-thumb-fallback',textContent:'${initial}'}))" />` : `<div class="trending-mp-thumb trending-mp-thumb-fallback">${initial}</div>`}
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
           <div class="trending-mp-meta"><span>&#x2B07; ${dl}</span>${loader ? '<span class="trending-mp-tag">' + loader + "</span>" : ""}</div>
         </div></div>`;
@@ -140,8 +141,8 @@ export function initContentFeature() {
           icon_url: mp.thumb,
           provider: "curseforge",
         }).replace(/"/g, "&quot;");
-        grid.innerHTML += `<div class="trending-mp-card" onclick="browserMode='modpack'; mpAddItem(JSON.parse('${modObj}'), this);" style="cursor:pointer;">
-        <div class="trending-mp-thumb" style="background-image:url('${thumbCached}');background-size:cover;background-position:center;"></div>
+        grid.innerHTML += `<div class="trending-mp-card" onclick="clickTrendingMod(JSON.parse('${modObj}'));" style="cursor:pointer;">
+        <img class="trending-mp-thumb" src="${thumbCached}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'trending-mp-thumb trending-mp-thumb-fallback',textContent:'${mp.name.charAt(0).toUpperCase()}'}))" />
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
           <div class="trending-mp-meta"><span>&#x2B07; ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>
         </div></div>`;
@@ -151,50 +152,119 @@ export function initContentFeature() {
 
   // Check for Updates
   async function initUpdateChecker() {
-    if (window.electronAPI && window.electronAPI.checkForUpdates) {
+    if (!window.electronAPI) return;
+    const api = window.electronAPI;
+
+    // Listen for update events from main process
+    if (api.onUpdateAvailable) {
+      api.onUpdateAvailable((data) => {
+        showUpdateModal(data.currentVersion, data.latestVersion, data.releaseNotes);
+      });
+    }
+    if (api.onUpdateProgress) {
+      api.onUpdateProgress((data) => {
+        const progressText = document.getElementById("update-progress-text");
+        const progressPercent = document.getElementById("update-progress-percent");
+        const progressBar = document.getElementById("update-progress-bar");
+        if (progressText) progressText.textContent = `Downloading... ${formatBytes(data.bytesPerSecond)}/s`;
+        if (progressPercent) progressPercent.textContent = `${data.percent}%`;
+        if (progressBar) progressBar.style.width = `${data.percent}%`;
+      });
+    }
+    if (api.onUpdateDownloaded) {
+      api.onUpdateDownloaded((data) => {
+        const downloadBtn = document.getElementById("btn-download-update");
+        const installBtn = document.getElementById("btn-install-update");
+        const progressContainer = document.getElementById("update-progress-container");
+        const progressText = document.getElementById("update-progress-text");
+        const progressBar = document.getElementById("update-progress-bar");
+        if (downloadBtn) downloadBtn.style.display = "none";
+        if (installBtn) installBtn.style.display = "flex";
+        if (progressContainer) progressContainer.style.display = "none";
+        if (progressText) progressText.textContent = "Download complete!";
+        if (progressBar) progressBar.style.width = "100%";
+        const title = document.getElementById("update-modal-title");
+        if (title) title.textContent = "Update Ready to Install!";
+      });
+    }
+    if (api.onUpdateError) {
+      api.onUpdateError((data) => {
+        console.warn("Auto-update error:", data.message);
+        const progressText = document.getElementById("update-progress-text");
+        if (progressText) progressText.textContent = `Update failed: ${data.message}`;
+      });
+    }
+
+    // Check on load
+    if (api.checkForUpdates) {
       try {
-        const res = await window.electronAPI.checkForUpdates();
+        const res = await api.checkForUpdates();
         if (res && res.updateAvailable) {
-          const modal = document.getElementById("update-modal");
-          const verInfo = document.getElementById("update-version-info");
-          const notesContainer = document.getElementById("update-notes");
-
-          verInfo.textContent = `Version v${res.latestVersion} is now available (you have v${res.currentVersion}).`;
-
-          // Escape HTML to prevent XSS and convert markdown elements to stylized HTML
-          const htmlNotes = res.releaseNotes
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/\n/g, "<br>")
-            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-            .replace(/\*(.*?)\*/g, "<em>$1</em>")
-            .replace(
-              /## (.*?)(<br>|$)/g,
-              '<h4 style="margin:10px 0 5px;color:white;font-family:var(--font-title);">$1</h4>',
-            )
-            .replace(
-              /- (.*?)(<br>|$)/g,
-              '<div style="margin-left:8px;display:flex;gap:6px;margin-bottom:4px;"><span style="color:#60a5fa;">&bull;</span><span>$1</span></div>',
-            );
-
-          notesContainer.innerHTML =
-            htmlNotes ||
-            '<p style="color:var(--text-muted);">No release notes provided.</p>';
-          modal.classList.add("active");
-
-          document.getElementById("btn-download-update").onclick = () => {
-            window.electronAPI.openExternal(res.releaseUrl);
-            modal.classList.remove("active");
-          };
-
-          document.getElementById("btn-ignore-update").onclick = () => {
-            modal.classList.remove("active");
-          };
+          showUpdateModal(res.currentVersion, res.latestVersion, res.releaseNotes);
         }
       } catch (e) {
         console.warn("Update check failed:", e);
       }
+    }
+
+    function showUpdateModal(currentVersion, latestVersion, releaseNotes) {
+      const modal = document.getElementById("update-modal");
+      const verInfo = document.getElementById("update-version-info");
+      const notesContainer = document.getElementById("update-notes");
+      const downloadBtn = document.getElementById("btn-download-update");
+      const installBtn = document.getElementById("btn-install-update");
+      const progressContainer = document.getElementById("update-progress-container");
+      const title = document.getElementById("update-modal-title");
+
+      if (title) title.textContent = "New Update Available!";
+      if (verInfo) verInfo.textContent = `Version v${latestVersion} is now available (you have v${currentVersion}).`;
+      if (downloadBtn) { downloadBtn.style.display = "flex"; downloadBtn.textContent = "Download & Install"; }
+      if (installBtn) installBtn.style.display = "none";
+      if (progressContainer) progressContainer.style.display = "none";
+
+      if (notesContainer) {
+        const htmlNotes = (releaseNotes || "")
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/\n/g, "<br>")
+          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.*?)\*/g, "<em>$1</em>")
+          .replace(/## (.*?)(<br>|$)/g, '<h4 style="margin:10px 0 5px;color:white;font-family:var(--font-title);">$1</h4>')
+          .replace(/- (.*?)(<br>|$)/g, '<div style="margin-left:8px;display:flex;gap:6px;margin-bottom:4px;"><span style="color:#60a5fa;">&bull;</span><span>$1</span></div>');
+        notesContainer.innerHTML = htmlNotes || '<p style="color:var(--text-muted);">No release notes provided.</p>';
+      }
+
+      modal.classList.add("active");
+
+      downloadBtn.onclick = async () => {
+        downloadBtn.textContent = "Downloading...";
+        downloadBtn.disabled = true;
+        progressContainer.style.display = "block";
+        try {
+          await api.downloadUpdate();
+        } catch (e) {
+          console.warn("Download failed:", e);
+          downloadBtn.textContent = "Download & Install";
+          downloadBtn.disabled = false;
+        }
+      };
+
+      installBtn.onclick = () => {
+        installBtn.textContent = "Restarting...";
+        installBtn.disabled = true;
+        api.installUpdate();
+      };
+
+      document.getElementById("btn-ignore-update").onclick = () => {
+        modal.classList.remove("active");
+      };
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return "0 B";
+      const k = 1024;
+      const sizes = ["B", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
     }
   }
 
