@@ -1,4 +1,4 @@
-﻿const { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, screen, protocol, net, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, screen, protocol, net, nativeImage } = require('electron');
 
 // --- Main-process heartbeat watchdog ---
 // Windows marks a window as "Not Responding" if the owning process
@@ -359,6 +359,7 @@ function createWindow() {
     frame: false,
     alwaysOnTop: true,
     resizable: false,
+    icon: path.join(__dirname, 'logo.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true
@@ -378,6 +379,7 @@ function createWindow() {
     minimizable: true,
     closable: true,
     show: false, // Don't show immediately
+    icon: path.join(__dirname, 'logo.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
