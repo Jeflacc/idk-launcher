@@ -188,6 +188,7 @@ export function initModpacksFeature({ switchView }) {
                   ? existing.loader
                   : existing?.loader || diskMp.loader || "Vanilla",
               iconUrl: existing?.iconUrl || diskMp.iconUrl || null,
+              favorite: existing?.favorite || false,
               lastPlayed: existing?.lastPlayed || diskMp.lastPlayed || null,
               loaderVersion: existing?.loaderVersion || diskMp.loaderVersion || "",
               javaArgs: existing?.javaArgs || diskMp.javaArgs || "",
@@ -423,7 +424,12 @@ export function initModpacksFeature({ switchView }) {
         const iconHtml = renderablePackIconUrl
           ? `<img src="${renderablePackIconUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<svg width=\`20\` height=\`20\` viewBox=\`0 0 24 24\` fill=\`none\` stroke=\`currentColor\` stroke-width=\`2\`><path d=\`M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\`></path></svg>'" />`
           : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
+        const favIconHtml = mp.favorite
+          ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="var(--theme-accent)" stroke="var(--theme-accent)" stroke-width="2" style="position:absolute;top:6px;right:6px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`
+          : "";
+        el.style.position = "relative";
         el.innerHTML = `
+        ${favIconHtml}
         <div class="mp-item-icon" style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(255,255,255,0.05);flex-shrink:0;border:1px solid rgba(255,255,255,0.08);">${iconHtml}</div>
         <div class="mp-item-info"><strong>${mp.name}</strong><span>${mp.mcVersion} \u00B7 ${mp.loader}</span></div>
         <span class="mp-item-count">${total}</span>`;
@@ -936,6 +942,20 @@ export function initModpacksFeature({ switchView }) {
       }
     }
 
+    const favBtn = document.getElementById("btn-favorite-modpack");
+    if (favBtn) {
+      if (isViewingVersion) {
+        favBtn.style.display = "none";
+      } else {
+        favBtn.style.display = "";
+        const svg = favBtn.querySelector("svg");
+        if (svg) {
+          svg.setAttribute("fill", mp.favorite ? "var(--theme-accent)" : "none");
+          svg.style.color = mp.favorite ? "var(--theme-accent)" : "currentColor";
+        }
+      }
+    }
+
     // Update dynamic stats
     if (isViewingVersion) {
       document.getElementById("mp-stat-version").innerText =
@@ -1139,6 +1159,9 @@ export function initModpacksFeature({ switchView }) {
     if (preSelectedVersion && [...sel.options].some(o => o.value === preSelectedVersion)) {
       sel.value = preSelectedVersion;
     }
+    document.getElementById("new-mp-icon").value = "";
+    document.getElementById("new-mp-icon-picker").innerHTML = `<div class="icon-picker-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`;
+    
     document.getElementById("mp-create-modal").classList.add("active");
     document.getElementById("new-mp-name").focus();
   }
@@ -1146,6 +1169,23 @@ export function initModpacksFeature({ switchView }) {
   document.getElementById("btn-new-modpack").addEventListener("click", () => {
     openCreateModpackModal();
   });
+
+  const setupIconPicker = (pickerId, inputId) => {
+    const picker = document.getElementById(pickerId);
+    if (!picker) return;
+    picker.addEventListener("click", async () => {
+      if (window.electronAPI?.selectImage) {
+        const result = await window.electronAPI.selectImage();
+        if (result && result.success && result.url) {
+          document.getElementById(inputId).value = result.url;
+          picker.innerHTML = `<img src="${result.url}" />`;
+        }
+      }
+    });
+  };
+
+  setupIconPicker("new-mp-icon-picker", "new-mp-icon");
+  setupIconPicker("mp-settings-icon-picker", "mp-settings-icon");
   document
     .getElementById("btn-cancel-create-mp")
     .addEventListener("click", () =>
@@ -1158,12 +1198,13 @@ export function initModpacksFeature({ switchView }) {
       const mcVersion = document.getElementById("new-mp-version").value;
       const loader = document.getElementById("new-mp-loader").value;
       if (!name || !mcVersion) return;
+      const iconUrl = document.getElementById("new-mp-icon").value;
       const newMp = {
         id: Date.now().toString(36) + Math.random().toString(36).slice(2),
         name,
         mcVersion,
         loader,
-        iconUrl: "",
+        iconUrl,
         mods: [],
         resourcepacks: [],
         shaders: [],
@@ -1485,6 +1526,12 @@ export function initModpacksFeature({ switchView }) {
         document.getElementById("mp-settings-height").disabled = false;
 
         document.getElementById("mp-settings-name").value = mp.name;
+        document.getElementById("mp-settings-icon").value = mp.iconUrl || "";
+        if (mp.iconUrl) {
+          document.getElementById("mp-settings-icon-picker").innerHTML = `<img src="${mp.iconUrl}" />`;
+        } else {
+          document.getElementById("mp-settings-icon-picker").innerHTML = `<div class="icon-picker-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`;
+        }
         document.getElementById("mp-settings-description").value =
           mp.description || "";
         const versionSelect = document.getElementById("mp-settings-version");
@@ -1574,6 +1621,7 @@ export function initModpacksFeature({ switchView }) {
         // Save modpack settings
         mp.name =
           document.getElementById("mp-settings-name").value.trim() || mp.name;
+        mp.iconUrl = document.getElementById("mp-settings-icon").value || mp.iconUrl;
         mp.description = document
           .getElementById("mp-settings-description")
           .value.trim();
@@ -1964,6 +2012,19 @@ export function initModpacksFeature({ switchView }) {
         hideDlPanel();
         actions.showWarningToast("Import failed: " + e.message);
       }
+    });
+
+  // --- Favorite Modpack ---
+  document
+    .getElementById("btn-favorite-modpack")
+    ?.addEventListener("click", () => {
+      const mp = mpGet();
+      if (!mp || mp.isTemporary) return;
+      mp.favorite = !mp.favorite;
+      mpSave();
+      mpRenderDetail();
+      mpRenderList();
+      if (actions.renderVersions) actions.renderVersions();
     });
 
   // --- Export Modpack (.zip) ---

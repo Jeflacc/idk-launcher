@@ -446,6 +446,15 @@ app.whenReady().then(() => {
   });
 
   protocol.handle('idk-cache', async (request) => {
+    if (request.url.startsWith('idk-cache://custom-icons/')) {
+      const fileName = request.url.replace('idk-cache://custom-icons/', '');
+      const localPath = path.join(app.getPath('userData'), 'custom-icons', fileName);
+      if (fs.existsSync(localPath)) {
+        return net.fetch('file://' + localPath.replace(/\\/g, '/'));
+      }
+      return new Response('Not found', { status: 404 });
+    }
+
     const originalUrl = request.url.replace('idk-cache://', 'https://');
     const hash = crypto.createHash('md5').update(originalUrl).digest('hex');
     const localPath = path.join(imageCacheDir, hash);
@@ -4851,6 +4860,38 @@ ipcMain.handle('get-settings-categories', async (event) => {
     return { success: true, categories };
   } catch (error) {
     console.error('[Settings IPC] get-settings-categories error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Select custom modpack icon
+ipcMain.handle('select-image', async (event) => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select Modpack Icon',
+      properties: ['openFile'],
+      filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg', 'webp'] }]
+    });
+    
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false };
+    }
+
+    const sourcePath = result.filePaths[0];
+    const customIconsDir = path.join(app.getPath('userData'), 'custom-icons');
+    if (!fs.existsSync(customIconsDir)) {
+      fs.mkdirSync(customIconsDir, { recursive: true });
+    }
+
+    const ext = path.extname(sourcePath).toLowerCase();
+    const fileName = crypto.randomUUID() + ext;
+    const targetPath = path.join(customIconsDir, fileName);
+
+    fs.copyFileSync(sourcePath, targetPath);
+
+    return { success: true, url: 'idk-cache://custom-icons/' + fileName };
+  } catch (error) {
+    console.error('[Main IPC] select-image error:', error);
     return { success: false, error: error.message };
   }
 });

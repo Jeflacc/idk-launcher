@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   installModToVersion: (data) => ipcRenderer.invoke('install-mod-to-version', data),
   unzipCurseforge:     (data) => ipcRenderer.invoke('unzip-curseforge',    data),
   selectModpackZip:    () => ipcRenderer.invoke('select-modpack-zip'),
+  selectImage:         () => ipcRenderer.invoke('select-image'),
   selectExportZip:     (data) => ipcRenderer.invoke('select-export-zip',   data),
   exportModpack:       (data) => ipcRenderer.invoke('export-modpack',      data),
   downloadCurseforgeModpack: (data) => ipcRenderer.invoke('download-curseforge-modpack', data),
