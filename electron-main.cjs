@@ -1299,7 +1299,13 @@ ipcMain.handle('elyby-authenticate', async (event, { username, password, clientT
 ipcMain.handle('microsoft-authenticate', async (event) => {
   try {
     const authManager = new msmc.Auth("login");
-    const xboxManager = await authManager.launch("electron");
+    const xboxManager = await authManager.launch("electron", {
+      width: 500,
+      height: 650,
+      resizable: false,
+      title: "Sign in to Minecraft",
+      icon: path.join(__dirname, 'logo.png')
+    });
     
     const token = await xboxManager.getMinecraft();
     const mclcAuth = token.mclc();
