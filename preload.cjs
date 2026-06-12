@@ -34,6 +34,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   scanAllAchievements: () => ipcRenderer.invoke('scan-all-achievements'),
   downloadVersion: (data) => ipcRenderer.invoke('download-version', data),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
+  microsoftAuthenticate: () => ipcRenderer.invoke('microsoft-authenticate'),
+  getMicrosoftAuthData: () => ipcRenderer.invoke('get-microsoft-auth-data'),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
   getElybyAuthData: () => ipcRenderer.invoke('get-elyby-auth-data'),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),

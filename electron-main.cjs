@@ -43,8 +43,10 @@ const { Worker } = require('worker_threads');
 const crypto = require('crypto');
 const AdmZip = require('adm-zip');
 const { scanProfileAchievements, scanAllAchievements, resolveProfilePath } = require('./src/backend/achievements-scanner.cjs');
+const msmc = require('msmc');
 
 app.commandLine.appendSwitch('js-flags', '--expose_gc');
+app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'idk-cache', privileges: { secure: true, standard: true, supportFetchAPI: true, bypassCSP: true } }
@@ -1257,6 +1259,18 @@ ipcMain.handle('get-elyby-auth-data', async (event) => {
   }
 });
 
+ipcMain.handle('get-microsoft-auth-data', async () => {
+  try {
+    const manager = getSettingsManager();
+    if (manager && manager.settings && manager.settings.microsoftData) {
+      return { success: true, data: manager.settings.microsoftData.value };
+    }
+    return { success: false, data: null };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
 // Launch minecraft with a specific modpack profile
 ipcMain.handle('elyby-authenticate', async (event, { username, password, clientToken }) => {
   return new Promise((resolve) => {
@@ -1279,6 +1293,22 @@ ipcMain.handle('elyby-authenticate', async (event, { username, password, clientT
     req.write(postData);
     req.end();
   });
+});
+
+// Launch microsoft authentication
+ipcMain.handle('microsoft-authenticate', async (event) => {
+  try {
+    const authManager = new msmc.Auth("login");
+    const xboxManager = await authManager.launch("electron");
+    
+    const token = await xboxManager.getMinecraft();
+    const mclcAuth = token.mclc();
+
+    return { success: true, data: { profile: { name: mclcAuth.name }, mclcAuth } };
+  } catch (e) {
+    console.error("[Microsoft Auth] Error:", e);
+    return { success: false, error: e.message || "Failed to authenticate with Microsoft." };
+  }
 });
 
 // Fetch Ely.by session profile (skin URL) via Node.js to bypass browser CORS
@@ -1581,7 +1611,10 @@ ipcMain.on('launch-modpack', async (event, args) => {
     }
   }
 
-  if (authData && authData.accessToken) {
+  if (authData && authData.mclcAuth) {
+    opts.authorization = authData.mclcAuth;
+    console.log(`[Launch] Using Microsoft auth for user: ${opts.authorization.name}`);
+  } else if (authData && authData.accessToken) {
     opts.authorization = {
       access_token: authData.accessToken,
       client_token: authData.clientToken,

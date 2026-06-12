@@ -577,9 +577,11 @@ playBtn.addEventListener('click', async (e) => {
   try {
     if (state.authMode === 'elyby' && window.electronAPI?.getElybyAuthData) {
       authData = (await window.electronAPI.getElybyAuthData()).data || null;
+    } else if (state.authMode === 'microsoft' && window.electronAPI?.getMicrosoftAuthData) {
+      authData = (await window.electronAPI.getMicrosoftAuthData()).data || null;
     }
   } catch (e) {
-    console.warn('[Launch] Ely.by auth retrieval failed:', e);
+    console.warn('[Launch] Auth retrieval failed:', e);
   }
 
   if (window.electronAPI) {

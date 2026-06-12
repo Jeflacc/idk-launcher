@@ -1,4 +1,4 @@
-﻿import { safeParse, esc } from "../../core/safe-parse.js";
+import { safeParse, esc } from "../../core/safe-parse.js";
 import { state, actions } from "../../core/app-state.js";
 
 export function initModpacksFeature({ switchView }) {
@@ -3974,9 +3974,11 @@ export function initModpacksFeature({ switchView }) {
     try {
       if (state.authMode === "elyby" && window.electronAPI?.getElybyAuthData) {
         authData = (await window.electronAPI.getElybyAuthData()).data || null;
+      } else if (state.authMode === "microsoft" && window.electronAPI?.getMicrosoftAuthData) {
+        authData = (await window.electronAPI.getMicrosoftAuthData()).data || null;
       }
     } catch (e) {
-      console.warn('[Modpack] Ely.by auth retrieval failed:', e);
+      console.warn('[Modpack] Auth retrieval failed:', e);
     }
 
     const windowSize = {
