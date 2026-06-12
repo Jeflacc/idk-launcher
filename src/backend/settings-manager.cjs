@@ -361,6 +361,14 @@ class SettingsManager extends EventEmitter {
         description: 'Authentication data for Ely.by accounts',
         tooltip: 'Token and profile data for Ely.by'
       },
+      microsoftData: {
+        value: null,
+        type: 'object',
+        category: 'Launcher',
+        label: 'Microsoft Auth Data',
+        description: 'Authentication data for Microsoft accounts',
+        tooltip: 'Token and profile data for Microsoft'
+      },
       lastPlayedVersion: {
         value: '',
         type: 'string',
