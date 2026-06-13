@@ -115,18 +115,17 @@ export function renderAppShell() {
       <p style="color: var(--text-muted); margin-bottom: 10px;">Select your login method to enter the launcher.</p>
 
       <div class="login-btn microsoft" id="btn-microsoft-login">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"></path></svg>
+        <img src="./microsoft.png" alt="Microsoft Logo" width="24" height="24" style="object-fit: contain;" />
         Microsoft Account
       </div>
 
       <div class="login-btn elyby" id="btn-elyby-login">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <img src="./elyby.jpg" alt="Ely.by Logo" width="22" height="22" style="border-radius: 4px; object-fit: cover;" />
         Ely.by Account
       </div>
 
-      <div class="login-btn offline" id="btn-offline-login">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        Offline Account
+      <div id="btn-offline-login" style="text-align: center; margin-top: 15px; cursor: pointer; color: #8c9096; font-size: 12px; text-decoration: underline; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#8c9096'">
+        Play Minecraft with Username (Offline)
       </div>
 
       <div class="offline-form" id="offline-form">
@@ -1723,7 +1722,9 @@ export function renderAppShell() {
         <div class="friends-auth-form">
           <div class="friends-auth-error" id="friends-auth-error">Error message here</div>
           <input type="text" class="clean-input" id="friends-auth-username" placeholder="IDK Username..." />
-          <input type="password" class="clean-input" id="friends-auth-password" placeholder="Password..." />
+          <input type="email" class="clean-input" id="friends-auth-email" placeholder="Email Address..." style="display: none; margin-top: 10px;" />
+          <input type="password" class="clean-input" id="friends-auth-password" placeholder="Password..." style="margin-top: 10px;" />
+          <input type="text" class="clean-input" id="friends-auth-otp" placeholder="6-digit OTP Code" style="display: none; margin-top: 10px; text-align: center; letter-spacing: 2px;" maxlength="6" />
           <button class="submit-btn" id="btn-friends-auth-submit" style="margin-top: 10px;">Connect Account</button>
         </div>
       </div>

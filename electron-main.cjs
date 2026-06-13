@@ -557,6 +557,50 @@ function resolveVersionDir(versionsPath, version) {
   return dirs.length > 0 ? dirs[0] : null;
 }
 
+// Import external files via drag and drop
+ipcMain.handle('import-external-files', async (event, { modpackId, targetType, sourcePaths }) => {
+  try {
+    const rootPath = getMinecraftDataPath();
+    let destDir;
+
+    if (modpackId && modpackId.startsWith('version-')) {
+      const version = modpackId.replace('version-', '');
+      const versionsPath = path.join(rootPath, 'versions');
+      const versionDir = resolveVersionDir(versionsPath, version);
+      if (!versionDir) return { success: false, error: 'Version not found' };
+      destDir = path.join(versionsPath, versionDir, targetType);
+    } else if (modpackId) {
+      destDir = path.join(rootPath, 'profiles', `modpack-${modpackId}`, targetType);
+    } else {
+      return { success: false, error: 'No modpack or version specified' };
+    }
+
+    if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+
+    let imported = 0;
+    for (const src of sourcePaths) {
+      try {
+        if (!fs.existsSync(src)) continue;
+        const filename = path.basename(src);
+        const destPath = safePath(destDir, filename);
+        // Only copy files (not directories)
+        const stat = fs.statSync(src);
+        if (stat.isFile()) {
+          fs.copyFileSync(src, destPath);
+          imported++;
+        }
+      } catch (err) {
+        console.error(`[ImportExternal] Failed to copy ${src}:`, err);
+      }
+    }
+
+    return { success: true, imported };
+  } catch (e) {
+    console.error('[ImportExternal] Error:', e);
+    return { success: false, error: e.message };
+  }
+});
+
 // Install mod directly to a version's mods folder
 ipcMain.handle('install-mod-to-version', async (event, { version, downloadUrl, filename }) => {
   if (/^(fabric|forge|neoforge|quilt)-loader-.*\.jar$/i.test(filename || '')) {
