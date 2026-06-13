@@ -1,5 +1,6 @@
 import { safeParse, esc } from "../../core/safe-parse.js";
 import { state, actions } from "../../core/app-state.js";
+import { initTutorial } from "../tutorial/tutorial.js";
 
 export function initModpacksFeature({ switchView }) {
   // Safe JSON parser for API responses
@@ -4124,6 +4125,94 @@ export function initModpacksFeature({ switchView }) {
       actions.showWarningToast("Profiles refreshed from disk!");
     });
 
+  // --- Drag and Drop External Files ---
+  const dragContent = document.getElementById("modpack-content");
+  if (dragContent) {
+    dragContent.addEventListener("dragenter", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    dragContent.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragContent.style.boxShadow = "inset 0 0 0 2px var(--theme-accent)";
+      dragContent.style.background = "rgba(var(--theme-accent-rgb), 0.05)";
+    });
+
+    dragContent.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragContent.style.boxShadow = "";
+      dragContent.style.background = "";
+    });
+
+    dragContent.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragContent.style.boxShadow = "";
+      dragContent.style.background = "";
+
+      if (window.electronAPI?.rendererLog) {
+        window.electronAPI.rendererLog("[Modpacks] DROP event fired on modpack-content!");
+      }
+
+      const rawFiles = Array.from(e.dataTransfer.files);
+      const files = rawFiles.map(f => window.electronAPI?.getPathForFile ? window.electronAPI.getPathForFile(f) : f.path).filter(p => p);
+      if (files.length === 0) {
+        actions.showWarningToast(`Could not read file paths. Dropped ${rawFiles.length} item(s). This is likely a security restriction.`);
+        return;
+      }
+
+      const mp = mpGet();
+      const isViewingVersion = state.activeVersionForMods && !state.activeModpackId;
+      const targetId = isViewingVersion ? `version-${state.activeVersionForMods}` : (mp ? mp.id : null);
+      if (!targetId) {
+        actions.showWarningToast("No active modpack or version selected to drop files into.");
+        return;
+      }
+
+      let targetType = "mods";
+      const activeTab = document.querySelector(".mp-tab.active");
+      if (activeTab) {
+        if (activeTab.dataset.tab === "resourcepacks") targetType = "resourcepacks";
+        else if (activeTab.dataset.tab === "shaders") targetType = "shaderpacks";
+      }
+
+      if (!window.electronAPI?.importExternalFiles) {
+        actions.showWarningToast("Backend not updated. Please close the launcher completely and start it again.");
+        return;
+      }
+
+      if (window.electronAPI?.importExternalFiles) {
+        try {
+          const result = await window.electronAPI.importExternalFiles({
+            modpackId: targetId,
+            targetType,
+            sourcePaths: files
+          });
+          
+          if (result.success) {
+            actions.showWarningToast(`Imported ${result.imported} file(s) into ${targetType}`);
+            if (isViewingVersion) {
+              if (typeof loadVersionMods === "function") {
+                await loadVersionMods(state.activeVersionForMods);
+              }
+            } else {
+              await loadProfilesFromDisk();
+            }
+            mpRenderDetail();
+            mpRenderList();
+          } else {
+             actions.showWarningToast(`Failed to import files: ${result.error}`);
+          }
+        } catch (err) {
+           actions.showWarningToast(`Import error: ${err.message}`);
+        }
+      }
+    });
+  }
+
   actions.modpacks = {
     mpGet,
     mpSave,
@@ -4131,4 +4220,11 @@ export function initModpacksFeature({ switchView }) {
     mpRenderDetail,
     loadProfilesFromDisk,
   };
+
+  document.addEventListener("idk:view-changed", (e) => {
+    if (e.detail.viewName === "mods") {
+      initTutorial();
+    }
+  });
 }
+

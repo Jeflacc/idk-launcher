@@ -1,6 +1,7 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  getPathForFile: (file) => webUtils ? webUtils.getPathForFile(file) : file.path,
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
@@ -50,6 +51,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Mod / resourcepack / shader management
   installMod:          (data) => ipcRenderer.invoke('install-mod',         data),
   installModToVersion: (data) => ipcRenderer.invoke('install-mod-to-version', data),
+  importExternalFiles: (data) => ipcRenderer.invoke('import-external-files', data),
   unzipCurseforge:     (data) => ipcRenderer.invoke('unzip-curseforge',    data),
   selectModpackZip:    () => ipcRenderer.invoke('select-modpack-zip'),
   selectImage:         () => ipcRenderer.invoke('select-image'),

@@ -18,7 +18,7 @@ export function initAuthFeature({ switchView }) {
   if (state.currentUser) {
     // Auto-login
     updateUserDisplay(state.currentUser);
-    switchView("main");
+    handleOnboardingFlow(switchView);
   }
 
   btnOfflineLogin.addEventListener("click", () => {
@@ -54,7 +54,7 @@ export function initAuthFeature({ switchView }) {
           }).catch(console.error);
 
           updateUserDisplay(state.currentUser);
-          switchView("main");
+          handleOnboardingFlow(switchView);
         } else {
           alert(res?.error || "Microsoft login failed or cancelled.");
         }
@@ -63,7 +63,7 @@ export function initAuthFeature({ switchView }) {
       console.error(e);
       alert("Error during Microsoft login.");
     }
-    btnMicrosoftLogin.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"></path></svg> Microsoft Account';
+    btnMicrosoftLogin.innerHTML = '<img src="./microsoft.png" alt="Microsoft Logo" width="24" height="24" style="object-fit: contain;" /> Microsoft Account';
   });
 
   loginInput.addEventListener("keydown", (e) => {
@@ -87,7 +87,7 @@ export function initAuthFeature({ switchView }) {
         .catch(console.error);
     }
     updateUserDisplay(state.currentUser);
-    switchView("main");
+    handleOnboardingFlow(switchView);
   }
 
   btnSubmitElyby.addEventListener("click", async () => {
@@ -137,7 +137,7 @@ export function initAuthFeature({ switchView }) {
             .catch(console.error);
         }
         updateUserDisplay(state.currentUser);
-        switchView("main");
+        handleOnboardingFlow(switchView);
       } else {
         alert(data.errorMessage || "Login failed");
       }
@@ -146,6 +146,63 @@ export function initAuthFeature({ switchView }) {
     }
     btnSubmitElyby.innerText = "Login via Ely.by";
   });
+
+  async function handleOnboardingFlow(switchViewFn) {
+    const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
+    
+    // 1. EULA & Privacy Policy
+    if (!localStorage.getItem("idk_agreed_eula")) {
+      const agreed = await showConfirmDialog({
+        title: "GAME ACCESS & LEGALITY",
+        message: `By continuing, you agree to our End User License Agreement and Privacy Policy.
+
+• Mojang/Microsoft Account Compliance: This launcher uses official OAuth authentication for Mojang and Microsoft accounts. We DO NOT store your passwords.
+• Offline / Custom Access (Cracked): As a compatibility option, this launcher allows you to play offline or use custom credentials. This feature is experimental and only recommended for use on unofficial servers or testing purposes.
+• Minecraft EULA Compliance: We are fully committed to respecting and complying with the Minecraft EULA. Using this launcher with custom accounts is entirely your responsibility and is not endorsed or supported by Mojang or Microsoft.
+
+Please review and accept these terms to continue.`,
+        confirmText: "AGREE & CONTINUE",
+        cancelText: "DECLINE",
+        variant: "neutral"
+      });
+      
+      if (!agreed) {
+        state.currentUser = "";
+        localStorage.removeItem("craftlaunch_username");
+        if (window.electronAPI) {
+          window.electronAPI.saveSettings({ currentUser: "", authMode: "offline", elybyData: null }).catch(console.error);
+        }
+        actions.updateFriendsAuthUI?.();
+        switchViewFn("login");
+        return;
+      }
+      localStorage.setItem("idk_agreed_eula", "true");
+    }
+
+    // 2. IDK Connect Prompt
+    if (!localStorage.getItem("idk_connect_prompted_v2")) {
+      const wantIdkConnect = await showConfirmDialog({
+        title: "IDK Connect",
+        message: "Sign in to IDK Connect to get extra features! Multiplayer, chat, profiles, etc.",
+        confirmText: "Login / Sign Up",
+        cancelText: "Continue Without",
+        variant: "neutral"
+      });
+      
+      localStorage.setItem("idk_connect_prompted_v2", "true");
+      
+      if (wantIdkConnect) {
+        switchViewFn("main");
+        setTimeout(() => {
+          document.getElementById('btn-friends-toggle')?.click();
+        }, 100);
+        return;
+      }
+    }
+
+    // Proceed as normal
+    switchViewFn("main");
+  }
 
   function updateUserDisplay(name) {
     document.getElementById("display-username").innerText = name;
@@ -236,6 +293,10 @@ export function initAuthFeature({ switchView }) {
     if (!ok) return;
     state.currentUser = "";
     localStorage.removeItem("craftlaunch_username");
+    
+    // Logout from IDK Connect as well
+    document.getElementById("btn-friends-disconnect")?.click();
+    
     if (window.electronAPI) {
       window.electronAPI
         .saveSettings({

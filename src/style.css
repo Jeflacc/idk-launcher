@@ -783,11 +783,26 @@ body:has(#view-login.active) .user-profile {
 .login-btn.microsoft {
     background: #2a2a2b;
     border-color: rgba(0, 164, 239, 0.3);
+    font-size: 16px;
+    padding: 16px 20px;
 }
 .login-btn.microsoft:hover {
     background: #333335;
     border-color: #00a4ef;
-    box-shadow: 0 0 12px rgba(0, 164, 239, 0.15);
+    box-shadow: 0 0 16px rgba(0, 164, 239, 0.2);
+}
+
+.secondary-login-row {
+    display: flex;
+    gap: 12px;
+}
+
+.login-btn.small-btn {
+    flex: 1;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .login-btn.offline {
@@ -8053,6 +8068,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     font-size: 0.8125rem;
     line-height: 1.55;
     color: #c8c8c9;
+    white-space: pre-wrap;
 }
 
 .confirm-modal-actions {

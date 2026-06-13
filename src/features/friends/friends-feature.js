@@ -33,8 +33,13 @@ export function initFriendsFeature() {
     const tabRegister = document.getElementById("tab-friends-register");
     const authError = document.getElementById("friends-auth-error");
     const inputUsername = document.getElementById("friends-auth-username");
+    const inputEmail = document.getElementById("friends-auth-email");
     const inputPassword = document.getElementById("friends-auth-password");
-    const btnAuthSubmit = document.getElementById("btn-friends-auth-submit");
+    const inputOtp = document.getElementById("friends-auth-otp");
+    const btnSubmit = document.getElementById("btn-friends-auth-submit");
+    const errorEl = document.getElementById("friends-auth-error");
+
+    let otpRequested = false;
 
     const myUsernameLabel = document.getElementById("friends-my-username");
     const myAvatarCanvas = document.getElementById("friends-my-avatar");
@@ -241,66 +246,118 @@ export function initFriendsFeature() {
     // --- AUTH PORTAL ACTIONS ---
     tabLogin.addEventListener("click", () => {
       idkAuthTab = "login";
+      otpRequested = false;
       tabLogin.classList.add("active");
       tabRegister.classList.remove("active");
-      btnAuthSubmit.innerText = "Connect Account";
-      authError.style.display = "none";
+      btnSubmit.innerText = "Connect Account";
+      errorEl.style.display = "none";
+      inputEmail.style.display = "none";
+      inputOtp.style.display = "none";
     });
 
     tabRegister.addEventListener("click", () => {
       idkAuthTab = "register";
+      otpRequested = false;
       tabRegister.classList.add("active");
       tabLogin.classList.remove("active");
-      btnAuthSubmit.innerText = "Create Account";
-      authError.style.display = "none";
+      btnSubmit.innerText = "Request OTP";
+      errorEl.style.display = "none";
+      inputEmail.style.display = "block";
+      inputOtp.style.display = "none";
     });
 
-    btnAuthSubmit.addEventListener("click", handleAuth);
-    [inputUsername, inputPassword].forEach((input) => {
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") handleAuth();
-      });
-    });
+    btnSubmit.addEventListener("click", async () => {
+      const user = inputUsername.value.trim();
+      const pass = inputPassword.value;
+      const email = inputEmail.value.trim();
+      const otp = inputOtp.value.trim();
 
-    async function handleAuth() {
-      const username = inputUsername.value.trim();
-      const password = inputPassword.value;
-
-      if (!username || !password) {
-        showAuthError("Please fill out all fields.");
+      if (!user || !pass) {
+        showAuthError("Username and password are required.");
         return;
       }
 
-      btnAuthSubmit.disabled = true;
-      btnAuthSubmit.innerText =
-        idkAuthTab === "login" ? "Connecting..." : "Registering...";
-      authError.style.display = "none";
+      if (idkAuthTab === "register" && !email) {
+        showAuthError("Email is required for registration.");
+        return;
+      }
+
+      if (idkAuthTab === "register" && !otpRequested) {
+        btnSubmit.innerText = "Requesting OTP...";
+        btnSubmit.disabled = true;
+        try {
+          const res = await fetch(`${IDK_BACKEND_URL}/api/auth/request-otp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: user, email })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            otpRequested = true;
+            inputOtp.style.display = "block";
+            btnSubmit.innerText = "Verify & Register";
+            showAuthError("OTP sent to your email (or console)!");
+            errorEl.style.color = "#4ade80"; // temporary green success
+            setTimeout(() => errorEl.style.color = "#ef4444", 5000);
+          } else {
+            showAuthError(data.error || "Failed to request OTP.");
+            btnSubmit.innerText = "Request OTP";
+          }
+        } catch (e) {
+          showAuthError("Network error: Backend server not running.");
+          btnSubmit.innerText = "Request OTP";
+        }
+        btnSubmit.disabled = false;
+        return;
+      }
+
+      if (idkAuthTab === "register" && otpRequested && !otp) {
+        showAuthError("Please enter the 6-digit OTP code.");
+        return;
+      }
+
+      const endpoint =
+        idkAuthTab === "login" ? "/api/auth/login" : "/api/auth/register";
+      const originalText = btnSubmit.innerText;
+      btnSubmit.innerText =
+        idkAuthTab === "login" ? "Connecting..." : "Verifying...";
+      btnSubmit.disabled = true;
+      errorEl.style.display = "none";
 
       try {
-        const endpoint =
-          idkAuthTab === "login" ? "/api/auth/login" : "/api/auth/register";
-        const data = await idkRequest(endpoint, "POST", { username, password });
+        const payload = idkAuthTab === "login" ? { username: user, password: pass } : { username: user, email, password: pass, otp };
+        const res = await fetch(`${IDK_BACKEND_URL}${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
 
-        idkToken = data.token;
-        idkUser = data.user;
-        localStorage.setItem("idk_connect_token", idkToken);
-        localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
+        if (res.ok) {
+          idkToken = data.token;
+          idkUser = data.user;
+          localStorage.setItem("idk_connect_token", idkToken);
+          localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
+          updateFriendsAuthUI();
+          
+          if (idkAuthTab === "register") {
+            actions.showWarningToast("Registration successful! You are now connected.");
+          }
 
-        inputUsername.value = "";
-        inputPassword.value = "";
-
-        updateFriendsAuthUI();
-        actions.showWarningToast(
-          `Connected to IDK Network as ${idkUser.username}!`,
-        );
+          inputPassword.value = "";
+          inputOtp.value = "";
+          otpRequested = false;
+          inputOtp.style.display = "none";
+        } else {
+          showAuthError(data.error || "Authentication failed.");
+        }
       } catch (err) {
-        showAuthError(err.message);
+        showAuthError("Network error: Backend server not running.");
       } finally {
-        btnAuthSubmit.disabled = false;
-        btnAuthSubmit.innerText =
-          idkAuthTab === "login" ? "Connect Account" : "Create Account";
+        btnSubmit.innerText = originalText;
+        btnSubmit.disabled = false;
       }
-    }
+    });
 
     function showAuthError(msg) {
       authError.innerText = msg;
