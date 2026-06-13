@@ -11,6 +11,8 @@ export const state = {
   authMode: localStorage.getItem("craftlaunch_authmode") || "offline",
   selectedVersion: lastPlayed.version,
   selectedLoader: lastPlayed.loader,
+  selectedIsModpack: localStorage.getItem('idk_last_played_is_modpack') === 'true',
+  selectedModpackId: localStorage.getItem('idk_last_played_modpack_id') || null,
   autoOptimization:
     localStorage.getItem("craftlaunch_autoOptimization") === "true",
   hideLauncher: localStorage.getItem("idk_hide_launcher") !== "false",

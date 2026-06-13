@@ -3,6 +3,13 @@ import { state, actions } from '../../core/app-state.js';
 function updateSetupDisplay() {
   const el = document.getElementById('play-dd-setup-value');
   if (el) {
+    if (state.selectedIsModpack) {
+      const mp = (JSON.parse(localStorage.getItem('idk_modpacks') || '[]')).find(m => m.id === state.selectedModpackId);
+      if (mp) {
+        el.textContent = `${mp.name}`;
+        return;
+      }
+    }
     el.textContent = `${state.selectedVersion || '—'} · ${state.selectedLoader || 'Vanilla'}`;
   }
 }
@@ -52,12 +59,57 @@ function populateVersionList() {
   }
 
   list.innerHTML = '';
+  
+  const modpacks = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
+  const favorites = modpacks.filter(mp => mp.favorite && !mp.isTemporary);
+  
+  if (favorites.length > 0) {
+    const header = document.createElement('div');
+    header.style.cssText = 'padding:8px 12px 4px;font-size:10px;font-weight:700;color:var(--theme-accent);letter-spacing:0.5px;text-transform:uppercase;';
+    header.textContent = 'Favorite Modpacks';
+    list.appendChild(header);
+
+    favorites.forEach(mp => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'play-dd-version-wrapper';
+      wrapper.innerHTML = `
+        <button class="play-dd-version-btn${mp.id === state.selectedModpackId ? ' active' : ''}" data-modpack="${mp.id}">
+          <span class="play-dd-version-id" style="color:var(--theme-accent-bright);"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="margin-right:4px;vertical-align:-1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>${mp.name}</span>
+          <span class="play-dd-version-loader">${mp.mcVersion} · ${mp.loader}</span>
+        </button>
+      `;
+      const btn = wrapper.querySelector('.play-dd-version-btn');
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.selectedIsModpack = true;
+        state.selectedModpackId = mp.id;
+        state.selectedVersion = mp.mcVersion;
+        state.selectedLoader = mp.loader;
+        const txt = document.getElementById('selected-version-text');
+        if (txt) txt.textContent = `Modpack: ${mp.name}`;
+        
+        localStorage.setItem('idk_last_played_is_modpack', 'true');
+        localStorage.setItem('idk_last_played_modpack_id', mp.id);
+        
+        updateSetupDisplay();
+        populateVersionList();
+        document.getElementById('version-dropdown')?.classList.remove('open');
+      });
+      list.appendChild(wrapper);
+    });
+
+    const vHeader = document.createElement('div');
+    vHeader.style.cssText = 'padding:8px 12px 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.5px;text-transform:uppercase;margin-top:4px;border-top:1px solid rgba(255,255,255,0.05);';
+    vHeader.textContent = 'Versions';
+    list.appendChild(vHeader);
+  }
+
   sorted.forEach(v => {
     const loader = getLoaderForVersion(v.id);
     const wrapper = document.createElement('div');
     wrapper.className = 'play-dd-version-wrapper';
     wrapper.innerHTML = `
-      <button class="play-dd-version-btn${v.id === state.selectedVersion ? ' active' : ''}" data-version="${v.id}">
+      <button class="play-dd-version-btn${v.id === state.selectedVersion && !state.selectedIsModpack ? ' active' : ''}" data-version="${v.id}">
         <span class="play-dd-version-id">${v.id}</span>
         <span class="play-dd-version-loader">${loader}</span>
       </button>
@@ -65,6 +117,10 @@ function populateVersionList() {
     const btn = wrapper.querySelector('.play-dd-version-btn');
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
+      state.selectedIsModpack = false;
+      state.selectedModpackId = null;
+      localStorage.setItem('idk_last_played_is_modpack', 'false');
+      
       state.selectedVersion = v.id;
       const txt = document.getElementById('selected-version-text');
       if (txt) txt.textContent = `Version: ${v.id}`;
@@ -577,9 +633,11 @@ playBtn.addEventListener('click', async (e) => {
   try {
     if (state.authMode === 'elyby' && window.electronAPI?.getElybyAuthData) {
       authData = (await window.electronAPI.getElybyAuthData()).data || null;
+    } else if (state.authMode === 'microsoft' && window.electronAPI?.getMicrosoftAuthData) {
+      authData = (await window.electronAPI.getMicrosoftAuthData()).data || null;
     }
   } catch (e) {
-    console.warn('[Launch] Ely.by auth retrieval failed:', e);
+    console.warn('[Launch] Auth retrieval failed:', e);
   }
 
   if (window.electronAPI) {
@@ -590,6 +648,34 @@ playBtn.addEventListener('click', async (e) => {
       enableOverlay: state.enableOverlay,
       hideLauncher: state.hideLauncher === true
     };
+
+    if (state.selectedIsModpack && state.selectedModpackId) {
+      const modpacks = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
+      const mp = modpacks.find(m => m.id === state.selectedModpackId);
+      if (mp) {
+        const fallbackVersion = state.downloadedVersions?.[0] || state.selectedVersion || "1.20.1";
+        const resolvedModpackVersion = mp.mcVersion ? mp.mcVersion : (state.versionSettings?.[mp.id]?.mcVersion || fallbackVersion);
+        const versionSettings = state.versionSettings?.[mp.id] || {};
+        
+        window.electronAPI.launchModpack({
+          username: state.currentUser,
+          modpackId: mp.id,
+          modpackName: mp.name,
+          mcVersion: resolvedModpackVersion,
+          loader: versionSettings.loader || mp.loader,
+          loaderVersion: mp.loaderVersion || "",
+          javaPath: state.javaPath,
+          maxMemory: `${state.maxMemoryGB}G`,
+          authData,
+          windowSize,
+          globalJavaArgs: state.globalJavaArgs,
+          quickConnect: state.quickConnectTarget,
+        });
+        state.quickConnectTarget = null;
+        return;
+      }
+    }
+
     window.electronAPI.launchMinecraft(
       state.currentUser,
       state.selectedVersion,

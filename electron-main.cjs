@@ -43,8 +43,10 @@ const { Worker } = require('worker_threads');
 const crypto = require('crypto');
 const AdmZip = require('adm-zip');
 const { scanProfileAchievements, scanAllAchievements, resolveProfilePath } = require('./src/backend/achievements-scanner.cjs');
+const msmc = require('msmc');
 
 app.commandLine.appendSwitch('js-flags', '--expose_gc');
+app.userAgentFallback = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'idk-cache', privileges: { secure: true, standard: true, supportFetchAPI: true, bypassCSP: true } }
@@ -444,6 +446,15 @@ app.whenReady().then(() => {
   });
 
   protocol.handle('idk-cache', async (request) => {
+    if (request.url.startsWith('idk-cache://custom-icons/')) {
+      const fileName = request.url.replace('idk-cache://custom-icons/', '');
+      const localPath = path.join(app.getPath('userData'), 'custom-icons', fileName);
+      if (fs.existsSync(localPath)) {
+        return net.fetch('file://' + localPath.replace(/\\/g, '/'));
+      }
+      return new Response('Not found', { status: 404 });
+    }
+
     const originalUrl = request.url.replace('idk-cache://', 'https://');
     const hash = crypto.createHash('md5').update(originalUrl).digest('hex');
     const localPath = path.join(imageCacheDir, hash);
@@ -1257,6 +1268,18 @@ ipcMain.handle('get-elyby-auth-data', async (event) => {
   }
 });
 
+ipcMain.handle('get-microsoft-auth-data', async () => {
+  try {
+    const manager = getSettingsManager();
+    if (manager && manager.settings && manager.settings.microsoftData) {
+      return { success: true, data: manager.settings.microsoftData.value };
+    }
+    return { success: false, data: null };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
 // Launch minecraft with a specific modpack profile
 ipcMain.handle('elyby-authenticate', async (event, { username, password, clientToken }) => {
   return new Promise((resolve) => {
@@ -1279,6 +1302,28 @@ ipcMain.handle('elyby-authenticate', async (event, { username, password, clientT
     req.write(postData);
     req.end();
   });
+});
+
+// Launch microsoft authentication
+ipcMain.handle('microsoft-authenticate', async (event) => {
+  try {
+    const authManager = new msmc.Auth("login");
+    const xboxManager = await authManager.launch("electron", {
+      width: 500,
+      height: 650,
+      resizable: false,
+      title: "Sign in to Minecraft",
+      icon: path.join(__dirname, 'logo.png')
+    });
+    
+    const token = await xboxManager.getMinecraft();
+    const mclcAuth = token.mclc();
+
+    return { success: true, data: { profile: { name: mclcAuth.name }, mclcAuth } };
+  } catch (e) {
+    console.error("[Microsoft Auth] Error:", e);
+    return { success: false, error: e.message || "Failed to authenticate with Microsoft." };
+  }
 });
 
 // Fetch Ely.by session profile (skin URL) via Node.js to bypass browser CORS
@@ -1591,7 +1636,10 @@ ipcMain.on('launch-modpack', async (event, args) => {
     }
   }
 
-  if (authData && authData.accessToken) {
+  if (authData && authData.mclcAuth) {
+    opts.authorization = authData.mclcAuth;
+    console.log(`[Launch] Using Microsoft auth for user: ${opts.authorization.name}`);
+  } else if (authData && authData.accessToken) {
     opts.authorization = {
       access_token: authData.accessToken,
       client_token: authData.clientToken,
@@ -4822,6 +4870,38 @@ ipcMain.handle('get-settings-categories', async (event) => {
     return { success: true, categories };
   } catch (error) {
     console.error('[Settings IPC] get-settings-categories error:', error.message);
+    return { success: false, error: error.message };
+  }
+});
+
+// IPC Handler: Select custom modpack icon
+ipcMain.handle('select-image', async (event) => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Select Modpack Icon',
+      properties: ['openFile'],
+      filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg', 'webp'] }]
+    });
+    
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false };
+    }
+
+    const sourcePath = result.filePaths[0];
+    const customIconsDir = path.join(app.getPath('userData'), 'custom-icons');
+    if (!fs.existsSync(customIconsDir)) {
+      fs.mkdirSync(customIconsDir, { recursive: true });
+    }
+
+    const ext = path.extname(sourcePath).toLowerCase();
+    const fileName = crypto.randomUUID() + ext;
+    const targetPath = path.join(customIconsDir, fileName);
+
+    fs.copyFileSync(sourcePath, targetPath);
+
+    return { success: true, url: 'idk-cache://custom-icons/' + fileName };
+  } catch (error) {
+    console.error('[Main IPC] select-image error:', error);
     return { success: false, error: error.message };
   }
 });

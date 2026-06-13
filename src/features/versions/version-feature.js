@@ -186,6 +186,52 @@ function renderVersions() {
   
   optionsList.innerHTML = '';
   
+  const modpacks = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
+  const favorites = modpacks.filter(mp => mp.favorite && !mp.isTemporary);
+  
+  if (favorites.length > 0) {
+    const header = document.createElement('div');
+    header.style.cssText = 'padding:8px 12px 4px;font-size:10px;font-weight:700;color:var(--theme-accent);letter-spacing:0.5px;text-transform:uppercase;';
+    header.textContent = 'Favorite Modpacks';
+    optionsList.appendChild(header);
+
+    favorites.forEach(mp => {
+      const el = document.createElement('div');
+      el.className = 'custom-option';
+      if (state.selectedIsModpack && mp.id === state.selectedModpackId) el.classList.add('selected');
+      
+      el.innerHTML = `
+        <span style="color:var(--theme-accent-bright);"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="margin-right:4px;vertical-align:-1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>${mp.name}</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span class="option-type">${mp.mcVersion} · ${mp.loader}</span>
+        </span>
+      `;
+      
+      el.addEventListener('click', () => {
+        state.selectedIsModpack = true;
+        state.selectedModpackId = mp.id;
+        state.selectedVersion = mp.mcVersion;
+        state.selectedLoader = mp.loader;
+        
+        localStorage.setItem('idk_last_played_is_modpack', 'true');
+        localStorage.setItem('idk_last_played_modpack_id', mp.id);
+
+        selectedText.innerText = `Modpack: ${mp.name}`;
+        versionDropdown.classList.remove('open');
+        
+        if (window.actions?.updateSetupDisplay) window.actions.updateSetupDisplay();
+        renderVersions();
+      });
+      
+      optionsList.appendChild(el);
+    });
+
+    const vHeader = document.createElement('div');
+    vHeader.style.cssText = 'padding:8px 12px 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.5px;text-transform:uppercase;margin-top:4px;border-top:1px solid rgba(255,255,255,0.05);';
+    vHeader.textContent = 'Versions';
+    optionsList.appendChild(vHeader);
+  }
+
   let filtered = state.allVersions.filter(v => {
     if (v.type === 'release') return true;
     if (v.type === 'snapshot' && allowSnap) return true;
@@ -201,7 +247,7 @@ function renderVersions() {
   filtered.forEach(v => {
     const el = document.createElement('div');
     el.className = 'custom-option';
-    if (v.id === state.selectedVersion) el.classList.add('selected');
+    if (!state.selectedIsModpack && v.id === state.selectedVersion) el.classList.add('selected');
     
     // Add downloaded class if version is downloaded
     if (state.downloadedVersions.includes(v.id)) {
@@ -235,6 +281,10 @@ function renderVersions() {
     `;
     
     el.addEventListener('click', () => {
+      state.selectedIsModpack = false;
+      state.selectedModpackId = null;
+      localStorage.setItem('idk_last_played_is_modpack', 'false');
+
       state.selectedVersion = v.id;
       selectedText.innerText = `Version: ${v.id}`;
       versionDropdown.classList.remove('open');
@@ -247,13 +297,21 @@ function renderVersions() {
         window.electronAPI.saveSettings({ lastPlayedLoader: state.selectedLoader }).catch(console.error);
       }
       updateLoaderUI(state.selectedLoader);
-
+      
+      if (window.actions?.updateSetupDisplay) window.actions.updateSetupDisplay();
       renderVersions(); // Re-render to update 'selected' class
     });
     
     optionsList.appendChild(el);
   });
   
+  if (state.selectedIsModpack) {
+    const mp = modpacks.find(m => m.id === state.selectedModpackId);
+    if (mp) {
+      selectedText.innerText = `Modpack: ${mp.name}`;
+      return;
+    }
+  }
   selectedText.innerText = `Version: ${state.selectedVersion}`;
 }
 

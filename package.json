@@ -1,6 +1,6 @@
 {
   "name": "idk-launcher",
-  "version": "1.5.1",
+  "version": "1.5.3",
   "author": "Jeflacc <109415855+Jeflacc@users.noreply.github.com>",
   "private": true,
   "type": "module",
@@ -86,6 +86,7 @@
     "electron-updater": "^6.8.9",
     "jszip": "^3.10.1",
     "minecraft-launcher-core": "^3.18.2",
+    "msmc": "^5.0.5",
     "skinview3d": "^3.4.2",
     "three": "^0.184.0",
     "uipro-cli": "^2.2.3"

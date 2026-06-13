@@ -13,6 +13,8 @@ export function initAuthFeature({ switchView }) {
   const elybyUserInput = document.getElementById("elyby-username");
   const elybyPassInput = document.getElementById("elyby-password");
   const btnSubmitElyby = document.getElementById("btn-submit-elyby");
+  const btnMicrosoftLogin = document.getElementById("btn-microsoft-login");
+
   if (state.currentUser) {
     // Auto-login
     updateUserDisplay(state.currentUser);
@@ -29,6 +31,39 @@ export function initAuthFeature({ switchView }) {
     offlineForm.classList.remove("open");
     elybyForm.classList.add("open");
     elybyUserInput.focus();
+  });
+
+  btnMicrosoftLogin.addEventListener("click", async () => {
+    offlineForm.classList.remove("open");
+    elybyForm.classList.remove("open");
+    
+    btnMicrosoftLogin.innerText = "Logging in...";
+    try {
+      if (window.electronAPI && window.electronAPI.microsoftAuthenticate) {
+        const res = await window.electronAPI.microsoftAuthenticate();
+        if (res && res.success && res.data && res.data.profile) {
+          state.currentUser = res.data.profile.name;
+          state.authMode = "microsoft";
+          localStorage.setItem("craftlaunch_username", state.currentUser);
+          localStorage.setItem("craftlaunch_authmode", state.authMode);
+          
+          window.electronAPI.saveSettings({
+            currentUser: state.currentUser,
+            authMode: state.authMode,
+            microsoftData: res.data
+          }).catch(console.error);
+
+          updateUserDisplay(state.currentUser);
+          switchView("main");
+        } else {
+          alert(res?.error || "Microsoft login failed or cancelled.");
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error during Microsoft login.");
+    }
+    btnMicrosoftLogin.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"></path></svg> Microsoft Account';
   });
 
   loginInput.addEventListener("keydown", (e) => {
@@ -118,8 +153,9 @@ export function initAuthFeature({ switchView }) {
     if (advancedHomeName) advancedHomeName.innerText = name.toUpperCase();
     const accountEl = document.querySelector(".user-details-account");
     if (accountEl) {
-      accountEl.innerText =
-        state.authMode === "elyby" ? "Ely.by Account" : "Offline Account";
+      if (state.authMode === "elyby") accountEl.innerText = "Ely.by Account";
+      else if (state.authMode === "microsoft") accountEl.innerText = "Microsoft Account";
+      else accountEl.innerText = "Offline Account";
     }
 
     const skinBtn = document.getElementById("btn-dropdown-skin");

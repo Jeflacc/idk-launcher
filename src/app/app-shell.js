@@ -114,7 +114,12 @@
       <h2>Welcome Back</h2>
       <p style="color: var(--text-muted); margin-bottom: 10px;">Select your login method to enter the launcher.</p>
 
-      <div class="login-btn microsoft" id="btn-elyby-login">
+      <div class="login-btn microsoft" id="btn-microsoft-login">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"></path></svg>
+        Microsoft Account
+      </div>
+
+      <div class="login-btn elyby" id="btn-elyby-login">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         Ely.by Account
       </div>
@@ -1470,6 +1475,7 @@
               </div>
               <div class="modpack-header-actions">
                 <div class="mp-action-icon-row">
+                  <button class="mp-action-btn icon-btn" id="btn-favorite-modpack" title="Favorite Modpack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
                   <button class="mp-action-btn icon-btn" id="btn-export-modpack" title="Export Modpack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
                   <button class="mp-action-btn icon-btn" id="btn-delete-modpack" title="Delete"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg></button>
                   <button class="mp-action-btn icon-btn" id="btn-modpack-settings" title="Settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg></button>
@@ -1572,10 +1578,18 @@
       <div class="mp-create-modal" id="mp-create-modal">
         <div class="mp-create-box">
           <h3>New Modpack</h3>
-          <input class="clean-input" id="new-mp-name" placeholder="Modpack name..." style="text-align:left;" />
-          <div style="display:flex;gap:12px;">
-            <select class="clean-select" id="new-mp-version"></select>
-            <select class="clean-select" id="new-mp-loader"><option value="Fabric">Fabric</option><option value="Forge">Forge</option><option value="NeoForge">NeoForge</option><option value="Quilt">Quilt</option><option value="Vanilla">Vanilla</option></select>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div class="icon-picker" id="new-mp-icon-picker" title="Select custom icon">
+              <div class="icon-picker-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
+            </div>
+            <input type="hidden" id="new-mp-icon" value="" />
+            <div style="flex:1;display:flex;flex-direction:column;gap:12px;">
+              <input class="clean-input" id="new-mp-name" placeholder="Modpack name..." style="text-align:left;" />
+              <div style="display:flex;gap:12px;">
+                <select class="clean-select" id="new-mp-version"></select>
+                <select class="clean-select" id="new-mp-loader"><option value="Fabric">Fabric</option><option value="Forge">Forge</option><option value="NeoForge">NeoForge</option><option value="Quilt">Quilt</option><option value="Vanilla">Vanilla</option></select>
+              </div>
+            </div>
           </div>
           <div style="display:flex;gap:10px;">
             <button class="submit-btn" id="btn-confirm-create-mp" style="flex:1;">Create</button>
@@ -1596,9 +1610,15 @@
             </button>
           </div>
           <div class="mp-settings-content">
-            <div class="mp-settings-section">
-              <label>Modpack Name</label>
-              <input type="text" class="clean-input" id="mp-settings-name" placeholder="Modpack name..." style="text-align:left;" />
+            <div style="display:flex;gap:16px;align-items:center;">
+              <div class="icon-picker" id="mp-settings-icon-picker" title="Select custom icon">
+                <div class="icon-picker-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
+              </div>
+              <input type="hidden" id="mp-settings-icon" value="" />
+              <div class="mp-settings-section" style="flex:1;">
+                <label>Modpack Name</label>
+                <input type="text" class="clean-input" id="mp-settings-name" placeholder="Modpack name..." style="text-align:left;" />
+              </div>
             </div>
 
             <div class="mp-settings-section">
