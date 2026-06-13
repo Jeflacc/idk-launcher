@@ -33,6 +33,9 @@ const fs = require('fs');
 const Handler = require('minecraft-launcher-core/components/handler');
 const originalCheckSum = Handler.prototype.checkSum;
 Handler.prototype.checkSum = async function(hash, file) {
+  if (this.options?.overrides?.skipVerify && require('fs').existsSync(file)) {
+    return true; // Bypass hashing if file exists
+  }
   return originalCheckSum.call(this, hash, file);
 };
 
@@ -1532,7 +1535,7 @@ function isModernVersion(ver) {
 
 ipcMain.on('launch-modpack', async (event, args) => {
   global.lastLaunchTime = Date.now();
-  let { username, modpackId, modpackName, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData, quickConnect, windowSize, globalJavaArgs } = args;
+  let { username, modpackId, modpackName, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData, quickConnect, windowSize, globalJavaArgs, forceUpdate } = args;
   const safeSend = (channel, data) => { try { if (event.sender && !event.sender.isDestroyed()) event.sender.send(channel, data); } catch (_) {} };
 
   console.log(`[Launch] launch-modpack received: modpackId=${modpackId}, name=${modpackName}, version=${mcVersion}, loader=${loader}, memory=${maxMemory}, hasWindowSize=${!!windowSize}, hasQuickConnect=${!!quickConnect}, hasGlobalJavaArgs=${!!globalJavaArgs}`);
@@ -1618,7 +1621,8 @@ ipcMain.on('launch-modpack', async (event, args) => {
     root: rootPath,
     overrides: {
       gameDirectory: profilePath,
-      cwd: profilePath
+      cwd: profilePath,
+      skipVerify: !forceUpdate
     },
     version: { number: mcVersion, type: 'release' },
     memory: { max: maxMem, min: minMem }
@@ -2024,10 +2028,10 @@ ipcMain.on('launch-modpack', async (event, args) => {
 // Minecraft Launch IPC
 ipcMain.on('launch-minecraft', async (event, args) => {
   global.lastLaunchTime = Date.now();
-  const { username, version, javaPath, loader, loaderVersion, autoOptimization, maxMemory, authData, quickConnect, windowSize, globalJavaArgs } = args;
+  const { username, version, javaPath, loader, loaderVersion, autoOptimization, performanceRenderer, maxMemory, authData, quickConnect, windowSize, globalJavaArgs, forceUpdate } = args;
   const safeSend = (channel, data) => { try { if (event.sender && !event.sender.isDestroyed()) event.sender.send(channel, data); } catch (_) {} };
 
-  console.log(`[Launch] launch-minecraft received: version=${version}, loader=${loader}, memory=${maxMemory}, autoOptimization=${autoOptimization}, hasWindowSize=${!!windowSize}, hasQuickConnect=${!!quickConnect}, hasGlobalJavaArgs=${!!globalJavaArgs}`);
+  console.log(`[Launch] launch-minecraft received: version=${version}, loader=${loader}, memory=${maxMemory}, autoOptimization=${autoOptimization}, renderer=${performanceRenderer}, hasWindowSize=${!!windowSize}, hasQuickConnect=${!!quickConnect}, hasGlobalJavaArgs=${!!globalJavaArgs}`);
 
   if (username) lastActiveUsername = username;
   const loaderName = loader || 'Vanilla';
@@ -2081,7 +2085,8 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     root: rootPath,
     overrides: {
       gameDirectory: profilePath,
-      cwd: profilePath
+      cwd: profilePath,
+      skipVerify: !forceUpdate
     },
     version: { number: launchVersion, type: 'release' },
     memory: { max: maxMem, min: minMem }
@@ -2228,10 +2233,51 @@ ipcMain.on('launch-minecraft', async (event, args) => {
       }
 
       if (autoOptimization) {
-        safeSend('launch-progress', { status: 'Downloading Sodium...', percent: 20 });
-        const sodiumInstalled = await installSodium(launchVersion, profilePath);
-        if (!sodiumInstalled) {
-          safeSend('launch-warning', `Sodium is not available for Minecraft ${launchVersion}. The game will launch without it.`);
+        const rendererPref = performanceRenderer || 'sodium';
+        const modsPath = path.join(profilePath, 'mods');
+        const hasMod = (keyword) => fs.existsSync(modsPath) && fs.readdirSync(modsPath).some(f => f.toLowerCase().includes(keyword));
+
+        if (rendererPref === 'sodium') {
+          safeSend('launch-progress', { status: 'Checking Sodium & Iris...', percent: 20 });
+          // Clean up conflicting VulkanMod
+          if (fs.existsSync(modsPath)) {
+            fs.readdirSync(modsPath).forEach(file => {
+              if (file.toLowerCase().includes('vulkanmod')) {
+                try { fs.unlinkSync(path.join(modsPath, file)); } catch (e) { }
+              }
+            });
+          }
+          const needSodium = !hasMod('sodium');
+          const needIris = !hasMod('iris');
+          
+          if (needSodium || needIris) {
+            safeSend('launch-progress', { status: 'Downloading Sodium & Iris...', percent: 20 });
+            const [sodiumInstalled] = await Promise.all([
+              needSodium ? installSodium(launchVersion, profilePath) : Promise.resolve(true),
+              needIris ? installIris(launchVersion, profilePath) : Promise.resolve(true)
+            ]);
+            if (!sodiumInstalled && needSodium) {
+              safeSend('launch-warning', `Sodium is not available for Minecraft ${launchVersion}. The game will launch without it.`);
+            }
+          }
+        } else if (rendererPref === 'vulkan') {
+          safeSend('launch-progress', { status: 'Checking VulkanMod...', percent: 20 });
+          // Clean up conflicting Sodium/Iris
+          if (fs.existsSync(modsPath)) {
+            fs.readdirSync(modsPath).forEach(file => {
+              const lFile = file.toLowerCase();
+              if (lFile.includes('sodium') || lFile.includes('iris')) {
+                try { fs.unlinkSync(path.join(modsPath, file)); } catch (e) { }
+              }
+            });
+          }
+          if (!hasMod('vulkanmod')) {
+            safeSend('launch-progress', { status: 'Downloading VulkanMod...', percent: 20 });
+            const vulkanInstalled = await installVulkanMod(launchVersion, profilePath);
+            if (!vulkanInstalled) {
+              safeSend('launch-warning', `VulkanMod is not available for Minecraft ${launchVersion}. The game will launch without it.`);
+            }
+          }
         }
       }
     } else if (loaderNameLC === 'forge') {
@@ -3548,20 +3594,26 @@ function installSodium(version, profilePath) {
           const downloadUrl = fileObj.url;
           const fileName = fileObj.filename;
 
-          // Mods folder is inside the per-version profile — no more cross-version leaking!
           const modsPath = path.join(profilePath, 'mods');
+          const jarPath = path.join(modsPath, fileName);
+          let alreadyExists = fs.existsSync(jarPath);
+
           if (!fs.existsSync(modsPath)) {
             fs.mkdirSync(modsPath, { recursive: true });
           } else {
-            // Clean stale sodium JARs in this version's mods folder
+            // Clean stale sodium JARs and conflicting VulkanMod in this version's mods folder
             fs.readdirSync(modsPath).forEach(file => {
-              if (file.toLowerCase().includes('sodium')) {
+              const lFile = file.toLowerCase();
+              if ((lFile.includes('sodium') || lFile.includes('vulkanmod')) && file !== fileName) {
                 try { fs.unlinkSync(path.join(modsPath, file)); } catch (e) { }
               }
             });
           }
 
-          const jarPath = path.join(modsPath, fileName);
+          if (alreadyExists) {
+            return resolve(true);
+          }
+
           downloadFile(downloadUrl, jarPath, () => resolve(true), reject);
         } catch (e) {
           console.error('[Sodium] Error parsing Modrinth response:', e);
@@ -3575,6 +3627,82 @@ function installSodium(version, profilePath) {
   });
 }
 
+function installModrinthProject(projectSlug, version, profilePath, removeKeyword) {
+  return new Promise((resolve, reject) => {
+    const gameVersions = encodeURIComponent(JSON.stringify([version]));
+    const loaders = encodeURIComponent(JSON.stringify(["fabric"]));
+    const url = `https://api.modrinth.com/v2/project/${projectSlug}/version?game_versions=${gameVersions}&loaders=${loaders}`;
+
+    https.get(url, { headers: { 'User-Agent': 'IDKLauncher/1.0 (contact@idklauncher.app)' } }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (!Array.isArray(json) || json.length === 0) {
+            return resolve(false);
+          }
+
+          const fileObj = json[0].files.find(f => f.primary) || json[0].files[0];
+          const downloadUrl = fileObj.url;
+          const fileName = fileObj.filename;
+
+          const modsPath = path.join(profilePath, 'mods');
+          const jarPath = path.join(modsPath, fileName);
+          let alreadyExists = fs.existsSync(jarPath);
+
+          if (!fs.existsSync(modsPath)) {
+            fs.mkdirSync(modsPath, { recursive: true });
+          } else {
+            // Clean stale jars
+            fs.readdirSync(modsPath).forEach(file => {
+              if (file.toLowerCase().includes(removeKeyword) && file !== fileName) {
+                try { fs.unlinkSync(path.join(modsPath, file)); } catch (e) { }
+              }
+            });
+          }
+
+          if (alreadyExists) {
+            return resolve(true);
+          }
+
+          downloadFile(downloadUrl, jarPath, () => resolve(true), reject);
+        } catch (e) {
+          console.error(`[${projectSlug}] Error parsing Modrinth response:`, e);
+          reject(e);
+        }
+      });
+    }).on('error', (e) => {
+      console.error(`[${projectSlug}] Request error:`, e);
+      reject(e);
+    });
+  });
+}
+
+function installIris(version, profilePath) {
+  return installModrinthProject('iris', version, profilePath, 'iris');
+}
+
+function installVulkanMod(version, profilePath) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // VulkanMod conflicts with Sodium/Iris, clean them up first
+      const modsPath = path.join(profilePath, 'mods');
+      if (fs.existsSync(modsPath)) {
+        fs.readdirSync(modsPath).forEach(file => {
+          const lFile = file.toLowerCase();
+          if (lFile.includes('sodium') || lFile.includes('iris')) {
+            try { fs.unlinkSync(path.join(modsPath, file)); } catch (e) { }
+          }
+        });
+      }
+      const installed = await installModrinthProject('vulkanmod', version, profilePath, 'vulkanmod');
+      resolve(installed);
+    } catch(e) {
+      reject(e);
+    }
+  });
+}
 // ============================================================
 // === FRPC TUNNEL MULTIPLAYER SYSTEM =========================
 // ============================================================

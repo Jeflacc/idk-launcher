@@ -15,6 +15,7 @@ export const state = {
   selectedModpackId: localStorage.getItem('idk_last_played_modpack_id') || null,
   autoOptimization:
     localStorage.getItem("craftlaunch_autoOptimization") === "true",
+  performanceRenderer: localStorage.getItem("craftlaunch_performanceRenderer") || "sodium",
   hideLauncher: localStorage.getItem("idk_hide_launcher") !== "false",
   launcherPerformanceMode:
     localStorage.getItem("idk_launcher_performance_mode") || "balanced",
@@ -22,6 +23,7 @@ export const state = {
   launcherUiMode: localStorage.getItem("idk_launcher_ui_mode") || "classic",
   launcherBorderRadius:
     parseInt(localStorage.getItem("idk_border_radius") || "10"),
+  forceUpdate: localStorage.getItem("craftlaunch_forceUpdate") === "true",
   launcherAccentColor:
     localStorage.getItem("idk_accent_color") || "#4cb837",
   launcherAnimationSpeed:

@@ -40,6 +40,24 @@ optimizationCheckbox.addEventListener('change', (e) => {
   }
 });
 
+const performanceRendererSelect = document.getElementById('performance-renderer');
+if (performanceRendererSelect) {
+  performanceRendererSelect.value = state.performanceRenderer;
+  performanceRendererSelect.addEventListener('change', (e) => {
+    state.performanceRenderer = e.target.value;
+    localStorage.setItem('craftlaunch_performanceRenderer', state.performanceRenderer);
+    if (window.electronAPI) {
+      window.electronAPI.saveSettings({ performanceRenderer: state.performanceRenderer }).catch(console.error);
+    }
+    
+    // Sync with advanced settings if present
+    const advSelect = document.getElementById('adv-performance-renderer');
+    if (advSelect && advSelect.value !== state.performanceRenderer) {
+      advSelect.value = state.performanceRenderer;
+    }
+  });
+}
+
 loaderTrigger.addEventListener('click', (e) => {
   e.stopPropagation();
   loaderDropdown.classList.toggle('open');

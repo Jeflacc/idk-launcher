@@ -346,6 +346,15 @@ if (playDropdownTrigger && playDropdown) {
       playDropdownTrigger.classList.remove('active');
     }
   });
+
+  const forceUpdateCb = document.getElementById('force-update-cb');
+  if (forceUpdateCb) {
+    forceUpdateCb.checked = state.forceUpdate;
+    forceUpdateCb.addEventListener('change', (e) => {
+      state.forceUpdate = e.target.checked;
+      localStorage.setItem('craftlaunch_forceUpdate', String(e.target.checked));
+    });
+  }
 }
 
 // --- PLAY LOGIC ---
@@ -670,6 +679,7 @@ playBtn.addEventListener('click', async (e) => {
           windowSize,
           globalJavaArgs: state.globalJavaArgs,
           quickConnect: state.quickConnectTarget,
+          forceUpdate: state.forceUpdate
         });
         state.quickConnectTarget = null;
         return;
@@ -682,11 +692,13 @@ playBtn.addEventListener('click', async (e) => {
       state.javaPath,
       state.selectedLoader,
       state.autoOptimization,
+      state.performanceRenderer,
       `${state.maxMemoryGB}G`,
       authData,
       state.quickConnectTarget,
       windowSize,
-      state.globalJavaArgs
+      state.globalJavaArgs,
+      state.forceUpdate
     );
     state.quickConnectTarget = null; // Reset after launch
   } else {

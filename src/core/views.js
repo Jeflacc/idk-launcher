@@ -5,6 +5,7 @@ export function createViewController() {
     settings: document.getElementById("view-settings"),
     mods: document.getElementById("view-mods"),
     profile: document.getElementById("view-profile"),
+    "idk-connect": document.getElementById("view-idk-connect"),
   };
 
   let returnView = "main";

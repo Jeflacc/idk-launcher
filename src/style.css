@@ -263,7 +263,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 0 18px;
-    z-index: 100;
+    z-index: 999999;
     background:
         linear-gradient(
             180deg,
@@ -325,6 +325,7 @@ body {
     align-items: stretch;
     min-width: 0;
     flex-shrink: 1;
+    -webkit-app-region: no-drag !important;
 }
 
 .nav-tab {
@@ -432,10 +433,14 @@ body {
         color 0.2s ease,
         border-color 0.2s ease,
         background-color 0.2s ease;
-    height: auto;
+    height: 100%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    z-index: 999999;
+    pointer-events: all;
+    -webkit-app-region: no-drag !important;
     gap: 7px;
     font-family: var(--font-title);
     font-variant: small-caps;
@@ -463,7 +468,8 @@ body {
 /* Dynamic active state mapped to views using CSS :has */
 body:has(#view-main.active) .nav-tab[data-target="main"],
 body:has(#view-mods.active) .nav-tab[data-target="mods"],
-body:has(#view-settings.active) .nav-tab[data-target="settings"] {
+body:has(#view-settings.active) .nav-tab[data-target="settings"],
+body:has(#view-idk-connect.active) .nav-tab[data-target="idk-connect"] {
     color: #ffffff;
     border-bottom-color: var(--theme-accent-bright);
 }
@@ -10411,4 +10417,30 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     position: relative;
     z-index: 2;
     pointer-events: auto;
+}
+
+/* =========================================================
+   FRIENDS SEARCH & PROFILE CARDS
+   ========================================================= */
+.friend-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    transition: all 0.2s ease;
+}
+
+.friend-card:hover {
+    background: rgba(var(--theme-accent-rgb), 0.1);
+    border-color: rgba(var(--theme-accent-rgb), 0.3);
+}
+
+.friend-card-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
