@@ -1,8 +1,8 @@
 # IDK Launcher Changelog
 
-## 🎮 IDK Launcher v1.5.3 Changelog
+## 🎮 IDK Launcher v1.5.4-preview Changelog (Unreleased)
 
-Welcome to the new release **v1.5.3**! This update introduces advanced performance renderer selections, faster concurrent mod downloads, and a highly requested launch verification toggle!
+Welcome to the new upcoming release **v1.5.4-preview**! This update introduces advanced performance renderer selections, faster concurrent mod downloads, and a highly requested launch verification toggle!
 
 ---
 
@@ -21,8 +21,8 @@ Welcome to the new release **v1.5.3**! This update introduces advanced performan
 ---
 
 ### 📦 Build Specifications
-* **Version:** `1.5.3`
-* **Release Channel:** Stable Release
+* **Version:** `1.5.4-preview`
+* **Release Channel:** Preview / Unreleased
 * **Platform:** Windows, macOS, Linux
 
 ---
