@@ -1,8 +1,8 @@
 # IDK Launcher Changelog
 
-## 🎮 IDK Launcher v1.4.1-preview.26w24a Changelog
+## 🎮 IDK Launcher v1.5.3 Changelog
 
-Welcome to the new unstable preview revision **v1.4.1-preview.26w24a**! This update introduces advanced performance renderer selections, faster concurrent mod downloads, and a highly requested launch verification toggle!
+Welcome to the new release **v1.5.3**! This update introduces advanced performance renderer selections, faster concurrent mod downloads, and a highly requested launch verification toggle!
 
 ---
 
@@ -21,11 +21,13 @@ Welcome to the new unstable preview revision **v1.4.1-preview.26w24a**! This upd
 ---
 
 ### 📦 Build Specifications
-* **Version:** `1.4.1-preview.26w24a`
-* **Release Channel:** Preview / Unstable Release
+* **Version:** `1.5.3`
+* **Release Channel:** Stable Release
 * **Platform:** Windows, macOS, Linux
 
----## 🎮 IDK Launcher v1.4.0 Changelog
+---
+
+## 🎮 IDK Launcher v1.4.0 Changelog
 
 Hello everyone! The stable release **v1.4.0** is officially here! This is the biggest update IDK Launcher has ever received, bringing a completely redesigned UI system with multiple themes and UI modes, a comprehensive modpack & version management overhaul, persistent settings, real-time social features, performance boosts, accessibility improvements, and much more!
 
