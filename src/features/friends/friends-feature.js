@@ -373,6 +373,11 @@ export function initFriendsFeature() {
       btnFriendsShareCancel.style.display = "inline-flex";
       btnFriendsShareCancel.innerText = "Cancel";
       btnFriendsShareCancel.disabled = false;
+      shareInputRow.style.display = "none";
+      progressPanel.style.display = "block";
+      statusText.innerText = "Preparing...";
+      percentText.innerText = "";
+      progressFill.style.width = "0%";
 
       if (!window.electronAPI) {
         // Fallback/Mock for Web Browsers
@@ -450,6 +455,7 @@ export function initFriendsFeature() {
           actions.showWarningToast(`Tunnel Error: ${err.message}`);
         }
         progressPanel.style.display = "none";
+        shareInputRow.style.display = "flex";
         btnShare.innerText = "Share";
       } finally {
         btnShare.disabled = false;
@@ -475,6 +481,7 @@ export function initFriendsFeature() {
         btnShare.disabled = false;
         btnShare.innerText = "Share";
         progressPanel.style.display = "none";
+        shareInputRow.style.display = "flex";
       }
     });
 

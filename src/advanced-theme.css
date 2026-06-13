@@ -32,8 +32,8 @@ body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 /* Block the panel itself so canvas never shows through the browser area */
 body[data-bg-effect]:not([data-bg-effect="none"]) .mod-browser {
     background: rgba(15, 13, 24, 0.05) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     isolation: isolate;
 }
 
@@ -228,8 +228,8 @@ body.ui-advanced .top-bar {
     height: var(--top-bar-height);
     padding: 0 18px;
     background: color-mix(in srgb, var(--theme-bg-panel) 60%, transparent);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-bottom-color: rgba(255, 255, 255, 0.08);
     box-shadow: none;
@@ -306,8 +306,8 @@ body.ui-advanced .nav-tabs {
     gap: 6px;
     padding: 14px 0 14px;
     background: color-mix(in srgb, var(--theme-bg-panel) 60%, transparent);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     border-right: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: none;
     -webkit-app-region: no-drag;
@@ -605,7 +605,7 @@ body.ui-advanced .main-hero-banner .bottom-bar {
     );
     border: 1px solid rgba(var(--theme-stage-grid-rgb), 0.44);
     border-radius: 0;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(var(--theme-blur));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -700,8 +700,8 @@ body.ui-advanced .play-dropdown {
     background: rgba(8, 8, 9, 0.96);
     border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     padding: 4px;
     display: flex;
     flex-direction: column;
@@ -892,7 +892,9 @@ body.ui-advanced .details-section {
     height: 100%;
     min-height: 0;
     overflow-y: auto;
-    background: linear-gradient(180deg, var(--theme-bg-panel), var(--theme-bg));
+    background: linear-gradient(180deg, rgba(15, 13, 24, 0.7), rgba(15, 13, 24, 0.7));
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     border-top: none;
     border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -1089,8 +1091,8 @@ body.ui-advanced .settings-content-wrapper,
 body.ui-advanced .profile-page-content {
     border: 1px solid rgba(var(--theme-accent-rgb), 0.32);
     background: rgba(15, 13, 24, 0.35);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
 }
 
@@ -1367,8 +1369,8 @@ body.ui-advanced .mp-tab.active {
 
 body.ui-advanced .mod-browser {
     left: 230px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     border-left: 1px solid rgba(var(--theme-accent-rgb), 0.36);
     isolation: isolate;
 }
@@ -1711,13 +1713,12 @@ body.ui-advanced .profile-page-content {
     grid-template-columns: minmax(0, 1fr) 360px;
     border: 0;
     background: rgba(15, 13, 24, 0.35);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--theme-blur));
     box-shadow: none;
     gap: 0;
 }
 
-body.ui-advanced .profile-main-stage,
-body.ui-advanced .profile-sidebar {
+body.ui-advanced .profile-main-stage {
     background: var(--theme-bg);
     border-color: transparent;
     border: none;
@@ -1850,7 +1851,9 @@ body.ui-advanced .profile-sidebar {
     display: flex;
     flex-direction: column;
     border-left: 1px solid rgba(255, 255, 255, 0.08);
-    background: var(--theme-bg);
+    background: rgba(15, 13, 24, 0.7);
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     box-shadow: none;
     gap: 16px;
 }
@@ -2924,7 +2927,7 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-sidebar,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     background: rgba(15, 13, 24, 0.2) !important;
-    backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(var(--theme-blur)) !important;
 }
 
 /* Layer 2 — Main Areas: barely-tinted clear glass, no blur */
@@ -2944,7 +2947,7 @@ html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-
 html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .friends-sidebar,
 html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .details-section {
     background: rgba(15, 13, 24, 0.3) !important;
-    backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(var(--theme-blur)) !important;
 }
 
 /* Layer 2 — Main Areas: barely-tinted clear glass, no blur */
@@ -2964,7 +2967,7 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effec
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .friends-sidebar,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .details-section {
     background: rgba(15, 13, 24, 0.9) !important;
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(var(--theme-blur));
 }
 
 @media (max-width: 980px) {
@@ -3000,8 +3003,8 @@ body.ui-advanced .advanced-tab-bar {
     gap: 0;
     margin: 12px 0 28px;
     background: rgba(20, 20, 24, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     border-radius: calc(var(--theme-radius) * 1.2);
     padding: 4px;
     border: 1px solid rgba(255, 255, 255, 0.06);

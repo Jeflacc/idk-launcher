@@ -223,13 +223,33 @@ export function initContentFeature() {
       if (progressContainer) progressContainer.style.display = "none";
 
       if (notesContainer) {
-        const htmlNotes = (releaseNotes || "")
-          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-          .replace(/\n/g, "<br>")
-          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-          .replace(/\*(.*?)\*/g, "<em>$1</em>")
-          .replace(/## (.*?)(<br>|$)/g, '<h4 style="margin:10px 0 5px;color:white;font-family:var(--font-title);">$1</h4>')
-          .replace(/- (.*?)(<br>|$)/g, '<div style="margin-left:8px;display:flex;gap:6px;margin-bottom:4px;"><span style="color:#60a5fa;">&bull;</span><span>$1</span></div>');
+        let htmlNotes = '';
+        const notes = releaseNotes;
+        let raw = '';
+        if (notes) {
+          if (typeof notes === 'string') {
+            raw = notes.trim();
+          } else if (Array.isArray(notes)) {
+            raw = notes.map(n => (typeof n === 'string' ? n : (n && n.note) || '')).filter(Boolean).join('\n\n').trim();
+          } else if (typeof notes === 'object' && notes.note) {
+            raw = String(notes.note).trim();
+          } else {
+            raw = String(notes).trim();
+          }
+        }
+        if (raw) {
+          if (/<[a-z][\s\S]*>/i.test(raw)) {
+            htmlNotes = raw;
+          } else {
+            htmlNotes = raw
+              .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+              .replace(/\n/g, "<br>")
+              .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+              .replace(/\*(.*?)\*/g, "<em>$1</em>")
+              .replace(/## (.*?)(<br>|$)/g, '<h4 style="margin:10px 0 5px;color:white;font-family:var(--font-title);">$1</h4>')
+              .replace(/- (.*?)(<br>|$)/g, '<div style="margin-left:8px;display:flex;gap:6px;margin-bottom:4px;"><span style="color:#60a5fa;">&bull;</span><span>$1</span></div>');
+          }
+        }
         notesContainer.innerHTML = htmlNotes || '<p style="color:var(--text-muted);">No release notes provided.</p>';
       }
 

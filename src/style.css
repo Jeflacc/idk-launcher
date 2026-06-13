@@ -1,4 +1,4 @@
-@font-face {
+﻿@font-face {
     font-family: "Mojang";
     src: url("../fonts/Mojang-Regular.ttf") format("truetype");
     font-weight: normal;
@@ -188,7 +188,7 @@ body {
     color: var(--text-main);
     height: 100vh;
     overflow: hidden;
-    font-size: 14px;
+    font-size: 0.875rem;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -267,14 +267,11 @@ body {
     background:
         linear-gradient(
             180deg,
-            rgba(18, 19, 22, 0.98) 0%,
-            rgba(8, 9, 12, 0.98) 100%
-        ),
-        radial-gradient(
-            circle at top,
-            rgba(255, 255, 255, 0.05),
-            transparent 55%
+            rgba(18, 19, 22, 0.75) 0%,
+            rgba(8, 9, 12, 0.8) 100%
         );
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     -webkit-app-region: drag;
     box-shadow:
@@ -294,7 +291,7 @@ body {
 
 .top-brand {
     font-family: var(--font-title);
-    font-size: 22px;
+    font-size: 1.375rem;
     font-weight: 800;
     letter-spacing: 0.5px;
     line-height: 1;
@@ -307,7 +304,7 @@ body {
 }
 
 .brand-title {
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     color: #8d9298;
     letter-spacing: 1.4px;
@@ -329,7 +326,7 @@ body {
 
 .nav-tab {
     color: #90959b;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     padding: 0 12px;
     cursor: pointer;
@@ -364,7 +361,7 @@ body {
 
 .top-brand {
     font-family: var(--font-title);
-    font-size: 24px;
+    font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: 0.5px;
     line-height: 1;
@@ -401,7 +398,7 @@ body {
 }
 
 .brand-title {
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     color: #8d9298;
     letter-spacing: 1.6px;
@@ -423,7 +420,7 @@ body {
 
 .nav-tab {
     color: #90959b;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     padding: 0 13px;
     cursor: pointer;
@@ -550,7 +547,7 @@ body:has(#view-settings.active) .nav-tab[data-target="settings"] {
 }
 
 .user-details-label {
-    font-size: 8px;
+    font-size: 0.5rem;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.62);
     text-transform: uppercase;
@@ -562,7 +559,7 @@ body:has(#view-settings.active) .nav-tab[data-target="settings"] {
 
 .user-details h4,
 #display-username {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 800;
     color: #fff;
     margin: 0;
@@ -578,7 +575,7 @@ body:has(#view-settings.active) .nav-tab[data-target="settings"] {
 }
 
 .user-details p {
-    font-size: 9px;
+    font-size: 0.5625rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -636,7 +633,7 @@ body:has(#view-settings.active) .nav-tab[data-target="settings"] {
     align-items: center;
     gap: 10px;
     padding: 9px 12px;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #d1d1d2;
     cursor: pointer;
     border-radius: 6px;
@@ -683,7 +680,7 @@ body:has(#view-settings.active) .nav-tab[data-target="settings"] {
     justify-content: center;
     cursor: pointer;
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 0.875rem;
     transition: all 0.2s;
 }
 
@@ -754,7 +751,7 @@ body:has(#view-login.active) .user-profile {
 
 .login-box h2 {
     font-family: var(--font-title);
-    font-size: 26px;
+    font-size: 1.625rem;
     font-weight: 700;
     color: white;
     text-align: center;
@@ -768,7 +765,7 @@ body:has(#view-login.active) .user-profile {
     color: white;
     padding: 12px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -826,7 +823,7 @@ body:has(#view-login.active) .user-profile {
     padding: 12px 14px;
     border-radius: 4px;
     font-family: var(--font-main);
-    font-size: 14px;
+    font-size: 0.875rem;
     outline: none;
     width: 100%;
     transition:
@@ -852,7 +849,7 @@ body:has(#view-login.active) .user-profile {
     border-radius: 4px;
     font-family: var(--font-title);
     font-weight: 700;
-    font-size: 14px;
+    font-size: 0.875rem;
     cursor: pointer;
     text-shadow: 1px 1px 0px var(--theme-accent-shadow);
     transition: none;
@@ -1024,7 +1021,7 @@ body:has(#view-login.active) .user-profile {
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 13px;
+    font-size: 0.8125rem;
     white-space: nowrap;
     color: white;
     gap: 8px;
@@ -1107,7 +1104,7 @@ body:has(#view-login.active) .user-profile {
     justify-content: space-between;
     align-items: center;
     border-left: 3px solid transparent;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: #d1d1d2;
     gap: 8px;
 }
@@ -1143,7 +1140,7 @@ body:has(#view-login.active) .user-profile {
     background: var(--theme-accent);
     color: white;
     border-radius: 50%;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: bold;
     flex-shrink: 0;
 }
@@ -1163,7 +1160,7 @@ body:has(#view-login.active) .user-profile {
     color: var(--text-muted);
     border-radius: 4px;
     cursor: pointer;
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -1192,7 +1189,7 @@ body:has(#view-login.active) .user-profile {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
     cursor: pointer;
     text-transform: uppercase;
@@ -1250,7 +1247,7 @@ input[type="checkbox"]:checked + .switch::after {
     );
     color: white;
     font-weight: 600;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-family: var(--font-title);
     cursor: pointer;
     transition: all 0.12s ease;
@@ -1318,7 +1315,7 @@ input[type="checkbox"]:checked + .switch::after {
     width: 200px;
     height: 50px;
     font-family: var(--font-title);
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: bold;
     letter-spacing: 0.5px;
     cursor: pointer;
@@ -1393,7 +1390,7 @@ input[type="checkbox"]:checked + .switch::after {
 .play-button:not(.running):not(:disabled)::after {
     content: "\25CF  Ready to play";
     font-family: var(--font-main);
-    font-size: 9px;
+    font-size: 0.5625rem;
     font-weight: 600;
     color: var(--theme-accent-text);
     display: flex;
@@ -1434,7 +1431,7 @@ input[type="checkbox"]:checked + .switch::after {
 /* Modpack list section headers */
 .mp-list-section-header {
     padding: 12px 16px 8px;
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
     font-weight: 700;
     letter-spacing: 0.5px;
@@ -1514,12 +1511,12 @@ input[type="checkbox"]:checked + .switch::after {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 24px;
+    font-size: 1.5rem;
 }
 
 .stat-info h4 {
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: 0.6875rem;
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 4px;
@@ -1528,14 +1525,14 @@ input[type="checkbox"]:checked + .switch::after {
 
 .stat-info h2 {
     font-family: var(--font-main);
-    font-size: 22px;
+    font-size: 1.375rem;
     font-weight: 700;
     margin: 0;
 }
 
 .section-title {
     font-family: var(--font-main);
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 24px;
     display: flex;
@@ -1605,7 +1602,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .news-date {
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     color: var(--theme-accent);
     letter-spacing: 0.8px;
@@ -1713,7 +1710,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .news-date {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     color: var(--theme-accent);
     letter-spacing: 0.8px;
@@ -1736,7 +1733,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: none;
     background: transparent;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -1768,7 +1765,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: none;
     background: var(--theme-accent);
     color: white;
-    font-size: 22px;
+    font-size: 1.375rem;
     font-weight: 700;
     cursor: pointer;
     transition: background 0.2s;
@@ -1784,7 +1781,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .news-content h3 {
     font-family: var(--font-main);
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
     margin-bottom: 8px;
     color: white;
@@ -1793,7 +1790,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .news-content p {
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.5;
 }
 
@@ -1817,7 +1814,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .view-title {
     font-family: var(--font-title);
-    font-size: 26px;
+    font-size: 1.625rem;
     font-weight: 700;
     margin-bottom: 30px;
     color: white;
@@ -1840,7 +1837,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .settings-section h3 {
     font-family: var(--font-main);
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
     margin-bottom: 6px;
     color: white;
@@ -1848,7 +1845,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .settings-section > p {
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
     margin-bottom: 16px;
     line-height: 1.5;
 }
@@ -1889,7 +1886,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .memory-value-label {
     font-family: var(--font-main);
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--accent-green-hover);
     min-width: 60px;
@@ -1908,7 +1905,7 @@ input[type="checkbox"]:checked + .switch::after {
     color: #d1d1d2;
     padding: 6px 12px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
@@ -1956,7 +1953,7 @@ input[type="checkbox"]:checked + .switch::after {
 .mods-page-header h2.view-title {
     margin: 0 !important;
     font-family: var(--font-title);
-    font-size: 22px;
+    font-size: 1.375rem;
     font-weight: 700;
     color: white;
     font-variant: small-caps;
@@ -1982,7 +1979,7 @@ input[type="checkbox"]:checked + .switch::after {
 .mods-page-header h2.view-title {
     margin: 0 !important;
     font-family: var(--font-title);
-    font-size: 26px;
+    font-size: 1.625rem;
     font-weight: 700;
     color: white;
     font-variant: small-caps;
@@ -2002,7 +1999,7 @@ input[type="checkbox"]:checked + .switch::after {
     border-radius: 4px;
     font-family: var(--font-title);
     font-weight: 700;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1;
     cursor: pointer;
     text-shadow: 1px 1px 0px var(--theme-accent-shadow);
@@ -2084,7 +2081,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .sidebar-label {
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     letter-spacing: 1.5px;
     color: var(--text-muted);
@@ -2144,7 +2141,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .mp-item-info strong {
     display: block;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -2157,14 +2154,14 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .mp-item-info span {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--text-muted);
 }
 
 .mp-item-count {
     background: rgba(255, 255, 255, 0.06);
     color: var(--text-muted);
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     padding: 2px 6px;
     border-radius: 99px;
@@ -2283,7 +2280,7 @@ input[type="checkbox"]:checked + .switch::after {
     flex-wrap: nowrap;
     gap: 18px;
     align-items: center;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-family: var(--font-title);
     min-width: 0;
     overflow-x: auto;
@@ -2352,7 +2349,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .modpack-content-header h2 {
     font-family: var(--font-title);
-    font-size: 24px;
+    font-size: 1.5rem;
     font-weight: 700;
     color: white;
     margin: 0;
@@ -2361,7 +2358,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .modpack-content-header p {
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--text-muted);
     margin: 0;
 }
@@ -2371,7 +2368,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: 2px solid #000000;
     border-radius: 4px;
     padding: 6px 12px;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1;
     font-weight: 700;
     font-family: var(--font-title);
@@ -2418,7 +2415,7 @@ input[type="checkbox"]:checked + .switch::after {
         var(--theme-accent-shadow) var(--theme-accent-bright);
     border-radius: 0px;
     padding: 8px 22px;
-    font-size: 13px;
+    font-size: 0.8125rem;
     width: auto;
     min-width: 120px;
     font-weight: 700;
@@ -2461,7 +2458,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 5px;
     padding: 6px 12px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     line-height: 1;
     font-weight: 700;
     font-family: var(--font-title);
@@ -2557,7 +2554,7 @@ input[type="checkbox"]:checked + .switch::after {
     border-color: #686869 #1a1a1b #1a1a1b #686869;
     border-radius: 0px;
     padding: 6px 12px;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #ffffff;
     box-shadow:
         inset 1px 1px 0 rgba(255, 255, 255, 0.1),
@@ -2603,7 +2600,7 @@ input[type="checkbox"]:checked + .switch::after {
     border-radius: 0px;
     padding: 8px 10px;
     color: #ffffff;
-    font-size: 13px;
+    font-size: 0.8125rem;
     box-shadow:
         inset 1px 1px 0 rgba(255, 255, 255, 0.1),
         inset -1px -1px 0 rgba(0, 0, 0, 0.4),
@@ -2671,7 +2668,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: none;
     color: var(--text-muted);
     padding: 5px 10px;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     font-family: var(--font-title);
     cursor: pointer;
@@ -2710,7 +2707,7 @@ input[type="checkbox"]:checked + .switch::after {
 .mp-tab-count {
     background: rgba(255, 255, 255, 0.06);
     color: var(--text-muted);
-    font-size: 10px;
+    font-size: 0.625rem;
     padding: 2px 6px;
     border-radius: 99px;
     font-weight: 700;
@@ -2764,7 +2761,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .shader-note {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--text-muted);
     opacity: 0.8;
 }
@@ -2821,7 +2818,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: 1px solid rgba(255, 255, 255, 0.06);
     flex-shrink: 0;
     color: rgba(255, 255, 255, 0.3);
-    font-size: 12px !important;
+    font-size: 0.75rem !important;
     font-weight: 700;
 }
 
@@ -2835,7 +2832,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .installed-mod-info strong {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: white;
     white-space: nowrap;
     overflow: hidden;
@@ -2846,7 +2843,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .installed-mod-info span {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -2867,7 +2864,7 @@ input[type="checkbox"]:checked + .switch::after {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1;
     padding: 0;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2980,7 +2977,7 @@ input[type="checkbox"]:checked + .switch::after {
     background: transparent;
     border: none;
     padding: 6px 0;
-    font-size: 14px;
+    font-size: 0.875rem;
     outline: none;
     color: white;
 }
@@ -3029,7 +3026,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .browser-filter-title {
-    font-size: 9px;
+    font-size: 0.5625rem;
     font-weight: 700;
     letter-spacing: 1.2px;
     color: var(--text-muted);
@@ -3050,7 +3047,7 @@ input[type="checkbox"]:checked + .switch::after {
     color: var(--text-muted);
     padding: 4px 9px;
     border-radius: 4px;
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
@@ -3077,7 +3074,7 @@ input[type="checkbox"]:checked + .switch::after {
     color: white;
     padding: 6px 8px;
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-family: var(--font-main);
     outline: none;
     cursor: pointer;
@@ -3090,7 +3087,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: 1px solid rgba(255, 255, 255, 0.06);
     color: var(--text-muted);
     border-radius: 4px;
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
@@ -3125,7 +3122,7 @@ input[type="checkbox"]:checked + .switch::after {
     color: #fff;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     transition: all 0.15s;
     line-height: 1;
@@ -3135,7 +3132,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 .browser-page-info {
     color: #fff;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     min-width: 40px;
     text-align: center;
@@ -3151,7 +3148,7 @@ input[type="checkbox"]:checked + .switch::after {
     color: #fff;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     transition: all 0.15s;
 }
@@ -3160,7 +3157,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 .browser-page-info-lg {
     color: #fff;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     background: rgba(var(--theme-accent-rgb), 0.2);
     padding: 8px 16px;
@@ -3237,7 +3234,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .mod-result-info strong {
     display: block;
-    font-size: 14px;
+    font-size: 0.875rem;
     color: white;
     white-space: nowrap;
     overflow: hidden;
@@ -3246,7 +3243,7 @@ input[type="checkbox"]:checked + .switch::after {
     font-weight: 700;
 }
 .mod-result-info > span {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: rgba(255, 255, 255, 0.55);
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -3260,7 +3257,7 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     gap: 12px;
     margin-top: 5px;
-    font-size: 10px;
+    font-size: 0.625rem;
     color: rgba(255, 255, 255, 0.4);
     font-weight: 600;
 }
@@ -3277,7 +3274,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
     border-radius: 6px;
     padding: 6px 14px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -3319,7 +3316,7 @@ input[type="checkbox"]:checked + .switch::after {
     color: var(--text-muted);
     padding: 4px 9px;
     border-radius: 4px;
-    font-size: 9px;
+    font-size: 0.5625rem;
     font-weight: 700;
     font-family: var(--font-title);
     cursor: pointer;
@@ -3362,7 +3359,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: none;
     padding: 6px 12px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
@@ -3421,7 +3418,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .trending-mp-info strong {
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: white;
     margin-bottom: 2px;
     white-space: nowrap;
@@ -3429,7 +3426,7 @@ input[type="checkbox"]:checked + .switch::after {
     text-overflow: ellipsis;
 }
 .trending-mp-info p {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
     line-height: 1.25;
     margin-bottom: 6px;
@@ -3444,7 +3441,7 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     gap: 8px;
     align-items: center;
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
 }
 
@@ -3461,7 +3458,7 @@ input[type="checkbox"]:checked + .switch::after {
     justify-content: center;
     color: rgba(255, 255, 255, 0.75);
     font-family: var(--font-title);
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -3503,7 +3500,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .mp-create-box h3 {
     font-family: var(--font-title);
-    font-size: 17px;
+    font-size: 1.0625rem;
     font-weight: 700;
     color: white;
     font-variant: small-caps;
@@ -3518,7 +3515,7 @@ input[type="checkbox"]:checked + .switch::after {
     padding: 9px 12px;
     border-radius: 5px;
     font-family: var(--font-main);
-    font-size: 13px;
+    font-size: 0.8125rem;
     outline: none;
     flex: 1;
     cursor: pointer;
@@ -3584,7 +3581,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .mp-settings-header h3 {
     font-family: var(--font-title);
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 700;
     color: white;
     margin: 0;
@@ -3596,7 +3593,7 @@ input[type="checkbox"]:checked + .switch::after {
     background: transparent;
     border: none;
     color: var(--text-muted);
-    font-size: 24px;
+    font-size: 1.5rem;
     cursor: pointer;
     padding: 0;
     width: 32px;
@@ -3629,7 +3626,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .mp-settings-section label {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -3644,7 +3641,7 @@ input[type="checkbox"]:checked + .switch::after {
     padding: 10px 12px;
     border-radius: 4px;
     font-family: var(--font-main);
-    font-size: 13px;
+    font-size: 0.8125rem;
     outline: none;
     transition: all 0.2s;
 }
@@ -3718,7 +3715,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .launch-status {
     font-family: var(--font-title);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     margin-bottom: 10px;
     color: white;
@@ -3795,12 +3792,12 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
+    font-size: 2rem;
 }
 
 .modal-content h3 {
     font-family: var(--font-title);
-    font-size: 24px;
+    font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 12px;
     color: white;
@@ -3811,7 +3808,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .modal-content p {
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 0.875rem;
     line-height: 1.6;
     margin-bottom: 32px;
 }
@@ -3868,7 +3865,7 @@ input[type="checkbox"]:checked + .switch::after {
     align-items: flex-start;
     gap: 10px;
     max-width: 320px;
-    font-size: 12px;
+    font-size: 0.75rem;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(12px);
     transform: translateY(12px);
@@ -3901,7 +3898,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .sodium-label {
     color: #c4b5fd;
-    font-size: 9px;
+    font-size: 0.5625rem;
     font-weight: 700;
 }
 
@@ -3965,7 +3962,7 @@ input[type="checkbox"]:checked + .switch::after {
     max-height: 140px;
     overflow-y: auto;
     text-align: left;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #a1a1a2;
     line-height: 1.5;
 }
@@ -3985,6 +3982,38 @@ input[type="checkbox"]:checked + .switch::after {
 
 .update-notes-container p {
     margin-bottom: 8px;
+}
+
+.update-notes-container a {
+    color: #60a5fa;
+    text-decoration: none;
+}
+
+.update-notes-container a:hover {
+    text-decoration: underline;
+}
+
+.update-notes-container tt {
+    font-family: monospace;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.update-notes-container h4 {
+    margin: 10px 0 5px;
+    color: white;
+    font-family: var(--font-title);
+}
+
+.update-notes-container ul, .update-notes-container ol {
+    margin: 4px 0 8px 16px;
+    padding: 0;
+}
+
+.update-notes-container li {
+    margin-bottom: 3px;
 }
 
 /* =========================================================
@@ -4025,7 +4054,7 @@ input[type="checkbox"]:checked + .switch::after {
     right: -2px;
     background: #ef4444;
     color: white;
-    font-size: 9px;
+    font-size: 0.5625rem;
     font-weight: 700;
     min-width: 15px;
     height: 15px;
@@ -4081,7 +4110,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .friends-sidebar-header h3 {
     font-family: var(--font-title);
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
     color: white;
     letter-spacing: 0.5px;
@@ -4092,7 +4121,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 16px;
+    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4128,7 +4157,7 @@ input[type="checkbox"]:checked + .switch::after {
 .friends-auth-welcome {
     text-align: center;
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.5;
     margin-bottom: 8px;
 }
@@ -4148,7 +4177,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: none;
     color: var(--text-muted);
     padding: 8px 10px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     cursor: pointer;
     border-radius: 4px;
@@ -4175,7 +4204,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .friends-auth-error {
     color: #ef4444;
-    font-size: 12px;
+    font-size: 0.75rem;
     background: rgba(239, 68, 68, 0.15);
     border: 2px solid rgba(239, 68, 68, 0.3);
     padding: 12px 16px;
@@ -4212,13 +4241,13 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friends-identity-name h4 {
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: white;
 }
 
 .friends-identity-name span {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--theme-accent);
     display: flex;
     align-items: center;
@@ -4262,7 +4291,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .friends-share-card h4 {
     font-family: var(--font-title);
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: white;
     display: flex;
     align-items: center;
@@ -4274,7 +4303,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friends-share-card p {
-    font-size: 11.5px;
+    font-size: 0.7188rem;
     color: var(--text-muted);
     line-height: 1.4;
 }
@@ -4286,7 +4315,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .friends-share-input-row input {
     padding: 8px 12px;
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .friends-share-btn {
@@ -4301,7 +4330,7 @@ input[type="checkbox"]:checked + .switch::after {
     padding: 6px 12px;
     border-radius: 4px;
     font-family: var(--font-title);
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     text-transform: uppercase;
     cursor: pointer;
@@ -4341,7 +4370,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friends-share-tunnel-link {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--accent-green-hover);
     background: rgba(0, 0, 0, 0.2);
     border: 1px dashed rgba(var(--theme-accent-rgb), 0.3);
@@ -4360,19 +4389,34 @@ input[type="checkbox"]:checked + .switch::after {
 
 /* Download progress bar for frpc */
 .frpc-progress-bar {
-    height: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 2px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
     overflow: hidden;
     width: 100%;
-    margin-top: 4px;
 }
 
 .frpc-progress-fill {
     height: 100%;
-    background: var(--accent-green-hover);
+    background: linear-gradient(90deg, var(--accent-green-hover), #4ade80);
     width: 0%;
-    transition: width 0.2s ease;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+#frpc-progress-panel {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+#frpc-progress-panel > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 0.6875rem;
+    color: var(--text-muted);
 }
 
 /* Friend request notifications */
@@ -4384,7 +4428,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friends-requests-title {
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     color: var(--text-muted);
     letter-spacing: 1px;
@@ -4402,13 +4446,13 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friend-request-info strong {
-    font-size: 12.5px;
+    font-size: 0.7812rem;
     color: white;
     display: block;
 }
 
 .friend-request-info span {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
 }
 
@@ -4426,7 +4470,7 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: white;
     transition: all 0.2s;
 }
@@ -4457,7 +4501,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .friends-add-row input {
     padding: 8px 12px;
-    font-size: 12.5px;
+    font-size: 0.7812rem;
 }
 
 .friends-add-btn {
@@ -4490,7 +4534,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friends-list-header {
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     color: var(--text-muted);
     letter-spacing: 1px;
@@ -4506,7 +4550,7 @@ input[type="checkbox"]:checked + .switch::after {
 .friends-list-empty {
     text-align: center;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     padding: 24px 0;
     border: 1px dashed rgba(255, 255, 255, 0.05);
     border-radius: 8px;
@@ -4563,7 +4607,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .friend-info strong {
     display: block;
-    font-size: 12.5px;
+    font-size: 0.7812rem;
     color: white;
     white-space: nowrap;
     overflow: hidden;
@@ -4571,7 +4615,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friend-status-text {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
     display: flex;
     align-items: center;
@@ -4616,7 +4660,7 @@ input[type="checkbox"]:checked + .switch::after {
     padding: 6px 12px;
     border-radius: 20px;
     font-family: var(--font-title);
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     text-transform: uppercase;
     cursor: pointer;
@@ -4743,7 +4787,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .chat-message-bubble {
     padding: 10px 14px;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.4;
     word-break: break-word;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
@@ -4764,7 +4808,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .chat-message-time {
-    font-size: 9px;
+    font-size: 0.5625rem;
     color: var(--text-muted);
     margin-top: 3px;
     padding: 0 4px;
@@ -4781,7 +4825,7 @@ input[type="checkbox"]:checked + .switch::after {
 .friends-chat-input-row input {
     flex: 1;
     padding: 10px 12px;
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .friends-chat-send-btn {
@@ -4817,7 +4861,7 @@ input[type="checkbox"]:checked + .switch::after {
 .friend-unread-badge {
     background: #4cb837;
     color: white;
-    font-size: 9px;
+    font-size: 0.5625rem;
     font-weight: 700;
     min-width: 16px;
     height: 16px;
@@ -4888,7 +4932,7 @@ input[type="checkbox"]:checked + .switch::after {
     }
 
     .mp-wizard-header h3 {
-        font-size: 12px;
+        font-size: 0.75rem;
         line-height: 1.05;
     }
 
@@ -4924,16 +4968,16 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .top-brand {
-        font-size: 20px;
+        font-size: 1.25rem;
     }
 
     .brand-title {
-        font-size: 10px;
+        font-size: 0.625rem;
     }
 
     .nav-tab {
         padding: 0 10px;
-        font-size: 12px;
+        font-size: 0.75rem;
         gap: 5px;
     }
 
@@ -5042,25 +5086,25 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 
     .nav-tab {
         padding: 0 8px;
-        font-size: 11px;
+        font-size: 0.6875rem;
     }
 
     .top-brand {
-        font-size: 18px;
+        font-size: 1.125rem;
     }
 
     .create-modpack-btn {
-        font-size: 11px;
+        font-size: 0.6875rem;
         padding: 5px 10px;
     }
 
     .mp-tab {
-        font-size: 11px;
+        font-size: 0.6875rem;
         padding: 5px 10px;
     }
 
     .mp-action-btn.browse {
-        font-size: 11px;
+        font-size: 0.6875rem;
         padding: 5px 10px;
     }
 
@@ -5101,7 +5145,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .section-title {
-        font-size: 18px;
+        font-size: 1.125rem;
         margin-bottom: 20px;
     }
 
@@ -5142,7 +5186,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .mp-wizard-header h3 {
-        font-size: 11px;
+        font-size: 0.6875rem;
     }
 
     .modpack-detail {
@@ -5175,7 +5219,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .mod-browser-header h3 {
-        font-size: 13px;
+        font-size: 0.8125rem;
         flex-shrink: 0;
     }
 
@@ -5188,7 +5232,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 
     .provider-pill {
         padding: 4px 8px;
-        font-size: 10px;
+        font-size: 0.625rem;
     }
 
     .mod-browser-close {
@@ -5214,12 +5258,12 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .mod-result-info strong {
-        font-size: 12px;
+        font-size: 0.75rem;
     }
 
     .add-mod-btn {
         padding: 4px 10px;
-        font-size: 10px;
+        font-size: 0.625rem;
     }
 
     .browser-search-bar {
@@ -5228,7 +5272,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .browser-pagination-bar {
-        font-size: 10px;
+        font-size: 0.625rem;
     }
 
     .browser-filter-section {
@@ -5237,7 +5281,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 
     .browser-filter-pill {
         padding: 3px 7px;
-        font-size: 9px;
+        font-size: 0.5625rem;
     }
 
     .browser-filter-options {
@@ -5259,7 +5303,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .top-brand {
-        font-size: 16px;
+        font-size: 1rem;
     }
 
     .nav-tabs {
@@ -5292,7 +5336,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     .play-button {
         width: 100%;
         height: 48px;
-        font-size: 16px;
+        font-size: 1rem;
     }
 
     .details-content {
@@ -5315,11 +5359,11 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .stat-info h2 {
-        font-size: 18px;
+        font-size: 1.125rem;
     }
 
     .section-title {
-        font-size: 16px;
+        font-size: 1rem;
     }
 
     .modal-content {
@@ -5346,7 +5390,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .mods-page-header h2.view-title {
-        font-size: 14px;
+        font-size: 0.875rem;
     }
 
     .mods-header-actions {
@@ -5354,7 +5398,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .create-modpack-btn {
-        font-size: 9px;
+        font-size: 0.5625rem;
         padding: 3px 6px;
     }
 
@@ -5365,7 +5409,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .mp-item-info strong {
-        font-size: 11px;
+        font-size: 0.6875rem;
     }
 
     .mod-browser-header {
@@ -5374,7 +5418,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .mod-browser-header h3 {
-        font-size: 11px;
+        font-size: 0.6875rem;
     }
 
     .mod-browser-header-actions {
@@ -5382,7 +5426,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .provider-pill {
-        font-size: 9px;
+        font-size: 0.5625rem;
         padding: 3px 6px;
     }
 
@@ -5407,12 +5451,12 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .add-mod-btn {
-        font-size: 9px;
+        font-size: 0.5625rem;
         padding: 3px 8px;
     }
 
     .mod-result-info strong {
-        font-size: 11px;
+        font-size: 0.6875rem;
     }
 
     .browser-sidebar {
@@ -5430,7 +5474,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 
     .browser-filter-pill {
         padding: 2px 6px;
-        font-size: 8px;
+        font-size: 0.5rem;
     }
 
     .browser-filter-options {
@@ -5501,7 +5545,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 
 /* Status text */
 .download-status-text {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
     color: #ffffff;
     margin-bottom: 12px;
@@ -5515,7 +5559,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     margin-bottom: 12px;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .download-metric {
@@ -5527,7 +5571,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 
 .download-metric-label {
     color: var(--text-muted);
-    font-size: 10px;
+    font-size: 0.625rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 4px;
@@ -5537,7 +5581,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 .download-metric-value {
     color: #ffffff;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 /* Individual metric texts */
@@ -5546,7 +5590,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 .download-current-item-text,
 .download-speed-text,
 .download-eta-text {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--text-main);
     margin-bottom: 8px;
     word-break: break-word;
@@ -5572,7 +5616,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     background: rgba(var(--theme-accent-rgb), 0.1);
     color: var(--theme-accent);
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -5633,7 +5677,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     padding: 10px 12px;
     margin-top: 12px;
     color: #f87171;
-    font-size: 12px;
+    font-size: 0.75rem;
     display: none;
 }
 
@@ -5679,7 +5723,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 
     .download-control-btn {
         padding: 8px 10px;
-        font-size: 11px;
+        font-size: 0.6875rem;
     }
 }
 
@@ -5766,19 +5810,19 @@ input:focus-visible,
 @media (prefers-reduced-motion: no-preference) and (min-width: 0px) {
     /* Ensure text is scalable */
     body {
-        font-size: 14px;
+        font-size: 0.875rem;
     }
 
     .download-status-text {
-        font-size: 14px;
+        font-size: 0.875rem;
     }
 
     .download-metrics {
-        font-size: 13px;
+        font-size: 0.8125rem;
     }
 
     .download-current-item-text {
-        font-size: 13px;
+        font-size: 0.8125rem;
     }
 }
 
@@ -5821,7 +5865,7 @@ input:focus-visible,
 /* Ensure metrics are readable */
 .download-metric-label {
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -5927,7 +5971,7 @@ input:focus-visible,
 }
 
 .download-status-text {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--theme-accent);
     text-transform: uppercase;
@@ -5975,7 +6019,7 @@ input:focus-visible,
 }
 
 .download-metric-label {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -5983,14 +6027,14 @@ input:focus-visible,
 }
 
 .download-metric-value {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
     color: white;
     font-family: "Courier New", monospace;
 }
 
 .download-current-item-text {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
@@ -6008,7 +6052,7 @@ input:focus-visible,
     border: 1px solid rgba(239, 68, 68, 0.3);
     border-radius: 6px;
     color: #fca5a5;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.5;
     white-space: pre-wrap;
     word-break: break-word;
@@ -6027,14 +6071,14 @@ input:focus-visible,
 }
 
 .error-icon {
-    font-size: 18px;
+    font-size: 1.125rem;
     flex-shrink: 0;
     margin-top: 2px;
 }
 
 .error-text {
     flex: 1;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.5;
     white-space: pre-wrap;
     word-break: break-word;
@@ -6045,7 +6089,7 @@ input:focus-visible,
     background: none;
     border: none;
     color: #fca5a5;
-    font-size: 20px;
+    font-size: 1.25rem;
     cursor: pointer;
     padding: 0;
     width: 24px;
@@ -6073,7 +6117,7 @@ input:focus-visible,
     color: #d1d1d2;
     padding: 8px 16px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -6199,7 +6243,7 @@ input:focus-visible,
 }
 
 .error-display-title {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
     color: #ffffff;
     font-family: var(--font-title);
@@ -6211,7 +6255,7 @@ input:focus-visible,
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 18px;
+    font-size: 1.125rem;
     padding: 0;
     width: 24px;
     height: 24px;
@@ -6226,13 +6270,13 @@ input:focus-visible,
 }
 
 .error-display-message {
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--text-secondary);
     line-height: 1.4;
 }
 
 .error-display-details {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--text-muted);
     background: rgba(0, 0, 0, 0.3);
     padding: 8px 12px;
@@ -6256,7 +6300,7 @@ input:focus-visible,
     padding: 8px 16px;
     border: none;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -6323,7 +6367,7 @@ input:focus-visible,
 }
 
 .download-status-text {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--accent-green);
     text-transform: uppercase;
@@ -6374,7 +6418,7 @@ input:focus-visible,
 }
 
 .download-metric-label {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.3px;
@@ -6382,14 +6426,14 @@ input:focus-visible,
 }
 
 .download-metric-value {
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--text-main);
     font-weight: 600;
     font-family: "Courier New", monospace;
 }
 
 .download-current-item-text {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
@@ -6402,7 +6446,7 @@ input:focus-visible,
     border: 1px solid rgba(231, 76, 60, 0.3);
     border-radius: 4px;
     padding: 8px 12px;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #ff6b6b;
     margin-bottom: 12px;
     display: none;
@@ -6424,7 +6468,7 @@ input:focus-visible,
     border: 1px solid rgba(var(--theme-accent-rgb), 0.4);
     color: var(--accent-green);
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -6483,7 +6527,7 @@ input:focus-visible,
 }
 
 .settings-title {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 700;
     color: var(--text-main);
     font-family: var(--font-title);
@@ -6495,7 +6539,7 @@ input:focus-visible,
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 20px;
+    font-size: 1.25rem;
     padding: 0;
     width: 32px;
     height: 32px;
@@ -6521,7 +6565,7 @@ input:focus-visible,
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     color: var(--text-main);
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .settings-search-input::placeholder {
@@ -6550,7 +6594,7 @@ input:focus-visible,
     color: var(--text-muted);
     text-align: left;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     border-radius: 4px;
     transition: all 0.2s;
@@ -6593,7 +6637,7 @@ input:focus-visible,
 }
 
 .settings-label {
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: var(--text-main);
 }
@@ -6607,7 +6651,7 @@ input:focus-visible,
     background: rgba(var(--theme-accent-rgb), 0.2);
     border-radius: 50%;
     color: var(--accent-green);
-    font-size: 10px;
+    font-size: 0.625rem;
     cursor: help;
     position: relative;
 }
@@ -6618,7 +6662,7 @@ input:focus-visible,
     color: var(--text-secondary);
     padding: 8px 12px;
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     white-space: nowrap;
     z-index: 10000;
     display: none;
@@ -6634,7 +6678,7 @@ input:focus-visible,
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     color: var(--text-main);
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .settings-input:focus {
@@ -6654,7 +6698,7 @@ input:focus-visible,
 }
 
 .settings-description {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--text-muted);
     margin: 0;
 }
@@ -6671,7 +6715,7 @@ input:focus-visible,
     padding: 10px 20px;
     border: none;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -6708,7 +6752,7 @@ input:focus-visible,
     text-align: center;
     padding: 40px 20px;
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 /* ===== ACCESSIBILITY ===== */
@@ -6860,7 +6904,7 @@ input:focus-visible,
 
 .delete-modal-content h3 {
     font-family: var(--font-title);
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     color: white;
     margin: 0;
@@ -6869,7 +6913,7 @@ input:focus-visible,
 }
 
 .delete-modal-content p {
-    font-size: 14px;
+    font-size: 0.875rem;
     color: #d1d1d2;
     margin: 0;
     line-height: 1.5;
@@ -6901,7 +6945,7 @@ input:focus-visible,
 }
 
 .delete-modal-checkbox label {
-    font-size: 14px;
+    font-size: 0.875rem;
     color: #d1d1d2;
     cursor: pointer;
     flex: 1;
@@ -6924,7 +6968,7 @@ input:focus-visible,
     padding: 12px 16px;
     border-radius: 4px;
     font-family: var(--font-title);
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
     cursor: pointer;
     border: 1px solid;
@@ -7016,12 +7060,12 @@ input:focus-visible,
 .performance-mode-card strong {
     color: white;
     font-family: var(--font-title);
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .performance-mode-card span {
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.35;
 }
 
@@ -7111,7 +7155,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .modal-content h3 {
     font-family: var(--font-title);
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 700;
     color: white;
     margin: 0 0 16px 0;
@@ -7119,7 +7163,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .modal-content p {
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.5;
     margin: 0 0 12px 0;
 }
@@ -7147,7 +7191,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     color: #d1d1d2;
     padding: 10px 16px;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -7168,7 +7212,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 20px;
+    font-size: 1.25rem;
     cursor: pointer;
     padding: 0;
     width: 24px;
@@ -7210,7 +7254,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     max-height: 200px;
     overflow-y: auto;
     text-align: left;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #d1d1d2;
     line-height: 1.5;
 }
@@ -7263,7 +7307,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     margin: 3px 0 0;
     line-height: 1;
     font-family: var(--font-body, "Outfit", "Inter", system-ui, sans-serif);
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: #fff;
@@ -7311,7 +7355,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .updates-summary strong {
     display: block;
-    font-size: 15px;
+    font-size: 0.9375rem;
     color: #fff;
 }
 
@@ -7319,7 +7363,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 .updates-type {
     display: block;
     color: #8f9296;
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -7332,7 +7376,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     color: rgba(255, 255, 255, 0.75);
     border-radius: 999px;
     padding: 7px 11px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 800;
     white-space: nowrap;
 }
@@ -7372,13 +7416,13 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .updates-update-all {
     padding: 8px 14px;
-    font-size: 12px;
+    font-size: 0.75rem;
     min-width: 0;
 }
 
 .updates-action-btn {
     padding: 7px 14px;
-    font-size: 12px;
+    font-size: 0.75rem;
     min-width: 0;
     flex: 0 0 auto;
 }
@@ -7398,7 +7442,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     border-radius: 4px;
     color: #9cf06f;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 800;
     padding: 2px 18px 2px 4px;
     cursor: pointer;
@@ -7528,7 +7572,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 .updates-icon-fallback {
     color: #fff;
     font-family: var(--font-title);
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 900;
     letter-spacing: 0.08em;
 }
@@ -7541,7 +7585,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 .updates-card-main strong {
     display: block;
     color: white;
-    font-size: 17px;
+    font-size: 1.0625rem;
     line-height: 1.25;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -7563,7 +7607,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     min-width: 0;
     margin-top: 5px;
     color: #c6c8cb;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 600;
 }
 
@@ -7591,7 +7635,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 .updates-filename {
     margin-top: 7px;
     color: #8c9096;
-    font-size: 11px;
+    font-size: 0.6875rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -7604,7 +7648,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     background: rgba(var(--theme-accent-rgb), 0.12);
     border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
     color: var(--theme-accent);
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -7624,7 +7668,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .updates-empty strong {
     color: #fff;
-    font-size: 15px;
+    font-size: 0.9375rem;
 }
 
 .updates-empty-error {
@@ -7664,7 +7708,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     }
 
     .modal-content h3 {
-        font-size: 16px;
+        font-size: 1rem;
     }
 }
 
@@ -7730,7 +7774,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 .skin-3d-modal-header h3 {
     margin: 0;
     font-family: var(--font-title);
-    font-size: 17px;
+    font-size: 1.0625rem;
     font-weight: 700;
     color: #fff;
     line-height: 1.2;
@@ -7744,7 +7788,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .skin-3d-modal-header p {
     margin: 4px 0 0;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.4;
     color: var(--text-muted);
 }
@@ -7758,7 +7802,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     border-radius: 4px;
     background: #2a2a2b;
     color: var(--text-muted);
-    font-size: 18px;
+    font-size: 1.125rem;
     line-height: 1;
     cursor: pointer;
     display: flex;
@@ -7808,7 +7852,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     justify-content: center;
     gap: 10px;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     z-index: 2;
 }
 
@@ -7841,7 +7885,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 .skin-3d-field label {
     display: block;
     margin-bottom: 6px;
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     letter-spacing: 0.8px;
     text-transform: uppercase;
@@ -7855,7 +7899,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     min-height: 36px;
     padding: 8px 10px;
     font-family: var(--font-main);
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: #fff;
     background: #252526;
     border: 2px solid #3c3c3d;
@@ -7964,7 +8008,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 .confirm-modal-content h3 {
     margin: 0;
     font-family: var(--font-title);
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 700;
     color: #fff;
     font-variant: small-caps;
@@ -7974,7 +8018,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .confirm-modal-content p {
     margin: 0;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.55;
     color: #c8c8c9;
 }
@@ -7991,7 +8035,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     padding: 9px 16px;
     border-radius: 4px;
     font-family: var(--font-title);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     cursor: pointer;
     border: 2px solid #000;
@@ -8178,7 +8222,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     width: 100%;
     text-align: center;
     font-family: var(--font-title);
-    font-size: clamp(18px, 2.4vw, 32px);
+    font-size: clamp(1.125rem, 2.4vw, 2rem);
     line-height: 1.05;
     font-weight: 800;
     color: #fff;
@@ -8210,7 +8254,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 0.875rem;
     letter-spacing: 0.4px;
     z-index: 2;
 }
@@ -8254,7 +8298,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     background: var(--theme-accent);
     color: #fff;
     font-family: var(--font-main);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
@@ -8287,7 +8331,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     background: transparent;
     color: #fff;
     font-family: var(--font-main);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
@@ -8347,16 +8391,18 @@ body[data-launcher-performance="balanced"] .mc-logo {
     border-bottom: none;
     background: linear-gradient(
         180deg,
-        rgba(12, 13, 16, 0.98) 0%,
-        rgba(8, 9, 11, 0.99) 100%
+        rgba(12, 13, 16, 0.7) 0%,
+        rgba(8, 9, 11, 0.75) 100%
     );
+    backdrop-filter: blur(var(--theme-blur));
+    -webkit-backdrop-filter: blur(var(--theme-blur));
     border-left: 1px solid rgba(255, 255, 255, 0.06);
     padding: 0;
 }
 
 .profile-section-header {
     padding: 16px 20px 10px;
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -8397,7 +8443,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .profile-sidebar-identity-name {
     font-family: var(--font-title);
-    font-size: 17px;
+    font-size: 1.0625rem;
     font-weight: 800;
     color: #ffffff;
     letter-spacing: 1px;
@@ -8409,7 +8455,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 }
 
 .profile-sidebar-identity-acct {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 600;
     color: var(--theme-accent);
     text-transform: uppercase;
@@ -8430,7 +8476,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     padding-left: 10px;
     position: relative;
     font-family: var(--font-title);
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 900;
     color: var(--theme-accent);
     text-transform: uppercase;
@@ -8532,7 +8578,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .profile-stat-mini-value {
     font-family: var(--font-main);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 800;
     color: #ffffff;
     letter-spacing: 0.3px;
@@ -8574,7 +8620,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .profile-friends-empty {
     text-align: center;
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--text-muted);
     padding: 12px 0;
 }
@@ -8623,7 +8669,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 }
 
 .profile-friend-name {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     color: #ffffff;
     white-space: nowrap;
@@ -8633,7 +8679,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
 }
 
 .profile-friend-status {
-    font-size: 9px;
+    font-size: 0.5625rem;
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -8661,7 +8707,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     background: transparent;
     color: #c8cdd4;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     letter-spacing: 1.2px;
     text-transform: uppercase;
@@ -8785,7 +8831,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     }
 
     .profile-character-name {
-        font-size: 22px;
+        font-size: 1.375rem;
         letter-spacing: 1.6px;
     }
 
@@ -8808,12 +8854,12 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     }
 
     .profile-character-name {
-        font-size: 18px;
+        font-size: 1.125rem;
         letter-spacing: 1px;
     }
 
     .profile-stat-mini-value {
-        font-size: 14px;
+        font-size: 0.875rem;
     }
 }
 
@@ -8846,7 +8892,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 
 .settings-header-sub {
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
     margin-top: 2px;
 }
 
@@ -8877,7 +8923,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
     border-radius: 6px;
@@ -8952,7 +8998,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 /* Settings section headers: font-only, no icons */
 .settings-section-title {
     font-family: var(--font-title);
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 800;
     color: white;
     margin: 22px 0 0;
@@ -8967,7 +9013,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 }
 
 .settings-section-desc {
-    font-size: 12.5px;
+    font-size: 0.7812rem;
     color: var(--text-muted);
     margin: 4px 0 4px;
     line-height: 1.45;
@@ -8995,13 +9041,13 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 }
 
 .settings-row-label span {
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: white;
 }
 
 .settings-row-label small {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -9079,7 +9125,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 }
 
 .theme-name {
-    font-size: 10px;
+    font-size: 0.625rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.6px;
@@ -9112,7 +9158,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 }
 
 .color-hex-label {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-family: monospace;
     color: var(--text-muted);
 }
@@ -9133,7 +9179,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     border: none;
     background: transparent;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -9167,7 +9213,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     border: none;
     background: transparent;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -9250,7 +9296,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 }
 
 .slider-value {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 800;
     color: var(--theme-accent-text);
     min-width: 44px;
@@ -9274,7 +9320,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     border: none;
     background: transparent;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     border-radius: calc(var(--theme-radius) * 0.6);
     cursor: pointer;
@@ -9355,7 +9401,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 }
 
 .tg-label {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--text-muted);
     white-space: nowrap;
 }
@@ -9367,7 +9413,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     border-radius: calc(var(--theme-radius) * 0.6);
     padding: 9px 14px;
     color: white;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-family: var(--font-main);
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
@@ -9403,7 +9449,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
     border-radius: calc(var(--theme-radius) * 0.6);
     color: var(--theme-accent-text);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -9444,7 +9490,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 
 .win-size-x {
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 /* Folder Row */
@@ -9469,7 +9515,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: calc(var(--theme-radius) * 0.5);
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -9527,14 +9573,7 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     50% { box-shadow: 0 0 14px rgba(var(--theme-accent-rgb), 0.5); }
 }
 
-/* Font scale */
-body, .view, .settings-content-wrapper {
-    font-size: calc(14px * var(--theme-font-scale, 1));
-}
-
-input, button, select, textarea, .clean-input, .glass-input {
-    font-size: calc(13px * var(--theme-font-scale, 1));
-}
+/* Font scale handled by root rem scaling */
 
 /* Border Radius applied globally */
 :root {
@@ -9573,15 +9612,15 @@ body.compact-mode .adv-section h3 {
 body.compact-mode .settings-section-desc,
 body.compact-mode .adv-section p {
     margin-bottom: var(--compact-pad);
-    font-size: 11px;
+    font-size: 0.6875rem;
 }
 
 body.compact-mode .settings-row-label span {
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 body.compact-mode .settings-row-label small {
-    font-size: 10px;
+    font-size: 0.625rem;
 }
 
 body.compact-mode .slider-group {
@@ -9595,7 +9634,7 @@ body.compact-mode .memory-presets {
 
 body.compact-mode .mem-preset-btn {
     min-height: 24px;
-    font-size: 10px;
+    font-size: 0.625rem;
     padding: 2px 8px;
 }
 
@@ -9605,7 +9644,7 @@ body.compact-mode .pill-switch {
 
 body.compact-mode .pill-switch-option {
     min-height: 26px;
-    font-size: 10px;
+    font-size: 0.625rem;
     padding: 2px 10px;
 }
 
@@ -9629,7 +9668,7 @@ body.compact-mode .settings-tab-bar {
 }
 
 body.compact-mode .settings-tab {
-    font-size: 10px;
+    font-size: 0.625rem;
     padding: 6px 12px;
 }
 
@@ -9643,7 +9682,7 @@ body.compact-mode .adv-slider-field {
 }
 
 body.compact-mode .adv-slider-field-header span {
-    font-size: 11px;
+    font-size: 0.6875rem;
 }
 
 body.compact-mode .theme-picker-grid,
@@ -9660,12 +9699,12 @@ body.compact-mode .ui-mode-card {
 body.compact-mode .theme-choice-card strong,
 body.compact-mode .ui-mode-card strong {
     margin-top: 4px;
-    font-size: 10px;
+    font-size: 0.625rem;
 }
 
 body.compact-mode .theme-choice-card small,
 body.compact-mode .ui-mode-card span {
-    font-size: 9px;
+    font-size: 0.5625rem;
     margin-top: 2px;
 }
 
@@ -9708,8 +9747,8 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .profile-sidebar,
 html body[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar,
 html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     background: rgba(15, 13, 24, 0.2) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(var(--theme-blur)) !important;
+    -webkit-backdrop-filter: blur(var(--theme-blur)) !important;
 }
 
 
@@ -9770,7 +9809,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     gap: 8px;
     padding: 10px 14px;
     font-family: var(--font-title);
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: #d1d1d2;
     cursor: pointer;
     border-radius: 6px;
@@ -9805,7 +9844,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .play-dd-setup-label {
-    font-size: 9px;
+    font-size: 0.5625rem;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: rgba(255, 255, 255, 0.35);
@@ -9813,7 +9852,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 
 .play-dd-setup-value {
     font-family: var(--font-title);
-    font-size: 12px;
+    font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.85);
 }
 
@@ -9828,7 +9867,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .play-dd-section-header {
-    font-size: 9px;
+    font-size: 0.5625rem;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: rgba(255, 255, 255, 0.3);
@@ -9846,7 +9885,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 .play-dd-loader-btn,
 .play-dd-version-btn {
     font-family: var(--font-main);
-    font-size: 10px;
+    font-size: 0.625rem;
     padding: 3px 7px;
     border-radius: 4px;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -9870,7 +9909,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .play-dd-version-more {
-    font-size: 9px;
+    font-size: 0.5625rem;
     color: rgba(255, 255, 255, 0.3);
     border-style: dashed;
 }
@@ -9888,7 +9927,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     align-items: center;
     gap: 6px;
     font-family: var(--font-main);
-    font-size: 10px;
+    font-size: 0.625rem;
     padding: 4px 8px;
     border-radius: 4px;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -9914,7 +9953,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .play-dd-version-loader {
-    font-size: 8px;
+    font-size: 0.5rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.4px;
@@ -9947,7 +9986,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 
 .mp-wizard-header h3 {
     font-family: var(--font-title);
-    font-size: 13px;
+    font-size: 0.8125rem;
     margin: 0;
     color: rgba(255, 255, 255, 0.9);
     font-weight: 700;
@@ -9956,7 +9995,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .mp-wizard-note {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
     margin-left: auto;
     white-space: nowrap;
@@ -9976,7 +10015,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 
 .mp-wizard-buttons .mp-action-btn.browse {
     flex: 1 1 160px;
-    font-size: 12px;
+    font-size: 0.75rem;
     padding: 8px 14px;
     border-radius: 6px;
 }
@@ -9996,14 +10035,14 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 
 .mp-welcome-hero h2 {
     font-family: var(--font-title);
-    font-size: 16px;
+    font-size: 1rem;
     color: rgba(255,255,255,0.85);
     margin: 8px 0 4px;
     font-weight: 700;
 }
 
 .mp-welcome-hero p {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--text-muted);
     margin: 0;
 }
@@ -10023,7 +10062,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .mp-trending-title {
-    font-size: 13px;
+    font-size: 0.8125rem;
     margin: 0;
     color: white;
     font-weight: 700;
@@ -10033,7 +10072,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .mp-trending-brand {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--text-muted);
     display: flex;
     align-items: center;
@@ -10044,11 +10083,11 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     padding: 24px;
     text-align: center;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .mp-wizard-step {
-    font-size: 9px;
+    font-size: 0.5625rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -10078,7 +10117,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     max-width: 320px;
     padding: 6px 12px;
     border-radius: 6px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     transition: background 0.15s;
     gap: 8px;
     text-align: center;
@@ -10091,18 +10130,18 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 .mp-version-download-item .version-name {
     font-family: var(--font-main);
     color: rgba(255, 255, 255, 0.8);
-    font-size: 11px;
+    font-size: 0.6875rem;
 }
 
 .mp-version-download-item .version-type {
-    font-size: 8px;
+    font-size: 0.5rem;
     text-transform: uppercase;
     color: var(--text-muted);
     margin-left: 8px;
 }
 
 .mp-dl-btn {
-    font-size: 10px;
+    font-size: 0.625rem;
     padding: 3px 10px;
     border-radius: 5px;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -10131,7 +10170,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .mp-dl-loader-badge {
-    font-size: 7px;
+    font-size: 0.4375rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -10231,7 +10270,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .ddp-title {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -10263,7 +10302,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .ddp-status {
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: rgba(255, 255, 255, 0.8);
     font-weight: 600;
 }
@@ -10285,7 +10324,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .ddp-current-item {
-    font-size: 10px;
+    font-size: 0.625rem;
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -10306,7 +10345,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .ddp-metric-label {
-    font-size: 9px;
+    font-size: 0.5625rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--text-muted);
@@ -10314,7 +10353,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 }
 
 .ddp-metric-value {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.8);
 }
@@ -10327,7 +10366,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 
 .ddp-btn {
     flex: 1;
-    font-size: 11px;
+    font-size: 0.6875rem;
     padding: 7px 14px;
     border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.1);

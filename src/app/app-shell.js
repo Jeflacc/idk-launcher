@@ -1,4 +1,4 @@
-export function renderAppShell() {
+﻿export function renderAppShell() {
   document.querySelector("#app").innerHTML = `
   <div class="background-slider">
     <video autoplay muted loop playsinline class="bg-video">
@@ -315,7 +315,7 @@ export function renderAppShell() {
           </div>
           <div class="news-grid" id="mojang-news-grid">
             <div style="padding: 60px 40px; text-align: center; color: var(--text-muted); width: 100%; grid-column: 1 / -1;">
-              <div style="font-size: 48px; margin-bottom: 16px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></div>
+              <div style="font-size:3rem; margin-bottom: 16px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></div>
               <div>Loading Mojang news...</div>
             </div>
           </div>
@@ -897,6 +897,84 @@ export function renderAppShell() {
           <span class="adv-slider-value" id="adv-bg-intensity-value">50</span>
         </div>
       </div>
+
+      <!-- Nebula Config -->
+      <div class="adv-section" id="adv-bg-nebula-config" style="display:none;">
+        <div class="adv-section-header">
+          <h3>Nebula Color Scheme</h3>
+          <p>Choose a cosmic color palette</p>
+        </div>
+        <div class="bg-effects-grid" id="adv-nebula-schemes">
+          <button class="bg-effect-card bg-scheme-card active" data-scheme="0">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#2a1a4a,#1a3a5a,#5a2a3a);"></div>
+            <span>Orion</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="1">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#5a2a1a,#4a3a1a,#3a2a0a);"></div>
+            <span>Crab</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="2">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#3a1a4a,#2a2a5a,#1a3a4a);"></div>
+            <span>Eagle</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="3">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#1a3a4a,#2a4a3a,#1a3a3a);"></div>
+            <span>Helix</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Liquid Chrome Config -->
+      <div class="adv-section" id="adv-bg-liquid-config" style="display:none;">
+        <div class="adv-section-header">
+          <h3>Color Palette</h3>
+          <p>Choose an iridescent color base</p>
+        </div>
+        <div class="bg-effects-grid" id="adv-liquid-schemes">
+          <button class="bg-effect-card bg-scheme-card active" data-scheme="0">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#1a4a5a,#2a5a6a,#1a4a5a);"></div>
+            <span>Teal</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="1">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#2a1a5a,#3a2a6a,#2a1a5a);"></div>
+            <span>Violet</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="2">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#5a1a3a,#6a2a4a,#5a1a3a);"></div>
+            <span>Rose</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="3">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#1a5a3a,#2a6a4a,#1a5a3a);"></div>
+            <span>Emerald</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Starfield Config -->
+      <div class="adv-section" id="adv-bg-starfield-config" style="display:none;">
+        <div class="adv-section-header">
+          <h3>Sky Elements</h3>
+          <p>Toggle real night sky features</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;padding:0 4px;">
+          <label class="adv-toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="adv-sf-milkyway" checked class="adv-toggle-input" />
+            <span>Milky Way Band</span>
+          </label>
+          <label class="adv-toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="adv-sf-galaxy" checked class="adv-toggle-input" />
+            <span>Spiral Galaxy</span>
+          </label>
+          <label class="adv-toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="adv-sf-constellations" checked class="adv-toggle-input" />
+            <span>Constellations</span>
+          </label>
+          <label class="adv-toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="adv-sf-planet" checked class="adv-toggle-input" />
+            <span>Planet</span>
+          </label>
+        </div>
+      </div>
     </div>
 
     <!-- ADVANCED -->
@@ -1368,8 +1446,8 @@ export function renderAppShell() {
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.8;color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                 </div>
                 <div style="flex:1;">
-                  <h2 id="modpack-name-display" style="font-size:28px;margin-bottom:2px;font-family:var(--font-title);font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);">Modpack</h2>
-                  <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 &middot; Fabric</p>
+                  <h2 id="modpack-name-display" style="font-size:1.75rem;margin-bottom:2px;font-family:var(--font-title);font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);">Modpack</h2>
+                  <p id="modpack-meta-display" style="font-size:0.8125rem;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 &middot; Fabric</p>
                   <div class="mp-stats-row">
                     <div class="mp-stat">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--theme-accent);"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
@@ -1551,7 +1629,7 @@ export function renderAppShell() {
 
             <div class="mp-settings-section">
               <label>Java Arguments</label>
-              <input type="text" class="clean-input" id="mp-settings-java-args" placeholder="e.g., -XX:+UseG1GC -XX:+ParallelRefProcEnabled" style="text-align:left; font-size:11px;" />
+              <input type="text" class="clean-input" id="mp-settings-java-args" placeholder="e.g., -XX:+UseG1GC -XX:+ParallelRefProcEnabled" style="text-align:left; font-size:0.6875rem;" />
               <small style="color:var(--text-muted); display:block; margin-top:4px;">Advanced JVM arguments for this modpack</small>
             </div>
 
@@ -1660,7 +1738,7 @@ export function renderAppShell() {
         <!-- Injected release notes -->
       </div>
       <div id="update-progress-container" style="display:none;width:100%;margin-top:15px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--text-muted);">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.75rem;color:var(--text-muted);">
           <span id="update-progress-text">Downloading...</span>
           <span id="update-progress-percent">0%</span>
         </div>
@@ -1679,7 +1757,7 @@ export function renderAppShell() {
   <!-- FRIENDS SIDEBAR -->
   <div class="friends-sidebar" id="friends-sidebar">
     <div class="friends-sidebar-header">
-      <h3>IDK CONNECT <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px; opacity: 0.8;">(Beta)</span></h3>
+      <h3>IDK CONNECT <span style="font-size:0.6875rem; color: var(--text-muted); font-weight: 500; vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px; opacity: 0.8;">(Beta)</span></h3>
       <button class="friends-sidebar-close" id="btn-friends-sidebar-close">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1757,7 +1835,7 @@ export function renderAppShell() {
 
           <!-- FRPC Downloader Progress Panel -->
           <div id="frpc-progress-panel" style="display:none;">
-            <div style="font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between;margin-bottom:2px;">
+            <div>
               <span id="frpc-status-text">Downloading FRPC...</span>
               <span id="frpc-percent-text">0%</span>
             </div>
@@ -1816,8 +1894,8 @@ export function renderAppShell() {
               <canvas id="friends-chat-avatar" width="24" height="24" style="image-rendering:pixelated;width:100%;height:100%;"></canvas>
             </div>
             <div class="friend-info">
-              <strong id="friends-chat-name" style="font-size:12.5px;">Friend Name</strong>
-              <span id="friends-chat-status" class="friend-status-text" style="font-size:9px;">Online</span>
+              <strong id="friends-chat-name" style="font-size:0.7812rem;">Friend Name</strong>
+              <span id="friends-chat-status" class="friend-status-text" style="font-size:0.5625rem;">Online</span>
             </div>
           </div>
         </div>
@@ -1866,7 +1944,7 @@ export function renderAppShell() {
   <div class="custom-modal" id="changelog-modal">
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 id="changelog-title" style="margin: 0; font-size: 18px; font-weight: 700;">Changelog</h3>
+        <h3 id="changelog-title" style="margin: 0; font-size:1.125rem; font-weight: 700;">Changelog</h3>
         <button class="mp-settings-close" id="btn-close-changelog">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1884,7 +1962,7 @@ export function renderAppShell() {
   <div class="custom-modal" id="crash-analyzer-modal">
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Crash Log Analyzer</h3>
+        <h3 style="margin: 0; font-size:1.125rem; font-weight: 700;">Crash Log Analyzer</h3>
         <button class="mp-settings-close" id="btn-close-crash-analyzer">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1893,8 +1971,8 @@ export function renderAppShell() {
         </button>
       </div>
       <div style="margin-bottom: 16px;">
-        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--theme-accent); text-transform: uppercase;">Paste Crash Log</label>
-        <textarea id="crash-log-input" class="clean-input" placeholder="Paste your crash log here..." style="width: 100%; min-height: 150px; resize: vertical; text-align: left; font-family: monospace; font-size: 11px;"></textarea>
+        <label style="display: block; margin-bottom: 8px; font-size:0.8125rem; font-weight: 600; color: var(--theme-accent); text-transform: uppercase;">Paste Crash Log</label>
+        <textarea id="crash-log-input" class="clean-input" placeholder="Paste your crash log here..." style="width: 100%; min-height: 150px; resize: vertical; text-align: left; font-family: monospace; font-size:0.6875rem;"></textarea>
       </div>
       <button class="submit-btn" id="btn-analyze-crash" style="width: 100%; margin-bottom: 16px;">Analyze Crash Log</button>
       <div id="crash-analysis-result" style="color: white;">
@@ -1907,7 +1985,7 @@ export function renderAppShell() {
   <div class="custom-modal" id="dependencies-modal">
     <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Missing Dependencies</h3>
+        <h3 style="margin: 0; font-size:1.125rem; font-weight: 700;">Missing Dependencies</h3>
         <button class="mp-settings-close" id="btn-close-dependencies">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1929,8 +2007,8 @@ export function renderAppShell() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
         </div>
         <div style="min-width:0;">
-          <h3 id="dl-confirm-name" style="margin:0 0 3px;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Download Modpack?</h3>
-          <p style="margin:0;font-size:11px;color:var(--text-muted);">Import this modpack into your collection.</p>
+          <h3 id="dl-confirm-name" style="margin:0 0 3px;font-size:0.9375rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Download Modpack?</h3>
+          <p style="margin:0;font-size:0.6875rem;color:var(--text-muted);">Import this modpack into your collection.</p>
         </div>
       </div>
       <div style="display:flex;gap:10px;">

@@ -1332,6 +1332,16 @@ autoUpdater.autoInstallOnAppQuit = true;
 let updateDownloaded = false;
 let updateVersionInfo = null;
 
+function normalizeReleaseNotes(notes) {
+  if (!notes) return '';
+  if (typeof notes === 'string') return notes;
+  if (Array.isArray(notes)) {
+    return notes.map(n => (typeof n === 'string' ? n : (n && n.note) || '')).filter(Boolean).join('\n\n');
+  }
+  if (typeof notes === 'object' && notes.note) return String(notes.note);
+  return String(notes);
+}
+
 autoUpdater.on('update-available', (info) => {
   console.log(`[AutoUpdater] Update available: ${info.version}`);
   updateVersionInfo = info;
@@ -1339,7 +1349,7 @@ autoUpdater.on('update-available', (info) => {
     mainWindow.webContents.send('update-available', {
       currentVersion: app.getVersion(),
       latestVersion: info.version,
-      releaseNotes: info.releaseNotes || ''
+      releaseNotes: normalizeReleaseNotes(info.releaseNotes)
     });
   }
 });
@@ -1387,7 +1397,7 @@ ipcMain.handle('update:check', async () => {
         updateAvailable: true,
         currentVersion: app.getVersion(),
         latestVersion: info.version,
-        releaseNotes: info.releaseNotes || ''
+        releaseNotes: normalizeReleaseNotes(info.releaseNotes)
       };
     }
     return { updateAvailable: false, currentVersion: app.getVersion() };
@@ -3594,11 +3604,11 @@ ipcMain.handle('start-frpc-tunnel', async (event, { port }) => {
     const remotePort = Math.floor(Math.random() * (65000 - 10000 + 1)) + 10000;
     const proxyName = 'idk_proxy_' + Math.random().toString(36).substring(2, 10);
     
-    console.log(`[FRPC] Starting tunnel on local tcp://127.0.0.1:${port} to remote ${frpcServer}:${remotePort}`);
-
     const frpcServer = process.env.IDK_FRPC_SERVER || 'play.somniac.me';
     const frpcPort = process.env.IDK_FRPC_PORT || '7000';
     const frpcToken = process.env.IDK_FRPC_TOKEN || 'indkingdomisalive';
+
+    console.log(`[FRPC] Starting tunnel on local tcp://127.0.0.1:${port} to remote ${frpcServer}:${remotePort}`);
     const proc = spawn(exePath, [
       'tcp',
       '-s', frpcServer,

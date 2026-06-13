@@ -1,8 +1,8 @@
-import { state, actions } from "../../core/app-state.js";
+﻿import { state, actions } from "../../core/app-state.js";
 
 const UI_MODE_IDS = new Set(["classic", "advanced"]);
 const PERFORMANCE_MODE_IDS = new Set(["quality", "balanced", "eco"]);
-const BLUR_LEVELS = { none: 0, light: 4, medium: 12, heavy: 24 };
+const BLUR_LEVELS = { none: 0, light: 1, medium: 6, heavy: 16 };
 
 const THEME_PRESETS = {
   emerald: {
@@ -209,14 +209,72 @@ function applyFontScale(scale) {
   state.launcherFontScale = scale;
   localStorage.setItem("idk_font_scale", String(scale));
   document.documentElement.style.setProperty("--theme-font-scale", String(scale));
+  document.documentElement.style.fontSize = `calc(16px * ${scale})`;
   persistVisualSettings();
+}
+
+function getBlurOverrideStyle() {
+  let el = document.getElementById("bg-blur-override");
+  if (!el) {
+    el = document.createElement("style");
+    el.id = "bg-blur-override";
+    document.head.appendChild(el);
+  }
+  return el;
 }
 
 function applyBlurIntensity(level) {
   state.launcherBlurIntensity = level;
   localStorage.setItem("idk_blur_intensity", level);
-  const px = BLUR_LEVELS[level] || 12;
+  const px = BLUR_LEVELS[level] || 6;
   document.documentElement.style.setProperty("--theme-blur", `${px}px`);
+  const style = getBlurOverrideStyle();
+  const glassSelectors = [
+    '.glass-panel', '.friends-sidebar', '.friends-panel',
+    '.profile-card', '.launch-card', '.chat-box',
+    '.news-card', '.friend-item', '.profile-header',
+    '.dropdown-menu', '.pill-switch', '.adv-section',
+    '.bg-effect-card', '.blur-choice-card',
+    '.glass-card', '.modal-card', '.update-card',
+    '.launch-config-section', '.versions-tab', '.mods-tab',
+    '.profile-tab', '.settings-tab', '.content-tab',
+    '.recommended-card', '.trending-card', '.friend-card',
+    '.achievement-item', '.server-card', '.server-item',
+    '.download-card', '.user-card',
+    '.notification-item', '.toast-item',
+    '.glass-input', '.glass-btn', '.modal-btn',
+    '.modpacks-sidebar', '.browser-sidebar',
+    '.settings-sidebar', '.details-section',
+    '.top-bar', '.nav-tabs', '.profile-sidebar', '.mod-browser',
+    '[class*="glass-"]', '[class*="modal-"]'
+  ].join(', ');
+  const excludeSelectors = [
+    '.launch-overlay', '.bg-effects-canvas', '[class*="overlay"]:not([class*="modal"])'
+  ].join(', ');
+
+  if (px === 0) {
+    style.textContent = `
+    ${glassSelectors} {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    ${excludeSelectors} {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+  `;
+  } else {
+    style.textContent = `
+    ${glassSelectors} {
+      backdrop-filter: blur(${px}px) !important;
+      -webkit-backdrop-filter: blur(${px}px) !important;
+    }
+    ${excludeSelectors} {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+  `;
+  }
   persistVisualSettings();
 }
 
@@ -849,6 +907,7 @@ export function initSettingsFeature({ switchView }) {
     document.querySelectorAll(".bg-effect-card").forEach((card) => {
       card.addEventListener("click", () => {
         const effect = card.dataset.effect;
+        if (!effect) return;
         applyBackgroundEffect(effect);
         document.querySelectorAll(".bg-effect-card").forEach((c) => {
           c.classList.toggle("active", c.dataset.effect === effect);
@@ -871,6 +930,73 @@ export function initSettingsFeature({ switchView }) {
         applyBackgroundIntensity(v);
         if (bgIntensityVal) bgIntensityVal.textContent = v;
       });
+    }
+
+    // ── Background effect configs ──
+    let bgCfg = {};
+    try { bgCfg = JSON.parse(localStorage.getItem("idk_bg_config") || "{}"); } catch {}
+
+    function saveBgCfg() {
+      localStorage.setItem("idk_bg_config", JSON.stringify(bgCfg));
+      if (window.restartCurrentEffect) window.restartCurrentEffect();
+    }
+
+    function updateConfigVisibility() {
+      const effect = state.backgroundEffect;
+      const nebulaEl = document.getElementById("adv-bg-nebula-config");
+      const liquidEl = document.getElementById("adv-bg-liquid-config");
+      const starfieldEl = document.getElementById("adv-bg-starfield-config");
+      if (nebulaEl) nebulaEl.style.display = effect === "nebula" ? "" : "none";
+      if (liquidEl) liquidEl.style.display = effect === "liquid" ? "" : "none";
+      if (starfieldEl) starfieldEl.style.display = effect === "starfield" ? "" : "none";
+    }
+    updateConfigVisibility();
+
+    const origApplyBg = applyBackgroundEffect;
+    applyBackgroundEffect = function(effect) {
+      origApplyBg(effect);
+      updateConfigVisibility();
+    };
+
+    document.querySelectorAll("#adv-nebula-schemes .bg-scheme-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const scheme = parseInt(card.dataset.scheme);
+        bgCfg.nebulaScheme = scheme;
+        saveBgCfg();
+        document.querySelectorAll("#adv-nebula-schemes .bg-scheme-card").forEach((c) => {
+          c.classList.toggle("active", parseInt(c.dataset.scheme) === scheme);
+        });
+      });
+      card.classList.toggle("active", parseInt(card.dataset.scheme) === (bgCfg.nebulaScheme || 0));
+    });
+
+    document.querySelectorAll("#adv-liquid-schemes .bg-scheme-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const scheme = parseInt(card.dataset.scheme);
+        bgCfg.liquidScheme = scheme;
+        saveBgCfg();
+        document.querySelectorAll("#adv-liquid-schemes .bg-scheme-card").forEach((c) => {
+          c.classList.toggle("active", parseInt(c.dataset.scheme) === scheme);
+        });
+      });
+      card.classList.toggle("active", parseInt(card.dataset.scheme) === (bgCfg.liquidScheme || 0));
+    });
+
+    const sfToggles = [
+      { id: "adv-sf-milkyway", key: "starfieldMilkyWay" },
+      { id: "adv-sf-galaxy", key: "starfieldGalaxy" },
+      { id: "adv-sf-constellations", key: "starfieldConstellations" },
+      { id: "adv-sf-planet", key: "starfieldPlanet" },
+    ];
+    for (const { id, key } of sfToggles) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.checked = bgCfg[key] !== false;
+        el.addEventListener("change", () => {
+          bgCfg[key] = el.checked;
+          saveBgCfg();
+        });
+      }
     }
 
     // Concurrent downloads
