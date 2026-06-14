@@ -5,7 +5,7 @@
     "21st-magic": {
       "type": "local",
       "command": ["npx", "-y", "@21st-dev/magic@latest"],
-      "enabled": true,
+      "enabled": false,
       "env": {
         "API_KEY": "bcc70be77b74740cc942349433809ace02ccc4335b96bfe251f4c4c188014565"
       }

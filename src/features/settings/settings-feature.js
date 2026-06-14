@@ -230,7 +230,7 @@ function applyBlurIntensity(level) {
   document.documentElement.style.setProperty("--theme-blur", `${px}px`);
   const style = getBlurOverrideStyle();
   const glassSelectors = [
-    '.glass-panel', '.friends-sidebar', '.friends-panel',
+    '.glass-panel', '.friends-panel',
     '.profile-card', '.launch-card', '.chat-box',
     '.news-card', '.friend-item', '.profile-header',
     '.dropdown-menu', '.pill-switch', '.adv-section',
@@ -246,6 +246,8 @@ function applyBlurIntensity(level) {
     '.modpacks-sidebar', '.browser-sidebar',
     '.settings-sidebar', '.details-section',
     '.top-bar', '.nav-tabs', '.profile-sidebar', '.mod-browser',
+    '.settings-panel', '.download-progress-container',
+    '.error-display-container', '.settings-tab-bar',
     '[class*="glass-"]', '[class*="modal-"]'
   ].join(', ');
   const excludeSelectors = [
@@ -255,12 +257,12 @@ function applyBlurIntensity(level) {
   if (px === 0) {
     style.textContent = `
     ${glassSelectors} {
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
+      backdrop-filter: blur(0px) !important;
+      -webkit-backdrop-filter: blur(0px) !important;
     }
     ${excludeSelectors} {
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
+      backdrop-filter: blur(0px) !important;
+      -webkit-backdrop-filter: blur(0px) !important;
     }
   `;
   } else {
@@ -603,6 +605,15 @@ export function initSettingsFeature({ switchView }) {
     if (compactToggle) {
       compactToggle.addEventListener("change", (e) => {
         if (accessCompactToggle) accessCompactToggle.checked = e.target.checked;
+      });
+    }
+
+    const btnRedoTutorial = document.getElementById("btn-redo-tutorial");
+    if (btnRedoTutorial) {
+      btnRedoTutorial.addEventListener("click", async () => {
+        localStorage.removeItem("idk_tutorial_completed_v2");
+        const { initTutorial } = await import("../tutorial/tutorial.js");
+        initTutorial();
       });
     }
 
@@ -1056,23 +1067,6 @@ export function initSettingsFeature({ switchView }) {
       });
     }
 
-    // Advanced performance renderer
-    const advRendererSelect = document.getElementById("adv-performance-renderer");
-    if (advRendererSelect) {
-      advRendererSelect.value = state.performanceRenderer;
-      advRendererSelect.addEventListener("change", (e) => {
-        state.performanceRenderer = e.target.value;
-        localStorage.setItem("craftlaunch_performanceRenderer", state.performanceRenderer);
-        persistVisualSettings();
-        
-        // Sync with classic UI
-        const classicRenderer = document.getElementById("performance-renderer");
-        if (classicRenderer && classicRenderer.value !== state.performanceRenderer) {
-          classicRenderer.value = state.performanceRenderer;
-        }
-      });
-    }
-
     // Advanced compact mode
     const advCompactToggle = document.getElementById("adv-compact-mode-toggle");
     if (advCompactToggle) {
@@ -1192,6 +1186,15 @@ export function initSettingsFeature({ switchView }) {
     if (advCompact2) {
       advCompact2.checked = state.launcherCompactMode;
       advCompact2.addEventListener('change', (e) => applyCompactMode(e.target.checked));
+    }
+
+    const advRedoTutorial = document.getElementById('adv-redo-tutorial');
+    if (advRedoTutorial) {
+      advRedoTutorial.addEventListener('click', async () => {
+        localStorage.removeItem("idk_tutorial_completed_v2");
+        const { initTutorial } = await import("../tutorial/tutorial.js");
+        initTutorial();
+      });
     }
 
     // Java path / global args / window size / overlay / custom Minecraft path
@@ -1339,12 +1342,6 @@ export function initSettingsFeature({ switchView }) {
       else alert('Debug console is only available in the desktop app.');
     });
 
-    document.getElementById('adv-btn-reset-warnings')?.addEventListener('click', () => {
-      localStorage.removeItem('craftlaunch_hideRenderPopup');
-      // Remove any other hidden warnings here in the future
-      actions.showWarningToast('Hidden warnings and popups have been reset!');
-    });
-
     // Shared tools
     bindSharedTools();
   }
@@ -1392,13 +1389,6 @@ export function initSettingsFeature({ switchView }) {
       } else {
         alert("Debug console is only available in the desktop app.");
       }
-    });
-
-    // Reset warnings
-    document.getElementById("btn-reset-warnings")?.addEventListener("click", () => {
-      localStorage.removeItem('craftlaunch_hideRenderPopup');
-      // Remove any other hidden warnings here in the future
-      actions.showWarningToast('Hidden warnings and popups have been reset!');
     });
   }
 

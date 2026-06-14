@@ -1,7 +1,6 @@
 import "./style.css";
 import "./advanced-theme.css";
 import "./launch-overlay-fix.css";
-import "./idk-connect.css";
 // Side-effect imports: constructors register UI and IPC behavior
 import "./components/download-progress.js";
 import "./components/accessibility-manager.js";

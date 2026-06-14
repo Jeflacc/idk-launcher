@@ -370,17 +370,6 @@ export function initContentFeature() {
         } else if (openSettings) {
           openSettings.click();
         }
-      } else if (target === "idk-connect") {
-        if (profileIsActive) {
-          actions.closeProfile?.("idk-connect");
-          return;
-        }
-        const closeMods = document.getElementById("btn-close-mods");
-        const closeSettings = document.getElementById("btn-close-settings");
-        if (document.getElementById("view-mods")?.classList.contains("active") && closeMods) closeMods.click();
-        else if (document.getElementById("view-settings")?.classList.contains("active") && closeSettings) closeSettings.click();
-        
-        setTimeout(() => actions.switchView?.("idk-connect"), 50);
       }
     });
   });

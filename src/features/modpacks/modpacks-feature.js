@@ -1,6 +1,5 @@
 import { safeParse, esc } from "../../core/safe-parse.js";
 import { state, actions } from "../../core/app-state.js";
-import { initTutorial } from "../tutorial/tutorial.js";
 
 export function initModpacksFeature({ switchView }) {
   // Safe JSON parser for API responses
@@ -425,15 +424,23 @@ export function initModpacksFeature({ switchView }) {
         const iconHtml = renderablePackIconUrl
           ? `<img src="${renderablePackIconUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<svg width=\`20\` height=\`20\` viewBox=\`0 0 24 24\` fill=\`none\` stroke=\`currentColor\` stroke-width=\`2\`><path d=\`M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\`></path></svg>'" />`
           : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
-        const favIconHtml = mp.favorite
-          ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="var(--theme-accent)" stroke="var(--theme-accent)" stroke-width="2" style="position:absolute;top:6px;right:6px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`
-          : "";
         el.style.position = "relative";
         el.innerHTML = `
-        ${favIconHtml}
         <div class="mp-item-icon" style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(255,255,255,0.05);flex-shrink:0;border:1px solid rgba(255,255,255,0.08);">${iconHtml}</div>
         <div class="mp-item-info"><strong>${mp.name}</strong><span>${mp.mcVersion} \u00B7 ${mp.loader}</span></div>
-        <span class="mp-item-count">${total}</span>`;
+        <span class="mp-item-count">${total}</span>
+        <button class="mp-fav-btn${mp.favorite ? ' is-fav' : ''}" title="${mp.favorite ? 'Unfavorite' : 'Favorite'}"><svg width="16" height="16" viewBox="0 0 24 24" fill="${mp.favorite ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>`;
+        const favBtn = el.querySelector('.mp-fav-btn');
+        favBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = state.modpacks.findIndex(m => m.id === mp.id);
+          if (idx === -1) return;
+          state.modpacks[idx].favorite = !state.modpacks[idx].favorite;
+          mpSave();
+          mpRenderList();
+          if (state.activeModpackId === mp.id) mpRenderDetail();
+          if (actions.renderVersions) actions.renderVersions();
+        });
         el.addEventListener("click", async () => {
           state.activeModpackId = mp.id;
           state.activeVersionForMods = null;
@@ -940,20 +947,6 @@ export function initModpacksFeature({ switchView }) {
         iconDisplay.innerHTML = renderablePackIconUrl
           ? `<img src="${esc(renderablePackIconUrl)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<svg width=\`24\` height=\`24\` viewBox=\`0 0 24 24\` fill=\`none\` stroke=\`currentColor\` stroke-width=\`2\` style=\`opacity:0.5;\`><path d=\`M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\`></path></svg>'" />`
           : `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
-      }
-    }
-
-    const favBtn = document.getElementById("btn-favorite-modpack");
-    if (favBtn) {
-      if (isViewingVersion) {
-        favBtn.style.display = "none";
-      } else {
-        favBtn.style.display = "";
-        const svg = favBtn.querySelector("svg");
-        if (svg) {
-          svg.setAttribute("fill", mp.favorite ? "var(--theme-accent)" : "none");
-          svg.style.color = mp.favorite ? "var(--theme-accent)" : "currentColor";
-        }
       }
     }
 
@@ -2013,19 +2006,6 @@ export function initModpacksFeature({ switchView }) {
         hideDlPanel();
         actions.showWarningToast("Import failed: " + e.message);
       }
-    });
-
-  // --- Favorite Modpack ---
-  document
-    .getElementById("btn-favorite-modpack")
-    ?.addEventListener("click", () => {
-      const mp = mpGet();
-      if (!mp || mp.isTemporary) return;
-      mp.favorite = !mp.favorite;
-      mpSave();
-      mpRenderDetail();
-      mpRenderList();
-      if (actions.renderVersions) actions.renderVersions();
     });
 
   // --- Export Modpack (.zip) ---
@@ -3999,11 +3979,7 @@ export function initModpacksFeature({ switchView }) {
 
   document.getElementById("btn-ddp-cancel").addEventListener("click", () => {
     currentImportCancelled = true;
-    if (typeof window.onDownloadPanelCancel === "function") {
-      window.onDownloadPanelCancel();
-    }
-    window.electronAPI?.cancelAllDownloads?.();
-    hideDlPanel();
+    dismissDlPanel();
   });
 
   // Close panel when clicking outside (dismiss, keep icon visible)
@@ -4224,11 +4200,5 @@ export function initModpacksFeature({ switchView }) {
     mpRenderDetail,
     loadProfilesFromDisk,
   };
-
-  document.addEventListener("idk:view-changed", (e) => {
-    if (e.detail.viewName === "mods") {
-      initTutorial();
-    }
-  });
 }
 

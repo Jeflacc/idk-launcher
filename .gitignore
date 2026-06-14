@@ -43,3 +43,8 @@ tests/
 .claude
 .agents
 .github/prompts
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
