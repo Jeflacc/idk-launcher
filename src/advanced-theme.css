@@ -622,6 +622,24 @@ body.ui-advanced .controls-right {
     gap: 0;
 }
 
+body.ui-advanced .play-container {
+    width: 100%;
+    height: 100%;
+}
+
+body.ui-advanced .force-update-container {
+    left: -1px;
+    right: -1px;
+    top: 100%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(18, 18, 20, 0.75) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: none;
+    border-radius: 0 0 var(--theme-radius) var(--theme-radius);
+    padding: 8px 0 8px 0;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.5);
+    backdrop-filter: blur(20px);
+}
+
 body.ui-advanced .play-button-wrapper {
     position: relative;
     width: 100%;
@@ -629,16 +647,31 @@ body.ui-advanced .play-button-wrapper {
     display: flex;
     align-items: stretch;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: var(--theme-radius);
+    border-radius: var(--theme-radius) var(--theme-radius) 0 0;
     overflow: visible;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
+}
+
+body.ui-advanced .play-button:hover:not(:disabled),
+body.ui-advanced .play-dropdown-trigger:hover {
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: none;
+    transform: none;
+}
+
+body.ui-advanced .play-button:active:not(:disabled),
+body.ui-advanced .play-dropdown-trigger:active {
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.2);
+    transform: none;
 }
 
 body.ui-advanced .play-button {
     flex: 1;
     height: 100%;
     border: none;
-    border-radius: var(--theme-radius) 0 0 var(--theme-radius);
+    border-radius: var(--theme-radius) 0 0 0;
     background: transparent;
     box-shadow: none;
     color: #fff;
@@ -649,7 +682,7 @@ body.ui-advanced .play-button {
 }
 
 body.ui-advanced .play-button:not(.running):not(:disabled)::after {
-    content: "\25CF  Ready to play";
+    content: "\25CF  " attr(data-status);
     font-family: var(--font-main);
     font-size: 9px;
     font-weight: 600;
@@ -666,7 +699,7 @@ body.ui-advanced .play-dropdown-trigger {
     width: 62px;
     border: none;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.22);
+    background: transparent;
     color: rgba(255, 255, 255, 0.85);
     cursor: pointer;
     display: flex;
@@ -675,11 +708,7 @@ body.ui-advanced .play-dropdown-trigger {
     transition: background 0.15s;
     padding: 0;
     flex-shrink: 0;
-    border-radius: 0 var(--theme-radius) var(--theme-radius) 0;
-}
-
-body.ui-advanced .play-dropdown-trigger:hover {
-    background: rgba(0, 0, 0, 0.35);
+    border-radius: 0 var(--theme-radius) 0 0;
 }
 
 body.ui-advanced .play-dropdown-trigger svg {
@@ -1818,8 +1847,8 @@ body.ui-advanced .profile-stage-bar-combined:hover {
 }
 
 body.ui-advanced .profile-stage-bar-main-text {
-    flex: 0 0 80%;
-    padding: 0 16px;
+    flex: 1;
+    padding: 0 10px;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.5px;
@@ -1833,7 +1862,7 @@ body.ui-advanced .profile-stage-bar-main-text:hover {
 }
 
 body.ui-advanced .profile-stage-bar-export-icon {
-    flex: 0 0 20%;
+    flex: 0 0 44px;
     background: rgba(0, 0, 0, 0.15);
     border-radius: 0 8px 8px 0;
     transition: background 0.2s ease;
@@ -2125,8 +2154,8 @@ body.ui-advanced .profile-stage-bar-combined:hover {
 }
 
 body.ui-advanced .profile-stage-bar-main-text {
-    flex: 0 0 80%;
-    padding: 0 18px;
+    flex: 1;
+    padding: 0 10px;
     font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.6px;
@@ -2144,7 +2173,7 @@ body.ui-advanced .profile-stage-bar-main-text:hover {
 }
 
 body.ui-advanced .profile-stage-bar-export-icon {
-    flex: 0 0 20%;
+    flex: 0 0 44px;
     background: rgba(0, 0, 0, 0.18);
     border-radius: 0 8px 8px 0;
     transition: background 0.2s ease;

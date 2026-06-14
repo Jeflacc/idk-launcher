@@ -231,9 +231,9 @@ export function renderAppShell() {
         </div>
 
         <div class="controls-right">
-          <div style="position: relative; display: flex;">
+          <div class="play-container">
             <div class="play-button-wrapper" id="play-btn-wrapper" style="position: relative; z-index: 5;">
-              <button class="play-button" id="play-btn">PLAY</button>
+              <button class="play-button" id="play-btn" data-status="Ready to play">PLAY</button>
               <button class="play-dropdown-trigger" id="play-dropdown-trigger" aria-label="More options">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
               </button>
@@ -274,12 +274,12 @@ export function renderAppShell() {
             </div>
             </div>
             
-            <div style="position: absolute; top: calc(100% - 6px); left: 16px; right: 16px; background: rgba(18, 18, 20, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-top: none; border-radius: 0 0 10px 10px; padding: 10px 0 6px 0; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,0.6); z-index: 4;" onclick="document.getElementById('force-update-cb').click();">
+            <div class="force-update-container" onclick="document.getElementById('force-update-cb').click();">
               <label class="tg-switch" style="transform: scale(0.65); margin:0; pointer-events:none;">
                 <input type="checkbox" id="force-update-cb" style="pointer-events:all;" />
                 <span class="tg-slider"></span>
               </label>
-              <span style="font-size:10px; font-weight:600; color:rgba(255,255,255,0.7); font-family:var(--font-primary); letter-spacing:0.5px; text-transform:uppercase;">Force Update</span>
+              <span class="force-update-label">Force Update</span>
             </div>
           </div>
           <button class="manage-mods-button" id="manage-mods-btn" style="display: none;">MANAGE MODS</button>
@@ -1117,6 +1117,9 @@ export function renderAppShell() {
           <div class="profile-stage-character">
             <div class="profile-stage-heading">
               <h1 class="profile-character-name" id="profile-page-username">MUZLIK_GAMER</h1>
+              <div id="profile-auth-badge" style="margin-top: 4px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <!-- Icon and Text injected by JS -->
+              </div>
             </div>
 
             <div class="profile-skin-viewer-wrapper" id="profile-skin-stage" style="display:flex; justify-content:center; align-items:center; overflow:hidden;">
@@ -1128,7 +1131,11 @@ export function renderAppShell() {
               <div class="profile-stage-bar-combined">
                 <button type="button" class="profile-stage-bar-main-text" id="profile-stage-change-skin">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                  Change Skin
+                  <span>Change Skin</span>
+                </button>
+                <button type="button" class="profile-stage-bar-main-text" id="profile-stage-manage-capes" style="display: none;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4z"></path><path d="M6 10v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10"></path></svg>
+                  <span>Manage Capes</span>
                 </button>
                 <button type="button" class="profile-stage-bar-export-icon" id="profile-stage-export-skin" title="Export Skin">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>

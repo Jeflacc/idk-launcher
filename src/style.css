@@ -1410,9 +1410,8 @@ input[type="checkbox"]:checked + .switch::after {
         0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Subtext & Glowing status dot inspired directly by Lunar Client screenshot! */
 .play-button:not(.running):not(:disabled)::after {
-    content: "\25CF  Ready to play";
+    content: "\25CF  " attr(data-status);
     font-family: var(--font-main);
     font-size: 9px;
     font-weight: 600;
@@ -8290,7 +8289,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     flex-direction: row;
     align-items: center;
     gap: 0;
-    width: min(360px, 80%);
+    width: min(460px, 95%);
     height: auto;
     background: transparent;
     border: none;
@@ -8333,20 +8332,39 @@ body[data-launcher-performance="balanced"] .mc-logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    flex: 0 0 80%;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
     height: 100%;
-    padding: 0 20px;
+    padding: 0 10px;
     border: none;
     background: transparent;
     color: #fff;
-    font-family: var(--font-main);
+    font-family: var(--font-title);
     font-size: 13px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
     cursor: pointer;
     transition: background 0.18s ease;
+}
+
+@keyframes spin-anim {
+    to { transform: rotate(360deg); }
+}
+.spin-anim {
+    animation: spin-anim 1s linear infinite;
+}
+
+.profile-stage-bar-main-text span {
+    transform: translateY(-1px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-stage-bar-main-text svg {
+    margin-bottom: 2px;
 }
 
 .profile-stage-bar-main-text:hover {
@@ -8357,7 +8375,7 @@ body[data-launcher-performance="balanced"] .mc-logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 20%;
+    flex: 0 0 44px;
     height: 100%;
     border: none;
     background: rgba(0, 0, 0, 0.15);
@@ -9770,6 +9788,40 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 /* =========================================================
    PLAY BUTTON DROPDOWN (split button)
    ========================================================= */
+.play-container {
+    position: relative;
+    display: flex;
+}
+
+.force-update-container {
+    position: absolute;
+    top: calc(100% - 6px);
+    left: 16px;
+    right: 16px;
+    background: rgba(18, 18, 20, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 10px 0 6px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+    z-index: 4;
+}
+
+.force-update-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    font-family: var(--font-primary, var(--font-main));
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
 .play-button-wrapper {
     position: relative;
     display: flex;

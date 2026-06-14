@@ -4002,7 +4002,8 @@ export function initModpacksFeature({ switchView }) {
     if (typeof window.onDownloadPanelCancel === "function") {
       window.onDownloadPanelCancel();
     }
-    dismissDlPanel();
+    window.electronAPI?.cancelAllDownloads?.();
+    hideDlPanel();
   });
 
   // Close panel when clicking outside (dismiss, keep icon visible)

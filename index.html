@@ -24,6 +24,20 @@
       </div>
     </div>
 
+    <!-- Generic list dialog -->
+    <div id="list-dialog-modal" class="confirm-modal">
+      <div class="confirm-modal-content confirm-modal-content--neutral" style="max-width: 350px;">
+        <h3 id="list-dialog-title">Select Option</h3>
+        <p id="list-dialog-message" style="margin-bottom: 16px;"></p>
+        <div class="list-dialog-items" id="list-dialog-items" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 20px;">
+          <!-- dynamically populated -->
+        </div>
+        <div class="confirm-modal-actions" style="justify-content: flex-end;">
+          <button type="button" id="list-dialog-cancel" class="confirm-modal-btn cancel" style="flex: 0 0 auto;">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Delete Modpack Confirmation Modal -->
     <div id="delete-modpack-modal" class="delete-modal">
       <div class="delete-modal-content">

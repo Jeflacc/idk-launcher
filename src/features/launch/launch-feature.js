@@ -2,15 +2,20 @@ import { state, actions } from '../../core/app-state.js';
 
 function updateSetupDisplay() {
   const el = document.getElementById('play-dd-setup-value');
+  let statusText = `${state.selectedVersion || '—'} · ${state.selectedLoader || 'Vanilla'}`;
+  
+  if (state.selectedIsModpack) {
+    const mp = (JSON.parse(localStorage.getItem('idk_modpacks') || '[]')).find(m => m.id === state.selectedModpackId);
+    if (mp) statusText = mp.name;
+  }
+  
   if (el) {
-    if (state.selectedIsModpack) {
-      const mp = (JSON.parse(localStorage.getItem('idk_modpacks') || '[]')).find(m => m.id === state.selectedModpackId);
-      if (mp) {
-        el.textContent = `${mp.name}`;
-        return;
-      }
-    }
-    el.textContent = `${state.selectedVersion || '—'} · ${state.selectedLoader || 'Vanilla'}`;
+    el.textContent = statusText;
+  }
+  
+  const playBtn = document.getElementById('play-btn');
+  if (playBtn) {
+    playBtn.setAttribute('data-status', `Ready to play ${statusText}`);
   }
 }
 

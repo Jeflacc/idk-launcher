@@ -234,9 +234,41 @@ ipcMain.on('resume-game', () => {
   }
 });
 
+const activeLaunchSockets = new Set();
+global.isLaunchDownloading = false;
+
+// Intercept https to allow brutal cancellation of MCLC
+const originalHttpsGet = https.get;
+const originalHttpsRequest = https.request;
+
+function trackRequest(req) {
+  if (global.isLaunchDownloading) {
+    activeLaunchSockets.add(req);
+    req.on('close', () => activeLaunchSockets.delete(req));
+    req.on('error', () => activeLaunchSockets.delete(req));
+  }
+  return req;
+}
+
+https.get = function(...args) { return trackRequest(originalHttpsGet.apply(this, args)); };
+https.request = function(...args) { return trackRequest(originalHttpsRequest.apply(this, args)); };
+
 ipcMain.on('cancel-launch', () => {
   try {
+    console.log(`[Launch] User requested launch cancellation. Active sockets to destroy: ${activeLaunchSockets.size}`);
+    global.isLaunchDownloading = false;
+    
+    // Brutally destroy all active MCLC sockets
+    for (const req of activeLaunchSockets) {
+      try { req.destroy(new Error('Launch cancelled')); } catch (e) {}
+    }
+    activeLaunchSockets.clear();
+
     if (activeLaunchProcess && typeof activeLaunchProcess.kill === 'function') {
+      if (!global.isLaunchDownloading) {
+        console.warn(`[Launch] Launch was cancelled before MCLC started.`);
+        return;
+      }
       activeLaunchProcess.kill();
     }
   } catch (e) {
@@ -1129,12 +1161,17 @@ ipcMain.handle('export-modpack', async (event, { modpackId, name, mcVersion, loa
 
 ipcMain.handle('download-curseforge-modpack', async (event, { downloadUrl }) => {
   try {
+    const cancelToken = { cancelled: false, req: null, cleanup: null };
+    activeDownloads.set('curseforge', cancelToken);
+
     const tempZip = path.join(app.getPath('userData'), 'temp-modpack-' + Date.now() + '.zip');
     await new Promise((resolve, reject) => {
       downloadFile(downloadUrl, tempZip, resolve, reject, 0, (progress) => {
         event.sender.send('download-progress', { id: 'curseforge', ...progress });
-      });
+      }, cancelToken);
     });
+
+    activeDownloads.delete('curseforge');
 
     const tempExt = path.join(app.getPath('userData'), 'temp-import-' + Date.now());
     if (fs.existsSync(tempExt)) fs.rmSync(tempExt, { recursive: true, force: true });
@@ -1192,20 +1229,27 @@ ipcMain.handle('download-curseforge-modpack', async (event, { downloadUrl }) => 
     }, null, 2);
     fs.writeFileSync(path.join(profilePath, 'profile.json'), Buffer.from(profileJson, 'utf8'));
 
+    activeDownloads.delete('curseforge');
     return { success: true, manifest, modpackId, resourcepackFiles, shaderpackFiles, extraModFiles };
   } catch (e) {
+    activeDownloads.delete('curseforge');
     return { success: false, error: e.message };
   }
 });
 
 ipcMain.handle('download-modrinth-modpack', async (event, { downloadUrl }) => {
   try {
+    const cancelToken = { cancelled: false, req: null, cleanup: null };
+    activeDownloads.set('modrinth', cancelToken);
+
     const tempZip = path.join(app.getPath('userData'), 'temp-mrpack-' + Date.now() + '.mrpack');
     await new Promise((resolve, reject) => {
       downloadFile(downloadUrl, tempZip, resolve, reject, 0, (progress) => {
         event.sender.send('download-progress', { id: 'modrinth', ...progress });
-      });
+      }, cancelToken);
     });
+
+    activeDownloads.delete('modrinth');
 
     // Rename .mrpack to .zip
     const tempZipPath = tempZip.replace(/\.mrpack$/, '.zip');
@@ -1296,8 +1340,10 @@ ipcMain.handle('download-modrinth-modpack', async (event, { downloadUrl }) => {
     }, null, 2);
     fs.writeFileSync(path.join(profilePath, 'profile.json'), Buffer.from(profileJson, 'utf8'));
 
+    activeDownloads.delete('modrinth');
     return { success: true, manifest, modpackId, resourcepackFiles, shaderpackFiles, extraModFiles };
   } catch (e) {
+    activeDownloads.delete('modrinth');
     return { success: false, error: e.message };
   }
 });
@@ -1370,6 +1416,159 @@ ipcMain.handle('microsoft-authenticate', async (event) => {
   } catch (e) {
     console.error("[Microsoft Auth] Error:", e);
     return { success: false, error: e.message || "Failed to authenticate with Microsoft." };
+  }
+});
+
+ipcMain.handle('select-image-file', async (event) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select Skin',
+    filters: [
+      { name: 'PNG Images', extensions: ['png'] }
+    ],
+    properties: ['openFile']
+  });
+  if (result.canceled || result.filePaths.length === 0) return null;
+  
+  return result.filePaths[0];
+});
+
+ipcMain.handle('upload-microsoft-skin', async (event, filePath, variant) => {
+  try {
+    const manager = getSettingsManager();
+    if (!manager || !manager.settings || !manager.settings.microsoftData || !manager.settings.microsoftData.value) {
+      return { success: false, error: "Not logged in with Microsoft." };
+    }
+    const tokenData = manager.settings.microsoftData.value;
+    const token = tokenData.mclcAuth ? tokenData.mclcAuth.access_token : null;
+    if (!token) return { success: false, error: "No access token found." };
+
+    const fs = require('fs');
+    const https = require('https');
+    
+    return new Promise((resolve) => {
+      const boundary = '----WebKitFormBoundary7MA4YWxkTrZu0gW';
+      const fileData = fs.readFileSync(filePath);
+      
+      let postData = `--${boundary}\r\n`;
+      postData += `Content-Disposition: form-data; name="variant"\r\n\r\n`;
+      postData += `${variant}\r\n`;
+      postData += `--${boundary}\r\n`;
+      postData += `Content-Disposition: form-data; name="file"; filename="skin.png"\r\n`;
+      postData += `Content-Type: image/png\r\n\r\n`;
+      
+      const footer = `\r\n--${boundary}--\r\n`;
+
+      const req = https.request({
+        hostname: 'api.minecraftservices.com',
+        path: '/minecraft/profile/skins',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': `multipart/form-data; boundary=${boundary}`,
+          'Content-Length': Buffer.byteLength(postData) + fileData.length + Buffer.byteLength(footer)
+        }
+      }, (res) => {
+        let responseBody = '';
+        res.on('data', chunk => responseBody += chunk);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve({ success: true });
+          } else {
+            resolve({ success: false, error: `HTTP ${res.statusCode}: ${responseBody}` });
+          }
+        });
+      });
+
+      req.on('error', (e) => resolve({ success: false, error: e.message }));
+      
+      req.write(postData);
+      req.write(fileData);
+      req.write(footer);
+      req.end();
+    });
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('fetch-microsoft-profile', async (event) => {
+  try {
+    const manager = getSettingsManager();
+    if (!manager || !manager.settings || !manager.settings.microsoftData || !manager.settings.microsoftData.value) {
+      return { success: false, error: "Not logged in with Microsoft." };
+    }
+    const tokenData = manager.settings.microsoftData.value;
+    const token = tokenData.mclcAuth ? tokenData.mclcAuth.access_token : null;
+    if (!token) return { success: false, error: "No access token found." };
+
+    const https = require('https');
+    return new Promise((resolve) => {
+      const req = https.request({
+        hostname: 'api.minecraftservices.com',
+        path: '/minecraft/profile',
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }, (res) => {
+        let responseBody = '';
+        res.on('data', chunk => responseBody += chunk);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try { resolve({ success: true, data: JSON.parse(responseBody) }); } 
+            catch(e) { resolve({ success: false, error: 'Invalid JSON' }); }
+          } else {
+            resolve({ success: false, error: `HTTP ${res.statusCode}: ${responseBody}` });
+          }
+        });
+      });
+      req.on('error', (e) => resolve({ success: false, error: e.message }));
+      req.end();
+    });
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('equip-microsoft-cape', async (event, capeId) => {
+  try {
+    const manager = getSettingsManager();
+    if (!manager || !manager.settings || !manager.settings.microsoftData || !manager.settings.microsoftData.value) {
+      return { success: false, error: "Not logged in with Microsoft." };
+    }
+    const tokenData = manager.settings.microsoftData.value;
+    const token = tokenData.mclcAuth ? tokenData.mclcAuth.access_token : null;
+    if (!token) return { success: false, error: "No access token found." };
+
+    const https = require('https');
+    return new Promise((resolve) => {
+      const method = capeId ? 'PUT' : 'DELETE';
+      const postData = capeId ? JSON.stringify({ capeId }) : '';
+
+      const req = https.request({
+        hostname: 'api.minecraftservices.com',
+        path: '/minecraft/profile/capes/active',
+        method: method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      }, (res) => {
+        let responseBody = '';
+        res.on('data', chunk => responseBody += chunk);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve({ success: true });
+          } else {
+            resolve({ success: false, error: `HTTP ${res.statusCode}: ${responseBody}` });
+          }
+        });
+      });
+      req.on('error', (e) => resolve({ success: false, error: e.message }));
+      req.write(postData);
+      req.end();
+    });
+  } catch (e) {
+    return { success: false, error: e.message };
   }
 });
 
@@ -1976,6 +2175,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
     await cleanEmptyFiles(path.join(rootPath, 'versions'));
 
     const mcProcess = await launchClient.launch(opts);
+    global.isLaunchDownloading = false;
     __heartbeatActive = false;
     activeLaunchProcess = mcProcess;
     
@@ -2147,6 +2347,8 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     opts.customArgs.push(...extraArgs);
     console.log(`[Launch] Added global Java args: ${extraArgs.join(' ')}`);
   }
+
+  global.isLaunchDownloading = true;
 
   if (quickConnect) {
     console.log(`[Launch] Quick connect: ${quickConnect.host}:${quickConnect.port || 25565}`);
@@ -2539,9 +2741,19 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     await cleanEmptyFiles(path.join(rootPath, 'libraries'));
     await cleanEmptyFiles(path.join(rootPath, 'versions'));
 
+    if (!global.isLaunchDownloading) {
+      console.warn(`[Launch] Launch was cancelled before MCLC started.`);
+      return;
+    }
     const mcProcess = await launchClient.launch(opts);
+    if (!global.isLaunchDownloading) {
+      console.warn(`[Launch] Launch was cancelled during MCLC download.`);
+      if (mcProcess && typeof mcProcess.kill === 'function') mcProcess.kill();
+      return;
+    }
     activeLaunchProcess = mcProcess;
     __heartbeatActive = false;
+    global.isLaunchDownloading = false;
 
     console.log(`[Launch] MCLC launch resolved. PID: ${mcProcess?.pid}, hasProcess: ${!!mcProcess}`);
     
@@ -3602,6 +3814,10 @@ function downloadFile(url, destPath, resolve, reject, depth = 0, progressCallbac
         cleanup();
         return reject(new Error(`Download truncated: expected ${totalSize} bytes, got ${bytesDownloaded}`));
       }
+      if (cancelToken && cancelToken.cancelled) {
+        cleanup();
+        return reject(new Error('Download cancelled'));
+      }
       // Atomic rename so the final file only ever appears intact.
       try {
         fs.renameSync(tmpPath, destPath);
@@ -4037,13 +4253,13 @@ ipcMain.handle('scan-downloaded-versions', async () => {
   }
 });
 
-const activeVersionDownloads = new Map();
+const activeDownloads = new Map();
 
 // Download a vanilla Minecraft version (client JAR + version JSON)
 ipcMain.handle('download-version', async (event, { version, rootPath }) => {
   try {
     const cancelToken = { cancelled: false, req: null, cleanup: null };
-    activeVersionDownloads.set(version, cancelToken);
+    activeDownloads.set(`version:${version}`, cancelToken);
 
     const mcDataPath = rootPath || getMinecraftDataPath();
     const versionDir = path.join(mcDataPath, 'versions', version);
@@ -4068,7 +4284,7 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
       if (jarStat.size > 0) {
         sendProgress(`Minecraft ${version} already downloaded`, 100);
         try { event.sender.send('download-complete', `version:${version}`, { success: true, alreadyDownloaded: true }); } catch {}
-        activeVersionDownloads.delete(version);
+        activeDownloads.delete(`version:${version}`);
         return { success: true, alreadyDownloaded: true };
       }
     } catch {} // Not downloaded yet, continue
@@ -4126,10 +4342,10 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
     sendProgress(`Finalizing Minecraft ${version}...`, 95);
 
     try { event.sender.send('download-complete', `version:${version}`, { success: true, alreadyDownloaded: false }); } catch {}
-    activeVersionDownloads.delete(version);
+    activeDownloads.delete(`version:${version}`);
     return { success: true, alreadyDownloaded: false };
   } catch (e) {
-    activeVersionDownloads.delete(version);
+    activeDownloads.delete(`version:${version}`);
     console.error('[Download Version] Failed:', e);
     try { event.sender.send('download-error', `version:${version}`, { message: e.message, error: e.message }); } catch {}
     return { success: false, error: e.message };
@@ -4137,15 +4353,31 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
 });
 
 ipcMain.handle('cancel-version-download', async (event, { version }) => {
-  const token = activeVersionDownloads.get(version);
+  const token = activeDownloads.get(`version:${version}`);
   if (token) {
     token.cancelled = true;
     if (token.req) token.req.destroy(new Error('Download cancelled'));
     if (token.cleanup) token.cleanup();
-    activeVersionDownloads.delete(version);
+    activeDownloads.delete(`version:${version}`);
     return { success: true };
   }
   return { success: false, error: 'Not found' };
+});
+
+ipcMain.handle('cancel-all-downloads', async () => {
+  for (const [id, token] of activeDownloads.entries()) {
+    token.cancelled = true;
+    if (token.req) token.req.destroy(new Error('Download cancelled'));
+    if (token.cleanup) token.cleanup();
+  }
+  activeDownloads.clear();
+
+  const manager = getDownloadManager();
+  if (manager) {
+    await manager.cancelAllDownloads();
+  }
+
+  return { success: true };
 });
 
 // Extract icon from JAR/ZIP file (mods, resourcepacks, shaders)

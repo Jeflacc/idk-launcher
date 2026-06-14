@@ -39,6 +39,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getMicrosoftAuthData: () => ipcRenderer.invoke('get-microsoft-auth-data'),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
   getElybyAuthData: () => ipcRenderer.invoke('get-elyby-auth-data'),
+  selectImageFile: () => ipcRenderer.invoke('select-image-file'),
+  uploadMicrosoftSkin: (filePath, variant) => ipcRenderer.invoke('upload-microsoft-skin', filePath, variant),
+  fetchMicrosoftProfile: () => ipcRenderer.invoke('fetch-microsoft-profile'),
+  equipMicrosoftCape: (capeId) => ipcRenderer.invoke('equip-microsoft-cape', capeId),
+  selectMicrosoftCape: (capes) => ipcRenderer.invoke('select-microsoft-cape', capes),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
   downloadUpdate:   () => ipcRenderer.invoke('update:download'),
@@ -121,6 +126,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('cancel-download', downloadId),
   cancelVersionDownload: (args) => 
     ipcRenderer.invoke('cancel-version-download', args),
+  cancelAllDownloads: () =>
+    ipcRenderer.invoke('cancel-all-downloads'),
   
   // Download progress event listeners
   onDownloadComplete: (cb) => 
