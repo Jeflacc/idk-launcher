@@ -4090,14 +4090,14 @@ ipcMain.handle('start-frpc-tunnel', async (event, { port }) => {
     const { spawn } = require('child_process');
     
     // Generate a random remote port between 10000 and 65000
+    const frpcServer = process.env.IDK_FRPC_SERVER || 'play.somniac.me';
+    const frpcPort = process.env.IDK_FRPC_PORT || '7000';
+    const frpcToken = process.env.IDK_FRPC_TOKEN || 'indkingdomisalive';
     const remotePort = Math.floor(Math.random() * (65000 - 10000 + 1)) + 10000;
     const proxyName = 'idk_proxy_' + Math.random().toString(36).substring(2, 10);
     
     console.log(`[FRPC] Starting tunnel on local tcp://127.0.0.1:${port} to remote ${frpcServer}:${remotePort}`);
 
-    const frpcServer = process.env.IDK_FRPC_SERVER || 'play.somniac.me';
-    const frpcPort = process.env.IDK_FRPC_PORT || '7000';
-    const frpcToken = process.env.IDK_FRPC_TOKEN || 'indkingdomisalive';
     const proc = spawn(exePath, [
       'tcp',
       '-s', frpcServer,
