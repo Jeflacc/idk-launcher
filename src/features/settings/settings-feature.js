@@ -1,8 +1,8 @@
-import { state, actions } from "../../core/app-state.js";
+﻿import { state, actions } from "../../core/app-state.js";
 
 const UI_MODE_IDS = new Set(["classic", "advanced"]);
 const PERFORMANCE_MODE_IDS = new Set(["quality", "balanced", "eco"]);
-const BLUR_LEVELS = { none: 0, light: 4, medium: 12, heavy: 24 };
+const BLUR_LEVELS = { none: 0, light: 1, medium: 6, heavy: 16 };
 
 const THEME_PRESETS = {
   emerald: {
@@ -209,14 +209,74 @@ function applyFontScale(scale) {
   state.launcherFontScale = scale;
   localStorage.setItem("idk_font_scale", String(scale));
   document.documentElement.style.setProperty("--theme-font-scale", String(scale));
+  document.documentElement.style.fontSize = `calc(16px * ${scale})`;
   persistVisualSettings();
+}
+
+function getBlurOverrideStyle() {
+  let el = document.getElementById("bg-blur-override");
+  if (!el) {
+    el = document.createElement("style");
+    el.id = "bg-blur-override";
+    document.head.appendChild(el);
+  }
+  return el;
 }
 
 function applyBlurIntensity(level) {
   state.launcherBlurIntensity = level;
   localStorage.setItem("idk_blur_intensity", level);
-  const px = BLUR_LEVELS[level] || 12;
+  const px = BLUR_LEVELS[level] || 6;
   document.documentElement.style.setProperty("--theme-blur", `${px}px`);
+  const style = getBlurOverrideStyle();
+  const glassSelectors = [
+    '.glass-panel', '.friends-panel',
+    '.profile-card', '.launch-card', '.chat-box',
+    '.news-card', '.friend-item', '.profile-header',
+    '.dropdown-menu', '.pill-switch', '.adv-section',
+    '.bg-effect-card', '.blur-choice-card',
+    '.glass-card', '.modal-card', '.update-card',
+    '.launch-config-section', '.versions-tab', '.mods-tab',
+    '.profile-tab', '.settings-tab', '.content-tab',
+    '.recommended-card', '.trending-card', '.friend-card',
+    '.achievement-item', '.server-card', '.server-item',
+    '.download-card', '.user-card',
+    '.notification-item', '.toast-item',
+    '.glass-input', '.glass-btn', '.modal-btn',
+    '.modpacks-sidebar', '.browser-sidebar',
+    '.settings-sidebar', '.details-section',
+    '.top-bar', '.nav-tabs', '.profile-sidebar', '.mod-browser',
+    '.settings-panel', '.download-progress-container',
+    '.error-display-container', '.settings-tab-bar',
+    '[class*="glass-"]', '[class*="modal-"]'
+  ].join(', ');
+  const excludeSelectors = [
+    '.launch-overlay', '.bg-effects-canvas', '[class*="overlay"]:not([class*="modal"])'
+  ].join(', ');
+
+  if (px === 0) {
+    style.textContent = `
+    ${glassSelectors} {
+      backdrop-filter: blur(0px) !important;
+      -webkit-backdrop-filter: blur(0px) !important;
+    }
+    ${excludeSelectors} {
+      backdrop-filter: blur(0px) !important;
+      -webkit-backdrop-filter: blur(0px) !important;
+    }
+  `;
+  } else {
+    style.textContent = `
+    ${glassSelectors} {
+      backdrop-filter: blur(${px}px) !important;
+      -webkit-backdrop-filter: blur(${px}px) !important;
+    }
+    ${excludeSelectors} {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+  `;
+  }
   persistVisualSettings();
 }
 
@@ -548,6 +608,15 @@ export function initSettingsFeature({ switchView }) {
       });
     }
 
+    const btnRedoTutorial = document.getElementById("btn-redo-tutorial");
+    if (btnRedoTutorial) {
+      btnRedoTutorial.addEventListener("click", async () => {
+        localStorage.removeItem("idk_tutorial_completed_v2");
+        const { initTutorial } = await import("../tutorial/tutorial.js");
+        initTutorial();
+      });
+    }
+
     // Classic tab switching
     function switchSettingsTab(tabId) {
       document.querySelectorAll(".settings-tab").forEach((tab) => {
@@ -849,6 +918,7 @@ export function initSettingsFeature({ switchView }) {
     document.querySelectorAll(".bg-effect-card").forEach((card) => {
       card.addEventListener("click", () => {
         const effect = card.dataset.effect;
+        if (!effect) return;
         applyBackgroundEffect(effect);
         document.querySelectorAll(".bg-effect-card").forEach((c) => {
           c.classList.toggle("active", c.dataset.effect === effect);
@@ -871,6 +941,73 @@ export function initSettingsFeature({ switchView }) {
         applyBackgroundIntensity(v);
         if (bgIntensityVal) bgIntensityVal.textContent = v;
       });
+    }
+
+    // ── Background effect configs ──
+    let bgCfg = {};
+    try { bgCfg = JSON.parse(localStorage.getItem("idk_bg_config") || "{}"); } catch {}
+
+    function saveBgCfg() {
+      localStorage.setItem("idk_bg_config", JSON.stringify(bgCfg));
+      if (window.restartCurrentEffect) window.restartCurrentEffect();
+    }
+
+    function updateConfigVisibility() {
+      const effect = state.backgroundEffect;
+      const nebulaEl = document.getElementById("adv-bg-nebula-config");
+      const liquidEl = document.getElementById("adv-bg-liquid-config");
+      const starfieldEl = document.getElementById("adv-bg-starfield-config");
+      if (nebulaEl) nebulaEl.style.display = effect === "nebula" ? "" : "none";
+      if (liquidEl) liquidEl.style.display = effect === "liquid" ? "" : "none";
+      if (starfieldEl) starfieldEl.style.display = effect === "starfield" ? "" : "none";
+    }
+    updateConfigVisibility();
+
+    const origApplyBg = applyBackgroundEffect;
+    applyBackgroundEffect = function(effect) {
+      origApplyBg(effect);
+      updateConfigVisibility();
+    };
+
+    document.querySelectorAll("#adv-nebula-schemes .bg-scheme-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const scheme = parseInt(card.dataset.scheme);
+        bgCfg.nebulaScheme = scheme;
+        saveBgCfg();
+        document.querySelectorAll("#adv-nebula-schemes .bg-scheme-card").forEach((c) => {
+          c.classList.toggle("active", parseInt(c.dataset.scheme) === scheme);
+        });
+      });
+      card.classList.toggle("active", parseInt(card.dataset.scheme) === (bgCfg.nebulaScheme || 0));
+    });
+
+    document.querySelectorAll("#adv-liquid-schemes .bg-scheme-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const scheme = parseInt(card.dataset.scheme);
+        bgCfg.liquidScheme = scheme;
+        saveBgCfg();
+        document.querySelectorAll("#adv-liquid-schemes .bg-scheme-card").forEach((c) => {
+          c.classList.toggle("active", parseInt(c.dataset.scheme) === scheme);
+        });
+      });
+      card.classList.toggle("active", parseInt(card.dataset.scheme) === (bgCfg.liquidScheme || 0));
+    });
+
+    const sfToggles = [
+      { id: "adv-sf-milkyway", key: "starfieldMilkyWay" },
+      { id: "adv-sf-galaxy", key: "starfieldGalaxy" },
+      { id: "adv-sf-constellations", key: "starfieldConstellations" },
+      { id: "adv-sf-planet", key: "starfieldPlanet" },
+    ];
+    for (const { id, key } of sfToggles) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.checked = bgCfg[key] !== false;
+        el.addEventListener("change", () => {
+          bgCfg[key] = el.checked;
+          saveBgCfg();
+        });
+      }
     }
 
     // Concurrent downloads
@@ -927,23 +1064,6 @@ export function initSettingsFeature({ switchView }) {
         persistVisualSettings();
         const classicAutoOpt = document.getElementById("auto-optimization");
         if (classicAutoOpt) classicAutoOpt.checked = e.target.checked;
-      });
-    }
-
-    // Advanced performance renderer
-    const advRendererSelect = document.getElementById("adv-performance-renderer");
-    if (advRendererSelect) {
-      advRendererSelect.value = state.performanceRenderer;
-      advRendererSelect.addEventListener("change", (e) => {
-        state.performanceRenderer = e.target.value;
-        localStorage.setItem("craftlaunch_performanceRenderer", state.performanceRenderer);
-        persistVisualSettings();
-        
-        // Sync with classic UI
-        const classicRenderer = document.getElementById("performance-renderer");
-        if (classicRenderer && classicRenderer.value !== state.performanceRenderer) {
-          classicRenderer.value = state.performanceRenderer;
-        }
       });
     }
 
@@ -1066,6 +1186,15 @@ export function initSettingsFeature({ switchView }) {
     if (advCompact2) {
       advCompact2.checked = state.launcherCompactMode;
       advCompact2.addEventListener('change', (e) => applyCompactMode(e.target.checked));
+    }
+
+    const advRedoTutorial = document.getElementById('adv-redo-tutorial');
+    if (advRedoTutorial) {
+      advRedoTutorial.addEventListener('click', async () => {
+        localStorage.removeItem("idk_tutorial_completed_v2");
+        const { initTutorial } = await import("../tutorial/tutorial.js");
+        initTutorial();
+      });
     }
 
     // Java path / global args / window size / overlay / custom Minecraft path
@@ -1213,12 +1342,6 @@ export function initSettingsFeature({ switchView }) {
       else alert('Debug console is only available in the desktop app.');
     });
 
-    document.getElementById('adv-btn-reset-warnings')?.addEventListener('click', () => {
-      localStorage.removeItem('craftlaunch_hideRenderPopup');
-      // Remove any other hidden warnings here in the future
-      actions.showWarningToast('Hidden warnings and popups have been reset!');
-    });
-
     // Shared tools
     bindSharedTools();
   }
@@ -1266,13 +1389,6 @@ export function initSettingsFeature({ switchView }) {
       } else {
         alert("Debug console is only available in the desktop app.");
       }
-    });
-
-    // Reset warnings
-    document.getElementById("btn-reset-warnings")?.addEventListener("click", () => {
-      localStorage.removeItem('craftlaunch_hideRenderPopup');
-      // Remove any other hidden warnings here in the future
-      actions.showWarningToast('Hidden warnings and popups have been reset!');
     });
   }
 

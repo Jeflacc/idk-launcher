@@ -38,3 +38,13 @@ scratch/
 docs
 plans
 tests/
+
+
+.claude
+.agents
+.github/prompts
+
+# Environment secrets
+.env
+.env.local
+.env.*.local

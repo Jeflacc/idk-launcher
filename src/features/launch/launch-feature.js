@@ -1,22 +1,16 @@
 import { state, actions } from '../../core/app-state.js';
-import { showRenderEngineDialog } from "../../components/render-dialog.js";
 
 function updateSetupDisplay() {
   const el = document.getElementById('play-dd-setup-value');
-  let statusText = `${state.selectedVersion || '—'} · ${state.selectedLoader || 'Vanilla'}`;
-  
-  if (state.selectedIsModpack) {
-    const mp = (JSON.parse(localStorage.getItem('idk_modpacks') || '[]')).find(m => m.id === state.selectedModpackId);
-    if (mp) statusText = mp.name;
-  }
-  
   if (el) {
-    el.textContent = statusText;
-  }
-  
-  const playBtn = document.getElementById('play-btn');
-  if (playBtn) {
-    playBtn.setAttribute('data-status', `Ready to play ${statusText}`);
+    if (state.selectedIsModpack) {
+      const mp = (JSON.parse(localStorage.getItem('idk_modpacks') || '[]')).find(m => m.id === state.selectedModpackId);
+      if (mp) {
+        el.textContent = `${mp.name}`;
+        return;
+      }
+    }
+    el.textContent = `${state.selectedVersion || '—'} · ${state.selectedLoader || 'Vanilla'}`;
   }
 }
 
@@ -71,7 +65,7 @@ function populateVersionList() {
   
   if (favorites.length > 0) {
     const header = document.createElement('div');
-    header.style.cssText = 'padding:8px 12px 4px;font-size:10px;font-weight:700;color:var(--theme-accent);letter-spacing:0.5px;text-transform:uppercase;';
+    header.style.cssText = 'padding:6px 10px 4px;font-size:9px;font-weight:700;color:var(--theme-accent);letter-spacing:1px;text-transform:uppercase;';
     header.textContent = 'Favorite Modpacks';
     list.appendChild(header);
 
@@ -105,7 +99,12 @@ function populateVersionList() {
     });
 
     const vHeader = document.createElement('div');
-    vHeader.style.cssText = 'padding:8px 12px 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.5px;text-transform:uppercase;margin-top:4px;border-top:1px solid rgba(255,255,255,0.05);';
+    vHeader.style.cssText = 'padding:6px 10px 4px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;margin-top:6px;border-top:1px solid rgba(255,255,255,0.05);';
+    vHeader.textContent = 'Versions';
+    list.appendChild(vHeader);
+  } else {
+    const vHeader = document.createElement('div');
+    vHeader.style.cssText = 'padding:6px 10px 4px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;';
     vHeader.textContent = 'Versions';
     list.appendChild(vHeader);
   }
@@ -248,18 +247,8 @@ function renderForLaunchVersionsModal(tab) {
           );
         };
         const removeProgress = window.electronAPI.onDownloadProgress?.(progressHandler);
-        
-        let cancelled = false;
-        window.onDownloadPanelCancel = () => {
-          cancelled = true;
-          window.electronAPI?.cancelVersionDownload?.({ version: v.id });
-        };
-
         try {
           const result = await window.electronAPI.downloadVersion({ version: v.id });
-          if (cancelled || (result && result.error && result.error.includes('cancelled'))) {
-             throw new Error('Download cancelled');
-          }
           if (!result?.success) throw new Error(result?.error || `Failed to download Minecraft ${v.id}`);
           if (!state.downloadedVersions.includes(v.id)) {
             state.downloadedVersions.push(v.id);
@@ -274,11 +263,10 @@ function renderForLaunchVersionsModal(tab) {
         } catch (err) {
           console.error('[Launch] Version download failed:', err);
           btn.classList.remove('downloading');
-          btn.textContent = err.message.includes('cancelled') ? 'Cancelled' : 'Failed';
+          btn.textContent = 'Failed';
           panelHide?.();
           setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
         } finally {
-          window.onDownloadPanelCancel = null;
           removeProgress?.();
         }
       };
@@ -363,15 +351,6 @@ if (playDropdownTrigger && playDropdown) {
       playDropdownTrigger.classList.remove('active');
     }
   });
-
-  const forceUpdateCb = document.getElementById('force-update-cb');
-  if (forceUpdateCb) {
-    forceUpdateCb.checked = state.forceUpdate;
-    forceUpdateCb.addEventListener('change', (e) => {
-      state.forceUpdate = e.target.checked;
-      localStorage.setItem('craftlaunch_forceUpdate', String(e.target.checked));
-    });
-  }
 }
 
 // --- PLAY LOGIC ---
@@ -431,32 +410,16 @@ function getFunStatus(status) {
 if (window.electronAPI) {
   window.electronAPI.onLaunchProgress((data) => {
     if (data.percent !== undefined) launchFill.style.width = `${data.percent}%`;
-    
-    // If it's a download status with percentage, show the REAL text + percentage
-    let text = "";
-    if (data.status && data.status.toLowerCase().includes('downloading')) {
-      text = data.percent !== undefined ? `${data.status} (${data.percent}%)` : data.status;
-    } else {
-      text = data.status ? getFunStatus(data.status) : '';
-      if (text && data.percent !== undefined) {
-        text = `${text} (${data.percent}%)`;
-      }
-    }
-    
+    const text = data.status ? getFunStatus(data.status) : '';
     if (text) {
       launchStatus.innerText = text;
       setMiniText(text);
     }
   });
   window.electronAPI.onGameLaunched(() => {
-    // Smart UI Offloading
     document.body.classList.add('game-running');
     gameStartTime = Date.now();
     document.querySelectorAll('video').forEach(v => v.pause());
-    const mojangNewsGrid = document.getElementById('mojang-news-grid');
-    if (mojangNewsGrid) mojangNewsGrid.innerHTML = '';
-    const trendingModsGrid = document.getElementById('trending-mods-grid');
-    if (trendingModsGrid) trendingModsGrid.innerHTML = '';
 
     // Mark the current version as downloaded since the game launched successfully
     if (!state.downloadedVersions.includes(state.selectedVersion)) {
@@ -484,6 +447,36 @@ if (window.electronAPI) {
       playBtn.disabled = true;
     }, 800);
   });
+  if (window.electronAPI.onEnterGameRunningMode) {
+    window.electronAPI.onEnterGameRunningMode(() => {
+      document.querySelectorAll('video').forEach(v => { try { v.pause(); } catch(_) {} });
+      document.querySelectorAll('.hero-video, .bg-video').forEach(v => { try { v.src = ''; } catch(_) {} });
+      document.body.classList.add('game-running');
+      try {
+        const grids = document.querySelectorAll('.news-grid, .trending-modpacks-grid');
+        grids.forEach(g => { g.dataset.preLaunchContent = g.innerHTML; });
+      } catch(_) {}
+      try {
+        document.querySelectorAll('[style*="animation"], [style*="transition"]').forEach(el => {
+          el.style.animationPlayState = 'paused';
+          el.style.transitionDuration = '0s';
+        });
+      } catch(_) {}
+      try {
+        const canvases = document.querySelectorAll('canvas');
+        canvases.forEach(c => { try { c.width = 0; c.height = 0; } catch(_) {} });
+      } catch(_) {}
+      try {
+        if (window.particlesJS) window.particlesJS = null;
+      } catch(_) {}
+      try {
+        const style = document.createElement('style');
+        style.id = 'ingame-perf-css';
+        style.textContent = '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }';
+        document.head.appendChild(style);
+      } catch(_) {}
+    });
+  }
   window.electronAPI.onLaunchClosed((data) => {
     document.body.classList.remove('game-running');
     window.dispatchEvent(new Event('reload-content'));
@@ -505,6 +498,20 @@ if (window.electronAPI) {
       mpPlayBtn.classList.remove('running');
       mpPlayBtn.disabled = false;
     }
+
+    try {
+      const perfCss = document.getElementById('ingame-perf-css');
+      if (perfCss) perfCss.remove();
+      document.querySelectorAll('[data-pre-launch-content]').forEach(g => {
+        g.innerHTML = g.dataset.preLaunchContent;
+        delete g.dataset.preLaunchContent;
+      });
+      document.querySelectorAll('.hero-video, .bg-video').forEach(v => { try { v.play().catch(() => {}); } catch(_) {} });
+      document.querySelectorAll('[style*="animation"], [style*="transition"]').forEach(el => {
+        el.style.animationPlayState = '';
+        el.style.transitionDuration = '';
+      });
+    } catch(_) {}
 
     // Crash / quick-exit detection
     const code = data?.code;
@@ -707,42 +714,10 @@ playBtn.addEventListener('click', async (e) => {
           windowSize,
           globalJavaArgs: state.globalJavaArgs,
           quickConnect: state.quickConnectTarget,
-          forceUpdate: state.forceUpdate
         });
         state.quickConnectTarget = null;
         return;
       }
-    }
-
-    const hideRenderPopup = localStorage.getItem('craftlaunch_hideRenderPopup') === 'true';
-    if (!hideRenderPopup) {
-      const selection = await showRenderEngineDialog();
-      if (!selection) {
-        // Cancelled launch
-        overlay.classList.remove('active');
-        playBtn.innerText = 'PLAY';
-        playBtn.disabled = false;
-        return;
-      }
-      
-      state.performanceRenderer = selection.renderer;
-      localStorage.setItem('craftlaunch_performanceRenderer', selection.renderer);
-      
-      if (selection.dontShowAgain) {
-        localStorage.setItem('craftlaunch_hideRenderPopup', 'true');
-      }
-      
-      // Attempt to sync the saved setting with backend
-      if (window.electronAPI && window.electronAPI.saveSettings) {
-        window.electronAPI.saveSettings({ performanceRenderer: selection.renderer }).catch(() => {});
-      }
-      
-      // Update the UI dropdowns if they exist
-      const advSelect = document.getElementById('advanced-performance-renderer');
-      if (advSelect) advSelect.value = selection.renderer;
-      
-      const classicRenderer = document.getElementById('performance-renderer');
-      if (classicRenderer) classicRenderer.value = selection.renderer;
     }
 
     window.electronAPI.launchMinecraft(
@@ -751,13 +726,11 @@ playBtn.addEventListener('click', async (e) => {
       state.javaPath,
       state.selectedLoader,
       state.autoOptimization,
-      state.performanceRenderer,
       `${state.maxMemoryGB}G`,
       authData,
       state.quickConnectTarget,
       windowSize,
-      state.globalJavaArgs,
-      state.forceUpdate
+      state.globalJavaArgs
     );
     state.quickConnectTarget = null; // Reset after launch
   } else {

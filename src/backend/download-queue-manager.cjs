@@ -188,17 +188,6 @@ class DownloadQueueManager extends EventEmitter {
     // Cancel all active downloads for this session
     const activeSet = this.activeDownloads.get(downloadId);
     if (activeSet) {
-      for (const itemId of activeSet) {
-        const item = session.items.find(i => i.id === itemId);
-        if (item && item._request) {
-          try {
-            item._request.destroy(new Error('Download cancelled'));
-            if (item._writeStream) {
-              item._writeStream.destroy();
-            }
-          } catch (e) {}
-        }
-      }
       activeSet.clear();
     }
 
@@ -211,18 +200,6 @@ class DownloadQueueManager extends EventEmitter {
     this.downloadQueues.delete(downloadId);
 
     this.emit('cancelled', { downloadId });
-  }
-
-  /**
-   * Cancel all active download sessions
-   * 
-   * @returns {Promise<void>}
-   */
-  async cancelAllDownloads() {
-    const sessionIds = Array.from(this.activeSessions.keys());
-    for (const id of sessionIds) {
-      await this.cancelDownload(id);
-    }
   }
 
   /**
@@ -412,9 +389,6 @@ class DownloadQueueManager extends EventEmitter {
         });
       });
 
-      item._request = request;
-      item._writeStream = writeStream;
-
       request.on('error', (error) => {
         if (timedOut) return;
         writeStream.destroy();
@@ -439,12 +413,6 @@ class DownloadQueueManager extends EventEmitter {
 
       writeStream.on('finish', () => {
         if (timedOut) return;
-
-        if (session.status === 'cancelled') {
-          fs.unlink(tempPath, () => {});
-          reject(new Error('Download cancelled'));
-          return;
-        }
 
         try {
           // Verify file size
