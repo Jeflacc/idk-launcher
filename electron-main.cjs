@@ -4156,21 +4156,16 @@ ipcMain.handle('start-frpc-tunnel', async (event, { port }) => {
 });
 
 ipcMain.handle('stop-frpc-tunnel', async () => {
-  let stopped = false;
   if (activeDownloadRequest) {
     try { activeDownloadRequest.destroy(); } catch (e) {}
     activeDownloadRequest = null;
-    stopped = true;
   }
   if (activeTunnelProcess) {
-    try { activeTunnelProcess.kill(); } catch (e) { }
+    try { activeTunnelProcess.kill('SIGTERM'); } catch (e) {}
     activeTunnelProcess = null;
-    stopped = true;
   }
-  if (stopped) {
-    return { success: true };
-  }
-  return { success: false, error: 'No active tunnel or download running' };
+  // Always return success — if there's no active process, it's already stopped
+  return { success: true };
 });
 
 // Get userData path for frontend

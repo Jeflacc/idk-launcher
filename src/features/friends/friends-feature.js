@@ -421,22 +421,31 @@ export function initFriendsFeature() {
           activeSharePort = null;
 
           // Restore sharing Card elements
-          shareCard.classList.remove("active");
-          shareInstructions.innerText =
+          if (shareCard) shareCard.classList.remove("active");
+          if (shareInstructions) shareInstructions.innerText =
             'Open your Minecraft singleplayer world, click "Open to LAN", then enter the port below to invite your friends!';
-          shareInputRow.style.display = "flex";
-          tunnelLink.style.display = "none";
+          if (shareInputRow) shareInputRow.style.display = "flex";
+          if (tunnelLink) tunnelLink.style.display = "none";
 
           btnShare.innerText = "Share";
           btnShare.classList.remove("stop-sharing");
 
           // Update presence immediately
-          await sendPresenceHeartbeat();
+          try { await sendPresenceHeartbeat(); } catch (e) {}
           actions.showWarningToast(
             "Multi-player tunnel closed. World is private again.",
           );
         } catch (err) {
-          actions.showWarningToast("Failed to stop tunnel cleanly.");
+          console.error("[Friends] Stop tunnel error:", err);
+          // Still reset UI even if stop had issues
+          activeTunnelUrl = null;
+          activeSharePort = null;
+          if (shareCard) shareCard.classList.remove("active");
+          if (shareInputRow) shareInputRow.style.display = "flex";
+          if (tunnelLink) tunnelLink.style.display = "none";
+          btnShare.innerText = "Share";
+          btnShare.classList.remove("stop-sharing");
+          actions.showWarningToast("Tunnel stopped (may not have been clean).");
         } finally {
           btnShare.disabled = false;
         }
