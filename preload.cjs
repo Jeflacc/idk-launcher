@@ -119,6 +119,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('resume-download', downloadId),
   cancelDownload: (downloadId) => 
     ipcRenderer.invoke('cancel-download', downloadId),
+  cancelVersionDownload: (args) => 
+    ipcRenderer.invoke('cancel-version-download', args),
   
   // Download progress event listeners
   onDownloadComplete: (cb) => 

@@ -242,8 +242,18 @@ function renderForLaunchVersionsModal(tab) {
           );
         };
         const removeProgress = window.electronAPI.onDownloadProgress?.(progressHandler);
+        
+        let cancelled = false;
+        window.onDownloadPanelCancel = () => {
+          cancelled = true;
+          window.electronAPI?.cancelVersionDownload?.({ version: v.id });
+        };
+
         try {
           const result = await window.electronAPI.downloadVersion({ version: v.id });
+          if (cancelled || (result && result.error && result.error.includes('cancelled'))) {
+             throw new Error('Download cancelled');
+          }
           if (!result?.success) throw new Error(result?.error || `Failed to download Minecraft ${v.id}`);
           if (!state.downloadedVersions.includes(v.id)) {
             state.downloadedVersions.push(v.id);
@@ -258,10 +268,11 @@ function renderForLaunchVersionsModal(tab) {
         } catch (err) {
           console.error('[Launch] Version download failed:', err);
           btn.classList.remove('downloading');
-          btn.textContent = 'Failed';
+          btn.textContent = err.message.includes('cancelled') ? 'Cancelled' : 'Failed';
           panelHide?.();
           setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
         } finally {
+          window.onDownloadPanelCancel = null;
           removeProgress?.();
         }
       };
@@ -414,7 +425,18 @@ function getFunStatus(status) {
 if (window.electronAPI) {
   window.electronAPI.onLaunchProgress((data) => {
     if (data.percent !== undefined) launchFill.style.width = `${data.percent}%`;
-    const text = data.status ? getFunStatus(data.status) : '';
+    
+    // If it's a download status with percentage, show the REAL text + percentage
+    let text = "";
+    if (data.status && data.status.toLowerCase().includes('downloading')) {
+      text = data.percent !== undefined ? `${data.status} (${data.percent}%)` : data.status;
+    } else {
+      text = data.status ? getFunStatus(data.status) : '';
+      if (text && data.percent !== undefined) {
+        text = `${text} (${data.percent}%)`;
+      }
+    }
+    
     if (text) {
       launchStatus.innerText = text;
       setMiniText(text);

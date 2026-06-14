@@ -3999,6 +3999,9 @@ export function initModpacksFeature({ switchView }) {
 
   document.getElementById("btn-ddp-cancel").addEventListener("click", () => {
     currentImportCancelled = true;
+    if (typeof window.onDownloadPanelCancel === "function") {
+      window.onDownloadPanelCancel();
+    }
     dismissDlPanel();
   });
 

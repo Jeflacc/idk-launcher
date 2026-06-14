@@ -1843,10 +1843,36 @@ ipcMain.on('launch-modpack', async (event, args) => {
     console.log(`[MCLC] progress: ${status} ${percent !== undefined ? percent + '%' : ''}`);
     safeSend('launch-progress', { status, percent });
   });
+  let dlSpeedTime1 = Date.now();
+  let dlSpeedBytes1 = 0;
+  let currentSpeedStr1 = "";
+  let lastFileName1 = "";
+  let lastFileBytes1 = 0;
+
   launchClient.on('download-status', (e) => {
-    const percent = Math.round((e.current / e.total) * 100);
-    const status = `Downloading ${e.name}...`;
-    console.log(`[MCLC] download-status: ${status} ${percent}%`);
+    let percent = Math.round((e.current / e.total) * 100);
+    let status = `Downloading ${e.name}...`;
+
+    let now = Date.now();
+    let timeDiff = (now - dlSpeedTime1) / 1000;
+    let delta = e.current - (e.name === lastFileName1 ? lastFileBytes1 : 0);
+    if (delta > 0) dlSpeedBytes1 += delta;
+    lastFileName1 = e.name;
+    lastFileBytes1 = e.current;
+
+    if (timeDiff >= 0.5) {
+      let speed = dlSpeedBytes1 / timeDiff;
+      if (speed >= 1048576) currentSpeedStr1 = (speed / 1048576).toFixed(1) + " MB/s";
+      else if (speed >= 1024) currentSpeedStr1 = (speed / 1024).toFixed(0) + " KB/s";
+      else currentSpeedStr1 = speed.toFixed(0) + " B/s";
+      dlSpeedTime1 = now;
+      dlSpeedBytes1 = 0;
+    }
+    
+    if (currentSpeedStr1) {
+      status += ` [${currentSpeedStr1}]`;
+    }
+
     safeSend('launch-progress', { percent, status });
   });
   launchClient.on('data', (e) => {
@@ -2381,11 +2407,37 @@ ipcMain.on('launch-minecraft', async (event, args) => {
     console.log(`[MCLC] progress: ${statusText} ${percent !== undefined ? percent + '%' : ''}`);
     safeSend('launch-progress', { status: statusText, percent });
   });
+  let dlSpeedTime2 = Date.now();
+  let dlSpeedBytes2 = 0;
+  let currentSpeedStr2 = "";
+  let lastFileName2 = "";
+  let lastFileBytes2 = 0;
+
   launchClient.on('download-status', (e) => {
     let percent = Math.round((e.current / e.total) * 100);
-    let statusText = `Downloading ${e.name}...`;
-    console.log(`[MCLC] download-status: ${statusText} ${percent}%`);
-    safeSend('launch-progress', { percent, status: statusText });
+    let status = `Downloading ${e.name}...`;
+
+    let now = Date.now();
+    let timeDiff = (now - dlSpeedTime2) / 1000;
+    let delta = e.current - (e.name === lastFileName2 ? lastFileBytes2 : 0);
+    if (delta > 0) dlSpeedBytes2 += delta;
+    lastFileName2 = e.name;
+    lastFileBytes2 = e.current;
+
+    if (timeDiff >= 0.5) {
+      let speed = dlSpeedBytes2 / timeDiff;
+      if (speed >= 1048576) currentSpeedStr2 = (speed / 1048576).toFixed(1) + " MB/s";
+      else if (speed >= 1024) currentSpeedStr2 = (speed / 1024).toFixed(0) + " KB/s";
+      else currentSpeedStr2 = speed.toFixed(0) + " B/s";
+      dlSpeedTime2 = now;
+      dlSpeedBytes2 = 0;
+    }
+    
+    if (currentSpeedStr2) {
+      status += ` [${currentSpeedStr2}]`;
+    }
+
+    safeSend('launch-progress', { percent, status });
   });
   launchClient.on('data', (e) => {
     const str = e.toString();
@@ -3511,7 +3563,7 @@ function installFabric(version, rootPath, pinnedLoaderVersion = null) {
 }
 
 // Helper: follow redirects recursively then pipe to a write stream
-function downloadFile(url, destPath, resolve, reject, depth = 0, progressCallback) {
+function downloadFile(url, destPath, resolve, reject, depth = 0, progressCallback, cancelToken = null) {
   if (depth > 5) return reject(new Error('Too many redirects'));
   const startTime = Date.now();
   let bytesDownloaded = 0;
@@ -3524,7 +3576,7 @@ function downloadFile(url, destPath, resolve, reject, depth = 0, progressCallbac
     if (r.statusCode === 301 || r.statusCode === 302 || r.statusCode === 303 || r.statusCode === 307 || r.statusCode === 308) {
       const location = r.headers.location;
       r.resume();
-      return downloadFile(location, destPath, resolve, reject, depth + 1, progressCallback);
+      return downloadFile(location, destPath, resolve, reject, depth + 1, progressCallback, cancelToken);
     }
     if (r.statusCode !== 200) {
       r.resume();
@@ -3565,6 +3617,17 @@ function downloadFile(url, destPath, resolve, reject, depth = 0, progressCallbac
     file.on('error', (err) => { cleanup(); reject(err); });
     r.on('error', (err) => { cleanup(); reject(err); });
   }).on('error', (err) => { cleanup(); reject(err); });
+  
+  if (cancelToken) {
+    if (cancelToken.cancelled) {
+      req.destroy();
+      cleanup();
+      return reject(new Error('Download cancelled'));
+    }
+    cancelToken.req = req;
+    cancelToken.cleanup = cleanup;
+  }
+
   req.setTimeout(120000, () => {
     req.destroy();
     cleanup();
@@ -3974,9 +4037,14 @@ ipcMain.handle('scan-downloaded-versions', async () => {
   }
 });
 
+const activeVersionDownloads = new Map();
+
 // Download a vanilla Minecraft version (client JAR + version JSON)
 ipcMain.handle('download-version', async (event, { version, rootPath }) => {
   try {
+    const cancelToken = { cancelled: false, req: null, cleanup: null };
+    activeVersionDownloads.set(version, cancelToken);
+
     const mcDataPath = rootPath || getMinecraftDataPath();
     const versionDir = path.join(mcDataPath, 'versions', version);
     const versionJsonPath = path.join(versionDir, `${version}.json`);
@@ -4000,6 +4068,7 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
       if (jarStat.size > 0) {
         sendProgress(`Minecraft ${version} already downloaded`, 100);
         try { event.sender.send('download-complete', `version:${version}`, { success: true, alreadyDownloaded: true }); } catch {}
+        activeVersionDownloads.delete(version);
         return { success: true, alreadyDownloaded: true };
       }
     } catch {} // Not downloaded yet, continue
@@ -4007,13 +4076,15 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
 
     // Fetch version manifest to get the version URL
     const manifest = await new Promise((resolve, reject) => {
-      https.get('https://launchermeta.mojang.com/mc/game/version_manifest.json',
+      const req = https.get('https://launchermeta.mojang.com/mc/game/version_manifest.json',
         { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
           let d = '';
           res.on('data', c => d += c);
           res.on('end', () => { try { resolve(JSON.parse(d)); } catch (e) { reject(e); } });
         }).on('error', reject);
+      cancelToken.req = req;
     });
+    if (cancelToken.cancelled) throw new Error('Download cancelled');
 
     const versionEntry = manifest.versions.find(v => v.id === version);
     if (!versionEntry) throw new Error(`Minecraft version ${version} not found`);
@@ -4021,12 +4092,14 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
 
     // Download version JSON
     const versionData = await new Promise((resolve, reject) => {
-      https.get(versionEntry.url, { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
+      const req = https.get(versionEntry.url, { headers: { 'User-Agent': 'IDKLauncher/1.0' } }, (res) => {
         let d = '';
         res.on('data', c => d += c);
         res.on('end', () => { try { resolve(JSON.parse(d)); } catch (e) { reject(e); } });
       }).on('error', reject);
+      cancelToken.req = req;
     });
+    if (cancelToken.cancelled) throw new Error('Download cancelled');
 
     if (!fs.existsSync(versionDir)) fs.mkdirSync(versionDir, { recursive: true });
     fs.writeFileSync(versionJsonPath, JSON.stringify(versionData, null, 2));
@@ -4048,17 +4121,31 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
             item: version,
           });
         } catch {}
-      });
+      }, cancelToken);
     });
     sendProgress(`Finalizing Minecraft ${version}...`, 95);
 
     try { event.sender.send('download-complete', `version:${version}`, { success: true, alreadyDownloaded: false }); } catch {}
+    activeVersionDownloads.delete(version);
     return { success: true, alreadyDownloaded: false };
   } catch (e) {
+    activeVersionDownloads.delete(version);
     console.error('[Download Version] Failed:', e);
     try { event.sender.send('download-error', `version:${version}`, { message: e.message, error: e.message }); } catch {}
     return { success: false, error: e.message };
   }
+});
+
+ipcMain.handle('cancel-version-download', async (event, { version }) => {
+  const token = activeVersionDownloads.get(version);
+  if (token) {
+    token.cancelled = true;
+    if (token.req) token.req.destroy(new Error('Download cancelled'));
+    if (token.cleanup) token.cleanup();
+    activeVersionDownloads.delete(version);
+    return { success: true };
+  }
+  return { success: false, error: 'Not found' };
 });
 
 // Extract icon from JAR/ZIP file (mods, resourcepacks, shaders)
