@@ -19,7 +19,60 @@ export async function getSkinTextureUrl(name, mode) {
     }
     return `https://skinsystem.ely.by/skins/${name}.png`;
   }
+  
+  if (mode === 'microsoft' && window.electronAPI?.fetchMicrosoftProfile) {
+    try {
+      const res = await window.electronAPI.fetchMicrosoftProfile();
+      if (res.success && res.data && res.data.skins && res.data.skins.length > 0) {
+        // Find active skin or the first one
+        const activeSkin = res.data.skins.find(s => s.state === 'ACTIVE') || res.data.skins[0];
+        if (activeSkin && activeSkin.url) {
+          return activeSkin.url;
+        }
+      }
+    } catch (err) {
+      console.warn('[Skin] Failed to fetch live Microsoft skin URL:', err);
+    }
+  }
+
   return `https://minotar.net/skin/${name}`;
+}
+
+export async function getCapeTextureUrl(name, mode) {
+  if (mode === 'elyby') {
+    if (window.electronAPI?.fetchElybyProfile) {
+      try {
+        const res = await window.electronAPI.fetchElybyProfile(name);
+        if (res.ok && res.data) {
+          const textureProp = res.data?.properties?.find((p) => p.name === 'textures');
+          if (textureProp) {
+            const decoded = JSON.parse(atob(textureProp.value));
+            const capeUrl = decoded?.textures?.CAPE?.url;
+            if (capeUrl) return capeUrl;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    return null;
+  }
+  
+  if (mode === 'microsoft' && window.electronAPI?.fetchMicrosoftProfile) {
+    try {
+      const res = await window.electronAPI.fetchMicrosoftProfile();
+      if (res.success && res.data && res.data.capes && res.data.capes.length > 0) {
+        const activeCape = res.data.capes.find(c => c.state === 'ACTIVE');
+        if (activeCape && activeCape.url) {
+          return activeCape.url;
+        }
+      }
+    } catch (err) {
+      console.warn('[Skin] Failed to fetch live Microsoft cape URL:', err);
+    }
+  }
+
+  return null;
 }
 
 export async function resolveSkinTextureBase64(skinUrl) {

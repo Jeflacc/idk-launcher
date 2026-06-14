@@ -3999,7 +3999,11 @@ export function initModpacksFeature({ switchView }) {
 
   document.getElementById("btn-ddp-cancel").addEventListener("click", () => {
     currentImportCancelled = true;
-    dismissDlPanel();
+    if (typeof window.onDownloadPanelCancel === "function") {
+      window.onDownloadPanelCancel();
+    }
+    window.electronAPI?.cancelAllDownloads?.();
+    hideDlPanel();
   });
 
   // Close panel when clicking outside (dismiss, keep icon visible)

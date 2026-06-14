@@ -1,16 +1,22 @@
 import { state, actions } from '../../core/app-state.js';
+import { showRenderEngineDialog } from "../../components/render-dialog.js";
 
 function updateSetupDisplay() {
   const el = document.getElementById('play-dd-setup-value');
+  let statusText = `${state.selectedVersion || '—'} · ${state.selectedLoader || 'Vanilla'}`;
+  
+  if (state.selectedIsModpack) {
+    const mp = (JSON.parse(localStorage.getItem('idk_modpacks') || '[]')).find(m => m.id === state.selectedModpackId);
+    if (mp) statusText = mp.name;
+  }
+  
   if (el) {
-    if (state.selectedIsModpack) {
-      const mp = (JSON.parse(localStorage.getItem('idk_modpacks') || '[]')).find(m => m.id === state.selectedModpackId);
-      if (mp) {
-        el.textContent = `${mp.name}`;
-        return;
-      }
-    }
-    el.textContent = `${state.selectedVersion || '—'} · ${state.selectedLoader || 'Vanilla'}`;
+    el.textContent = statusText;
+  }
+  
+  const playBtn = document.getElementById('play-btn');
+  if (playBtn) {
+    playBtn.setAttribute('data-status', `Ready to play ${statusText}`);
   }
 }
 
@@ -242,8 +248,18 @@ function renderForLaunchVersionsModal(tab) {
           );
         };
         const removeProgress = window.electronAPI.onDownloadProgress?.(progressHandler);
+        
+        let cancelled = false;
+        window.onDownloadPanelCancel = () => {
+          cancelled = true;
+          window.electronAPI?.cancelVersionDownload?.({ version: v.id });
+        };
+
         try {
           const result = await window.electronAPI.downloadVersion({ version: v.id });
+          if (cancelled || (result && result.error && result.error.includes('cancelled'))) {
+             throw new Error('Download cancelled');
+          }
           if (!result?.success) throw new Error(result?.error || `Failed to download Minecraft ${v.id}`);
           if (!state.downloadedVersions.includes(v.id)) {
             state.downloadedVersions.push(v.id);
@@ -258,10 +274,11 @@ function renderForLaunchVersionsModal(tab) {
         } catch (err) {
           console.error('[Launch] Version download failed:', err);
           btn.classList.remove('downloading');
-          btn.textContent = 'Failed';
+          btn.textContent = err.message.includes('cancelled') ? 'Cancelled' : 'Failed';
           panelHide?.();
           setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
         } finally {
+          window.onDownloadPanelCancel = null;
           removeProgress?.();
         }
       };
@@ -346,6 +363,15 @@ if (playDropdownTrigger && playDropdown) {
       playDropdownTrigger.classList.remove('active');
     }
   });
+
+  const forceUpdateCb = document.getElementById('force-update-cb');
+  if (forceUpdateCb) {
+    forceUpdateCb.checked = state.forceUpdate;
+    forceUpdateCb.addEventListener('change', (e) => {
+      state.forceUpdate = e.target.checked;
+      localStorage.setItem('craftlaunch_forceUpdate', String(e.target.checked));
+    });
+  }
 }
 
 // --- PLAY LOGIC ---
@@ -405,7 +431,18 @@ function getFunStatus(status) {
 if (window.electronAPI) {
   window.electronAPI.onLaunchProgress((data) => {
     if (data.percent !== undefined) launchFill.style.width = `${data.percent}%`;
-    const text = data.status ? getFunStatus(data.status) : '';
+    
+    // If it's a download status with percentage, show the REAL text + percentage
+    let text = "";
+    if (data.status && data.status.toLowerCase().includes('downloading')) {
+      text = data.percent !== undefined ? `${data.status} (${data.percent}%)` : data.status;
+    } else {
+      text = data.status ? getFunStatus(data.status) : '';
+      if (text && data.percent !== undefined) {
+        text = `${text} (${data.percent}%)`;
+      }
+    }
+    
     if (text) {
       launchStatus.innerText = text;
       setMiniText(text);
@@ -670,10 +707,42 @@ playBtn.addEventListener('click', async (e) => {
           windowSize,
           globalJavaArgs: state.globalJavaArgs,
           quickConnect: state.quickConnectTarget,
+          forceUpdate: state.forceUpdate
         });
         state.quickConnectTarget = null;
         return;
       }
+    }
+
+    const hideRenderPopup = localStorage.getItem('craftlaunch_hideRenderPopup') === 'true';
+    if (!hideRenderPopup) {
+      const selection = await showRenderEngineDialog();
+      if (!selection) {
+        // Cancelled launch
+        overlay.classList.remove('active');
+        playBtn.innerText = 'PLAY';
+        playBtn.disabled = false;
+        return;
+      }
+      
+      state.performanceRenderer = selection.renderer;
+      localStorage.setItem('craftlaunch_performanceRenderer', selection.renderer);
+      
+      if (selection.dontShowAgain) {
+        localStorage.setItem('craftlaunch_hideRenderPopup', 'true');
+      }
+      
+      // Attempt to sync the saved setting with backend
+      if (window.electronAPI && window.electronAPI.saveSettings) {
+        window.electronAPI.saveSettings({ performanceRenderer: selection.renderer }).catch(() => {});
+      }
+      
+      // Update the UI dropdowns if they exist
+      const advSelect = document.getElementById('advanced-performance-renderer');
+      if (advSelect) advSelect.value = selection.renderer;
+      
+      const classicRenderer = document.getElementById('performance-renderer');
+      if (classicRenderer) classicRenderer.value = selection.renderer;
     }
 
     window.electronAPI.launchMinecraft(
@@ -682,11 +751,13 @@ playBtn.addEventListener('click', async (e) => {
       state.javaPath,
       state.selectedLoader,
       state.autoOptimization,
+      state.performanceRenderer,
       `${state.maxMemoryGB}G`,
       authData,
       state.quickConnectTarget,
       windowSize,
-      state.globalJavaArgs
+      state.globalJavaArgs,
+      state.forceUpdate
     );
     state.quickConnectTarget = null; // Reset after launch
   } else {

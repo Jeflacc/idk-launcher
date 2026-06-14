@@ -1056,6 +1056,23 @@ export function initSettingsFeature({ switchView }) {
       });
     }
 
+    // Advanced performance renderer
+    const advRendererSelect = document.getElementById("adv-performance-renderer");
+    if (advRendererSelect) {
+      advRendererSelect.value = state.performanceRenderer;
+      advRendererSelect.addEventListener("change", (e) => {
+        state.performanceRenderer = e.target.value;
+        localStorage.setItem("craftlaunch_performanceRenderer", state.performanceRenderer);
+        persistVisualSettings();
+        
+        // Sync with classic UI
+        const classicRenderer = document.getElementById("performance-renderer");
+        if (classicRenderer && classicRenderer.value !== state.performanceRenderer) {
+          classicRenderer.value = state.performanceRenderer;
+        }
+      });
+    }
+
     // Advanced compact mode
     const advCompactToggle = document.getElementById("adv-compact-mode-toggle");
     if (advCompactToggle) {
@@ -1322,6 +1339,12 @@ export function initSettingsFeature({ switchView }) {
       else alert('Debug console is only available in the desktop app.');
     });
 
+    document.getElementById('adv-btn-reset-warnings')?.addEventListener('click', () => {
+      localStorage.removeItem('craftlaunch_hideRenderPopup');
+      // Remove any other hidden warnings here in the future
+      actions.showWarningToast('Hidden warnings and popups have been reset!');
+    });
+
     // Shared tools
     bindSharedTools();
   }
@@ -1369,6 +1392,13 @@ export function initSettingsFeature({ switchView }) {
       } else {
         alert("Debug console is only available in the desktop app.");
       }
+    });
+
+    // Reset warnings
+    document.getElementById("btn-reset-warnings")?.addEventListener("click", () => {
+      localStorage.removeItem('craftlaunch_hideRenderPopup');
+      // Remove any other hidden warnings here in the future
+      actions.showWarningToast('Hidden warnings and popups have been reset!');
     });
   }
 

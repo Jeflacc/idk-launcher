@@ -1,5 +1,32 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.5.4-preview Changelog (Unreleased)
+
+Welcome to the new upcoming release **v1.5.4-preview**! This update introduces advanced performance renderer selections, faster concurrent mod downloads, and a highly requested launch verification toggle!
+
+---
+
+### 🚀 New Features & Enhancements
+
+* **⚡ Performance Boost Pack Enhancements**
+  - Added a brand-new option to select your preferred rendering engine when using the Performance Boost Pack.
+  - Choose between **Sodium** (with Iris Shaders) or **Vulkan** (VulkanMod) for maximum FPS based on your hardware.
+  - Mod downloads for the Boost Pack are now fully concurrent, reducing wait times significantly when installing Sodium, Iris, or Vulkan.
+
+* **🔄 Force Update (Verify) Toggle**
+  - Added a "Force Update" toggle seamlessly integrated directly underneath the main PLAY button as a sleek glassmorphic dropdown tab.
+  - **Instant Launching:** When unchecked, the launcher completely bypasses the asset and library checksum verification if the files already exist, making game launching near-instant.
+  - Check the toggle when you want to force a strict verification of all Minecraft game files to fix corruptions.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.5.4-preview`
+* **Release Channel:** Preview / Unreleased
+* **Platform:** Windows, macOS, Linux
+
+---
+
 ## 🎮 IDK Launcher v1.4.0 Changelog
 
 Hello everyone! The stable release **v1.4.0** is officially here! This is the biggest update IDK Launcher has ever received, bringing a completely redesigned UI system with multiple themes and UI modes, a comprehensive modpack & version management overhaul, persistent settings, real-time social features, performance boosts, accessibility improvements, and much more!

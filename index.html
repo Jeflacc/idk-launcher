@@ -24,6 +24,20 @@
       </div>
     </div>
 
+    <!-- Generic list dialog -->
+    <div id="list-dialog-modal" class="confirm-modal">
+      <div class="confirm-modal-content confirm-modal-content--neutral" style="max-width: 350px;">
+        <h3 id="list-dialog-title">Select Option</h3>
+        <p id="list-dialog-message" style="margin-bottom: 16px;"></p>
+        <div class="list-dialog-items" id="list-dialog-items" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 20px;">
+          <!-- dynamically populated -->
+        </div>
+        <div class="confirm-modal-actions" style="justify-content: flex-end;">
+          <button type="button" id="list-dialog-cancel" class="confirm-modal-btn cancel" style="flex: 0 0 auto;">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Delete Modpack Confirmation Modal -->
     <div id="delete-modpack-modal" class="delete-modal">
       <div class="delete-modal-content">
@@ -38,6 +52,54 @@
         <div class="delete-modal-actions">
           <button id="delete-modal-cancel" class="delete-modal-btn cancel">Cancel</button>
           <button id="delete-modal-confirm" class="delete-modal-btn confirm">Yes, Delete</button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Render Engine Selection Modal -->
+    <div id="render-engine-modal" class="confirm-modal">
+      <div class="confirm-modal-content confirm-modal-content--neutral" style="max-width: 400px; padding: 24px;">
+        <h3 id="render-engine-title" style="margin-bottom: 6px; font-family: var(--font-title); font-size: 20px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 1px;">Select Render Engine</h3>
+        <p id="render-engine-message" style="margin-bottom: 20px; font-size: 14px; color: rgba(255, 255, 255, 0.7); line-height: 1.5;">Choose a rendering engine. Sodium is highly recommended for maximum FPS and stability.</p>
+        
+        <div class="list-dialog-items" id="render-engine-items" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+          <!-- Sodium Option -->
+          <button type="button" id="render-engine-sodium" style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 16px; background: rgba(59, 130, 246, 0.1); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 12px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-align: left;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.borderColor='rgba(59, 130, 246, 0.6)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.borderColor='rgba(59, 130, 246, 0.3)'; this.style.transform='translateY(0)';">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #60a5fa;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-weight: 800; font-family: var(--font-title); font-size: 16px; color: #fff; letter-spacing: 0.5px;">SODIUM</span>
+                <span style="font-size: 12px; color: #60a5fa; font-weight: 600;">RECOMMENDED</span>
+              </div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(59, 130, 246, 0.8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </button>
+
+          <!-- Vulkan Option -->
+          <button type="button" id="render-engine-vulkan" style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 16px; background: rgba(239, 68, 68, 0.05); border: 2px solid rgba(239, 68, 68, 0.2); border-radius: 12px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-align: left;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.borderColor='rgba(239, 68, 68, 0.4)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(239, 68, 68, 0.05)'; this.style.borderColor='rgba(239, 68, 68, 0.2)'; this.style.transform='translateY(0)';">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #f87171;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-weight: 800; font-family: var(--font-title); font-size: 16px; color: #fff; letter-spacing: 0.5px;">VULKANMOD</span>
+                <span style="font-size: 12px; color: rgba(239, 68, 68, 0.8); font-weight: 600;">EXPERIMENTAL</span>
+              </div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(239, 68, 68, 0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </button>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto;">
+          <div class="delete-modal-checkbox" style="margin: 0; padding: 0;">
+            <input type="checkbox" id="render-engine-dont-show" />
+            <label for="render-engine-dont-show" style="font-size: 13px; cursor: pointer; color: rgba(255, 255, 255, 0.6); user-select: none;">Don't show this again</label>
+          </div>
+          
+          <button type="button" id="render-engine-cancel" style="padding: 10px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; font-family: var(--font-title); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: background 0.2s ease;" onmouseover="this.style.background='rgba(255, 255, 255, 0.15)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.05)';">Cancel</button>
         </div>
       </div>
     </div>
