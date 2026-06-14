@@ -2038,7 +2038,7 @@ ipcMain.on('launch-modpack', async (event, args) => {
   launchClient.on('debug', (e) => console.log(`[MCLC] debug:`, e));
   launchClient.on('progress', (e) => {
     let percent = e.task !== undefined && e.total > 0 ? Math.round((e.task / e.total) * 100) : undefined;
-    const status = `Downloading ${e.type || 'files'} (${e.task}/${e.total})...`;
+    const status = `Verifying ${e.type || 'files'} (${e.task}/${e.total})...`;
     console.log(`[MCLC] progress: ${status} ${percent !== undefined ? percent + '%' : ''}`);
     safeSend('launch-progress', { status, percent });
   });
@@ -2600,11 +2600,11 @@ ipcMain.on('launch-minecraft', async (event, args) => {
   const launchClient = new Client();
   launchClient.on('debug', (e) => console.log(`[MCLC] debug:`, e));
   launchClient.on('progress', (e) => {
-    let statusText = `Downloading ${e.type || 'files'}...`;
+    let statusText = `Verifying ${e.type || 'files'}...`;
     let percent;
     if (e.task !== undefined && e.total !== undefined && e.total > 0) {
       percent = Math.round((e.task / e.total) * 100);
-      statusText = `Downloading ${e.type || 'files'} (${e.task}/${e.total})...`;
+      statusText = `Verifying ${e.type || 'files'} (${e.task}/${e.total})...`;
     }
     console.log(`[MCLC] progress: ${statusText} ${percent !== undefined ? percent + '%' : ''}`);
     safeSend('launch-progress', { status: statusText, percent });

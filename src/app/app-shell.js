@@ -686,6 +686,13 @@ export function renderAppShell() {
             </div>
             <button class="glass-btn" id="btn-toggle-devtools">Open DevTools</button>
           </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Reset Hidden Warnings</span>
+              <small>Restore any popups you previously dismissed</small>
+            </div>
+            <button class="glass-btn" id="btn-reset-warnings" style="color: #f87171; border-color: rgba(248, 113, 113, 0.3);">Reset</button>
+          </div>
 
         </div>
       </div>
@@ -1083,6 +1090,13 @@ export function renderAppShell() {
             <small>Chrome DevTools for debugging</small>
           </div>
           <button type="button" class="adv-btn" id="adv-btn-toggle-devtools">Open DevTools</button>
+        </div>
+        <div class="adv-action-row">
+          <div class="adv-action-label">
+            <span>Reset Hidden Warnings</span>
+            <small>Restore any popups you previously dismissed</small>
+          </div>
+          <button type="button" class="adv-btn" id="adv-btn-reset-warnings" style="color: #f87171; border-color: rgba(248, 113, 113, 0.3);">Reset</button>
         </div>
       </div>
     </div>

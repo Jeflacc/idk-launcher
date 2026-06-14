@@ -1,4 +1,5 @@
 import { state, actions } from '../../core/app-state.js';
+import { showRenderEngineDialog } from "../../components/render-dialog.js";
 
 function updateSetupDisplay() {
   const el = document.getElementById('play-dd-setup-value');
@@ -711,6 +712,37 @@ playBtn.addEventListener('click', async (e) => {
         state.quickConnectTarget = null;
         return;
       }
+    }
+
+    const hideRenderPopup = localStorage.getItem('craftlaunch_hideRenderPopup') === 'true';
+    if (!hideRenderPopup) {
+      const selection = await showRenderEngineDialog();
+      if (!selection) {
+        // Cancelled launch
+        overlay.classList.remove('active');
+        playBtn.innerText = 'PLAY';
+        playBtn.disabled = false;
+        return;
+      }
+      
+      state.performanceRenderer = selection.renderer;
+      localStorage.setItem('craftlaunch_performanceRenderer', selection.renderer);
+      
+      if (selection.dontShowAgain) {
+        localStorage.setItem('craftlaunch_hideRenderPopup', 'true');
+      }
+      
+      // Attempt to sync the saved setting with backend
+      if (window.electronAPI && window.electronAPI.saveSettings) {
+        window.electronAPI.saveSettings({ performanceRenderer: selection.renderer }).catch(() => {});
+      }
+      
+      // Update the UI dropdowns if they exist
+      const advSelect = document.getElementById('advanced-performance-renderer');
+      if (advSelect) advSelect.value = selection.renderer;
+      
+      const classicRenderer = document.getElementById('performance-renderer');
+      if (classicRenderer) classicRenderer.value = selection.renderer;
     }
 
     window.electronAPI.launchMinecraft(

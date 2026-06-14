@@ -1213,6 +1213,12 @@ export function initSettingsFeature({ switchView }) {
       else alert('Debug console is only available in the desktop app.');
     });
 
+    document.getElementById('adv-btn-reset-warnings')?.addEventListener('click', () => {
+      localStorage.removeItem('craftlaunch_hideRenderPopup');
+      // Remove any other hidden warnings here in the future
+      actions.showWarningToast('Hidden warnings and popups have been reset!');
+    });
+
     // Shared tools
     bindSharedTools();
   }
@@ -1260,6 +1266,13 @@ export function initSettingsFeature({ switchView }) {
       } else {
         alert("Debug console is only available in the desktop app.");
       }
+    });
+
+    // Reset warnings
+    document.getElementById("btn-reset-warnings")?.addEventListener("click", () => {
+      localStorage.removeItem('craftlaunch_hideRenderPopup');
+      // Remove any other hidden warnings here in the future
+      actions.showWarningToast('Hidden warnings and popups have been reset!');
     });
   }
 
