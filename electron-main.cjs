@@ -4036,21 +4036,20 @@ ipcMain.handle('download-version', async (event, { version, rootPath }) => {
     if (!clientUrl) throw new Error(`No client download URL for Minecraft ${version}`);
     sendProgress(`Downloading Minecraft ${version} client...`, 45);
 
-    const downloadFile = (url, destPath) => new Promise((resolve, reject) => {
-      const file = fs.createWriteStream(destPath);
-      https.get(url, (r) => {
-        if (r.statusCode >= 300 && r.statusCode < 400 && r.headers.location) {
-          r.resume();
-          return downloadFile(r.headers.location, destPath).then(resolve).catch(reject);
-        }
-        r.pipe(file);
-        file.on('finish', () => { file.close(); resolve(); });
-        file.on('error', reject);
-        r.on('error', reject);
-      }).on('error', reject);
+    await new Promise((resolve, reject) => {
+      downloadFile(clientUrl, versionJarPath, resolve, reject, 0, (prog) => {
+        try {
+          event.sender.send('download-progress', {
+            downloadId: `version:${version}`,
+            status: `Downloading Minecraft ${version} client...`,
+            percent: prog.percent,
+            speed: prog.speed,
+            eta: prog.eta,
+            item: version,
+          });
+        } catch {}
+      });
     });
-
-    await downloadFile(clientUrl, versionJarPath);
     sendProgress(`Finalizing Minecraft ${version}...`, 95);
 
     try { event.sender.send('download-complete', `version:${version}`, { success: true, alreadyDownloaded: false }); } catch {}
