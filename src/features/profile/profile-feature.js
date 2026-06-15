@@ -1,7 +1,6 @@
 import { state, actions } from "../../core/app-state.js";
 import {
   getSkinTextureUrl,
-  getCapeTextureUrl,
   resolveSkinTextureBase64,
   loadAvatarForUser,
 } from "../../core/skin-texture.js";
@@ -282,8 +281,6 @@ async function initHomeSkinViewer() {
   const username = state.currentUser || "Steve";
   const skinUrl = await getSkinTextureUrl(username, state.authMode);
   const texture = await resolveSkinTextureBase64(skinUrl);
-  const capeUrl = await getCapeTextureUrl(username, state.authMode);
-  const capeTexture = capeUrl ? await resolveSkinTextureBase64(capeUrl) : null;
   const { width, height } = fitHomeCanvasToStage(canvasEl, stage);
 
   try {
@@ -318,14 +315,14 @@ async function initHomeSkinViewer() {
         homeSkinViewerInstance.scene.remove(light),
       );
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1.1);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.72);
       homeSkinViewerInstance.scene.add(ambientLight);
 
-      const mainLight = new THREE.DirectionalLight(0xffffff, 1.6);
+      const mainLight = new THREE.DirectionalLight(0xffffff, 1.05);
       mainLight.position.set(4, 8, 7);
       homeSkinViewerInstance.scene.add(mainLight);
 
-      const rimLight = new THREE.DirectionalLight(0x9f7aea, 0.8);
+      const rimLight = new THREE.DirectionalLight(0x9f7aea, 0.45);
       rimLight.position.set(-5, 5, -3);
       homeSkinViewerInstance.scene.add(rimLight);
     }
@@ -373,9 +370,6 @@ async function initProfileSkinViewer() {
   const skinUrl = await getSkinTextureUrl(username, state.authMode);
   const texture = await resolveSkinTextureBase64(skinUrl);
 
-  const capeUrl = await getCapeTextureUrl(username, state.authMode);
-  const capeTexture = capeUrl ? await resolveSkinTextureBase64(capeUrl) : null;
-
   const { width, height } = fitCanvasToStage(canvasEl, stage);
 
   try {
@@ -387,14 +381,6 @@ async function initProfileSkinViewer() {
       height,
       skin: texture,
     });
-
-    if (capeTexture) {
-      try {
-        skinViewerInstance.loadCape(capeTexture, { backEquipment: "cape" });
-      } catch (err) {
-        console.warn("Failed to load cape in profile viewer:", err);
-      }
-    }
 
     canvasEl.width = width;
     canvasEl.height = height;
@@ -412,16 +398,16 @@ async function initProfileSkinViewer() {
       existingLights.forEach((light) => skinViewerInstance.scene.remove(light));
 
       // Ambient light for base illumination
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1.1);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
       skinViewerInstance.scene.add(ambientLight);
 
       // Main light from front
-      const mainLight = new THREE.DirectionalLight(0xffffff, 1.6);
+      const mainLight = new THREE.DirectionalLight(0xffffff, 1.0);
       mainLight.position.set(3, 8, 6);
       skinViewerInstance.scene.add(mainLight);
 
       // Fill light from side
-      const fillLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
       fillLight.position.set(-4, 4, 4);
       skinViewerInstance.scene.add(fillLight);
     }
@@ -455,47 +441,17 @@ async function initProfileSkinViewer() {
 function refreshProfilePage() {
   const name = state.currentUser || "Player";
   const nameEl = document.getElementById("profile-page-username");
-  const authBadge = document.getElementById("profile-auth-badge");
   const accountStat = document.getElementById("profile-stat-account-type");
   const playtimeEl = document.getElementById("profile-stat-playtime");
   const modpacksEl = document.getElementById("profile-stat-modpacks");
   const achievementsEl = document.getElementById("profile-stat-achievements");
   const changeSkinBtn = document.getElementById("profile-btn-change-skin");
-  const changeSkinMainBtn = document.getElementById("profile-stage-change-skin");
-  const manageCapesBtn = document.getElementById("profile-stage-manage-capes");
   const sidebarName = document.getElementById("profile-sidebar-name");
   const sidebarAcct = document.getElementById("profile-sidebar-acct");
 
   if (nameEl) nameEl.textContent = name.toUpperCase();
-  
-  let authTypeStr = "Offline";
-  let authTypeLong = "Offline Account";
-  if (state.authMode === "elyby") { authTypeStr = "Ely.by"; authTypeLong = "Ely.by Account"; }
-  else if (state.authMode === "microsoft") { authTypeStr = "Microsoft"; authTypeLong = "Microsoft Account"; }
-  
-  if (accountStat) accountStat.textContent = authTypeStr;
-  
-  if (authBadge) {
-    let iconSvg = "";
-    if (state.authMode === "microsoft") {
-      iconSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zM24 11.4H12.6V0H24v11.4z"/></svg>`;
-      authBadge.style.color = "#00a4ef";
-    } else if (state.authMode === "elyby") {
-      iconSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
-      authBadge.style.color = "var(--theme-accent-bright)"; 
-    } else {
-      iconSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-      authBadge.style.color = "rgba(255,255,255,0.5)";
-    }
-    authBadge.innerHTML = `${iconSvg} <span>${authTypeLong}</span>`;
-  }
-
-  if (changeSkinMainBtn) {
-    changeSkinMainBtn.style.display = state.authMode === "offline" ? "none" : "flex";
-  }
-  if (manageCapesBtn) {
-    manageCapesBtn.style.display = state.authMode === "microsoft" ? "flex" : "none";
-  }
+  if (accountStat)
+    accountStat.textContent = state.authMode === "elyby" ? "Ely.by" : "Offline";
   if (playtimeEl) playtimeEl.textContent = formatPlaytimeHours();
   if (modpacksEl) modpacksEl.textContent = String(state.modpacks?.length || 0);
   if (achievementsEl) {
@@ -516,7 +472,9 @@ function refreshProfilePage() {
   }
   // Change skin button removed - no longer needed
   if (sidebarName) sidebarName.textContent = name.toUpperCase();
-  if (sidebarAcct) sidebarAcct.textContent = authTypeLong;
+  if (sidebarAcct)
+    sidebarAcct.textContent =
+      state.authMode === "elyby" ? "Ely.by account" : "Offline account";
 
   const sidebarAvatarCanvas = document.getElementById("profile-sidebar-avatar");
   if (sidebarAvatarCanvas) {
@@ -670,136 +628,12 @@ export function initProfileFeature({ switchView, getReturnView }) {
     initHomeSkinViewer();
   }
 
-  async function openSkinManager() {
-    if (state.authMode === "microsoft") {
-      if (window.electronAPI && window.electronAPI.selectImageFile && window.electronAPI.uploadMicrosoftSkin) {
-        const selection = await window.electronAPI.selectImageFile();
-        if (!selection) return;
-
-        const { showListDialog } = await import("../../components/list-dialog.js");
-        const variantId = await showListDialog({
-          title: "Skin Model",
-          message: "Which skin model does your image use?",
-          items: [
-            { id: "classic", label: "Classic (Steve)" },
-            { id: "slim", label: "Slim (Alex)" }
-          ]
-        });
-
-        if (!variantId) return; // Cancelled
-        
-        const btn = document.getElementById("profile-stage-change-skin");
-        const originalHtml = btn.innerHTML;
-        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-anim"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg> Uploading...`;
-        btn.disabled = true;
-        
-        const res = await window.electronAPI.uploadMicrosoftSkin(selection, variantId);
-        
-        btn.innerHTML = originalHtml;
-        btn.disabled = false;
-        
-        if (res.success) {
-          const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
-          await showConfirmDialog({
-            title: "Success",
-            message: "Skin uploaded successfully! Your new look is now active.",
-            confirmText: "Awesome",
-            cancelText: "Close",
-            variant: "neutral"
-          });
-          
-          // Clear skin cache and refresh
-          const username = state.currentUser || "Steve";
-          if (window.electronAPI?.clearCache) {
-             // not implemented yet, just force reload
-          }
-          initProfileSkinViewer();
-          initHomeSkinViewer();
-        } else {
-          alert("Failed to upload skin: " + res.error);
-        }
-      } else {
-        alert("Skin uploading is not available in this build.");
-      }
-      return;
-    }
-
+  function openSkinManager() {
     const url = "https://ely.by/profile";
     if (window.electronAPI?.openExternal) {
       window.electronAPI.openExternal(url);
     } else {
       window.open(url, "_blank");
-    }
-  }
-
-  async function openCapeManager() {
-    if (state.authMode !== "microsoft" || !window.electronAPI || !window.electronAPI.fetchMicrosoftProfile) return;
-
-    const btn = document.getElementById("profile-stage-manage-capes");
-    const originalHtml = btn.innerHTML;
-    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-anim"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg> Fetching...`;
-    btn.disabled = true;
-
-    const profileRes = await window.electronAPI.fetchMicrosoftProfile();
-    
-    if (!profileRes.success || !profileRes.data) {
-      btn.innerHTML = originalHtml;
-      btn.disabled = false;
-      alert("Failed to fetch profile: " + (profileRes.error || "Unknown error"));
-      return;
-    }
-
-    const capes = profileRes.data.capes || [];
-    if (capes.length === 0) {
-      btn.innerHTML = originalHtml;
-      btn.disabled = false;
-      alert("You do not own any official Minecraft capes on this account.");
-      return;
-    }
-
-    const { showListDialog } = await import("../../components/list-dialog.js");
-    const capeItems = capes.map(c => {
-      let name = c.alias || 'Unknown Cape';
-      if (c.state === 'ACTIVE') name += ' (Equipped)';
-      return { id: c.id, label: name };
-    });
-    
-    // Add a hide option at the top
-    capeItems.unshift({ id: "HIDE_CAPE", label: "Hide Cape", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` });
-
-    const selectionId = await showListDialog({
-      title: "Manage Capes",
-      message: "Which official cape would you like to equip?",
-      items: capeItems
-    });
-
-    if (!selectionId) {
-      btn.innerHTML = originalHtml;
-      btn.disabled = false;
-      return;
-    }
-
-    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-anim"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg> Equipping...`;
-    
-    const capeIdToEquip = selectionId === "HIDE_CAPE" ? null : selectionId;
-    const equipRes = await window.electronAPI.equipMicrosoftCape(capeIdToEquip);
-    
-    btn.innerHTML = originalHtml;
-    btn.disabled = false;
-
-    if (equipRes.success) {
-      const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
-      await showConfirmDialog({
-        title: "Cape Updated",
-        message: "Your cape has been updated! Your new look is now active on official servers.",
-        confirmText: "Awesome",
-        cancelText: "Close",
-        variant: "neutral"
-      });
-      initProfileSkinViewer();
-      initHomeSkinViewer();
-    } else {
-      alert("Failed to equip cape: " + equipRes.error);
     }
   }
 
@@ -827,10 +661,6 @@ export function initProfileFeature({ switchView, getReturnView }) {
   document
     .getElementById("profile-stage-change-skin")
     ?.addEventListener("click", openSkinManager);
-
-  document
-    .getElementById("profile-stage-manage-capes")
-    ?.addEventListener("click", openCapeManager);
 
   document
     .getElementById("profile-stage-export-skin")

@@ -1,5 +1,6 @@
 import { state, actions } from "../../core/app-state.js";
 import { loadAvatarForUser } from "../../core/skin-texture.js";
+import { initTutorial } from "../tutorial/tutorial.js";
 
 export function initAuthFeature({ switchView }) {
   // --- LOGIN LOGIC ---
@@ -9,34 +10,59 @@ export function initAuthFeature({ switchView }) {
   const btnSubmitLogin = document.getElementById("btn-submit-login");
 
   const btnElybyLogin = document.getElementById("btn-elyby-login");
-  const elybyForm = document.getElementById("elyby-form");
-  const elybyUserInput = document.getElementById("elyby-username");
-  const elybyPassInput = document.getElementById("elyby-password");
-  const btnSubmitElyby = document.getElementById("btn-submit-elyby");
   const btnMicrosoftLogin = document.getElementById("btn-microsoft-login");
 
   if (state.currentUser) {
-    // Auto-login
     updateUserDisplay(state.currentUser);
     handleOnboardingFlow(switchView);
   }
 
   btnOfflineLogin.addEventListener("click", () => {
-    elybyForm.classList.remove("open");
     offlineForm.classList.add("open");
     loginInput.focus();
   });
 
-  btnElybyLogin.addEventListener("click", () => {
+  btnElybyLogin.addEventListener("click", async () => {
     offlineForm.classList.remove("open");
-    elybyForm.classList.add("open");
-    elybyUserInput.focus();
+
+    btnElybyLogin.innerText = "Opening browser...";
+    try {
+      if (window.electronAPI && window.electronAPI.elybyOAuthLogin) {
+        const res = await window.electronAPI.elybyOAuthLogin();
+        if (res && res.success && res.data && res.data.user) {
+          state.currentUser = res.data.user.username;
+          state.authMode = "elyby";
+          localStorage.setItem("craftlaunch_username", state.currentUser);
+          localStorage.setItem("craftlaunch_authmode", state.authMode);
+
+          window.electronAPI.saveSettings({
+            currentUser: state.currentUser,
+            authMode: state.authMode,
+            elybyData: {
+              accessToken: res.data.accessToken,
+              tokenType: res.data.tokenType,
+              expiresIn: res.data.expiresIn,
+              selectedProfile: { name: res.data.user.username, id: res.data.user.uuid },
+              user: res.data.user,
+            }
+          }).catch(console.error);
+
+          updateUserDisplay(state.currentUser);
+          handleOnboardingFlow(switchView);
+        } else {
+          alert(res?.error || "Ely.by login failed or was cancelled.");
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error during Ely.by login.");
+    }
+    btnElybyLogin.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Ely.by Account';
   });
 
   btnMicrosoftLogin.addEventListener("click", async () => {
     offlineForm.classList.remove("open");
-    elybyForm.classList.remove("open");
-    
+
     btnMicrosoftLogin.innerText = "Logging in...";
     try {
       if (window.electronAPI && window.electronAPI.microsoftAuthenticate) {
@@ -46,7 +72,7 @@ export function initAuthFeature({ switchView }) {
           state.authMode = "microsoft";
           localStorage.setItem("craftlaunch_username", state.currentUser);
           localStorage.setItem("craftlaunch_authmode", state.authMode);
-          
+
           window.electronAPI.saveSettings({
             currentUser: state.currentUser,
             authMode: state.authMode,
@@ -90,67 +116,9 @@ export function initAuthFeature({ switchView }) {
     handleOnboardingFlow(switchView);
   }
 
-  btnSubmitElyby.addEventListener("click", async () => {
-    const username = elybyUserInput.value.trim();
-    const password = elybyPassInput.value;
-    if (!username || !password) return;
-
-    btnSubmitElyby.innerText = "Logging in...";
-    try {
-      let ok = false;
-      let data = {};
-      if (window.electronAPI && window.electronAPI.elybyAuthenticate) {
-        const res = await window.electronAPI.elybyAuthenticate({
-          username,
-          password,
-          clientToken: "idklauncher-token-" + Date.now(),
-        });
-        ok = res.ok;
-        data = res.data;
-      } else {
-        const res = await fetch("https://authserver.ely.by/auth/authenticate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            agent: { name: "Minecraft", version: 1 },
-            username,
-            password,
-            clientToken: "idklauncher-token-" + Date.now(),
-          }),
-        });
-        data = await res.json();
-        ok = res.ok;
-      }
-
-      if (ok && data.accessToken) {
-        state.currentUser = data.selectedProfile.name;
-        state.authMode = "elyby";
-        localStorage.setItem("craftlaunch_username", state.currentUser);
-        localStorage.setItem("craftlaunch_authmode", state.authMode);
-        if (window.electronAPI) {
-          window.electronAPI
-            .saveSettings({
-              currentUser: state.currentUser,
-              authMode: state.authMode,
-              elybyData: data,
-            })
-            .catch(console.error);
-        }
-        updateUserDisplay(state.currentUser);
-        handleOnboardingFlow(switchView);
-      } else {
-        alert(data.errorMessage || "Login failed");
-      }
-    } catch (e) {
-      alert("Network error during login.");
-    }
-    btnSubmitElyby.innerText = "Login via Ely.by";
-  });
-
   async function handleOnboardingFlow(switchViewFn) {
     const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
-    
-    // 1. EULA & Privacy Policy
+
     if (!localStorage.getItem("idk_agreed_eula")) {
       const agreed = await showConfirmDialog({
         title: "GAME ACCESS & LEGALITY",
@@ -165,7 +133,7 @@ Please review and accept these terms to continue.`,
         cancelText: "DECLINE",
         variant: "neutral"
       });
-      
+
       if (!agreed) {
         state.currentUser = "";
         localStorage.removeItem("craftlaunch_username");
@@ -179,7 +147,6 @@ Please review and accept these terms to continue.`,
       localStorage.setItem("idk_agreed_eula", "true");
     }
 
-    // 2. IDK Connect Prompt
     if (!localStorage.getItem("idk_connect_prompted_v2")) {
       const wantIdkConnect = await showConfirmDialog({
         title: "IDK Connect",
@@ -188,11 +155,12 @@ Please review and accept these terms to continue.`,
         cancelText: "Continue Without",
         variant: "neutral"
       });
-      
+
       localStorage.setItem("idk_connect_prompted_v2", "true");
-      
+
       if (wantIdkConnect) {
-        switchViewFn("main");
+    switchViewFn("main");
+    initTutorial();
         setTimeout(() => {
           document.getElementById('btn-friends-toggle')?.click();
         }, 100);
@@ -200,7 +168,6 @@ Please review and accept these terms to continue.`,
       }
     }
 
-    // Proceed as normal
     switchViewFn("main");
   }
 
@@ -230,7 +197,6 @@ Please review and accept these terms to continue.`,
       loadAvatarForUser(avatarCanvas, name, state.authMode);
     }
 
-    // Sync IDK Connect UI
     actions.updateFriendsAuthUI?.();
   }
 
@@ -241,7 +207,6 @@ Please review and accept these terms to continue.`,
   const btnDropdownProfile = document.getElementById("btn-dropdown-profile");
   const btnDropdownLogout = document.getElementById("btn-dropdown-logout");
 
-  // Toggle dropdown menu on click; double-click opens profile page
   userProfileBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     profileDropdown.classList.toggle("active");
@@ -253,12 +218,10 @@ Please review and accept these terms to continue.`,
     actions.openProfile?.();
   });
 
-  // Close dropdown when clicking outside
   document.addEventListener("click", () => {
     profileDropdown.classList.remove("active");
   });
 
-  // "Change Skin" behavior: forwards user to Ely.by profile dashboard in their system browser!
   btnDropdownSkin.addEventListener("click", (e) => {
     e.stopPropagation();
     profileDropdown.classList.remove("active");
@@ -270,14 +233,12 @@ Please review and accept these terms to continue.`,
     }
   });
 
-  // Open full profile page (3D skin + stats)
   btnDropdownProfile.addEventListener("click", (e) => {
     e.stopPropagation();
     profileDropdown.classList.remove("active");
     actions.openProfile?.();
   });
 
-  // Logout click behavior
   btnDropdownLogout.addEventListener("click", async (e) => {
     e.stopPropagation();
     profileDropdown.classList.remove("active");
@@ -293,10 +254,9 @@ Please review and accept these terms to continue.`,
     if (!ok) return;
     state.currentUser = "";
     localStorage.removeItem("craftlaunch_username");
-    
-    // Logout from IDK Connect as well
+
     document.getElementById("btn-friends-disconnect")?.click();
-    
+
     if (window.electronAPI) {
       window.electronAPI
         .saveSettings({
@@ -306,7 +266,6 @@ Please review and accept these terms to continue.`,
         })
         .catch(console.error);
     }
-    // Sync IDK Connect UI
     actions.updateFriendsAuthUI?.();
     switchView("login");
   });

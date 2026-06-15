@@ -1,4 +1,4 @@
-export function renderAppShell() {
+﻿export function renderAppShell() {
   document.querySelector("#app").innerHTML = `
   <div class="background-slider">
     <video autoplay muted loop playsinline class="bg-video">
@@ -31,10 +31,6 @@ export function renderAppShell() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg>
             Settings
           </div>
-          <div class="nav-tab" data-target="idk-connect">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            IDK Connect
-          </div>
         </div>
       </div>
     </div>
@@ -52,7 +48,17 @@ export function renderAppShell() {
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
       </button>
-      <!-- OLD FRIENDS TOGGLE REMOVED -->
+      <!-- FRIENDS TOGGLE BUTTON -->
+      <button class="friends-toggle-btn" id="btn-friends-toggle" title="Friends List" style="margin-right: 4px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span class="friends-badge" id="friends-pending-badge" style="display:none;">0</span>
+        <span class="friends-unread-dot" id="friends-unread-dot" style="display:none;"></span>
+      </button>
 
       <div class="user-profile-wrapper">
         <div class="user-profile" id="user-profile-btn">
@@ -109,28 +115,22 @@ export function renderAppShell() {
       <p style="color: var(--text-muted); margin-bottom: 10px;">Select your login method to enter the launcher.</p>
 
       <div class="login-btn microsoft" id="btn-microsoft-login">
-        <img src="./microsoft.png" alt="Microsoft Logo" width="24" height="24" style="object-fit: contain;" />
+        <img src="./microsoft.png" alt="Microsoft Logo" width="18" height="18" style="object-fit: contain;" />
         Microsoft Account
       </div>
 
       <div class="login-btn elyby" id="btn-elyby-login">
-        <img src="./elyby.jpg" alt="Ely.by Logo" width="22" height="22" style="border-radius: 4px; object-fit: cover;" />
+        <img src="./elyby.jpg" alt="Ely.by Logo" width="18" height="18" style="border-radius: 3px; object-fit: cover;" />
         Ely.by Account
       </div>
 
-      <div id="btn-offline-login" style="text-align: center; margin-top: 15px; cursor: pointer; color: #8c9096; font-size: 12px; text-decoration: underline; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#8c9096'">
+      <div id="btn-offline-login" style="text-align: center; margin-top: 8px; cursor: pointer; color: #8c9096; font-size: 11px; text-decoration: underline; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#8c9096'">
         Play Minecraft with Username (Offline)
       </div>
 
       <div class="offline-form" id="offline-form">
         <input type="text" class="clean-input" id="login-username" placeholder="Enter username..." />
         <button class="submit-btn" id="btn-submit-login">Enter Launcher</button>
-      </div>
-
-      <div class="offline-form" id="elyby-form">
-        <input type="text" class="clean-input" id="elyby-username" placeholder="Ely.by Username or Email" />
-        <input type="password" class="clean-input" id="elyby-password" placeholder="Password" style="margin-top: 10px;" />
-        <button class="submit-btn" id="btn-submit-elyby" style="margin-top: 10px;">Login via Ely.by</button>
       </div>
     </div>
   </div>
@@ -172,16 +172,16 @@ export function renderAppShell() {
               <div class="custom-options">
                 <div class="options-filters">
                   <div class="version-tabs">
-                    <button class="version-tab active" data-tab="all">All Versions</button>
-                    <button class="version-tab" data-tab="downloaded">Downloaded</button>
+                    <button class="version-tab active" data-tab="all">All Releases</button>
+                    <button class="version-tab" data-tab="downloaded">Installed</button>
                   </div>
-                  <label class="toggle-switch">
+                  <label class="toggle-switch" style="display:none;">
                     <input type="checkbox" id="show-snapshots" />
                     <div class="switch"></div>
                     Snapshots
                   </label>
 
-                  <label class="toggle-switch">
+                  <label class="toggle-switch" style="display:none;">
                     <input type="checkbox" id="show-historical" />
                     <div class="switch"></div>
                     Historical
@@ -231,17 +231,16 @@ export function renderAppShell() {
         </div>
 
         <div class="controls-right">
-          <div class="play-container">
-            <div class="play-button-wrapper" id="play-btn-wrapper" style="position: relative; z-index: 5;">
-              <button class="play-button" id="play-btn" data-status="Ready to play">PLAY</button>
-              <button class="play-dropdown-trigger" id="play-dropdown-trigger" aria-label="More options">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-              <div class="play-dropdown" id="play-dropdown">
-                <div class="play-dd-setup" id="play-dd-setup">
-                  <span class="play-dd-setup-label">Current Setup</span>
-                  <span class="play-dd-setup-value" id="play-dd-setup-value">—</span>
-                </div>
+          <div class="play-button-wrapper" id="play-btn-wrapper">
+            <button class="play-button" id="play-btn">PLAY</button>
+            <button class="play-dropdown-trigger" id="play-dropdown-trigger" aria-label="More options">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="play-dropdown" id="play-dropdown">
+              <div class="play-dd-setup" id="play-dd-setup">
+                <span class="play-dd-setup-label">Current Setup</span>
+                <span class="play-dd-setup-value" id="play-dd-setup-value">—</span>
+              </div>
 
               <div class="play-dropdown-divider"></div>
 
@@ -259,9 +258,8 @@ export function renderAppShell() {
               <div class="play-dropdown-divider"></div>
 
               <div class="play-dd-section">
-                <div class="play-dd-section-header">Version</div>
                 <div class="play-dd-version-list" id="play-dd-version-list">
-                  <!-- Injected by JS -->
+                  <!-- Injected by JS: section headers + version/modpack items -->
                 </div>
               </div>
 
@@ -271,15 +269,6 @@ export function renderAppShell() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 Modpacks
               </button>
-            </div>
-            </div>
-            
-            <div class="force-update-container" onclick="document.getElementById('force-update-cb').click();">
-              <label class="tg-switch" style="transform: scale(0.65); margin:0; pointer-events:none;">
-                <input type="checkbox" id="force-update-cb" style="pointer-events:all;" />
-                <span class="tg-slider"></span>
-              </label>
-              <span class="force-update-label">Force Update</span>
             </div>
           </div>
           <button class="manage-mods-button" id="manage-mods-btn" style="display: none;">MANAGE MODS</button>
@@ -323,7 +312,7 @@ export function renderAppShell() {
           </div>
           <div class="news-grid" id="mojang-news-grid">
             <div style="padding: 60px 40px; text-align: center; color: var(--text-muted); width: 100%; grid-column: 1 / -1;">
-              <div style="font-size: 48px; margin-bottom: 16px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></div>
+              <div style="font-size:3rem; margin-bottom: 16px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></div>
               <div>Loading Mojang news...</div>
             </div>
           </div>
@@ -519,16 +508,6 @@ export function renderAppShell() {
               <span class="tg-slider"></span>
             </label>
           </div>
-          <div class="settings-row">
-            <div class="settings-row-label">
-              <span>Performance Renderer</span>
-              <small>Mod to use for rendering performance</small>
-            </div>
-            <select id="performance-renderer" class="clean-select" style="width:160px; padding: 6px;">
-              <option value="sodium">Sodium (+ Iris)</option>
-              <option value="vulkan">VulkanMod</option>
-            </select>
-          </div>
 
         </div>
       </div>
@@ -654,6 +633,13 @@ export function renderAppShell() {
               <span class="tg-slider"></span>
             </label>
           </div>
+          <div class="settings-row">
+            <div class="settings-row-label">
+              <span>Tutorial</span>
+              <small>Replay the guided tour of the launcher</small>
+            </div>
+            <button class="settings-action-btn" id="btn-redo-tutorial">Redo Tutorial</button>
+          </div>
 
         </div>
       </div>
@@ -685,13 +671,6 @@ export function renderAppShell() {
               <small>Chrome DevTools for debugging</small>
             </div>
             <button class="glass-btn" id="btn-toggle-devtools">Open DevTools</button>
-          </div>
-          <div class="settings-row">
-            <div class="settings-row-label">
-              <span>Reset Hidden Warnings</span>
-              <small>Restore any popups you previously dismissed</small>
-            </div>
-            <button class="glass-btn" id="btn-reset-warnings" style="color: #f87171; border-color: rgba(248, 113, 113, 0.3);">Reset</button>
           </div>
 
         </div>
@@ -872,6 +851,10 @@ export function renderAppShell() {
           <input type="checkbox" id="adv-compact-mode-toggle" />
           <span class="adv-toggle-track"></span>
         </label>
+        <div class="adv-toggle-row">
+          <span>Tutorial</span>
+          <button type="button" class="settings-action-btn" id="adv-redo-tutorial">Redo Tutorial</button>
+        </div>
       </div>
 
     </div>
@@ -920,6 +903,84 @@ export function renderAppShell() {
           <input type="range" id="adv-bg-intensity" min="0" max="200" value="50" class="adv-slider" />
           <span class="adv-slider-label">High</span>
           <span class="adv-slider-value" id="adv-bg-intensity-value">50</span>
+        </div>
+      </div>
+
+      <!-- Nebula Config -->
+      <div class="adv-section" id="adv-bg-nebula-config" style="display:none;">
+        <div class="adv-section-header">
+          <h3>Nebula Color Scheme</h3>
+          <p>Choose a cosmic color palette</p>
+        </div>
+        <div class="bg-effects-grid" id="adv-nebula-schemes">
+          <button class="bg-effect-card bg-scheme-card active" data-scheme="0">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#2a1a4a,#1a3a5a,#5a2a3a);"></div>
+            <span>Orion</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="1">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#5a2a1a,#4a3a1a,#3a2a0a);"></div>
+            <span>Crab</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="2">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#3a1a4a,#2a2a5a,#1a3a4a);"></div>
+            <span>Eagle</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="3">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#1a3a4a,#2a4a3a,#1a3a3a);"></div>
+            <span>Helix</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Liquid Chrome Config -->
+      <div class="adv-section" id="adv-bg-liquid-config" style="display:none;">
+        <div class="adv-section-header">
+          <h3>Color Palette</h3>
+          <p>Choose an iridescent color base</p>
+        </div>
+        <div class="bg-effects-grid" id="adv-liquid-schemes">
+          <button class="bg-effect-card bg-scheme-card active" data-scheme="0">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#1a4a5a,#2a5a6a,#1a4a5a);"></div>
+            <span>Teal</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="1">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#2a1a5a,#3a2a6a,#2a1a5a);"></div>
+            <span>Violet</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="2">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#5a1a3a,#6a2a4a,#5a1a3a);"></div>
+            <span>Rose</span>
+          </button>
+          <button class="bg-effect-card bg-scheme-card" data-scheme="3">
+            <div class="bg-effect-preview" style="background:linear-gradient(135deg,#1a5a3a,#2a6a4a,#1a5a3a);"></div>
+            <span>Emerald</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Starfield Config -->
+      <div class="adv-section" id="adv-bg-starfield-config" style="display:none;">
+        <div class="adv-section-header">
+          <h3>Sky Elements</h3>
+          <p>Toggle real night sky features</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;padding:0 4px;">
+          <label class="adv-toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="adv-sf-milkyway" checked class="adv-toggle-input" />
+            <span>Milky Way Band</span>
+          </label>
+          <label class="adv-toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="adv-sf-galaxy" checked class="adv-toggle-input" />
+            <span>Spiral Galaxy</span>
+          </label>
+          <label class="adv-toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="adv-sf-constellations" checked class="adv-toggle-input" />
+            <span>Constellations</span>
+          </label>
+          <label class="adv-toggle-row" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="adv-sf-planet" checked class="adv-toggle-input" />
+            <span>Planet</span>
+          </label>
         </div>
       </div>
     </div>
@@ -992,13 +1053,6 @@ export function renderAppShell() {
           <input type="checkbox" id="adv-auto-optimization" />
           <span class="adv-toggle-track"></span>
         </label>
-        <div class="adv-input-field" style="margin-top:12px;">
-          <label class="adv-input-label" for="adv-performance-renderer">Performance Renderer</label>
-          <select id="adv-performance-renderer" class="adv-select" style="width:160px;">
-            <option value="sodium">Sodium (+ Iris)</option>
-            <option value="vulkan">VulkanMod</option>
-          </select>
-        </div>
       </div>
 
     </div>
@@ -1091,13 +1145,6 @@ export function renderAppShell() {
           </div>
           <button type="button" class="adv-btn" id="adv-btn-toggle-devtools">Open DevTools</button>
         </div>
-        <div class="adv-action-row">
-          <div class="adv-action-label">
-            <span>Reset Hidden Warnings</span>
-            <small>Restore any popups you previously dismissed</small>
-          </div>
-          <button type="button" class="adv-btn" id="adv-btn-reset-warnings" style="color: #f87171; border-color: rgba(248, 113, 113, 0.3);">Reset</button>
-        </div>
       </div>
     </div>
 
@@ -1131,9 +1178,6 @@ export function renderAppShell() {
           <div class="profile-stage-character">
             <div class="profile-stage-heading">
               <h1 class="profile-character-name" id="profile-page-username">MUZLIK_GAMER</h1>
-              <div id="profile-auth-badge" style="margin-top: 4px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                <!-- Icon and Text injected by JS -->
-              </div>
             </div>
 
             <div class="profile-skin-viewer-wrapper" id="profile-skin-stage" style="display:flex; justify-content:center; align-items:center; overflow:hidden;">
@@ -1145,11 +1189,7 @@ export function renderAppShell() {
               <div class="profile-stage-bar-combined">
                 <button type="button" class="profile-stage-bar-main-text" id="profile-stage-change-skin">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                  <span>Change Skin</span>
-                </button>
-                <button type="button" class="profile-stage-bar-main-text" id="profile-stage-manage-capes" style="display: none;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4z"></path><path d="M6 10v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10"></path></svg>
-                  <span>Manage Capes</span>
+                  Change Skin
                 </button>
                 <button type="button" class="profile-stage-bar-export-icon" id="profile-stage-export-skin" title="Export Skin">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -1359,42 +1399,59 @@ export function renderAppShell() {
         <div class="modpack-detail" id="modpack-detail">
           <div class="no-modpack-msg" id="no-modpack-msg">
 
-            <div class="mp-welcome-hero">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-              <h2>Set up your modpack</h2>
-            </div>
-
-            <div class="mp-wizard-columns">
-
-              <div class="mp-wizard-section" id="mp-version-wizard">
-                <div class="mp-wizard-header">
-                  <span class="mp-wizard-step">Step 1</span>
-                  <h3>Download a Minecraft Version</h3>
+            <div class="mp-welcome">
+              <div class="mp-welcome-left">
+                <div class="mp-hero-card">
+                  <div class="mp-hero-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                  </div>
+                  <div class="mp-hero-text">
+                    <h2>Set up your modpack</h2>
+                    <p>Download a Minecraft version, then create or import a modpack to get started.</p>
+                  </div>
                 </div>
-                <div class="mp-version-download-grid" id="mp-version-download-grid">
-                  <!-- Injected by JS -->
-                </div>
-                <div class="mp-wizard-footer">
-                  <button class="mp-dl-btn" id="btn-show-all-versions">Show all versions…</button>
+
+                <div class="mp-onboard-grid">
+                  <div class="mp-onboard-card" id="mp-version-wizard">
+                    <div class="mp-onboard-num">1</div>
+                    <div class="mp-onboard-content">
+                      <h3>Download a Version</h3>
+                      <p>Choose a Minecraft version to install</p>
+                    </div>
+                    <div class="mp-version-download-grid" id="mp-version-download-grid"></div>
+                    <button class="mp-dl-btn" id="btn-show-all-versions">Show all versions…</button>
+                  </div>
+
+                  <div class="mp-onboard-card">
+                    <div class="mp-onboard-num">2</div>
+                    <div class="mp-onboard-content">
+                      <h3>Create or Import</h3>
+                      <p>Start a new modpack or import an existing one</p>
+                    </div>
+                    <div class="mp-onboard-actions">
+                      <button class="mp-onboard-action" id="btn-new-modpack-wizard">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>New Modpack</span>
+                      </button>
+                      <button class="mp-onboard-action" id="btn-import-modpack-wizard">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <span>Import Zip</span>
+                      </button>
+                      <button class="mp-onboard-action" id="btn-browse-modpacks-wizard">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <span>Browse</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div class="mp-wizard-section">
-                <div class="mp-wizard-header">
-                  <span class="mp-wizard-step">Step 2</span>
-                  <h3>Create or Import a Modpack</h3>
-                </div>
-                <div class="mp-wizard-buttons">
-                  <button class="mp-action-btn browse" id="btn-new-modpack-wizard">+ New Modpack</button>
-                  <button class="mp-action-btn browse" id="btn-import-modpack-wizard">Import Zip</button>
-                  <button class="mp-action-btn browse" id="btn-browse-modpacks-wizard">Browse Modpacks</button>
-                </div>
-
-                <div class="mp-trending-section">
-                  <div class="mp-trending-header">
-                    <h2 class="mp-trending-title">Trending Modpacks</h2>
+              <div class="mp-welcome-right">
+                <div class="mp-trending-panel">
+                  <div class="mp-trending-head">
+                    <span class="mp-trending-label">Trending on</span>
                     <span class="mp-trending-brand">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
                       CurseForge
                     </span>
                   </div>
@@ -1403,7 +1460,6 @@ export function renderAppShell() {
                   </div>
                 </div>
               </div>
-
             </div>
 
           </div>
@@ -1414,8 +1470,8 @@ export function renderAppShell() {
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.8;color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                 </div>
                 <div style="flex:1;">
-                  <h2 id="modpack-name-display" style="font-size:28px;margin-bottom:2px;font-family:var(--font-title);font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);">Modpack</h2>
-                  <p id="modpack-meta-display" style="font-size:13px;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 &middot; Fabric</p>
+                  <h2 id="modpack-name-display" style="font-size:1.75rem;margin-bottom:2px;font-family:var(--font-title);font-weight:900;letter-spacing:1px;color:#ffffff;text-shadow:2px 2px 0 rgba(0,0,0,0.5);">Modpack</h2>
+                  <p id="modpack-meta-display" style="font-size:0.8125rem;color:#a0a0a0;margin-bottom:12px;font-weight:600;font-family:var(--font-title);">MC 1.20.4 &middot; Fabric</p>
                   <div class="mp-stats-row">
                     <div class="mp-stat">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--theme-accent);"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
@@ -1438,7 +1494,6 @@ export function renderAppShell() {
               </div>
               <div class="modpack-header-actions">
                 <div class="mp-action-icon-row">
-                  <button class="mp-action-btn icon-btn" id="btn-favorite-modpack" title="Favorite Modpack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
                   <button class="mp-action-btn icon-btn" id="btn-export-modpack" title="Export Modpack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
                   <button class="mp-action-btn icon-btn" id="btn-delete-modpack" title="Delete"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg></button>
                   <button class="mp-action-btn icon-btn" id="btn-modpack-settings" title="Settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg></button>
@@ -1612,7 +1667,7 @@ export function renderAppShell() {
 
             <div class="mp-settings-section">
               <label>Java Arguments</label>
-              <input type="text" class="clean-input" id="mp-settings-java-args" placeholder="e.g., -XX:+UseG1GC -XX:+ParallelRefProcEnabled" style="text-align:left; font-size:11px;" />
+              <input type="text" class="clean-input" id="mp-settings-java-args" placeholder="e.g., -XX:+UseG1GC -XX:+ParallelRefProcEnabled" style="text-align:left; font-size:0.6875rem;" />
               <small style="color:var(--text-muted); display:block; margin-top:4px;">Advanced JVM arguments for this modpack</small>
             </div>
 
@@ -1721,7 +1776,7 @@ export function renderAppShell() {
         <!-- Injected release notes -->
       </div>
       <div id="update-progress-container" style="display:none;width:100%;margin-top:15px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--text-muted);">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.75rem;color:var(--text-muted);">
           <span id="update-progress-text">Downloading...</span>
           <span id="update-progress-percent">0%</span>
         </div>
@@ -1737,270 +1792,169 @@ export function renderAppShell() {
     </div>
   </div>
 
-  <!-- IDK CONNECT VIEW -->
-  <div id="view-idk-connect" class="view">
-    
-    <!-- PORTAL PANEL (LOGIN/REGISTER) -->
-    <div id="friends-auth-panel" class="mods-content-wrapper" style="display:flex; align-items:center; justify-content:center;">
-      <div class="mp-wizard-section" style="width: 400px; padding: 30px;">
-        <h2 style="text-align: center; margin-top: 0; font-family: var(--font-title);">IDK Network</h2>
-        <p style="text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 20px;">
-          Connect to add friends, sync presence, and join multiplayer worlds instantly!
+  <!-- FRIENDS SIDEBAR -->
+  <div class="friends-sidebar" id="friends-sidebar">
+    <div class="friends-sidebar-header">
+      <h3>IDK CONNECT <span style="font-size:0.6875rem; color: var(--text-muted); font-weight: 500; vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px; opacity: 0.8;">(Beta)</span></h3>
+      <button class="friends-sidebar-close" id="btn-friends-sidebar-close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="friends-sidebar-content">
+      <!-- PORTAL PANEL (WHEN NOT AUTHENTICATED WITH IDK SYSTEM) -->
+      <div id="friends-auth-panel" class="friends-auth-panel">
+        <p class="friends-auth-welcome">
+          Connect to <strong>IDK Network</strong> to add friends, sync presence, and join multiplayer worlds with a single click!
         </p>
 
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-          <button class="submit-btn" id="tab-friends-login" style="flex: 1;">LOGIN</button>
-          <button class="modal-btn" id="tab-friends-register" style="flex: 1;">REGISTER</button>
+        <div class="friends-auth-tabs">
+          <button class="friends-auth-tab active" id="tab-friends-login">LOGIN</button>
+          <button class="friends-auth-tab" id="tab-friends-register">REGISTER</button>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <div id="friends-auth-error" style="display: none; color: var(--accent-red); font-size: 12px; text-align: center;"></div>
-          <input type="text" class="clean-input" id="friends-auth-username" placeholder="Username" />
-          <input type="email" class="clean-input" id="friends-auth-email" placeholder="Email Address" style="display: none;" />
-          <input type="password" class="clean-input" id="friends-auth-password" placeholder="Password" />
-          <input type="text" class="clean-input" id="friends-auth-otp" placeholder="6-digit OTP Code" style="display: none; text-align: center; letter-spacing: 4px;" maxlength="6" />
-          <button class="submit-btn" id="btn-friends-auth-submit" style="padding: 10px; margin-top: 10px;">Connect</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- MAIN DASHBOARD PANEL -->
-    <div id="friends-main-panel" class="mods-content-wrapper" style="display:none;">
-      <div class="mods-page-header">
-        <h2 class="view-title">IDK Connect</h2>
-        <div class="mods-header-actions">
-          <button class="submit-btn" id="btn-open-search">Find Users</button>
-          <button class="modal-btn" id="btn-my-settings">Settings</button>
-          <button class="modal-btn" id="btn-friends-disconnect" style="color: var(--accent-red);">Disconnect</button>
+        <div class="friends-auth-form">
+          <div class="friends-auth-error" id="friends-auth-error">Error message here</div>
+          <input type="text" class="clean-input" id="friends-auth-username" placeholder="IDK Username..." />
+          <input type="email" class="clean-input" id="friends-auth-email" placeholder="Email Address..." style="display: none; margin-top: 10px;" />
+          <input type="password" class="clean-input" id="friends-auth-password" placeholder="Password..." style="margin-top: 10px;" />
+          <input type="text" class="clean-input" id="friends-auth-otp" placeholder="6-digit OTP Code" style="display: none; margin-top: 10px; text-align: center; letter-spacing: 2px;" maxlength="6" />
+          <button class="submit-btn" id="btn-friends-auth-submit" style="margin-top: 10px;">Connect Account</button>
         </div>
       </div>
-      
-      <div class="mods-container">
-        <!-- LEFT COLUMN: Profile Info -->
-        <div class="modpacks-sidebar" style="width: 250px; padding: 20px; display: flex; flex-direction: column; gap: 20px;">
-            
-            <!-- Minecraft style profile header -->
-            <div style="text-align: center;">
-                <div style="width: 80px; height: 80px; margin: 0 auto 15px; border-radius: 8px; border: 2px solid var(--border-mojang); background: rgba(0,0,0,0.5); overflow: hidden;">
-                  <canvas id="friends-my-avatar" width="80" height="80" style="image-rendering:pixelated;width:100%;height:100%;"></canvas>
-                </div>
-                <h3 id="friends-my-username" style="margin: 0; font-family: var(--font-title); font-size: 18px; color: white;">Username</h3>
-                <div style="color: var(--theme-accent); font-size: 11px; margin-top: 5px; font-weight: bold;">CONNECTED</div>
+
+      <!-- MAIN PANEL (WHEN AUTHENTICATED WITH IDK SYSTEM) -->
+      <div id="friends-main-panel" class="friends-auth-panel" style="display:none;">
+        <!-- Identity Card -->
+        <div class="friends-identity-card">
+          <div class="friends-identity-info">
+            <div class="friends-identity-avatar">
+              <canvas id="friends-my-avatar" width="28" height="28" style="image-rendering:pixelated;width:100%;height:100%;"></canvas>
             </div>
-
-            <!-- Share LAN World Card -->
-            <div class="mp-wizard-section" id="friends-share-card" style="padding: 15px; margin-top: 10px;">
-              <h4 style="margin: 0 0 10px 0; font-family: var(--font-title); font-size: 13px;">Host LAN World</h4>
-              <p id="friends-share-instructions" style="color: var(--text-muted); font-size: 11px; margin-bottom: 10px;">Open your singleplayer world, click "Open to LAN", enter port below.</p>
-
-              <div style="display: flex; gap: 8px;">
-                <input type="number" class="clean-input" id="friends-share-port" placeholder="Port" style="flex: 1; padding: 6px; font-size: 12px;" />
-                <button class="submit-btn" id="btn-friends-share" style="padding: 0 10px; font-size: 12px;">Share</button>
-                <button class="modal-btn" id="btn-friends-share-cancel" style="display: none; padding: 0 10px; font-size: 12px; color: var(--accent-red);">Cancel</button>
-              </div>
-
-              <div id="friends-share-tunnel-link" style="display:none; margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; color: var(--theme-accent); font-family: monospace; font-size: 11px; word-break: break-all;">
-                tcp://...
-              </div>
-
-              <!-- FRPC Downloader Progress Panel -->
-              <div id="frpc-progress-panel" style="display:none; margin-top: 10px;">
-                <div style="font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between;margin-bottom:4px;">
-                  <span id="frpc-status-text">Downloading FRPC...</span>
-                  <span id="frpc-percent-text">0%</span>
-                </div>
-                <div style="width: 100%; height: 4px; background: rgba(0,0,0,0.5); border-radius: 2px;">
-                  <div id="frpc-progress-fill" style="height: 100%; width: 0%; background: var(--theme-accent); border-radius: 2px; transition: width 0.2s;"></div>
-                </div>
-              </div>
+            <div class="friends-identity-name">
+              <h4 id="friends-my-username">Username</h4>
+              <span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block;vertical-align:middle;margin-right:4px;">
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                Connected
+              </span>
             </div>
+          </div>
+          <button class="friends-identity-disconnect" id="btn-friends-disconnect" title="Disconnect Account">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
         </div>
 
-        <!-- RIGHT COLUMN: Social Tabs -->
-        <div class="mp-settings-content" style="flex: 1; padding: 20px; display: flex; flex-direction: column;">
-            
-            <h3 style="margin: 0 0 15px 0; font-family: var(--font-title); font-size: 16px;">Friends</h3>
+        <!-- Share LAN World Card -->
+        <div class="friends-share-card" id="friends-share-card">
+          <h4>
+            <!-- Minecraft-style signal/antenna icon for LAN hosting -->
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+              <line x1="12" y1="20" x2="12.01" y2="20"></line>
+            </svg>
+            Host LAN World
+          </h4>
+          <p id="friends-share-instructions">Open your Minecraft singleplayer world, click "Open to LAN", then enter the port below to invite your friends!</p>
 
-            <!-- Content Areas -->
-            <div id="friends-list" style="flex: 1; overflow-y: auto;">
-                <div style="color: var(--text-muted); text-align: center; margin-top: 40px; font-size: 13px;">Your friends list is empty.</div>
-            </div>
+          <div class="friends-share-input-row" id="friends-share-input-row">
+            <input type="number" class="clean-input" id="friends-share-port" placeholder="LAN Port (e.g. 54321)" min="1024" max="65535" />
+            <button class="friends-share-btn" id="btn-friends-share">Share</button>
+            <button class="friends-share-btn stop-sharing" id="btn-friends-share-cancel" style="display:none;">Cancel</button>
+          </div>
 
-            <div id="friends-requests-section" style="display:none; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                <h4 style="margin: 0 0 10px 0; font-family: var(--font-title); font-size: 14px;">Friend Requests</h4>
-                <div id="friends-requests-list"></div>
+          <div class="friends-share-tunnel-link" id="friends-share-tunnel-link" style="display:none;" title="Click to copy IP address">
+            tcp://...
+          </div>
+
+          <!-- FRPC Downloader Progress Panel -->
+          <div id="frpc-progress-panel" style="display:none;">
+            <div>
+              <span id="frpc-status-text">Downloading FRPC...</span>
+              <span id="frpc-percent-text">0%</span>
             </div>
+            <div class="frpc-progress-bar">
+              <div class="frpc-progress-fill" id="frpc-progress-fill"></div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- SEARCH USERS PANEL -->
-    <div id="friends-search-panel" class="mods-content-wrapper" style="display:none;">
-      <div class="mods-page-header">
-        <h2 class="view-title">Find Users</h2>
-        <div class="mods-header-actions">
-          <button class="modal-btn" id="btn-search-back">Back</button>
+        <!-- Pending Friend Requests -->
+        <div class="friends-requests-section" id="friends-requests-section" style="display:none;">
+          <span class="friends-requests-title">Friend Requests</span>
+          <div id="friends-requests-list" class="friends-list-container">
+            <!-- Dynamic requests -->
+          </div>
         </div>
-      </div>
-      <div class="mods-container" style="padding: 20px; flex-direction: column;">
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-          <input type="text" class="clean-input" id="input-search-users" placeholder="Search by IDK username..." style="flex: 1;" />
-          <button class="submit-btn" id="btn-execute-search">Search</button>
+
+        <!-- Add Friend -->
+        <div class="friends-requests-section">
+          <span class="friends-requests-title">Add Friend</span>
+          <div class="friends-add-row">
+            <input type="text" class="clean-input" id="friends-add-username" placeholder="Friend's username..." />
+            <button class="friends-add-btn" id="btn-friends-add" title="Send Friend Request">
+              <!-- Minecraft-style add player icon -->
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+                <line x1="19" y1="8" x2="19" y2="14"></line>
+                <line x1="22" y1="11" x2="16" y2="11"></line>
+              </svg>
+            </button>
+          </div>
         </div>
-        <div id="search-results-list" style="flex: 1; overflow-y: auto;">
-          <div style="color: var(--text-muted); text-align: center; margin-top: 40px; font-size: 13px;">Type a name to search</div>
-        </div>
-      </div>
-    </div>
 
-    <!-- PUBLIC PROFILE PANEL -->
-    <div id="friends-profile-panel" class="mods-content-wrapper" style="display:none;">
-      <div class="mods-page-header">
-        <h2 class="view-title">User Profile</h2>
-        <div class="mods-header-actions">
-          <button class="modal-btn" id="btn-profile-back">Back</button>
-        </div>
-      </div>
-      <div class="mods-container" style="padding: 30px; display: flex; justify-content: center; align-items: flex-start;">
-        <div class="mp-wizard-section" style="width: 400px; padding: 0; text-align: center; overflow: hidden; position: relative;">
-            <!-- BANNER -->
-            <div style="width: 100%; height: 160px; background-image: url('./public/bannerbg.jpg'); background-size: cover; background-position: center; border-bottom: 2px solid var(--border-color); position: relative; overflow: hidden;">
-               <!-- AVATAR LARI (LOCAL RENDERER) -->
-               <canvas id="profile-skin-render-canvas" style="position: absolute; bottom: -230px; left: 50%; transform: translateX(-50%); width: 200px; height: 290px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));"></canvas>
-            </div>
-            
-            <div style="padding: 30px;">
-              <h2 id="profile-username" style="margin: 0 0 5px 0; font-family: var(--font-title); font-size: 26px; color: white; letter-spacing: 1px;">Username</h2>
-              <div id="profile-status" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Offline</div>
-              
-              <div style="text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);">
-                <h4 style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">About Me</h4>
-                <div id="profile-bio" style="color: #ddd; font-size: 13px; min-height: 40px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">No bio yet.</div>
-              </div>
-              
-              <button class="submit-btn" id="btn-profile-add-friend" style="width: 100%; padding: 12px; font-size: 14px;">
-                SEND FRIEND REQUEST
-              </button>
-            </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SETTINGS PANEL -->
-    <div id="friends-settings-panel" class="mods-content-wrapper" style="display:none;">
-      <div class="mods-page-header">
-        <h2 class="view-title">Profile Settings</h2>
-        <div class="mods-header-actions">
-          <button class="modal-btn" id="btn-settings-back">Back</button>
-        </div>
-      </div>
-      <div class="settings-content-wrapper" style="height: calc(100% - 70px);">
-        <div class="settings-tab-panel active" style="overflow-y: auto; height: 100%;">
-          <div class="settings-page">
-
-            <h3 class="settings-section-title">About Me</h3>
-            <p class="settings-section-desc">Write something about yourself for your public profile</p>
-
-            <div class="settings-row">
-              <div class="settings-row-label" style="align-self: flex-start; margin-top: 5px;">
-                <span>Bio</span>
-                <small>Visible to everyone</small>
-              </div>
-              <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
-                <textarea class="clean-input" id="settings-bio" rows="3" style="resize: none; width: 100%; font-size: 13px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);" placeholder="Write something about yourself..."></textarea>
-                <button class="submit-btn" id="btn-settings-save-bio" style="background: var(--theme-accent);">Save Bio</button>
-              </div>
-            </div>
-
-            <h3 class="settings-section-title">Security & Password</h3>
-            <p class="settings-section-desc">Protect your IDK Connect account</p>
-
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Two-Factor Authentication</span>
-                <small>Require an email OTP to login</small>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="settings-2fa" />
-                <div class="switch"></div>
-              </label>
-            </div>
-
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Change Password</span>
-                <small>Leave blank to keep current</small>
-              </div>
-              <input type="password" class="clean-input" id="settings-new-password" placeholder="New Password..." style="width: 250px; font-size: 13px;" />
-            </div>
-
-            <div class="settings-row" id="settings-security-otp-container" style="display: none; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
-              <div class="settings-row-label">
-                <span style="color: var(--theme-accent);">Email Verification</span>
-                <small>OTP sent to your email.</small>
-              </div>
-              <input type="text" class="clean-input" id="settings-security-otp" placeholder="6-digit OTP" maxlength="6" style="width: 150px; text-align: center; letter-spacing: 4px; font-size: 14px; font-weight: bold;" />
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; width: 100%; margin-top: 15px; padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <button class="submit-btn" id="btn-settings-save-security" style="background: var(--theme-accent);">Request OTP to Save</button>
-            </div>
-              
-            <h3 class="settings-section-title" style="margin-top: 25px;">Linked Minecraft Account</h3>
-            <p class="settings-section-desc">Automatically log into IDK Connect when you launch the game</p>
-
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Link Status</span>
-                <small>Currently connected account</small>
-              </div>
-              <div id="settings-linked-mc-status" style="font-size: 14px; font-weight: 600; color: white;">Loading...</div>
-            </div>
-
-            <div class="settings-row" style="margin-top: 10px;">
-              <div class="settings-row-label">
-                <span>Link Launcher Account</span>
-                <small>Link your active Ely.by/Microsoft account</small>
-              </div>
-              <button class="submit-btn" id="btn-settings-link-minecraft" style="background: var(--theme-accent);">Link Account</button>
-            </div>
-
-            <div id="settings-error" style="color: var(--accent-red); font-size: 13px; margin-top: 20px; display: none; text-align: center; padding: 10px; background: rgba(239,68,68,0.1); border-radius: 6px;"></div>
-
+        <!-- Friends List -->
+        <div class="friends-list-section">
+          <span class="friends-list-header">My Friends</span>
+          <div id="friends-list" class="friends-list-container">
+            <div class="friends-list-empty">Your friends list is empty.</div>
           </div>
         </div>
       </div>
-    </div>
 
-  </div>
-
-  <!-- CHAT POPUP PANEL -->
-  <div id="friends-chat-panel" class="mods-content-wrapper" style="display:none; position: fixed; bottom: 20px; right: 20px; width: 340px; height: 450px; z-index: 10000; box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); border-radius: 8px; background: #161618 !important;">
-    <div class="mods-page-header" style="padding: 10px 15px; border-bottom: 1px solid var(--border-color); background: #111112;">
-      <h2 class="view-title" style="display: flex; align-items: center; gap: 10px; font-size: 14px; margin: 0;">
-        <div style="width: 20px; height: 20px; border-radius: 4px; overflow: hidden; background: #111;">
-          <canvas id="friends-chat-avatar" width="20" height="20" style="width: 100%; height: 100%; image-rendering: pixelated;"></canvas>
+      <!-- CHAT PANEL (WHEN CHATTING WITH A FRIEND) -->
+      <div id="friends-chat-panel" class="friends-chat-panel" style="display:none; flex-direction:column; height: 100%;">
+        <!-- Chat Header -->
+        <div class="friends-chat-header">
+          <button class="friends-chat-back" id="btn-friends-chat-back" title="Back to Friends List">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </button>
+          <div class="friends-chat-info">
+            <div class="friend-avatar" style="width:24px;height:24px;">
+              <canvas id="friends-chat-avatar" width="24" height="24" style="image-rendering:pixelated;width:100%;height:100%;"></canvas>
+            </div>
+            <div class="friend-info">
+              <strong id="friends-chat-name" style="font-size:0.7812rem;">Friend Name</strong>
+              <span id="friends-chat-status" class="friend-status-text" style="font-size:0.5625rem;">Online</span>
+            </div>
+          </div>
         </div>
-        <span id="friends-chat-name" style="font-family: var(--font-title);">Friend Name</span>
-        <span id="friends-chat-status" style="font-size: 10px; color: var(--text-muted); font-family: var(--font-main); font-weight: normal; margin-left: auto;">Online</span>
-      </h2>
-      <div class="mods-header-actions">
-        <button class="mp-settings-close" id="btn-friends-chat-back" style="padding: 4px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-    </div>
 
-    <div class="mods-container" style="padding: 10px; flex-direction: column; flex: 1; min-height: 0; background: transparent;">
-      <!-- Messages Area -->
-      <div id="friends-chat-messages" style="flex: 1; overflow-y: auto; padding: 10px; background: #0a0a0c; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
-        <!-- Dynamically populated messages -->
-      </div>
+        <!-- Scrollable Messages Area -->
+        <div id="friends-chat-messages" class="friends-chat-messages">
+          <!-- Dynamically populated messages -->
+        </div>
 
-      <!-- Chat Input Form -->
-      <div style="display: flex; gap: 6px;">
-        <input type="text" class="clean-input" id="friends-chat-input" placeholder="Type a message..." maxlength="500" style="flex: 1; padding: 8px; font-size: 12px;" />
-        <button class="submit-btn" id="btn-friends-chat-send" style="padding: 0 12px; font-size: 12px;">Send</button>
+        <!-- Chat Input Form -->
+        <div class="friends-chat-input-row">
+          <input type="text" class="clean-input" id="friends-chat-input" placeholder="Type a message..." maxlength="500" />
+          <button class="friends-chat-send-btn" id="btn-friends-chat-send" title="Send Message">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -2030,7 +1984,7 @@ export function renderAppShell() {
   <div class="custom-modal" id="changelog-modal">
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 id="changelog-title" style="margin: 0; font-size: 18px; font-weight: 700;">Changelog</h3>
+        <h3 id="changelog-title" style="margin: 0; font-size:1.125rem; font-weight: 700;">Changelog</h3>
         <button class="mp-settings-close" id="btn-close-changelog">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -2048,7 +2002,7 @@ export function renderAppShell() {
   <div class="custom-modal" id="crash-analyzer-modal">
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Crash Log Analyzer</h3>
+        <h3 style="margin: 0; font-size:1.125rem; font-weight: 700;">Crash Log Analyzer</h3>
         <button class="mp-settings-close" id="btn-close-crash-analyzer">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -2057,8 +2011,8 @@ export function renderAppShell() {
         </button>
       </div>
       <div style="margin-bottom: 16px;">
-        <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--theme-accent); text-transform: uppercase;">Paste Crash Log</label>
-        <textarea id="crash-log-input" class="clean-input" placeholder="Paste your crash log here..." style="width: 100%; min-height: 150px; resize: vertical; text-align: left; font-family: monospace; font-size: 11px;"></textarea>
+        <label style="display: block; margin-bottom: 8px; font-size:0.8125rem; font-weight: 600; color: var(--theme-accent); text-transform: uppercase;">Paste Crash Log</label>
+        <textarea id="crash-log-input" class="clean-input" placeholder="Paste your crash log here..." style="width: 100%; min-height: 150px; resize: vertical; text-align: left; font-family: monospace; font-size:0.6875rem;"></textarea>
       </div>
       <button class="submit-btn" id="btn-analyze-crash" style="width: 100%; margin-bottom: 16px;">Analyze Crash Log</button>
       <div id="crash-analysis-result" style="color: white;">
@@ -2071,7 +2025,7 @@ export function renderAppShell() {
   <div class="custom-modal" id="dependencies-modal">
     <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Missing Dependencies</h3>
+        <h3 style="margin: 0; font-size:1.125rem; font-weight: 700;">Missing Dependencies</h3>
         <button class="mp-settings-close" id="btn-close-dependencies">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -2093,8 +2047,8 @@ export function renderAppShell() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
         </div>
         <div style="min-width:0;">
-          <h3 id="dl-confirm-name" style="margin:0 0 3px;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Download Modpack?</h3>
-          <p style="margin:0;font-size:11px;color:var(--text-muted);">Import this modpack into your collection.</p>
+          <h3 id="dl-confirm-name" style="margin:0 0 3px;font-size:0.9375rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Download Modpack?</h3>
+          <p style="margin:0;font-size:0.6875rem;color:var(--text-muted);">Import this modpack into your collection.</p>
         </div>
       </div>
       <div style="display:flex;gap:10px;">

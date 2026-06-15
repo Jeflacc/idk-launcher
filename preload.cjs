@@ -6,8 +6,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
 
-  launchMinecraft: (username, version, javaPath, loader, autoOptimization, performanceRenderer, maxMemory, authData, quickConnect, windowSize, globalJavaArgs, forceUpdate) =>
-    ipcRenderer.send('launch-minecraft', { username, version, javaPath, loader, autoOptimization, performanceRenderer, maxMemory, authData, quickConnect, windowSize, globalJavaArgs, forceUpdate }),
+  launchMinecraft: (username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect, windowSize, globalJavaArgs) =>
+    ipcRenderer.send('launch-minecraft', { username, version, javaPath, loader, autoOptimization, maxMemory, authData, quickConnect, windowSize, globalJavaArgs }),
   cancelLaunch: () => ipcRenderer.send('cancel-launch'),
 
   // All IPC listeners — registered once at startup
@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onLaunchWarning:   (cb) => ipcRenderer.on('launch-warning',   (_e, msg)   => cb(msg)),
   onClearJavaPath:   (cb) => ipcRenderer.on('clear-java-path',  ()          => cb()),
   onWindowStateChanged: (cb) => ipcRenderer.on('window-state-changed', (_e, data) => cb(data)),
+  onEnterGameRunningMode: (cb) => ipcRenderer.on('enter-game-running-mode', () => cb()),
 
   // Overlay IPC
   onOverlayInit:     (cb) => ipcRenderer.on('overlay-init',     (_e, data)  => cb(data)),
@@ -35,15 +36,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   scanAllAchievements: () => ipcRenderer.invoke('scan-all-achievements'),
   downloadVersion: (data) => ipcRenderer.invoke('download-version', data),
   elybyAuthenticate: (data) => ipcRenderer.invoke('elyby-authenticate', data),
+  elybyOAuthLogin: () => ipcRenderer.invoke('elyby-oauth-login'),
   microsoftAuthenticate: () => ipcRenderer.invoke('microsoft-authenticate'),
   getMicrosoftAuthData: () => ipcRenderer.invoke('get-microsoft-auth-data'),
   fetchElybyProfile: (username) => ipcRenderer.invoke('fetch-elyby-profile', username),
   getElybyAuthData: () => ipcRenderer.invoke('get-elyby-auth-data'),
-  selectImageFile: () => ipcRenderer.invoke('select-image-file'),
-  uploadMicrosoftSkin: (filePath, variant) => ipcRenderer.invoke('upload-microsoft-skin', filePath, variant),
-  fetchMicrosoftProfile: () => ipcRenderer.invoke('fetch-microsoft-profile'),
-  equipMicrosoftCape: (capeId) => ipcRenderer.invoke('equip-microsoft-cape', capeId),
-  selectMicrosoftCape: (capes) => ipcRenderer.invoke('select-microsoft-cape', capes),
   fetchImageBase64: (url) => ipcRenderer.invoke('fetch-image-base64', url),
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
   downloadUpdate:   () => ipcRenderer.invoke('update:download'),
@@ -124,10 +121,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('resume-download', downloadId),
   cancelDownload: (downloadId) => 
     ipcRenderer.invoke('cancel-download', downloadId),
-  cancelVersionDownload: (args) => 
-    ipcRenderer.invoke('cancel-version-download', args),
-  cancelAllDownloads: () =>
-    ipcRenderer.invoke('cancel-all-downloads'),
   
   // Download progress event listeners
   onDownloadComplete: (cb) => 

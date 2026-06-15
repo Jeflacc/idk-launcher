@@ -40,24 +40,6 @@ optimizationCheckbox.addEventListener('change', (e) => {
   }
 });
 
-const performanceRendererSelect = document.getElementById('performance-renderer');
-if (performanceRendererSelect) {
-  performanceRendererSelect.value = state.performanceRenderer;
-  performanceRendererSelect.addEventListener('change', (e) => {
-    state.performanceRenderer = e.target.value;
-    localStorage.setItem('craftlaunch_performanceRenderer', state.performanceRenderer);
-    if (window.electronAPI) {
-      window.electronAPI.saveSettings({ performanceRenderer: state.performanceRenderer }).catch(console.error);
-    }
-    
-    // Sync with advanced settings if present
-    const advSelect = document.getElementById('adv-performance-renderer');
-    if (advSelect && advSelect.value !== state.performanceRenderer) {
-      advSelect.value = state.performanceRenderer;
-    }
-  });
-}
-
 loaderTrigger.addEventListener('click', (e) => {
   e.stopPropagation();
   loaderDropdown.classList.toggle('open');
@@ -251,9 +233,8 @@ function renderVersions() {
   }
 
   let filtered = state.allVersions.filter(v => {
+    // Only show release versions as requested by user
     if (v.type === 'release') return true;
-    if (v.type === 'snapshot' && allowSnap) return true;
-    if ((v.type === 'old_beta' || v.type === 'old_alpha') && allowHist) return true;
     return false;
   });
   

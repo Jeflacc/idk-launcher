@@ -1,7 +1,6 @@
 import "./style.css";
 import "./advanced-theme.css";
 import "./launch-overlay-fix.css";
-import "./idk-connect.css";
 // Side-effect imports: constructors register UI and IPC behavior
 import "./components/download-progress.js";
 import "./components/accessibility-manager.js";
@@ -9,7 +8,7 @@ import "./components/error-display.js";
 import { renderAppShell } from "./app/app-shell.js";
 import { state, actions } from "./core/app-state.js";
 import { createViewController, initWindowControls } from "./core/views.js";
-import { initBackgroundEffects } from "./features/background/background-effects.js";
+import { initBackgroundEffects, restartCurrentEffect } from "./features/background/background-effects.js";
 import { initGameFeaturesIntegration } from "./features/game-features/game-features-integration.js";
 
 function applyWindowModeClass(data) {
@@ -203,3 +202,4 @@ initFriendsFeature();
 initProfileFeature({ switchView, getReturnView });
 initGameFeaturesIntegration();
 initBackgroundEffects();
+window.restartCurrentEffect = restartCurrentEffect;
