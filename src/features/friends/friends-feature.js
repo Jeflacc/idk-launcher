@@ -395,22 +395,31 @@ export function initFriendsFeature() {
           activeSharePort = null;
 
           // Restore sharing Card elements
-          shareCard.classList.remove("active");
-          shareInstructions.innerText =
+          if (shareCard) shareCard.classList.remove("active");
+          if (shareInstructions) shareInstructions.innerText =
             'Open your Minecraft singleplayer world, click "Open to LAN", then enter the port below to invite your friends!';
-          shareInputRow.style.display = "flex";
-          tunnelLink.style.display = "none";
+          if (shareInputRow) shareInputRow.style.display = "flex";
+          if (tunnelLink) tunnelLink.style.display = "none";
 
           btnShare.innerText = "Share";
           btnShare.classList.remove("stop-sharing");
 
           // Update presence immediately
-          await sendPresenceHeartbeat();
+          try { await sendPresenceHeartbeat(); } catch (e) {}
           actions.showWarningToast(
             "Multi-player tunnel closed. World is private again.",
           );
         } catch (err) {
-          actions.showWarningToast("Failed to stop tunnel cleanly.");
+          console.error("[Friends] Stop tunnel error:", err);
+          // Still reset UI even if stop had issues
+          activeTunnelUrl = null;
+          activeSharePort = null;
+          if (shareCard) shareCard.classList.remove("active");
+          if (shareInputRow) shareInputRow.style.display = "flex";
+          if (tunnelLink) tunnelLink.style.display = "none";
+          btnShare.innerText = "Share";
+          btnShare.classList.remove("stop-sharing");
+          actions.showWarningToast("Tunnel stopped (may not have been clean).");
         } finally {
           btnShare.disabled = false;
         }
@@ -464,20 +473,20 @@ export function initFriendsFeature() {
 
       try {
         // 1. Ensure FRPC binary exists (downloads if not)
-        progressPanel.style.display = "block";
-        statusText.innerText = "Preparing frpc.exe...";
-        percentText.innerText = "0%";
-        progressFill.style.width = "0%";
+        if (progressPanel) progressPanel.style.display = "block";
+        if (statusText) statusText.innerText = "Preparing frpc.exe...";
+        if (percentText) percentText.innerText = "0%";
+        if (progressFill) progressFill.style.width = "0%";
 
         const cfStatus = await window.electronAPI.ensureFrpc();
         if (!cfStatus.success) {
           throw new Error(cfStatus.error || "Failed to download frpc");
         }
 
-        progressPanel.style.display = "none";
+        if (progressPanel) progressPanel.style.display = "none";
 
         // 2. Start FRPC TCP tunnel forwarding LAN port
-        statusText.innerText = "Connecting tunnel...";
+        if (statusText) statusText.innerText = "Connecting tunnel...";
         const tunnelStatus = await window.electronAPI.startFrpcTunnel(portVal);
         if (!tunnelStatus.success) {
           throw new Error(
@@ -489,13 +498,12 @@ export function initFriendsFeature() {
         activeSharePort = portVal;
 
         // Render shared status
-        shareCard.classList.add("active");
-        shareInstructions.innerText =
+        if (shareCard) shareCard.classList.add("active");
+        if (shareInstructions) shareInstructions.innerText =
           "Sharing Active! Click below to copy your IP Address. Friends can join you now:";
-        shareInputRow.style.display = "none";
+        if (shareInputRow) shareInputRow.style.display = "none";
 
-        tunnelLink.innerText = activeTunnelUrl;
-        tunnelLink.style.display = "block";
+        if (tunnelLink) { tunnelLink.innerText = activeTunnelUrl; tunnelLink.style.display = "block"; }
 
         btnShare.innerText = "Stop";
         btnShare.classList.add("stop-sharing");
@@ -511,12 +519,12 @@ export function initFriendsFeature() {
         if (!isCancellingHost) {
           actions.showWarningToast(`Tunnel Error: ${err.message}`);
         }
-        progressPanel.style.display = "none";
-        shareInputRow.style.display = "flex";
+        if (progressPanel) progressPanel.style.display = "none";
+        if (shareInputRow) shareInputRow.style.display = "flex";
         btnShare.innerText = "Share";
       } finally {
         btnShare.disabled = false;
-        btnFriendsShareCancel.style.display = "none";
+        if (btnFriendsShareCancel) btnFriendsShareCancel.style.display = "none";
       }
     });
 

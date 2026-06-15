@@ -3956,6 +3956,9 @@ ipcMain.handle('start-frpc-tunnel', async (event, { port }) => {
     const { spawn } = require('child_process');
     
     // Generate a random remote port between 10000 and 65000
+    const frpcServer = process.env.IDK_FRPC_SERVER || 'play.somniac.me';
+    const frpcPort = process.env.IDK_FRPC_PORT || '7000';
+    const frpcToken = process.env.IDK_FRPC_TOKEN || 'indkingdomisalive';
     const remotePort = Math.floor(Math.random() * (65000 - 10000 + 1)) + 10000;
     const proxyName = 'idk_proxy_' + Math.random().toString(36).substring(2, 10);
     
@@ -4022,21 +4025,16 @@ ipcMain.handle('start-frpc-tunnel', async (event, { port }) => {
 });
 
 ipcMain.handle('stop-frpc-tunnel', async () => {
-  let stopped = false;
   if (activeDownloadRequest) {
     try { activeDownloadRequest.destroy(); } catch (e) {}
     activeDownloadRequest = null;
-    stopped = true;
   }
   if (activeTunnelProcess) {
-    try { activeTunnelProcess.kill(); } catch (e) { }
+    try { activeTunnelProcess.kill('SIGTERM'); } catch (e) {}
     activeTunnelProcess = null;
-    stopped = true;
   }
-  if (stopped) {
-    return { success: true };
-  }
-  return { success: false, error: 'No active tunnel or download running' };
+  // Always return success — if there's no active process, it's already stopped
+  return { success: true };
 });
 
 // Get userData path for frontend
