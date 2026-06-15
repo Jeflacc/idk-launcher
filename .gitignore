@@ -38,3 +38,6 @@ scratch/
 docs
 plans
 tests/
+.agents
+.github/prompts
+.claude
