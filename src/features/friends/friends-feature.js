@@ -942,16 +942,16 @@ export function initFriendsFeature() {
     });
 
     async function loadDefaultSuggestedUsers() {
-      searchResultsList.innerHTML = '<div class="search-section-label">Suggested</div><div class="friends-list-empty" style="opacity:.5;padding:8px 0">Loading...</div>';
+      searchResultsList.innerHTML = '<div class="search-section-label">Suggested</div><div class="search-empty-state">Loading suggestions...</div>';
       try {
         const res = await idkRequest("/api/users/suggested");
         if (!res.users || res.users.length === 0) {
-          searchResultsList.innerHTML = '<div class="search-section-label">Suggested</div><div class="friends-list-empty" style="opacity:.5;padding:8px 0">Search for users above</div>';
+          searchResultsList.innerHTML = '<div class="search-section-label">Suggested</div><div class="search-empty-state">No suggestions yet. Try searching for a username above.</div>';
           return;
         }
         renderSearchResults(res.users, false);
       } catch (err) {
-        searchResultsList.innerHTML = '<div class="search-section-label">Suggested</div><div class="friends-list-empty" style="opacity:.5;padding:8px 0">Search for users above</div>';
+        searchResultsList.innerHTML = '<div class="search-section-label">Suggested</div><div class="search-empty-state">Couldn\'t load suggestions. Use the search bar above to find users.</div>';
       }
     }
 
@@ -1071,17 +1071,17 @@ export function initFriendsFeature() {
       if (!q) return;
 
       btnExecuteSearch.disabled = true;
-      searchResultsList.innerHTML = '<div class="friends-list-empty">Searching...</div>';
+      searchResultsList.innerHTML = '<div class="search-empty-state">Searching...</div>';
       try {
         const res = await idkRequest("/api/users/search?q=" + encodeURIComponent(q));
         searchResultsList.innerHTML = "";
         if (!res.users || res.users.length === 0) {
-          searchResultsList.innerHTML = '<div class="friends-list-empty">No users found.</div>';
+          searchResultsList.innerHTML = '<div class="search-empty-state">No users found for "' + q.replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#x27;'}[c])) + '".</div>';
           return;
         }
         renderSearchResults(res.users, true);
       } catch (err) {
-        searchResultsList.innerHTML = '<div class="friends-list-empty" style="color:#ef4444;">Search failed.</div>';
+        searchResultsList.innerHTML = '<div class="search-empty-state" style="color:#ef4444;">Search failed. Please try again.</div>';
       } finally {
         btnExecuteSearch.disabled = false;
       }

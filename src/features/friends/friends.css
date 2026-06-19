@@ -1,11 +1,65 @@
 /* =====================================================================
    IDK Connect — Friends Sidebar / Sub-panels / Auth / Search / Settings
-   Extracted from the inline <style id="friends-sidebar-style"> block in
-   src/features/friends/friends-feature.js so the styles apply in BOTH
-   classic and advanced UI modes (the inline block worked but had no
-   .friends-btn base rule, which caused every Save/Search/Send/Submit
-   button to render as a default grey OS rectangle).
+   v2 — comprehensive redesign with proper padding, spacing, and hierarchy.
    ===================================================================== */
+
+/* ---------- Sidebar container — wider, better shadow, rounded corner -------- */
+.friends-sidebar {
+    width: 380px !important;
+    right: -380px !important;
+    border-top-left-radius: 16px;
+    border-bottom-left-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(
+        180deg,
+        rgba(14, 14, 18, 0.96) 0%,
+        rgba(10, 10, 14, 0.98) 100%
+    ) !important;
+    backdrop-filter: blur(32px) saturate(140%);
+    -webkit-backdrop-filter: blur(32px) saturate(140%);
+    box-shadow: -24px 0 64px rgba(0, 0, 0, 0.6) !important;
+}
+
+.friends-sidebar.active {
+    right: 0 !important;
+    box-shadow: -32px 0 80px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* ---------- Sidebar header — bigger, more breathing room -------- */
+.friends-sidebar-header {
+    padding: 22px 24px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.friends-sidebar-header h3 {
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.8px !important;
+}
+
+.friends-sidebar-content {
+    padding: 22px 24px 28px !important;
+    gap: 18px !important;
+}
+
+/* ---------- Backdrop — click outside to close -------- */
+.friends-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 106;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.friends-sidebar-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
 
 /* ---------- Sub-panel container (Search / Profile / Settings / Chat) -------- */
 .friends-sub-panel {
@@ -13,80 +67,80 @@
     inset: 0;
     background: linear-gradient(
         180deg,
-        rgba(12, 12, 14, 0.92) 0%,
-        rgba(8, 8, 10, 0.96) 100%
+        rgba(14, 14, 18, 0.96) 0%,
+        rgba(10, 10, 14, 0.98) 100%
     );
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    backdrop-filter: blur(32px) saturate(140%);
+    -webkit-backdrop-filter: blur(32px) saturate(140%);
     z-index: 10;
     display: none;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.45);
 }
 
 .friends-sub-panel.active {
     display: flex;
-    animation: friends-sub-panel-in 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: friends-sub-panel-in 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes friends-sub-panel-in {
-    from { opacity: 0; transform: translateX(16px); }
+    from { opacity: 0; transform: translateX(20px); }
     to   { opacity: 1; transform: translateX(0); }
 }
 
+/* ---------- Sub-panel content — proper padding & spacing -------- */
 .friends-sub-panel-content {
     flex: 1;
     overflow-y: auto;
-    padding: 16px 18px 22px;
+    padding: 24px 24px 32px !important;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px !important;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .friends-sub-panel-content::-webkit-scrollbar { width: 6px; }
 .friends-sub-panel-content::-webkit-scrollbar-track { background: transparent; }
 .friends-sub-panel-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 3px;
 }
 .friends-sub-panel-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.25);
 }
 
-/* ---------- Sub-panel header (back button + title / search) -------- */
+/* ---------- Sub-panel header — bigger back button, clearer title -------- */
 .friends-sub-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 18px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.015);
+    gap: 14px !important;
+    padding: 22px 24px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.02);
     flex-shrink: 0;
 }
 
 .friends-sub-header .back-btn {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
     cursor: pointer;
-    padding: 6px 8px;
-    border-radius: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
     transition: background 0.18s, color 0.18s, border-color 0.18s;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
     flex-shrink: 0;
 }
 
 .friends-sub-header .back-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
     color: white;
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .friends-sub-header .back-btn:focus-visible {
@@ -95,8 +149,8 @@
 }
 
 .friends-sub-header > span {
-    font-size: 0.9375rem;
-    font-weight: 700;
+    font-size: 1.0625rem !important;
+    font-weight: 700 !important;
     color: white;
     letter-spacing: 0.3px;
     flex: 1;
@@ -111,12 +165,12 @@
 
 .friends-sub-header .search-input-wrap input {
     width: 100%;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     color: white;
-    padding: 8px 12px 8px 34px;
-    font-size: 0.8125rem;
+    padding: 10px 14px 10px 38px;
+    font-size: 0.875rem;
     font-family: var(--font-main);
     transition: border-color 0.18s, background 0.18s;
     min-width: 0;
@@ -124,8 +178,8 @@
 
 .friends-sub-header .search-input-wrap input:focus {
     outline: none;
-    border-color: rgba(var(--theme-accent-rgb), 0.55);
-    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(var(--theme-accent-rgb), 0.6);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .friends-sub-header .search-input-wrap input::placeholder {
@@ -134,118 +188,102 @@
 
 .friends-sub-header .search-input-wrap .search-icon {
     position: absolute;
-    left: 10px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-dim);
     pointer-events: none;
 }
 
-/* ---------- CRITICAL: friends-btn base styling (was only defined in
-              advanced-theme.css under body.ui-advanced, leaving every
-              Save / Search / Send / Submit / Link Account button as a
-              default grey OS rectangle in classic mode). -------- */
+/* ---------- CRITICAL: friends-btn — styled button, no more grey OS default -------- */
 .friends-btn {
     background: linear-gradient(
         135deg,
         var(--theme-accent-hover) 0%,
         var(--theme-accent) 100%
-    );
-    color: white;
-    border: 1px solid var(--theme-accent-shadow);
-    padding: 9px 16px;
-    border-radius: 8px;
-    font-family: var(--font-main);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+    ) !important;
+    color: #fff !important;
+    border: 1px solid var(--theme-accent-shadow) !important;
+    padding: 11px 18px !important;
+    border-radius: 10px !important;
+    font-family: var(--font-main) !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4) !important;
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.18),
-        0 2px 8px rgba(var(--theme-accent-rgb), 0.2);
-    transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 2px 8px rgba(var(--theme-accent-rgb), 0.25) !important;
+    transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease !important;
     flex-shrink: 0;
     line-height: 1.2;
+    text-align: center;
 }
 
 .friends-btn:hover {
-    filter: brightness(1.1);
+    filter: brightness(1.1) !important;
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.22),
-        0 4px 14px rgba(var(--theme-accent-rgb), 0.35);
-    transform: translateY(-1px);
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        0 4px 16px rgba(var(--theme-accent-rgb), 0.4) !important;
+    transform: translateY(-1px) !important;
 }
 
 .friends-btn:active {
-    transform: translateY(0);
-    filter: brightness(0.95);
+    transform: translateY(0) !important;
+    filter: brightness(0.95) !important;
 }
 
 .friends-btn:focus-visible {
-    outline: 2px solid var(--text-main);
-    outline-offset: 2px;
+    outline: 2px solid var(--text-main) !important;
+    outline-offset: 2px !important;
 }
 
 .friends-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-    pointer-events: none;
-    filter: grayscale(0.4);
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    filter: grayscale(0.4) !important;
 }
 
+/* Small variant: full-width by default in sub-panels (looks more polished) */
 .friends-btn.small {
-    padding: 6px 12px;
-    font-size: 0.75rem;
-    align-self: flex-start;
-    border-radius: 6px;
+    padding: 10px 16px !important;
+    font-size: 0.8125rem !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    border-radius: 8px !important;
 }
 
 .friends-btn.cancel {
-    background: linear-gradient(135deg, #3a3a3c, #2a2a2c);
-    border-color: #1a1a1c;
-    color: #d1d1d2;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    background: linear-gradient(135deg, #3a3a3c, #2a2a2c) !important;
+    border-color: #1a1a1c !important;
+    color: #d1d1d2 !important;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6) !important;
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.08),
-        0 2px 6px rgba(0, 0, 0, 0.3);
+        0 2px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
 .friends-btn.cancel:hover {
-    filter: brightness(1.18);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.12),
-        0 3px 10px rgba(0, 0, 0, 0.4);
+    filter: brightness(1.18) !important;
 }
 
 .friends-btn.danger {
-    background: linear-gradient(135deg, #ef4444, #b91c1c);
-    border-color: #7f1d1d;
+    background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
+    border-color: #7f1d1d !important;
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.18),
-        0 2px 8px rgba(239, 68, 68, 0.25);
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 2px 8px rgba(239, 68, 68, 0.3) !important;
 }
 
-.friends-btn.danger:hover {
-    filter: brightness(1.1);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.22),
-        0 4px 14px rgba(239, 68, 68, 0.4);
-}
-
-/* Advanced-mode tint: subtle accent border accentuation */
+/* Advanced-mode accent border tint */
 body.ui-advanced .friends-btn {
-    border-color: rgba(var(--theme-accent-rgb), 0.45);
-}
-
-body.ui-advanced .friends-btn:hover {
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.22),
-        0 4px 14px rgba(var(--theme-accent-rgb), 0.4);
+    border-color: rgba(var(--theme-accent-rgb), 0.5) !important;
 }
 
 /* ---------- Search results -------- */
@@ -253,9 +291,9 @@ body.ui-advanced .friends-btn:hover {
     font-size: 0.6875rem;
     font-weight: 700;
     color: var(--text-muted);
-    letter-spacing: 1.4px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    padding: 6px 0 4px;
+    padding: 4px 0 8px;
     opacity: 0.85;
 }
 
@@ -263,15 +301,19 @@ body.ui-advanced .friends-btn:hover {
     text-align: center;
     color: var(--text-dim);
     font-size: 0.8125rem;
-    padding: 32px 12px;
-    line-height: 1.5;
+    padding: 40px 16px;
+    line-height: 1.6;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    margin-top: 12px;
 }
 
 .search-user-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 10px;
-    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -280,15 +322,15 @@ body.ui-advanced .friends-btn:hover {
 }
 
 .search-user-card:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
     transform: translateX(-2px);
 }
 
 .search-user-card .search-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.3);
     border: 1.5px solid rgba(255, 255, 255, 0.1);
@@ -310,25 +352,26 @@ body.ui-advanced .friends-btn:hover {
 
 .search-user-card .search-user-info strong {
     display: block;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     color: white;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-weight: 600;
 }
 
 .search-user-card .search-user-info .search-user-sub {
     font-size: 0.6875rem;
     color: var(--text-dim);
-    margin-top: 2px;
+    margin-top: 3px;
 }
 
 .search-user-card .search-user-action {
-    background: rgba(var(--theme-accent-rgb), 0.12);
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
     color: var(--theme-accent);
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
     font-size: 0.6875rem;
     font-weight: 600;
     cursor: pointer;
@@ -337,12 +380,12 @@ body.ui-advanced .friends-btn:hover {
 }
 
 .search-user-card .search-user-action:hover {
-    background: rgba(var(--theme-accent-rgb), 0.22);
-    border-color: rgba(var(--theme-accent-rgb), 0.45);
+    background: rgba(var(--theme-accent-rgb), 0.25);
+    border-color: rgba(var(--theme-accent-rgb), 0.5);
 }
 
 .search-user-card .search-user-action.friend {
-    background: rgba(var(--theme-accent-rgb), 0.15);
+    background: rgba(var(--theme-accent-rgb), 0.18);
     color: var(--theme-accent);
     cursor: default;
     opacity: 0.7;
@@ -353,44 +396,47 @@ body.ui-advanced .search-user-card {
 }
 
 body.ui-advanced .search-user-card:hover {
-    border-color: rgba(var(--theme-accent-rgb), 0.32);
+    border-color: rgba(var(--theme-accent-rgb), 0.35);
     background: rgba(var(--theme-accent-rgb), 0.05);
 }
 
-/* ---------- Settings sections inside the sidebar -------- */
+/* ---------- Settings sections — proper spacing, clear hierarchy -------- */
 .settings-section {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 6px 0;
+    gap: 12px !important;
+    padding: 4px 0 !important;
 }
 
 .settings-section-title {
-    font-size: 0.8125rem;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 0.3px;
-    margin: 0;
+    font-size: 0.6875rem !important;
+    font-weight: 700 !important;
+    color: var(--text-muted) !important;
+    letter-spacing: 1.4px !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+    padding-bottom: 4px;
 }
 
 .settings-section-desc {
-    font-size: 0.6875rem;
-    color: var(--text-dim);
-    line-height: 1.4;
-    margin: 0;
+    font-size: 0.75rem !important;
+    color: var(--text-dim) !important;
+    line-height: 1.5 !important;
+    margin: 0 !important;
 }
 
 .settings-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 0;
+    padding: 10px 0 !important;
     gap: 12px;
 }
 
 .settings-row-label {
-    font-size: 0.8125rem;
-    color: var(--text-secondary);
+    font-size: 0.875rem !important;
+    color: var(--text-secondary) !important;
+    font-weight: 500;
 }
 
 .settings-divider {
@@ -398,24 +444,24 @@ body.ui-advanced .search-user-card:hover {
     background: linear-gradient(
         to right,
         transparent,
-        rgba(255, 255, 255, 0.1) 20%,
-        rgba(255, 255, 255, 0.1) 80%,
+        rgba(255, 255, 255, 0.12) 20%,
+        rgba(255, 255, 255, 0.12) 80%,
         transparent
-    );
-    margin: 8px 0;
+    ) !important;
+    margin: 8px 0 !important;
     border: 0;
 }
 
 body.ui-advanced .settings-section-title {
-    color: var(--theme-accent);
+    color: var(--theme-accent) !important;
 }
 
-/* ---------- Toggle switch (2FA) -------- */
+/* ---------- Toggle switch (2FA) — bigger, smoother -------- */
 .idk-toggle {
     position: relative;
     display: inline-block;
-    width: 38px;
-    height: 22px;
+    width: 44px;
+    height: 24px;
     flex-shrink: 0;
 }
 
@@ -432,33 +478,34 @@ body.ui-advanced .settings-section-title {
     cursor: pointer;
     inset: 0;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 22px;
+    border-radius: 24px;
     transition: background 0.25s, border-color 0.25s;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .idk-toggle-slider::before {
     content: "";
     position: absolute;
-    height: 16px;
-    width: 16px;
+    height: 18px;
+    width: 18px;
     left: 2px;
     top: 50%;
     transform: translateY(-50%);
     background: var(--text-muted);
     border-radius: 50%;
     transition: transform 0.25s, background 0.25s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .idk-toggle input:checked + .idk-toggle-slider {
-    background: rgba(var(--theme-accent-rgb), 0.35);
-    border-color: rgba(var(--theme-accent-rgb), 0.55);
+    background: rgba(var(--theme-accent-rgb), 0.4);
+    border-color: rgba(var(--theme-accent-rgb), 0.6);
 }
 
 .idk-toggle input:checked + .idk-toggle-slider::before {
-    transform: translate(16px, -50%);
+    transform: translate(20px, -50%);
     background: var(--theme-accent);
-    box-shadow: 0 0 6px rgba(var(--theme-accent-rgb), 0.6);
+    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.6);
 }
 
 .idk-toggle input:focus-visible + .idk-toggle-slider {
@@ -471,22 +518,23 @@ body.ui-advanced .settings-section-title {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
-    padding: 20px 16px 24px;
+    gap: 18px !important;
+    padding: 28px 16px 32px !important;
 }
 
 .profile-skin-wrap {
-    width: 120px;
-    height: 200px;
-    border-radius: 12px;
+    width: 140px;
+    height: 220px;
+    border-radius: 14px;
     overflow: hidden;
     background: radial-gradient(
         ellipse at center top,
-        rgba(var(--theme-accent-rgb), 0.08),
-        rgba(0, 0, 0, 0.4)
+        rgba(var(--theme-accent-rgb), 0.1),
+        rgba(0, 0, 0, 0.5)
     );
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+    position: relative;
 }
 
 .profile-skin-wrap canvas {
@@ -496,7 +544,7 @@ body.ui-advanced .settings-section-title {
 }
 
 .profile-name {
-    font-size: 1rem;
+    font-size: 1.125rem !important;
     font-weight: 700;
     color: white;
     letter-spacing: 0.3px;
@@ -504,40 +552,54 @@ body.ui-advanced .settings-section-title {
 }
 
 .profile-status-badge {
-    font-size: 0.75rem;
+    font-size: 0.8125rem !important;
     color: var(--text-muted);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .profile-status-badge.online {
     color: var(--theme-accent);
 }
 
+.profile-status-badge::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    display: inline-block;
+}
+
+.profile-status-badge.online::before {
+    background: var(--theme-accent);
+    box-shadow: 0 0 6px var(--theme-accent);
+}
+
 .profile-bio-text {
-    font-size: 0.8125rem;
+    font-size: 0.875rem !important;
     color: var(--text-muted);
     text-align: center;
-    line-height: 1.55;
-    max-width: 260px;
-    padding: 0 8px;
+    line-height: 1.6 !important;
+    max-width: 280px;
+    padding: 0 12px;
     margin: 0;
     user-select: text;
 }
 
-/* ---------- Inputs / textareas inside the sidebar -------- */
+/* ---------- Inputs / textareas inside the sidebar — bigger, more padding -------- */
 .friends-sidebar-content input[type="text"],
 .friends-sidebar-content input[type="password"],
 .friends-sidebar-content input[type="email"],
 .friends-sidebar-content input[type="number"] {
     width: 100%;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     color: white;
-    padding: 10px 14px;
-    font-size: 0.8125rem;
+    padding: 12px 16px !important;
+    font-size: 0.875rem !important;
     font-family: var(--font-main);
     transition: border-color 0.18s, background 0.18s;
     box-sizing: border-box;
@@ -548,8 +610,8 @@ body.ui-advanced .settings-section-title {
 .friends-sidebar-content input[type="email"]:focus,
 .friends-sidebar-content input[type="number"]:focus {
     outline: none;
-    border-color: rgba(var(--theme-accent-rgb), 0.55);
-    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(var(--theme-accent-rgb), 0.6);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .friends-sidebar-content input::placeholder {
@@ -558,23 +620,24 @@ body.ui-advanced .settings-section-title {
 
 .friends-sidebar-content textarea {
     width: 100%;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     color: white;
-    padding: 10px 14px;
-    font-size: 0.8125rem;
+    padding: 12px 16px !important;
+    font-size: 0.875rem !important;
     font-family: var(--font-main);
     resize: vertical;
-    min-height: 80px;
+    min-height: 120px !important;
     transition: border-color 0.18s, background 0.18s;
     box-sizing: border-box;
+    line-height: 1.5;
 }
 
 .friends-sidebar-content textarea:focus {
     outline: none;
-    border-color: rgba(var(--theme-accent-rgb), 0.55);
-    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(var(--theme-accent-rgb), 0.6);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .friends-sidebar-content textarea::placeholder {
@@ -582,49 +645,51 @@ body.ui-advanced .settings-section-title {
 }
 
 .friends-sidebar-content h4 {
-    font-size: 0.8125rem;
-    font-weight: 700;
-    color: white;
-    margin: 4px 0;
-    letter-spacing: 0.3px;
+    font-size: 0.6875rem !important;
+    font-weight: 700 !important;
+    color: var(--text-muted) !important;
+    margin: 0 !important;
+    letter-spacing: 1.4px !important;
+    text-transform: uppercase !important;
+    padding-bottom: 4px;
 }
 
 /* ---------- Chat panel -------- */
 .friends-chat-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 12px 16px;
+    padding: 16px 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     user-select: text;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .friends-chat-messages::-webkit-scrollbar { width: 6px; }
 .friends-chat-messages::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 3px;
 }
 
 .friends-chat-input-row {
     display: flex;
-    gap: 8px;
-    padding: 10px 14px;
+    gap: 10px;
+    padding: 14px 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.25);
     flex-shrink: 0;
 }
 
 .friends-chat-input-row input {
     flex: 1;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     color: white;
-    padding: 8px 12px;
-    font-size: 0.8125rem;
+    padding: 11px 14px;
+    font-size: 0.875rem;
     font-family: var(--font-main);
     min-width: 0;
     transition: border-color 0.18s;
@@ -632,85 +697,103 @@ body.ui-advanced .settings-section-title {
 
 .friends-chat-input-row input:focus {
     outline: none;
-    border-color: rgba(var(--theme-accent-rgb), 0.55);
-    background: rgba(255, 255, 255, 0.06);
-}
-
-/* ---------- Sidebar backdrop — click outside the sidebar closes it -------- */
-.friends-sidebar-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
-    z-index: 106; /* below sidebar (107), above main UI */
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-}
-
-.friends-sidebar-backdrop.active {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* ---------- Sidebar outer polish: round the left edge + breathing room -------- */
-.friends-sidebar {
-    border-top-left-radius: 14px;
-    border-bottom-left-radius: 14px;
-    overflow: hidden;
-}
-
-.friends-sidebar.active {
-    box-shadow: -24px 0 60px rgba(0, 0, 0, 0.55);
+    border-color: rgba(var(--theme-accent-rgb), 0.6);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 /* ---------- Friends list items — clearer separators + better hover -------- */
-.friends-list-container .friend-card {
-    border-radius: 10px;
-    padding: 10px 14px;
-    background: rgba(255, 255, 255, 0.025);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+.friends-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px !important;
 }
 
-.friends-list-container .friend-card + .friend-card {
-    margin-top: 4px;
+.friends-list-container .friend-card {
+    border-radius: 12px;
+    padding: 12px 14px !important;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    transition: background 0.18s, border-color 0.18s;
 }
 
 .friends-list-container .friend-card:hover {
-    background: rgba(var(--theme-accent-rgb), 0.06);
-    border-color: rgba(var(--theme-accent-rgb), 0.2);
+    background: rgba(var(--theme-accent-rgb), 0.07);
+    border-color: rgba(var(--theme-accent-rgb), 0.22);
 }
 
 /* ---------- Identity card — better contrast & spacing -------- */
 .friends-identity-card {
-    padding: 12px 14px;
+    padding: 16px 18px !important;
     background:
         linear-gradient(
             135deg,
-            rgba(var(--theme-accent-rgb), 0.08),
-            rgba(var(--theme-accent-rgb), 0.03)
-        );
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.22);
-    border-radius: 12px;
+            rgba(var(--theme-accent-rgb), 0.1),
+            rgba(var(--theme-accent-rgb), 0.04)
+        ) !important;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.25) !important;
+    border-radius: 14px !important;
     margin-bottom: 4px;
 }
 
 /* ---------- Share card — slightly larger padding + better focus state -------- */
 .friends-share-card {
-    padding: 14px 16px;
+    padding: 18px !important;
+    gap: 14px !important;
+    border-radius: 14px !important;
+}
+
+.friends-share-input-row {
+    display: flex;
     gap: 10px;
+    align-items: stretch !important;
 }
 
 .friends-share-input-row input {
     flex: 1;
     min-width: 0;
+    padding: 11px 14px !important;
+    font-size: 0.875rem !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 10px !important;
+    color: white;
+    transition: border-color 0.18s, background 0.18s;
 }
 
-/* ---------- Friends sidebar content scrollbar (was missing in main panel) -------- */
+.friends-share-input-row input:focus {
+    outline: none;
+    border-color: rgba(var(--theme-accent-rgb), 0.6) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.friends-share-btn {
+    padding: 11px 18px !important;
+    border-radius: 10px !important;
+    font-size: 0.8125rem !important;
+}
+
+/* ---------- Add Friend row -------- */
+.friends-add-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch !important;
+}
+
+.friends-add-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.friends-add-btn {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 10px !important;
+}
+
+/* ---------- Friends sidebar content scrollbar -------- */
 .friends-sidebar-content {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .friends-sidebar-content::-webkit-scrollbar {
@@ -722,26 +805,26 @@ body.ui-advanced .settings-section-title {
 }
 
 .friends-sidebar-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 3px;
 }
 
 .friends-sidebar-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.25);
 }
 
-/* ---------- User info row in main panel — align items & spacing -------- */
+/* ---------- User info row in main panel -------- */
 .friends-user-info {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 4px;
+    gap: 12px;
+    padding: 8px 4px !important;
 }
 
 .friends-user-info .username-label {
     flex: 1;
     min-width: 0;
-    font-size: 0.875rem;
+    font-size: 0.9375rem !important;
     font-weight: 700;
     color: white;
     white-space: nowrap;
@@ -750,12 +833,12 @@ body.ui-advanced .settings-section-title {
 }
 
 .friends-user-info .icon-btn {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -765,15 +848,15 @@ body.ui-advanced .settings-section-title {
 }
 
 .friends-user-info .icon-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
     color: white;
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .friends-user-info .icon-btn.danger:hover {
-    background: rgba(239, 68, 68, 0.12);
+    background: rgba(239, 68, 68, 0.15);
     color: #ef4444;
-    border-color: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.35);
 }
 
 .friends-user-info .icon-btn:focus-visible {
@@ -781,16 +864,58 @@ body.ui-advanced .settings-section-title {
     outline-offset: 2px;
 }
 
+/* ---------- Friends auth panel -------- */
+.friends-auth-panel {
+    gap: 18px !important;
+}
+
+.friends-auth-tabs {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 4px;
+}
+
+.friends-auth-tab {
+    padding: 10px 12px !important;
+    font-size: 0.75rem !important;
+    border-radius: 6px;
+}
+
+.friends-auth-form {
+    gap: 12px !important;
+}
+
+/* Auth submit button — full width */
+#btn-friends-auth-submit,
+.submit-btn {
+    width: 100%;
+    padding: 12px 18px !important;
+    font-size: 0.875rem !important;
+}
+
+/* ---------- Friends requests section -------- */
+.friends-requests-section {
+    gap: 12px !important;
+    margin-bottom: 8px;
+}
+
+.friends-requests-title {
+    font-size: 0.6875rem !important;
+    letter-spacing: 1.4px !important;
+}
+
 /* ---------- Responsive: stack sidebar full-width on narrow windows -------- */
 @media (max-width: 540px) {
     .friends-sidebar {
-        width: 100vw;
-        right: -100vw;
+        width: 100vw !important;
+        right: -100vw !important;
         border-top-left-radius: 0;
         border-bottom-left-radius: 0;
     }
     .friends-sidebar.active {
-        right: 0;
+        right: 0 !important;
     }
 }
 
@@ -802,4 +927,47 @@ body.ui-advanced .settings-section-title {
         animation: none !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* ---------- friends-list-empty state -------- */
+.friends-list-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8125rem !important;
+    padding: 32px 12px !important;
+    border: 1px dashed rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* ---------- friend-request-card polish -------- */
+.friend-request-card {
+    border-radius: 12px !important;
+    padding: 12px 14px !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ---------- Frpc progress panel polish -------- */
+#frpc-progress-panel {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.frpc-progress-bar {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.frpc-progress-fill {
+    border-radius: 4px;
+}
+
+/* ---------- Friends share tunnel link polish -------- */
+.friends-share-tunnel-link {
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    font-size: 0.8125rem !important;
 }
