@@ -1,4 +1,5 @@
 import { actions } from "../../core/app-state.js";
+import { esc } from "../../core/safe-parse.js";
 
 export function initContentFeature() {
   // === MOJANG NEWS FETCHING ================================
@@ -9,9 +10,9 @@ export function initContentFeature() {
     try {
       const res = await fetch("https://launchercontent.mojang.com/news.json");
       const data = await res.json();
-      grid.innerHTML = "";
+      grid.replaceChildren();
 
-      const latestNews = data.entries.slice(0, 4); // Show latest 4
+      const latestNews = (data.entries || []).slice(0, 4); // Show latest 4
 
       latestNews.forEach((news) => {
         const imageUrl = news.newsPageImage?.url
@@ -29,22 +30,64 @@ export function initContentFeature() {
                 year: "numeric",
               })
               .toUpperCase()
-          : news.date;
+          : (news.date || "");
 
-        grid.innerHTML += `
-        <div class="news-card" onclick="window.electronAPI ? window.electronAPI.openExternal('${news.readMoreLink}') : window.open('${news.readMoreLink}', '_blank')" style="cursor:pointer;">
-          <div class="news-img" style="background-image: url('${imageUrl}')"></div>
-          <div class="news-content">
-            <span class="news-date" style="display: block; margin-bottom: 6px;">${dateStr} &bull; ${news.category}</span>
-            <h3 style="font-size: 15px; margin-bottom: 6px;">${news.title}</h3>
-            <p style="font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${news.text}</p>
-          </div>
-        </div>
-      `;
+        const card = document.createElement("div");
+        card.className = "news-card";
+        card.style.cursor = "pointer";
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", `Open article: ${news.title || "Untitled"}`);
+        const openUrl = news.readMoreLink || "";
+        const onOpen = () => {
+          if (!openUrl) return;
+          if (window.electronAPI?.openExternal) window.electronAPI.openExternal(openUrl);
+          else window.open(openUrl, "_blank");
+        };
+        card.addEventListener("click", onOpen);
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); }
+        });
+
+        const img = document.createElement("div");
+        img.className = "news-img";
+        if (imageUrl) img.style.backgroundImage = `url('${imageUrl.replace(/'/g, "%27")}')`;
+
+        const content = document.createElement("div");
+        content.className = "news-content";
+
+        const meta = document.createElement("span");
+        meta.className = "news-date";
+        meta.style.display = "block";
+        meta.style.marginBottom = "6px";
+        meta.textContent = `${dateStr} • ${news.category || ""}`;
+
+        const h3 = document.createElement("h3");
+        h3.style.fontSize = "15px";
+        h3.style.marginBottom = "6px";
+        h3.textContent = news.title || "";
+
+        const p = document.createElement("p");
+        p.style.fontSize = "12px";
+        p.style.display = "-webkit-box";
+        p.style.webkitLineClamp = "2";
+        p.style.webkitBoxOrient = "vertical";
+        p.style.overflow = "hidden";
+        p.textContent = news.text || "";
+
+        content.append(meta, h3, p);
+        card.append(img, content);
+        grid.appendChild(card);
       });
     } catch (err) {
-      grid.innerHTML =
-        '<div style="padding: 20px; color: var(--text-muted); width: 100%; text-align: center;">Failed to load news.</div>';
+      grid.replaceChildren();
+      const errEl = document.createElement("div");
+      errEl.style.padding = "20px";
+      errEl.style.color = "var(--text-muted)";
+      errEl.style.width = "100%";
+      errEl.style.textAlign = "center";
+      errEl.textContent = "Failed to load news.";
+      grid.appendChild(errEl);
       console.error("Failed to fetch Mojang news:", err);
     }
   }
@@ -103,13 +146,71 @@ export function initContentFeature() {
       // offline — fall through to defaults
     }
 
-    grid.innerHTML = "";
+    grid.replaceChildren();
+    const renderCard = (mp, thumb, dl, loader, modObj) => {
+      const card = document.createElement("div");
+      card.className = "trending-mp-card";
+      card.style.cursor = "pointer";
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `Install modpack: ${mp.name || ""}`);
+      const onActivate = () => {
+        try { window.clickTrendingMod?.(modObj); } catch (e) { console.error("clickTrendingMod failed:", e); }
+      };
+      card.addEventListener("click", onActivate);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onActivate(); }
+      });
+
+      const initial = (mp.name || "M").charAt(0).toUpperCase();
+      let thumbEl;
+      if (thumb) {
+        thumbEl = document.createElement("img");
+        thumbEl.className = "trending-mp-thumb";
+        thumbEl.src = thumb;
+        thumbEl.alt = "";
+        thumbEl.addEventListener("error", () => {
+          const fb = document.createElement("div");
+          fb.className = "trending-mp-thumb trending-mp-thumb-fallback";
+          fb.textContent = initial;
+          thumbEl.replaceWith(fb);
+        });
+      } else {
+        thumbEl = document.createElement("div");
+        thumbEl.className = "trending-mp-thumb trending-mp-thumb-fallback";
+        thumbEl.textContent = initial;
+      }
+
+      const info = document.createElement("div");
+      info.className = "trending-mp-info";
+
+      const name = document.createElement("strong");
+      name.textContent = mp.name || "";
+      const summary = document.createElement("p");
+      summary.textContent = mp.summary || "";
+
+      const meta = document.createElement("div");
+      meta.className = "trending-mp-meta";
+      const dlSpan = document.createElement("span");
+      dlSpan.textContent = `⬇ ${dl}`;
+      meta.appendChild(dlSpan);
+      if (loader) {
+        const tag = document.createElement("span");
+        tag.className = "trending-mp-tag";
+        tag.textContent = loader;
+        meta.appendChild(tag);
+      }
+
+      info.append(name, summary, meta);
+      card.append(thumbEl, info);
+      grid.appendChild(card);
+    };
+
     if (packs) {
       packs.forEach((mp) => {
         const thumb = mp.logo
           ? mp.logo.thumbnailUrl.replace("https://", "idk-cache://")
           : "";
-        const initial = (mp.name || "M").charAt(0).toUpperCase();
         const dl =
           mp.downloadCount >= 1e6
             ? (mp.downloadCount / 1e6).toFixed(1) + "M"
@@ -120,32 +221,24 @@ export function initContentFeature() {
           (mp.categories || []).find((c) =>
             ["Forge", "Fabric", "NeoForge", "Quilt"].includes(c.name),
           )?.name || "";
-        const modObj = JSON.stringify({
+        const modObj = {
           project_id: mp.id.toString(),
           title: mp.name,
           icon_url: thumb,
           provider: "curseforge",
-        }).replace(/"/g, "&quot;");
-        grid.innerHTML += `<div class="trending-mp-card" onclick="clickTrendingMod(JSON.parse('${modObj}'));" style="cursor:pointer;">
-        ${thumb ? `<img class="trending-mp-thumb" src="${thumb}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'trending-mp-thumb trending-mp-thumb-fallback',textContent:'${initial}'}))" />` : `<div class="trending-mp-thumb trending-mp-thumb-fallback">${initial}</div>`}
-        <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
-          <div class="trending-mp-meta"><span>&#x2B07; ${dl}</span>${loader ? '<span class="trending-mp-tag">' + loader + "</span>" : ""}</div>
-        </div></div>`;
+        };
+        renderCard(mp, thumb, dl, loader, modObj);
       });
     } else {
       FALLBACK.forEach((mp) => {
         const thumbCached = mp.thumb.replace("https://", "idk-cache://");
-        const modObj = JSON.stringify({
+        const modObj = {
           project_id: mp.id,
           title: mp.name,
           icon_url: mp.thumb,
           provider: "curseforge",
-        }).replace(/"/g, "&quot;");
-        grid.innerHTML += `<div class="trending-mp-card" onclick="clickTrendingMod(JSON.parse('${modObj}'));" style="cursor:pointer;">
-        <img class="trending-mp-thumb" src="${thumbCached}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'trending-mp-thumb trending-mp-thumb-fallback',textContent:'${mp.name.charAt(0).toUpperCase()}'}))" />
-        <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
-          <div class="trending-mp-meta"><span>&#x2B07; ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>
-        </div></div>`;
+        };
+        renderCard(mp, thumbCached, mp.dl, mp.loader, modObj);
       });
     }
   }
@@ -239,7 +332,14 @@ export function initContentFeature() {
         }
         if (raw) {
           if (/<[a-z][\s\S]*>/i.test(raw)) {
-            htmlNotes = raw;
+            // Strip all HTML tags and emit as plain text — never trust
+            // arbitrary HTML from the update server (XSS risk).
+            htmlNotes = raw
+              .replace(/<script[\s\S]*?<\/script>/gi, "")
+              .replace(/<style[\s\S]*?<\/style>/gi, "")
+              .replace(/<[^>]+>/g, "")
+              .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+              .replace(/\n/g, "<br>");
           } else {
             htmlNotes = raw
               .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")

@@ -98,7 +98,7 @@ let currentVersionTab = 'all'; // 'all' or 'downloaded'
 // Scan the versions directory to detect downloaded versions
 async function scanDownloadedVersions() {
   try {
-    console.log('[Versions] Starting scan for downloaded versions...');
+
     
     const result = await window.electronAPI?.scanDownloadedVersions?.();
     if (!result || !result.success) {
@@ -107,7 +107,7 @@ async function scanDownloadedVersions() {
     }
     
     state.downloadedVersions = result.versions || [];
-    console.log(`[Versions] Scanned ${state.downloadedVersions.length} downloaded versions:`, state.downloadedVersions);
+
 
     // Store truth source: actual installed loaders from disk
     window.__installedLoaders = {};
@@ -129,7 +129,7 @@ async function scanDownloadedVersions() {
       if (window.electronAPI) {
         window.electronAPI.saveSettings({ versionSettings: state.versionSettings }).catch(console.error);
       }
-      console.log('[Versions] Updated version settings with detected loaders:', state.versionSettings);
+
     }
     
     // Re-render versions if they're already loaded
@@ -233,8 +233,11 @@ function renderVersions() {
   }
 
   let filtered = state.allVersions.filter(v => {
-    // Only show release versions as requested by user
+    // Show releases always; snapshots/historical only when the corresponding
+    // toggles are enabled (the checkboxes are no longer dead UI).
     if (v.type === 'release') return true;
+    if (v.type === 'snapshot' && allowSnap) return true;
+    if ((v.type === 'old_beta' || v.type === 'old_alpha') && allowHist) return true;
     return false;
   });
   
@@ -335,12 +338,13 @@ fetchVersions();
 setTimeout(() => {
   const refreshBtn = document.getElementById('btn-refresh-versions');
   if (refreshBtn) {
-    console.log('[Versions] Refresh button found, attaching handler');
     refreshBtn.addEventListener('click', async () => {
-      console.log('[Versions] Refresh button clicked');
       refreshBtn.classList.add('loading');
-      await scanDownloadedVersions();
-      refreshBtn.classList.remove('loading');
+      try {
+        await scanDownloadedVersions();
+      } finally {
+        refreshBtn.classList.remove('loading');
+      }
     });
   } else {
     console.warn('[Versions] Refresh button not found in DOM');

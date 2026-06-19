@@ -13,8 +13,8 @@
     <div id="app"></div>
     
     <!-- Generic confirmation dialog -->
-    <div id="confirm-dialog-modal" class="confirm-modal">
-      <div class="confirm-modal-content confirm-modal-content--danger">
+    <div id="confirm-dialog-modal" class="confirm-modal" data-modal data-modal-noncloseable>
+      <div class="confirm-modal-content confirm-modal-content--danger" role="document">
         <h3 id="confirm-dialog-title">Confirm</h3>
         <p id="confirm-dialog-message"></p>
         <div class="confirm-modal-actions">
@@ -25,8 +25,8 @@
     </div>
 
     <!-- Delete Modpack Confirmation Modal -->
-    <div id="delete-modpack-modal" class="delete-modal">
-      <div class="delete-modal-content">
+    <div id="delete-modpack-modal" class="delete-modal" data-modal data-modal-noncloseable>
+      <div class="delete-modal-content" role="document">
         <h3>Delete Modpack</h3>
         <p id="delete-modal-message"></p>
         

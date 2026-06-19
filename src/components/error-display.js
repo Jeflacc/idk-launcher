@@ -138,23 +138,28 @@ class ErrorDisplay {
     // Update icon based on error type
     const icon = this.container.querySelector('.error-display-icon');
     if (icon) {
-      icon.className = `error-display-icon error-type-${errorInfo.type.toLowerCase()}`;
-      icon.innerHTML = this._getErrorIcon(errorInfo.type);
+      const typeKey = (errorInfo.type || 'DOWNLOAD_ERROR').toLowerCase();
+      icon.className = `error-display-icon error-type-${typeKey}`;
+      icon.innerHTML = this._getErrorIcon(errorInfo.type) || this._getErrorIcon('DOWNLOAD_ERROR');
     }
 
     // Update message
     const message = this.container.querySelector('.error-display-message');
     if (message) {
-      message.textContent = errorInfo.message;
+      message.textContent = errorInfo.message || '';
     }
 
-    // Update details if available
+    // Update details if available (use textContent to avoid XSS)
     const details = this.container.querySelector('.error-display-details');
     if (details) {
       if (errorInfo.details) {
-        details.innerHTML = `<div class="error-display-detail-item">${errorInfo.details}</div>`;
+        const item = document.createElement('div');
+        item.className = 'error-display-detail-item';
+        item.textContent = errorInfo.details;
+        details.replaceChildren(item);
         details.style.display = 'block';
       } else {
+        details.replaceChildren();
         details.style.display = 'none';
       }
     }
@@ -162,14 +167,14 @@ class ErrorDisplay {
     // Update actions
     const actions = this.container.querySelector('.error-display-actions');
     if (actions) {
-      actions.innerHTML = '';
+      actions.replaceChildren();
       if (errorInfo.actions && errorInfo.actions.length > 0) {
         errorInfo.actions.forEach(action => {
           const btn = document.createElement('button');
           btn.className = `error-action-btn ${action.type || 'secondary'}`;
           btn.textContent = action.label;
           btn.addEventListener('click', () => {
-            action.callback?.();
+            try { action.callback?.(); } catch (cbErr) { console.error('[ErrorDisplay] action callback threw:', cbErr); }
             this.dismiss();
           });
           actions.appendChild(btn);
@@ -183,9 +188,18 @@ class ErrorDisplay {
     // Show container
     this.container.classList.remove('hidden');
 
-    // Auto-dismiss after 10 seconds if no actions
+    // Auto-dismiss after 10 seconds if no actions.
+    // Track the timer so a later dismiss() can cancel it (prevents a new
+    // error from being auto-dismissed by a stale timer).
+    if (this._autoDismissTimer) {
+      clearTimeout(this._autoDismissTimer);
+      this._autoDismissTimer = null;
+    }
     if (!errorInfo.actions || errorInfo.actions.length === 0) {
-      setTimeout(() => this.dismiss(), 10000);
+      this._autoDismissTimer = setTimeout(() => {
+        this._autoDismissTimer = null;
+        this.dismiss();
+      }, 10000);
     }
   }
 
@@ -193,6 +207,10 @@ class ErrorDisplay {
    * Dismiss current error
    */
   dismiss() {
+    if (this._autoDismissTimer) {
+      clearTimeout(this._autoDismissTimer);
+      this._autoDismissTimer = null;
+    }
     if (this.container) {
       this.container.classList.add('hidden');
     }
@@ -261,6 +279,13 @@ class ErrorDisplay {
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"></circle>
           <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      `,
+      'DOWNLOAD_ERROR': `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
       `
     };

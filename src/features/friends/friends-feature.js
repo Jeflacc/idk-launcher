@@ -962,6 +962,22 @@ export function initFriendsFeature() {
     btnSettingsBack.addEventListener("click", () => showPanel("main"));
     btnMySettings.addEventListener("click", async () => {
       showPanel("settings");
+      // Guard against null idkUser (corrupt/empty localStorage)
+      if (!idkUser) {
+        settingsBio.value = "";
+        settings2fa.checked = false;
+        settings2faLabel.innerText = "Disabled";
+        settingsLinkedMcStatus.innerText = "Not signed in";
+        settingsLinkedMcStatus.style.color = "var(--text-muted)";
+        settings2fa.onchange = () => {
+          settings2faLabel.innerText = settings2fa.checked ? "Enabled" : "Disabled";
+        };
+        settingsNewPassword.value = "";
+        settingsSecurityOtp.value = "";
+        settingsSecurityOtpContainer.style.display = "none";
+        settingsError.style.display = "none";
+        return;
+      }
       settingsBio.value = idkUser.bio || "";
       settings2fa.checked = idkUser.twoFactorEnabled || false;
       settings2faLabel.innerText = settings2fa.checked ? "Enabled" : "Disabled";

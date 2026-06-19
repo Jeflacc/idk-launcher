@@ -241,14 +241,30 @@ class DownloadProgressTracker {
   updateProgress(downloadId, progressData) {
     if (downloadId !== this.currentDownloadId) return;
 
-    // Throttle progress updates to reduce UI re-renders
+    // Throttle progress updates to reduce UI re-renders.
+    // If a new update arrives during the throttle window, store it as
+    // pending and flush on a timer so the final 100% is never dropped.
     const now = Date.now();
     const updateInterval = this.progress.updateInterval || 500; // Default 500ms
-    
+
     if (now - this.progress.lastProgressUpdate < updateInterval) {
-      // Store pending update but don't render yet
       this.progress.pendingUpdate = progressData;
+      if (!this._pendingFlushTimer) {
+        this._pendingFlushTimer = setTimeout(() => {
+          this._pendingFlushTimer = null;
+          if (this.progress.pendingUpdate) {
+            const pending = this.progress.pendingUpdate;
+            this.progress.pendingUpdate = null;
+            this.updateProgress(downloadId, pending);
+          }
+        }, updateInterval);
+      }
       return;
+    }
+
+    if (this._pendingFlushTimer) {
+      clearTimeout(this._pendingFlushTimer);
+      this._pendingFlushTimer = null;
     }
 
     this.progress = {
@@ -303,7 +319,8 @@ class DownloadProgressTracker {
       downloading: 'Downloading...',
       paused: 'Download paused',
       completed: 'Download completed',
-      failed: 'Download failed'
+      failed: 'Download failed',
+      cancelled: 'Download cancelled'
     };
     this.elements.statusText.textContent = statusMap[this.state] || 'Downloading...';
   }

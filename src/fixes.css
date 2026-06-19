@@ -1,0 +1,705 @@
+/* =====================================================================
+   IDK Launcher — Consolidated Fixes Layer
+   Loaded LAST (after style.css, advanced-theme.css, launch-overlay-fix.css)
+   so it wins the cascade. Resolves duplicate rules, z-index conflicts,
+   missing webkit prefixes, contrast failures, and accessibility gaps
+   found during the v1.5.5 audit.
+   ===================================================================== */
+
+/* ---------- 1. Modals: unified stacking, single design system -------- */
+.custom-modal,
+#update-modal {
+    position: fixed !important;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-modal.active,
+#update-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background: rgba(22, 22, 25, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--theme-radius, 10px);
+    padding: 28px;
+    width: min(460px, calc(100vw - 32px));
+    max-width: 90vw;
+    max-height: 82vh;
+    overflow-y: auto;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    transform: translateY(12px) scale(0.985);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: none;
+}
+
+.custom-modal.active .modal-content,
+#update-modal.active .modal-content {
+    transform: translateY(0) scale(1);
+}
+
+.modal-content h3 {
+    font-family: var(--font-title);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 14px;
+    color: var(--text-main);
+    letter-spacing: 0.4px;
+}
+
+.modal-content p {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    margin: 0 0 20px;
+}
+
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+/* Mojang 3D accent button — used everywhere `.modal-btn` appears */
+.modal-btn {
+    background: linear-gradient(135deg, var(--theme-accent-hover), var(--theme-accent));
+    border: 2px solid var(--theme-accent-shadow);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 4px;
+    font-family: var(--font-title);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow:
+        inset 0 2px 0 var(--theme-accent-bright),
+        inset 2px 0 0 var(--theme-accent-bright),
+        inset 0 -2px 0 var(--theme-accent-shadow),
+        inset -2px 0 0 var(--theme-accent-shadow),
+        0 3px 10px rgba(0, 0, 0, 0.35);
+    text-shadow: 1px 1px 0 var(--theme-accent-shadow);
+    transition: transform 0.1s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    font-variant: small-caps;
+    text-transform: lowercase;
+}
+
+.modal-btn:hover {
+    filter: brightness(1.08);
+    box-shadow:
+        inset 0 2px 0 var(--theme-accent-bright),
+        inset 2px 0 0 var(--theme-accent-bright),
+        inset 0 -2px 0 var(--theme-accent-shadow),
+        inset -2px 0 0 var(--theme-accent-shadow),
+        0 6px 16px rgba(var(--theme-accent-rgb), 0.35);
+}
+
+.modal-btn:active {
+    transform: translateY(1px);
+    box-shadow:
+        inset 0 2px 0 var(--theme-accent-shadow),
+        inset 2px 0 0 var(--theme-accent-shadow),
+        inset 0 -2px 0 var(--theme-accent-hover),
+        inset -2px 0 0 var(--theme-accent-hover);
+}
+
+.modal-btn:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+}
+
+/* Secondary variant (cancel/dismiss) */
+.modal-btn.secondary,
+.modal-btn.cancel,
+.modal-btn.btn-secondary {
+    background: linear-gradient(135deg, #3a3a3c, #2a2a2c);
+    border-color: #1a1a1c;
+    box-shadow:
+        inset 0 2px 0 #4a4a4c,
+        inset 2px 0 0 #4a4a4c,
+        inset 0 -2px 0 #1a1a1c,
+        inset -2px 0 0 #1a1a1c;
+    text-shadow: 1px 1px 0 #000;
+}
+
+/* ---------- 2. Update modal box — drop !important, theme-aware -------- */
+.update-box {
+    background: rgba(22, 22, 25, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 28px;
+    width: min(440px, calc(100vw - 32px));
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* ---------- 3. Warning toast — fix stacking vs tutorial layer -------- */
+.warning-toast {
+    z-index: 100010;
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* ---------- 4. Play dropdown trigger — must be visible in classic mode -------- */
+.play-button-wrapper {
+    display: flex;
+    overflow: visible;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--theme-radius);
+}
+
+.play-button {
+    flex: 1;
+    border: 2px solid var(--theme-accent-shadow);
+    background: linear-gradient(135deg, var(--theme-accent-hover) 0%, var(--theme-accent) 100%);
+    color: #fff;
+    border-radius: var(--theme-radius) 0 0 var(--theme-radius);
+    border-right: none;
+    font-family: var(--font-title);
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    padding: 0 18px;
+    height: 50px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    line-height: 1.1;
+    box-shadow:
+        inset 0 2px 0 var(--theme-accent-hover),
+        inset 2px 0 0 var(--theme-accent-hover),
+        inset 0 -2px 0 var(--theme-accent-shadow),
+        0 4px 16px rgba(0, 0, 0, 0.4);
+    text-shadow: 1px 1px 0 var(--theme-accent-shadow);
+    font-variant: small-caps;
+    text-transform: lowercase;
+    transition: filter 0.12s ease, transform 0.1s ease;
+}
+
+.play-button:hover:not(:disabled) {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+.play-button:active:not(:disabled) {
+    transform: translateY(0);
+    filter: brightness(0.95);
+}
+
+.play-button:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+}
+
+.play-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-accent-dark) 100%);
+    border: 2px solid var(--theme-accent-shadow);
+    border-left: 1px solid var(--theme-accent-shadow);
+    border-radius: 0 var(--theme-radius) var(--theme-radius) 0;
+    color: #fff;
+    cursor: pointer;
+    box-shadow:
+        inset 0 2px 0 var(--theme-accent-hover),
+        inset 0 -2px 0 var(--theme-accent-shadow);
+    transition: filter 0.12s ease;
+}
+
+.play-dropdown-trigger:hover {
+    filter: brightness(1.1);
+}
+
+.play-dropdown-trigger:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+}
+
+.play-dropdown-trigger svg {
+    transition: transform 0.18s ease;
+}
+
+.play-dropdown-trigger.active svg {
+    transform: rotate(180deg);
+}
+
+/* ---------- 5. Disabled / running play button -------- */
+.play-button:disabled,
+.play-button.running {
+    background: #2a2a2b !important;
+    border-color: #3c3c3d !important;
+    color: #727273 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    cursor: not-allowed;
+    transform: none !important;
+    filter: none !important;
+    height: 52px;
+}
+
+/* ---------- 6. Pill switch — single consolidated definition -------- */
+.pill-switch {
+    display: inline-flex;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: calc(var(--theme-radius) + 4px);
+    padding: 2px;
+    gap: 2px;
+}
+
+.pill-switch-option {
+    padding: 6px 14px;
+    border-radius: calc(var(--theme-radius) + 2px);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.pill-switch-option:hover {
+    color: var(--text-main);
+}
+
+.pill-switch-option.active {
+    background: rgba(var(--theme-accent-rgb), 0.18);
+    color: var(--theme-accent-bright);
+    font-weight: 700;
+}
+
+/* ---------- 7. Contrast fixes -------- */
+:root {
+    --text-dim: #8a8a8a;
+}
+
+.mp-list-section-header {
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.nav-tab {
+    color: #a8aeb4;
+}
+
+.nav-tab.active,
+.nav-tab:hover {
+    color: var(--text-main);
+}
+
+/* ---------- 8. Allow text selection in content areas -------- */
+.news-content,
+.modal-content p,
+.update-notes-container,
+.debug-line,
+.friends-chat-messages,
+#changelog-content,
+#crash-analysis-result,
+.mod-description,
+.mp-detail-description,
+.mp-readme,
+.profile-bio,
+.friend-bio,
+.trending-mp-info p {
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
+}
+
+/* ---------- 9. Focus indicators everywhere -------- */
+button:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible,
+.nav-tab:focus-visible,
+.play-dd-loader-btn:focus-visible,
+.play-dropdown-item:focus-visible,
+.trending-mp-card:focus-visible,
+.news-card:focus-visible,
+.mp-item:focus-visible,
+.settings-section-card:focus-visible {
+    outline: 2px solid var(--theme-accent-bright);
+    outline-offset: 2px;
+    border-radius: var(--theme-radius);
+}
+
+/* ---------- 10. Reduced motion -------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---------- 11. Tutorial tooltip responsive + theme-aware -------- */
+.tutorial-tooltip {
+    width: min(340px, calc(100vw - 32px));
+    background: var(--theme-bg-panel, #1a1a22);
+    color: var(--text-main, #fff);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.4);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(var(--theme-accent-rgb), 0.2);
+}
+
+.tutorial-tooltip .tutorial-tooltip-title {
+    color: var(--text-main, #fff);
+}
+
+.tutorial-tooltip .tutorial-tooltip-text {
+    color: var(--text-muted, #b0b8c4);
+}
+
+@media (max-width: 480px) {
+    .tutorial-tooltip {
+        padding: 14px;
+        font-size: 0.8125rem;
+    }
+    .tutorial-btn {
+        padding: 8px 14px;
+        font-size: 0.8125rem;
+    }
+}
+
+/* ---------- 12. Skin viewer loading spinner -------- */
+.profile-skin-loading,
+.advanced-home-skin-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-skin-loading::before,
+.advanced-home-skin-loading::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--theme-accent);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- 13. Scroll indicators for horizontal scroll areas -------- */
+.nav-tabs,
+.mods-header-actions,
+.mp-stats-row,
+.mp-tabs {
+    mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+    scrollbar-width: thin;
+}
+
+/* ---------- 14. Inputs — let them shrink properly -------- */
+.glass-input,
+.adv-input,
+.tg-input,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+    min-width: 0;
+}
+
+/* ---------- 15. Hidden but accessible checkboxes for toggle switches -------- */
+.toggle-switch input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* ---------- 16. Nav tabs — make them keyboard-focusable -------- */
+.nav-tab {
+    outline: none;
+}
+
+/* ---------- 17. Confirm dialog fixes -------- */
+.confirm-modal {
+    z-index: 100020;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.confirm-modal-content {
+    background: rgba(22, 22, 25, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--theme-radius, 10px);
+    padding: 28px;
+    width: min(420px, calc(100vw - 32px));
+    max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    transform: translateY(12px);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.confirm-modal.active .confirm-modal-content {
+    transform: translateY(0);
+}
+
+.confirm-modal-btn {
+    padding: 10px 22px;
+    border-radius: 4px;
+    font-family: var(--font-title);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.12s ease, transform 0.1s ease;
+    font-variant: small-caps;
+    text-transform: lowercase;
+    border: 2px solid #000;
+    color: #fff;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.confirm-modal-btn.confirm {
+    background: linear-gradient(135deg, #d32f2f, #b71c1c);
+    box-shadow: inset 0 2px 0 #ef5350, inset 0 -2px 0 #7f0000;
+}
+
+.confirm-modal-btn.confirm:hover {
+    filter: brightness(1.1);
+}
+
+.confirm-modal-btn.cancel {
+    background: linear-gradient(135deg, #3a3a3c, #2a2a2c);
+    box-shadow: inset 0 2px 0 #4a4a4c, inset 0 -2px 0 #1a1a1c;
+}
+
+.confirm-modal-btn.cancel:hover {
+    filter: brightness(1.15);
+}
+
+.confirm-modal-btn:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+}
+
+/* ---------- 18. Delete modpack modal — same stacking tier -------- */
+.delete-modal {
+    z-index: 100020;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* ---------- 19. Download progress — consolidate & fix cancelled state -------- */
+.download-progress-container {
+    width: min(400px, calc(100vw - 32px));
+    background: rgba(18, 18, 19, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.download-progress-container.hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+}
+
+/* ---------- 20. Modpack modals — same stacking tier as other modals -------- */
+.mp-create-modal,
+.mp-settings-modal,
+.mp-all-versions-modal,
+.dl-confirm-modal,
+.mod-updates-modal,
+.changelog-modal,
+.crash-analyzer-modal,
+.dependencies-modal {
+    z-index: 10001;
+}
+
+/* ---------- 21. Settings tooltip — lower z-index than modals -------- */
+.settings-tooltip {
+    z-index: 1500;
+}
+
+/* ---------- 22. Body font fallback -------- */
+:root {
+    --font-body: var(--font-main);
+}
+
+/* ---------- 23. User profile / nav placeholder -------- */
+.user-details-label {
+    font-size: 0.6875rem;
+}
+
+.user-details p {
+    font-size: 0.6875rem;
+}
+
+.downloaded-badge {
+    font-size: 0.625rem;
+}
+
+.play-button:not(.running):not(:disabled)::after {
+    font-size: 0.625rem;
+}
+
+/* ---------- 24. Submit button — restore transition -------- */
+.submit-btn {
+    transition: background-color 0.12s ease, box-shadow 0.12s ease, transform 0.1s ease;
+}
+
+/* ---------- 25. Launch overlay — fixed positioning for restored windows -------- */
+.launch-overlay {
+    position: fixed;
+    z-index: 10000;
+}
+
+/* ---------- 26. Custom scrollbar styling globally -------- */
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+/* ---------- 27. Make icon buttons accessible (focus + aria) -------- */
+.icon-btn,
+.mp-action-btn,
+.modal-close,
+.mp-settings-close,
+.close-btn {
+    transition: background 0.12s ease, color 0.12s ease, transform 0.1s ease;
+}
+
+.icon-btn:hover,
+.mp-action-btn:hover,
+.modal-close:hover,
+.mp-settings-close:hover,
+.close-btn:hover {
+    transform: scale(1.05);
+}
+
+.icon-btn:active,
+.mp-action-btn:active,
+.modal-close:active,
+.mp-settings-close:active,
+.close-btn:active {
+    transform: scale(0.96);
+}
+
+/* ---------- 28. Friends / profile panel scroll fix -------- */
+.friends-sidebar,
+.profile-page-content,
+.modpacks-sidebar,
+.browser-sidebar,
+.settings-content-wrapper {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* ---------- 29. Smooth view transitions (when not reduced-motion) -------- */
+@media (prefers-reduced-motion: no-preference) {
+    .view {
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+}
+
+/* ---------- 30. Hide elements removed from active state -------- */
+[data-empty-state] {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 0.875rem;
+}
+
+/* ---------- 31. Form field error state -------- */
+.input-error,
+.glass-input.input-error,
+.adv-input.input-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 1px #ef4444 inset;
+}
+
+.input-error-message {
+    color: #ef4444;
+    font-size: 0.75rem;
+    margin-top: 4px;
+    display: block;
+}
+
+/* ---------- 32. Better disabled state for buttons -------- */
+button:disabled,
+button[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ---------- 33. Modal animation: slide + fade on first show -------- */
+.custom-modal:not(.active) .modal-content,
+#update-modal:not(.active) .modal-content {
+    transform: translateY(20px) scale(0.96);
+}
+
+/* ---------- 34. Landing page — add webkit prefix & reduced motion -------- */
+@media (prefers-reduced-motion: reduce) {
+    .landing-page *,
+    .landing-page *::before,
+    .landing-page *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---------- 35. Overlay: webkit prefix for in-game sidebar blur -------- */
+.overlay-sidebar,
+.overlay-toolbar {
+    -webkit-backdrop-filter: blur(var(--overlay-blur, 16px));
+}

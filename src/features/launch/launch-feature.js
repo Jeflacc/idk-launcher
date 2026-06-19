@@ -284,7 +284,7 @@ window.showLaunchVersionPicker = () => {
     const clone = oldBtn.cloneNode(true);
     oldBtn.parentNode.replaceChild(clone, oldBtn);
     clone.addEventListener('click', () => {
-      document.querySelectorAll('[data-dl-tab]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#mp-all-versions-modal [data-dl-tab]').forEach(b => b.classList.remove('active'));
       clone.classList.add('active');
       renderForLaunchVersionsModal(clone.getAttribute('id').replace('mp-dl-tab-', ''));
     });
@@ -360,6 +360,20 @@ const launchStatus = document.getElementById('launch-status');
 const launchFill = document.getElementById('launch-fill');
 const cancelLaunchBtn = document.getElementById('btn-cancel-launch');
 
+// Helper: null-safe setters so IPC callbacks never throw if an element is
+// missing (e.g. after a hot-reload that didn't re-create the shell).
+const setLaunchFill = (pct) => { if (launchFill) launchFill.style.width = pct; };
+const setLaunchStatus = (txt) => { if (launchStatus) launchStatus.innerText = txt; };
+const setPlayBtn = (txt, opts = {}) => {
+  if (!playBtn) return;
+  if (txt != null) playBtn.innerText = txt;
+  playBtn.classList.toggle('running', !!opts.running);
+  playBtn.disabled = !!opts.disabled;
+};
+const hideOverlay = () => {
+  if (overlay) { overlay.classList.remove('active'); overlay.classList.remove('minimized'); }
+};
+
 const mcFunStatuses = [
   "Waking up the Iron Golems...",
   "Feeding the Baby Turtles...",
@@ -409,10 +423,10 @@ function getFunStatus(status) {
 // regular play AND modpack play without needing to be re-registered each time.
 if (window.electronAPI) {
   window.electronAPI.onLaunchProgress((data) => {
-    if (data.percent !== undefined) launchFill.style.width = `${data.percent}%`;
-    const text = data.status ? getFunStatus(data.status) : '';
+    if (data && data.percent !== undefined) setLaunchFill(`${data.percent}%`);
+    const text = data && data.status ? getFunStatus(data.status) : '';
     if (text) {
-      launchStatus.innerText = text;
+      setLaunchStatus(text);
       setMiniText(text);
     }
   });
@@ -422,7 +436,7 @@ if (window.electronAPI) {
     document.querySelectorAll('video').forEach(v => v.pause());
 
     // Mark the current version as downloaded since the game launched successfully
-    if (!state.downloadedVersions.includes(state.selectedVersion)) {
+    if (state.selectedVersion && !state.downloadedVersions.includes(state.selectedVersion)) {
       state.downloadedVersions.push(state.selectedVersion);
       localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
     }
@@ -435,16 +449,13 @@ if (window.electronAPI) {
       actions.modpacks?.mpRenderDetail?.();
     }
 
-    launchFill.style.width = '100%';
-    launchStatus.innerText = 'Game is running!';
+    setLaunchFill('100%');
+    setLaunchStatus('Game is running!');
     // Hide the mini-indicator — the game is now running independently.
     if (miniIndicator) miniIndicator.classList.remove('visible');
     setTimeout(() => {
-      overlay.classList.remove('active');
-      overlay.classList.remove('minimized');
-      playBtn.innerText = 'RUNNING';
-      playBtn.classList.add('running');
-      playBtn.disabled = true;
+      hideOverlay();
+      setPlayBtn('RUNNING', { running: true, disabled: true });
     }, 800);
   });
   if (window.electronAPI.onEnterGameRunningMode) {
@@ -482,16 +493,9 @@ if (window.electronAPI) {
     window.dispatchEvent(new Event('reload-content'));
     // Always dismiss the launch overlay regardless of which play button
     // initiated the launch (main page or modpack page).
-    if (overlay) {
-      overlay.classList.remove('active');
-      overlay.classList.remove('minimized');
-    }
+    hideOverlay();
     if (miniIndicator) miniIndicator.classList.remove('visible');
-    if (playBtn) {
-      playBtn.innerText = 'PLAY';
-      playBtn.classList.remove('running');
-      playBtn.disabled = false;
-    }
+    setPlayBtn('PLAY', { disabled: false });
     const mpPlayBtn = document.getElementById('btn-play-modpack');
     if (mpPlayBtn) {
       mpPlayBtn.innerText = 'PLAY';
@@ -538,16 +542,9 @@ if (window.electronAPI) {
     const errMsg = typeof error === 'string' ? error : (error?.message || 'An unknown error occurred.');
     const attemptedVersion = error?.version || state.selectedVersion || 'this version';
     const attemptedLoader = error?.loader || state.selectedLoader || 'Unknown';
-    if (overlay) {
-      overlay.classList.remove('active');
-      overlay.classList.remove('minimized');
-    }
+    hideOverlay();
     if (miniIndicator) miniIndicator.classList.remove('visible');
-    if (playBtn) {
-      playBtn.innerText = 'PLAY';
-      playBtn.classList.remove('running');
-      playBtn.disabled = false;
-    }
+    setPlayBtn('PLAY', { disabled: false });
     const mpPlayBtn = document.getElementById('btn-play-modpack');
     if (mpPlayBtn) {
       mpPlayBtn.innerText = 'PLAY';
@@ -555,20 +552,39 @@ if (window.electronAPI) {
       mpPlayBtn.disabled = false;
     }
 
-    // Smart loader-unavailable handling
-    const loaderUnavailablePattern = /(Fabric|Forge|NeoForge|Quilt).*?(not available|No.*?builds found)/i;
-    const match = errMsg.match(loaderUnavailablePattern);
-    if (match) {
-      document.getElementById('error-message').innerHTML = `
-        <strong>${attemptedLoader}</strong> is not available for Minecraft <strong>${attemptedVersion}</strong>.<br><br>
-        This version may not have a ${attemptedLoader} release. Use the dropdown to switch to a different loader or version, then try again.
-      `;
-      document.getElementById('error-modal').classList.add('active');
+    const errorMessageEl = document.getElementById('error-message');
+    const errorModal = document.getElementById('error-modal');
+    if (!errorMessageEl || !errorModal) {
+      // Element missing — fall back to a warning toast so the error isn't lost.
+      showWarningToast(`Launch failed: ${errMsg}`);
       return;
     }
 
-    document.getElementById('error-message').innerText = errMsg;
-    document.getElementById('error-modal').classList.add('active');
+    // Smart loader-unavailable handling.
+    // Use textContent on dynamic fields to avoid XSS via modpack name / version.
+    const loaderUnavailablePattern = /(Fabric|Forge|NeoForge|Quilt).*?(not available|No.*?builds found)/i;
+    const match = errMsg.match(loaderUnavailablePattern);
+    if (match) {
+      errorMessageEl.replaceChildren();
+      const strong1 = document.createElement('strong'); strong1.textContent = attemptedLoader;
+      const strong2 = document.createElement('strong'); strong2.textContent = attemptedVersion;
+      errorMessageEl.append(
+        strong1,
+        document.createTextNode(' is not available for Minecraft '),
+        strong2,
+        document.createTextNode('.\n\nThis version may not have a '),
+        document.createTextNode(attemptedLoader),
+        document.createTextNode(' release. Use the dropdown to switch to a different loader or version, then try again.'),
+      );
+      // Preserve line breaks (CSS white-space: pre-wrap needed — handled by .error-message styling)
+      errorMessageEl.style.whiteSpace = 'pre-wrap';
+      errorModal.classList.add('active');
+      return;
+    }
+
+    errorMessageEl.textContent = errMsg;
+    errorMessageEl.style.whiteSpace = 'pre-wrap';
+    errorModal.classList.add('active');
   });
   window.electronAPI.onLaunchWarning((msg) => showWarningToast(msg));
 
@@ -584,21 +600,16 @@ if (window.electronAPI) {
     const javaPathInput = document.getElementById('java-path');
     if (javaPathInput) javaPathInput.value = '';
     showWarningToast('Auto-Healer: Incompatible Java version detected. Custom Java path was cleared to let the launcher auto-download Java 21!');
-    overlay.classList.remove('active');
-    playBtn.innerText = 'PLAY';
-    playBtn.classList.remove('running');
-    playBtn.disabled = false;
+    hideOverlay();
+    setPlayBtn('PLAY', { disabled: false });
   });
 }
 
 if (cancelLaunchBtn && window.electronAPI) {
   cancelLaunchBtn.addEventListener('click', () => {
     window.electronAPI.cancelLaunch?.();
-    overlay.classList.remove('active');
-    overlay.classList.remove('minimized');
-    playBtn.innerText = 'PLAY';
-    playBtn.classList.remove('running');
-    playBtn.disabled = false;
+    hideOverlay();
+    setPlayBtn('PLAY', { disabled: false });
   });
 }
 

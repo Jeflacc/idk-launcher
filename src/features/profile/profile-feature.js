@@ -538,19 +538,27 @@ async function loadProfileFriendsList() {
       return;
     }
 
-    // Render friends in profile sidebar (limit to 8)
-    friendsListEl.innerHTML = friends.slice(0, 8).map(friend => `
-      <div class="profile-friend-item" title="${friend.username}" data-friend-id="${friend.id || ""}">
+    // Render friends in profile sidebar (limit to 8) — escape all user-controlled
+    // fields (username, status) to prevent XSS via crafted friend records.
+    const escFriend = (s) => String(s == null ? '' : s).replace(/[&<>"'`]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;','`':'&#x60;'}[c]));
+    friendsListEl.innerHTML = friends.slice(0, 8).map(friend => {
+      const status = String(friend.status || "offline");
+      const statusCls = (status.toLowerCase().includes("playing") || status.toLowerCase().includes("hosting")) ? "online" : "offline";
+      const username = escFriend(friend.username);
+      const friendId = escFriend(friend.id || "");
+      const unread = Number(friend.unreadCount) || 0;
+      return `
+      <div class="profile-friend-item" title="${username}" data-friend-id="${friendId}">
         <div class="profile-friend-avatar">
-          <canvas width="24" height="24" data-friend-username="${friend.username}"></canvas>
+          <canvas width="24" height="24" data-friend-username="${username}"></canvas>
         </div>
         <div class="profile-friend-info">
-          <span class="profile-friend-name">${friend.username}</span>
-          <span class="profile-friend-status ${friend.status.toLowerCase().includes("playing") || friend.status.toLowerCase().includes("hosting") ? "online" : "offline"}">${friend.status}</span>
+          <span class="profile-friend-name">${username}</span>
+          <span class="profile-friend-status ${statusCls}">${escFriend(status)}</span>
         </div>
-        ${friend.unreadCount > 0 ? `<span class="profile-friend-unread">${friend.unreadCount}</span>` : ""}
-      </div>
-    `).join("");
+        ${unread > 0 ? `<span class="profile-friend-unread">${unread}</span>` : ""}
+      </div>`;
+    }).join("");
 
     // Load friend avatars and attach click handlers
     friends.slice(0, 8).forEach(friend => {

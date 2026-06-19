@@ -67,11 +67,13 @@ export function initModpacksFeature({ switchView }) {
   // The id should be the raw part (e.g. 'mp9qv96i3i3uqistkjd'), not 'modpack-mp9qv96...'
   state.modpacks = state.modpacks.map((mp) => ({
     ...mp,
-    id: mp.id.startsWith("modpack-") ? mp.id.replace(/^modpack-/, "") : mp.id,
+    id: (mp && typeof mp.id === "string" && mp.id.startsWith("modpack-"))
+      ? mp.id.replace(/^modpack-/, "")
+      : (mp && mp.id != null ? mp.id : `mp${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`),
   }));
 
   // Remove any entries whose id still contains 'modpack-' after stripping (double-nested duplicates)
-  state.modpacks = state.modpacks.filter((mp) => !mp.id.startsWith("modpack-"));
+  state.modpacks = state.modpacks.filter((mp) => !(mp && typeof mp.id === "string" && mp.id.startsWith("modpack-")));
 
   // Save immediately if we filtered anything out to prevent it from coming back
   if (state.modpacks.length !== originalCount) {
@@ -427,7 +429,7 @@ export function initModpacksFeature({ switchView }) {
         el.style.position = "relative";
         el.innerHTML = `
         <div class="mp-item-icon" style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(255,255,255,0.05);flex-shrink:0;border:1px solid rgba(255,255,255,0.08);">${iconHtml}</div>
-        <div class="mp-item-info"><strong>${mp.name}</strong><span>${mp.mcVersion} \u00B7 ${mp.loader}</span></div>
+        <div class="mp-item-info"><strong>${esc(mp.name)}</strong><span>${esc(mp.mcVersion)} \u00B7 ${esc(mp.loader)}</span></div>
         <span class="mp-item-count">${total}</span>
         <button class="mp-fav-btn${mp.favorite ? ' is-fav' : ''}" title="${mp.favorite ? 'Unfavorite' : 'Favorite'}"><svg width="16" height="16" viewBox="0 0 24 24" fill="${mp.favorite ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>`;
         const favBtn = el.querySelector('.mp-fav-btn');
@@ -915,27 +917,41 @@ export function initModpacksFeature({ switchView }) {
     const nameEl = document.getElementById("modpack-name-display");
     const metaEl = document.getElementById("modpack-meta-display");
 
+    // Guard against missing DOM elements (e.g. advanced vs classic UI variations).
+    // Without this guard, the entire modpacks view silently breaks if any of
+    // these IDs is removed from the markup.
+    const statVersion = document.getElementById("mp-stat-version");
+    const statLoader = document.getElementById("mp-stat-loader");
+    const statPlaytime = document.getElementById("mp-stat-playtime");
+    const modCount = document.getElementById("mod-count");
+    const rpCount = document.getElementById("rp-count");
+    const shaderCount = document.getElementById("shader-count");
+
     if (isViewingVersion && versionData) {
-      nameEl.innerText = versionData.id;
+      if (nameEl) nameEl.innerText = versionData.id;
       const displayLoader = getLoaderForVersion(versionData.id);
-      metaEl.innerText = `${versionData.id} \u00B7 ${displayLoader}`;
-      nameEl.title = versionData.id;
-      nameEl.style.cursor = "default";
-      nameEl.ondblclick = null;
+      if (metaEl) metaEl.innerText = `${versionData.id} \u00B7 ${displayLoader}`;
+      if (nameEl) {
+        nameEl.title = versionData.id;
+        nameEl.style.cursor = "default";
+        nameEl.ondblclick = null;
+      }
     } else if (mp) {
-      nameEl.innerText = mp.name;
-      metaEl.innerText = `MC ${mp.mcVersion} \u00B7 ${mp.loader}`;
-      nameEl.title = "Double-click to rename";
-      nameEl.style.cursor = "pointer";
-      nameEl.ondblclick = () => {
-        const newName = prompt("Rename modpack:", mp.name);
-        if (newName && newName.trim() && newName.trim() !== mp.name) {
-          mp.name = newName.trim();
-          mpSave();
-          mpRenderList();
-          mpRenderDetail();
-        }
-      };
+      if (nameEl) nameEl.innerText = mp.name;
+      if (metaEl) metaEl.innerText = `MC ${mp.mcVersion} \u00B7 ${mp.loader}`;
+      if (nameEl) {
+        nameEl.title = "Double-click to rename";
+        nameEl.style.cursor = "pointer";
+        nameEl.ondblclick = () => {
+          const newName = prompt("Rename modpack:", mp.name);
+          if (newName && newName.trim() && newName.trim() !== mp.name) {
+            mp.name = newName.trim();
+            mpSave();
+            mpRenderList();
+            mpRenderDetail();
+          }
+        };
+      }
     }
 
     const iconDisplay = document.getElementById("modpack-icon-display");
@@ -943,7 +959,7 @@ export function initModpacksFeature({ switchView }) {
       if (isViewingVersion) {
         iconDisplay.innerHTML = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.8;color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
       } else {
-        const renderablePackIconUrl = getRenderableIconUrl(mp.iconUrl);
+        const renderablePackIconUrl = getRenderableIconUrl(mp?.iconUrl);
         iconDisplay.innerHTML = renderablePackIconUrl
           ? `<img src="${esc(renderablePackIconUrl)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<svg width=\`24\` height=\`24\` viewBox=\`0 0 24 24\` fill=\`none\` stroke=\`currentColor\` stroke-width=\`2\` style=\`opacity:0.5;\`><path d=\`M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\`></path></svg>'" />`
           : `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
@@ -952,47 +968,42 @@ export function initModpacksFeature({ switchView }) {
 
     // Update dynamic stats
     if (isViewingVersion) {
-      document.getElementById("mp-stat-version").innerText =
-        versionData?.id || "1.20.4";
-      document.getElementById("mp-stat-loader").innerText =
-        getLoaderForVersion(state.activeVersionForMods);
-      document.getElementById("mp-stat-playtime").innerText = "0h played";
+      if (statVersion) statVersion.innerText = versionData?.id || "1.20.4";
+      if (statLoader) statLoader.innerText = getLoaderForVersion(state.activeVersionForMods);
+      if (statPlaytime) statPlaytime.innerText = "0h played";
       updateAchievementsStat({ versionId: state.activeVersionForMods });
-      document.getElementById("mod-count").innerText = "0";
-      document.getElementById("rp-count").innerText = "0";
-      document.getElementById("shader-count").innerText = "0";
+      if (modCount) modCount.innerText = "0";
+      if (rpCount) rpCount.innerText = "0";
+      if (shaderCount) shaderCount.innerText = "0";
     } else {
-      document.getElementById("mp-stat-version").innerText =
-        mp.mcVersion || "1.20.4";
-      document.getElementById("mp-stat-loader").innerText =
-        mp.loader || "Vanilla";
+      if (statVersion) statVersion.innerText = mp?.mcVersion || "1.20.4";
+      if (statLoader) statLoader.innerText = mp?.loader || "Vanilla";
 
       // Update playtime
-      const playtimeEl = document.getElementById("mp-stat-playtime");
-      if (mp.lastPlayed) {
-        const lastPlayedDate = new Date(mp.lastPlayed);
-        const now = new Date();
-        const diffMs = now - lastPlayedDate;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
+      if (statPlaytime) {
+        if (mp?.lastPlayed) {
+          const lastPlayedDate = new Date(mp.lastPlayed);
+          const now = new Date();
+          const diffMs = now - lastPlayedDate;
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffHours = Math.floor(diffMs / 3600000);
+          const diffDays = Math.floor(diffMs / 86400000);
 
-        if (diffMins < 1) playtimeEl.innerText = "Just now";
-        else if (diffMins < 60) playtimeEl.innerText = `${diffMins}m ago`;
-        else if (diffHours < 24) playtimeEl.innerText = `${diffHours}h ago`;
-        else if (diffDays < 7) playtimeEl.innerText = `${diffDays}d ago`;
-        else playtimeEl.innerText = lastPlayedDate.toLocaleDateString();
-      } else {
-        playtimeEl.innerText = "Never Played";
+          if (diffMins < 1) statPlaytime.innerText = "Just now";
+          else if (diffMins < 60) statPlaytime.innerText = `${diffMins}m ago`;
+          else if (diffHours < 24) statPlaytime.innerText = `${diffHours}h ago`;
+          else if (diffDays < 7) statPlaytime.innerText = `${diffDays}d ago`;
+          else statPlaytime.innerText = lastPlayedDate.toLocaleDateString();
+        } else {
+          statPlaytime.innerText = "Never Played";
+        }
       }
 
-      document.getElementById("mod-count").innerText = mp.mods?.length || 0;
-      document.getElementById("rp-count").innerText =
-        mp.resourcepacks?.length || 0;
-      document.getElementById("shader-count").innerText =
-        mp.shaders?.length || 0;
+      if (modCount) modCount.innerText = mp?.mods?.length || 0;
+      if (rpCount) rpCount.innerText = mp?.resourcepacks?.length || 0;
+      if (shaderCount) shaderCount.innerText = mp?.shaders?.length || 0;
 
-      updateAchievementsStat({ modpackId: mp.id });
+      if (mp) updateAchievementsStat({ modpackId: mp.id });
     }
 
     // Load installed mods for versions
@@ -1082,6 +1093,7 @@ export function initModpacksFeature({ switchView }) {
       state.activeVersionForMods && !state.activeModpackId;
 
     let ipcResult = { success: true };
+    let mutated = false;
     try {
       if (isViewingVersion) {
         if (!state.versionSettings[state.activeVersionForMods]) return;
@@ -1109,6 +1121,7 @@ export function initModpacksFeature({ switchView }) {
           "idk_version_settings",
           JSON.stringify(state.versionSettings),
         );
+        mutated = true;
       } else if (mp) {
         // Call IPC first — only update state if disk delete succeeds
         if (window.electronAPI) {
@@ -1126,12 +1139,17 @@ export function initModpacksFeature({ switchView }) {
         // Remove from modpack — filter by filename (unique), not modrinthId (can be empty)
         mp[type] = mp[type].filter((i) => i.filename !== item.filename);
         mpSave();
+        mutated = true;
       }
     } catch (e) {
       console.error("[Modpacks] mpRemoveItem failed:", e);
     } finally {
-      mpRenderDetail();
-      mpRenderList();
+      // Only re-render if we actually mutated state — avoids UI flicker when
+      // the early `return` fired before any change.
+      if (mutated) {
+        mpRenderDetail();
+        mpRenderList();
+      }
     }
   }
 
@@ -1303,19 +1321,28 @@ export function initModpacksFeature({ switchView }) {
           btn.classList.add('downloading');
           btn.textContent = 'Downloading…';
           btn.disabled = true;
-          const result = await window.electronAPI.downloadVersion({ version: v.id });
-          if (result.success) {
-            if (!state.downloadedVersions.includes(v.id)) {
-              state.downloadedVersions.push(v.id);
-              localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
+          try {
+            const result = await window.electronAPI.downloadVersion({ version: v.id });
+            if (result && result.success) {
+              if (!state.downloadedVersions.includes(v.id)) {
+                state.downloadedVersions.push(v.id);
+                localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
+              }
+              await refreshLoaderCache();
+              renderVersionDownloadGrid();
+              renderAllVersionsModal(currentDlTab);
+            } else {
+              btn.classList.remove('downloading');
+              btn.textContent = 'Failed';
+              setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
+              if (result && result.error) actions.showWarningToast?.(result.error);
             }
-            await refreshLoaderCache();
-            renderVersionDownloadGrid();
-            renderAllVersionsModal(currentDlTab);
-          } else {
+          } catch (err) {
+            console.error('[Modpacks] downloadVersion threw:', err);
             btn.classList.remove('downloading');
             btn.textContent = 'Failed';
             setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
+            actions.showWarningToast?.('Download failed: ' + (err.message || err));
           }
         });
       }
@@ -1368,19 +1395,28 @@ export function initModpacksFeature({ switchView }) {
           btn.classList.add('downloading');
           btn.textContent = 'Downloading…';
           btn.disabled = true;
-          const result = await window.electronAPI.downloadVersion({ version: v.id });
-          if (result.success) {
-            if (!state.downloadedVersions.includes(v.id)) {
-              state.downloadedVersions.push(v.id);
-              localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
+          try {
+            const result = await window.electronAPI.downloadVersion({ version: v.id });
+            if (result && result.success) {
+              if (!state.downloadedVersions.includes(v.id)) {
+                state.downloadedVersions.push(v.id);
+                localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
+              }
+              await refreshLoaderCache();
+              renderVersionDownloadGrid();
+              renderAllVersionsModal(currentDlTab);
+            } else {
+              btn.classList.remove('downloading');
+              btn.textContent = 'Failed';
+              setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
+              if (result && result.error) actions.showWarningToast?.(result.error);
             }
-            await refreshLoaderCache();
-            renderVersionDownloadGrid();
-            renderAllVersionsModal(currentDlTab);
-          } else {
+          } catch (err) {
+            console.error('[Modpacks] downloadVersion threw:', err);
             btn.classList.remove('downloading');
             btn.textContent = 'Failed';
             setTimeout(() => { btn.textContent = 'Download'; btn.disabled = false; }, 2000);
+            actions.showWarningToast?.('Download failed: ' + (err.message || err));
           }
         });
       }
@@ -1391,7 +1427,7 @@ export function initModpacksFeature({ switchView }) {
   // Expose for external use (e.g. play dropdown "All versions")
   window.showVersionPickerModal = () => {
     currentDlTab = 'release';
-    document.querySelectorAll('[data-dl-tab]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#mp-all-versions-modal [data-dl-tab]').forEach(b => b.classList.remove('active'));
     const tabBtn = document.getElementById('mp-dl-tab-release');
     if (tabBtn) tabBtn.classList.add('active');
     renderAllVersionsModal('release');
@@ -1432,7 +1468,7 @@ export function initModpacksFeature({ switchView }) {
     const btn = document.getElementById(`mp-dl-tab-${tab}`);
     if (btn) {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-dl-tab]').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#mp-all-versions-modal [data-dl-tab]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentDlTab = tab;
         renderAllVersionsModal(tab);
@@ -2713,10 +2749,19 @@ export function initModpacksFeature({ switchView }) {
           return;
         }
         const onDlProg = (p) => updateDlPanel(p.status || "Downloading...", p.percent, p.speed, p.eta, dlFileName);
-        if (window.electronAPI.onDownloadProgress) window.electronAPI.onDownloadProgress(onDlProg);
-        const importRes = await window.electronAPI.downloadCurseforgeModpack({
-          downloadUrl: dlUrl,
-        });
+        // Capture the cleanup fn so we can detach this listener when the
+        // import completes/fails — otherwise every import leaks another
+        // ipcRenderer.on('download-progress', …) handler.
+        let detachDlProg = null;
+        if (window.electronAPI.onDownloadProgress) detachDlProg = window.electronAPI.onDownloadProgress(onDlProg);
+        let importRes;
+        try {
+          importRes = await window.electronAPI.downloadCurseforgeModpack({
+            downloadUrl: dlUrl,
+          });
+        } finally {
+          if (detachDlProg) { try { detachDlProg(); } catch (_) {} detachDlProg = null; }
+        }
         if (!importRes.success)
           throw new Error(importRes.error || "Import failed");
         const manifest = importRes.manifest;
@@ -2997,10 +3042,17 @@ export function initModpacksFeature({ switchView }) {
         }
 
         const onDlProg = (p) => updateDlPanel(p.status || "Downloading...", p.percent, p.speed, p.eta, dlFileName);
-        if (window.electronAPI.onDownloadProgress) window.electronAPI.onDownloadProgress(onDlProg);
-        const importRes = await window.electronAPI.downloadModrinthModpack({
-          downloadUrl: dlUrl,
-        });
+        // Capture cleanup fn so we can detach this listener (see CurseForge path above).
+        let detachDlProg = null;
+        if (window.electronAPI.onDownloadProgress) detachDlProg = window.electronAPI.onDownloadProgress(onDlProg);
+        let importRes;
+        try {
+          importRes = await window.electronAPI.downloadModrinthModpack({
+            downloadUrl: dlUrl,
+          });
+        } finally {
+          if (detachDlProg) { try { detachDlProg(); } catch (_) {} detachDlProg = null; }
+        }
         if (!importRes.success)
           throw new Error(importRes.error || "Import failed");
         const manifest = importRes.manifest;
@@ -4094,14 +4146,21 @@ export function initModpacksFeature({ switchView }) {
     .getElementById("btn-refresh-profiles")
     .addEventListener("click", async () => {
       const btn = document.getElementById("btn-refresh-profiles");
+      if (!btn) return;
       btn.style.opacity = "0.5";
       btn.style.pointerEvents = "none";
-      // Rotate icon
-      btn.querySelector("svg").style.animation = "spin 0.8s linear infinite";
-      await loadProfilesFromDisk();
-      btn.style.opacity = "";
-      btn.style.pointerEvents = "";
-      btn.querySelector("svg").style.animation = "";
+      // Rotate icon (null-safe in case the SVG child is missing)
+      const svg = btn.querySelector("svg");
+      if (svg) svg.style.animation = "spin 0.8s linear infinite";
+      try {
+        await loadProfilesFromDisk();
+      } catch (e) {
+        console.error("[Modpacks] refresh failed:", e);
+      } finally {
+        btn.style.opacity = "";
+        btn.style.pointerEvents = "";
+        if (svg) svg.style.animation = "";
+      }
       actions.showWarningToast("Profiles refreshed from disk!");
     });
 
@@ -4138,11 +4197,21 @@ export function initModpacksFeature({ switchView }) {
       }
 
       const rawFiles = Array.from(e.dataTransfer.files);
-      const files = rawFiles.map(f => window.electronAPI?.getPathForFile ? window.electronAPI.getPathForFile(f) : f.path).filter(p => p);
-      if (files.length === 0) {
-        actions.showWarningToast(`Could not read file paths. Dropped ${rawFiles.length} item(s). This is likely a security restriction.`);
+      // Modern Electron: use window.electronAPI.getPathForFile(f) — the
+      // deprecated f.path is no longer set on File objects. Surface a
+      // clear error if the bridge is missing instead of silently dropping files.
+      const files = rawFiles.map(f => {
+        if (window.electronAPI?.getPathForFile) {
+          try { return window.electronAPI.getPathForFile(f); } catch (_) { return null; }
+        }
+        // Fallback for legacy Electron where f.path still exists
+        return f.path || null;
+      }).filter(p => p);
+      if (files.length === 0 && rawFiles.length > 0) {
+        actions.showWarningToast(`Could not read file paths. Drag-drop requires the desktop app (Electron). Dropped ${rawFiles.length} item(s).`);
         return;
       }
+      if (rawFiles.length === 0) return;
 
       const mp = mpGet();
       const isViewingVersion = state.activeVersionForMods && !state.activeModpackId;

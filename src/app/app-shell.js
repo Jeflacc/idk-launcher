@@ -1593,7 +1593,7 @@
           </div>
         </div>
       </div>
-      <div class="mp-create-modal" id="mp-create-modal">
+      <div class="mp-create-modal" id="mp-create-modal" data-modal>
         <div class="mp-create-box">
           <h3>New Modpack</h3>
           <div style="display:flex;gap:12px;align-items:center;">
@@ -1616,7 +1616,7 @@
         </div>
       </div>
 
-      <div class="mp-settings-modal" id="mp-settings-modal">
+      <div class="mp-settings-modal" id="mp-settings-modal" data-modal>
         <div class="mp-settings-box">
           <div class="mp-settings-header">
             <h3>Modpack Settings</h3>
@@ -1691,7 +1691,7 @@
   </div>
 
   <!-- Version Download Modal -->
-  <div class="mp-create-modal" id="mp-all-versions-modal">
+  <div class="mp-create-modal" id="mp-all-versions-modal" data-modal>
     <div class="mp-create-box" style="width:480px;max-height:80vh;overflow-y:auto;">
       <h3>All Minecraft Versions</h3>
       <div style="display:flex;gap:8px;margin-bottom:12px;">
@@ -1709,7 +1709,7 @@
   </div>
 
   <!-- LAUNCH OVERLAY -->
-  <div class="launch-overlay" id="launch-overlay">
+  <div class="launch-overlay" id="launch-overlay" data-modal data-modal-noncloseable>
     <div class="launch-overlay-card">
       <div class="launch-card-header">
         <img src="./loading.gif" class="launch-spinner-gif" alt="Loading...">
@@ -1747,7 +1747,7 @@
   </div>
 
   <!-- ERROR MODAL -->
-  <div class="custom-modal" id="error-modal">
+  <div class="custom-modal" id="error-modal" data-modal>
     <div class="modal-content">
       <div class="modal-icon">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -1765,7 +1765,7 @@
   </div>
 
   <!-- UPDATE MODAL -->
-  <div class="custom-modal" id="update-modal">
+  <div class="custom-modal" id="update-modal" data-modal>
     <div class="modal-content update-box">
       <div class="modal-icon update-icon">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
@@ -1960,7 +1960,7 @@
   </div>
 
   <!-- MOD UPDATE CHECKER MODAL -->
-  <div class="custom-modal" id="mod-updates-modal">
+  <div class="custom-modal" id="mod-updates-modal" data-modal>
     <div class="modal-content mod-updates-modal-content">
       <div class="updates-modal-header">
         <div>
@@ -1981,7 +1981,7 @@
   </div>
 
   <!-- CHANGELOG VIEWER MODAL -->
-  <div class="custom-modal" id="changelog-modal">
+  <div class="custom-modal" id="changelog-modal" data-modal>
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 id="changelog-title" style="margin: 0; font-size:1.125rem; font-weight: 700;">Changelog</h3>
@@ -1999,7 +1999,7 @@
   </div>
 
   <!-- CRASH LOG ANALYZER MODAL -->
-  <div class="custom-modal" id="crash-analyzer-modal">
+  <div class="custom-modal" id="crash-analyzer-modal" data-modal>
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="margin: 0; font-size:1.125rem; font-weight: 700;">Crash Log Analyzer</h3>
@@ -2022,7 +2022,7 @@
   </div>
 
   <!-- DEPENDENCY RESOLVER MODAL -->
-  <div class="custom-modal" id="dependencies-modal">
+  <div class="custom-modal" id="dependencies-modal" data-modal>
     <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="margin: 0; font-size:1.125rem; font-weight: 700;">Missing Dependencies</h3>
@@ -2040,7 +2040,7 @@
   </div>
 
   <!-- DOWNLOAD CONFIRMATION MODAL -->
-  <div class="custom-modal" id="dl-confirm-modal">
+  <div class="custom-modal" id="dl-confirm-modal" data-modal>
     <div class="modal-content" style="max-width: 400px;">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
         <div id="dl-confirm-icon-wrap" style="width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.04);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;">

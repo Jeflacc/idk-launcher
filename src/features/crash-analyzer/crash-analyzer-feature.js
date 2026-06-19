@@ -3,6 +3,8 @@
  * Parses crash logs and suggests fixes
  */
 
+import { esc } from "../../core/safe-parse.js";
+
 const COMMON_ERRORS = {
   'OutOfMemoryError': {
     title: 'Out of Memory',
@@ -111,12 +113,12 @@ export function parseCrashLog(crashLogText) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     
-    // Look for exception line
+    // Look for exception line — also accept errors without a colon-message.
     if (line.includes('Exception') || line.includes('Error')) {
-      const match = line.match(/(\w+(?:Exception|Error)):\s*(.*)/);
+      const match = line.match(/(\w+(?:Exception|Error))(?::\s*(.*))?/);
       if (match) {
         mainException = match[1];
-        exceptionMessage = match[2];
+        exceptionMessage = match[2] || '';
         
         // Collect stack trace
         for (let j = i + 1; j < Math.min(i + 10, lines.length); j++) {
@@ -206,7 +208,7 @@ function calculateSeverity(exception) {
  */
 export function formatAnalysis(analysis) {
   if (analysis.error) {
-    return `<div class="crash-analysis-error">${analysis.error}</div>`;
+    return `<div class="crash-analysis-error">${esc(analysis.error)}</div>`;
   }
 
   const severityColor = {
@@ -215,35 +217,43 @@ export function formatAnalysis(analysis) {
     medium: '#eab308'
   };
 
+  const safeTitle = esc(analysis.title || '');
+  const safeDesc = esc(analysis.description || '');
+  const safeMsg = analysis.message ? esc(analysis.message) : '';
+  const safeExc = esc(analysis.exception || '');
+  const safeModsLoaded = esc(String(analysis.modsLoaded ?? 0));
+  const suggestions = (analysis.suggestions || []).map(s => `<li style="margin-bottom: 6px; color: #d1d1d2; font-size: 12px;">&bull; ${esc(s)}</li>`).join('');
+  const modAdvice = (analysis.modSpecificAdvice || []).map(a => `<li style="margin-bottom: 6px; color: #d1d1d2; font-size: 12px;">&bull; ${esc(a)}</li>`).join('');
+
   let html = `
     <div class="crash-analysis" style="color: white;">
       <div style="margin-bottom: 16px;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${severityColor[analysis.severity]}; flex-shrink: 0;"></span>
-          <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: white;">${analysis.title}</h3>
+          <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${severityColor[analysis.severity] || severityColor.medium}; flex-shrink: 0;"></span>
+          <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: white;">${safeTitle}</h3>
         </div>
-        <p style="margin: 0; color: #a0a0a0; font-size: 13px;">${analysis.description}</p>
-        ${analysis.message ? `<p style="margin: 8px 0 0 0; color: #d1d1d2; font-size: 12px; font-family: monospace; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px;">${analysis.message}</p>` : ''}
+        <p style="margin: 0; color: #a0a0a0; font-size: 13px;">${safeDesc}</p>
+        ${safeMsg ? `<p style="margin: 8px 0 0 0; color: #d1d1d2; font-size: 12px; font-family: monospace; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; white-space: pre-wrap; word-break: break-word;">${safeMsg}</p>` : ''}
       </div>
       
       <div style="margin-bottom: 16px;">
         <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600; color: var(--theme-accent); text-transform: uppercase; letter-spacing: 0.5px;">Suggestions</h4>
         <ul style="margin: 0; padding-left: 20px; list-style: none;">
-          ${analysis.suggestions.map(s => `<li style="margin-bottom: 6px; color: #d1d1d2; font-size: 12px;">&bull; ${s}</li>`).join('')}
+          ${suggestions}
         </ul>
       </div>
       
-      ${analysis.modSpecificAdvice.length > 0 ? `
+      ${modAdvice ? `
         <div style="margin-bottom: 16px;">
           <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600; color: #f97316; text-transform: uppercase; letter-spacing: 0.5px;">Mod-Specific Issues</h4>
           <ul style="margin: 0; padding-left: 20px; list-style: none;">
-            ${analysis.modSpecificAdvice.map(a => `<li style="margin-bottom: 6px; color: #d1d1d2; font-size: 12px;">&bull; ${a}</li>`).join('')}
+            ${modAdvice}
           </ul>
         </div>
       ` : ''}
       
       <div style="padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: #707070;">
-        ${analysis.modsLoaded} mods loaded | Exception: ${analysis.exception}
+        ${safeModsLoaded} mods loaded | Exception: ${safeExc}
       </div>
     </div>
   `;
