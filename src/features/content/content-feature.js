@@ -298,26 +298,37 @@ export function initContentFeature() {
     fetchTrendingModpacks();
   });
 
-  // Seamless tab transitions helper
+  // Seamless tab transitions helper — uses switchView directly for reliability
   document.querySelectorAll(".nav-tab[data-target]").forEach((tab) => {
     tab.addEventListener("click", () => {
       const target = tab.dataset.target;
-      const profileIsActive = document
-        .getElementById("view-profile")
-        ?.classList.contains("active");
 
       if (target === "profile") {
-        if (!profileIsActive) {
-          actions.openProfile?.();
+        const profileView = document.getElementById("view-profile");
+        if (profileView && !profileView.classList.contains("active")) {
+          // openProfile handles both switching view AND refreshing profile data
+          if (actions.openProfile) {
+            actions.openProfile();
+          } else if (actions.switchView) {
+            actions.switchView("profile");
+          }
         }
         return;
       }
 
+      // For non-profile tabs, close profile view first if open, then switch
+      const profileIsActive = document
+        .getElementById("view-profile")
+        ?.classList.contains("active");
+
+      if (profileIsActive) {
+        // Remove active from profile and switch to target view directly
+        document.getElementById("view-profile")?.classList.remove("active");
+        if (actions.switchView) actions.switchView(target);
+        return;
+      }
+
       if (target === "main") {
-        if (profileIsActive) {
-          actions.closeProfile?.("main");
-          return;
-        }
         const closeMods = document.getElementById("btn-close-mods");
         const closeSettings = document.getElementById("btn-close-settings");
         if (
@@ -333,10 +344,6 @@ export function initContentFeature() {
         )
           closeSettings.click();
       } else if (target === "mods") {
-        if (profileIsActive) {
-          actions.closeProfile?.("mods");
-          return;
-        }
         const openMods = document.getElementById("btn-open-mods");
         const closeSettings = document.getElementById("btn-close-settings");
         if (
@@ -353,10 +360,6 @@ export function initContentFeature() {
           openMods.click();
         }
       } else if (target === "settings") {
-        if (profileIsActive) {
-          actions.closeProfile?.("settings");
-          return;
-        }
         const openSettings = document.getElementById("btn-open-settings");
         const closeMods = document.getElementById("btn-close-mods");
         if (

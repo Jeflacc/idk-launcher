@@ -2358,15 +2358,15 @@ body.ui-advanced .chat-message-bubble {
 body.ui-advanced .chat-message-row.me .chat-message-bubble {
     background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.3), rgba(var(--theme-accent-rgb), 0.18));
     color: #fff;
-    border-radius: 14px 14px 2px 14px;
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.35);
+    border-radius: 14px 14px 4px 14px;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
 }
 
 body.ui-advanced .chat-message-row.friend .chat-message-bubble {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.07);
     color: #e2e8f0;
-    border-radius: 14px 14px 14px 2px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px 14px 14px 4px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 body.ui-advanced .chat-message-time {
@@ -2387,11 +2387,11 @@ body.ui-advanced .friends-chat-input-row {
 
 body.ui-advanced .friends-chat-input-row input {
     flex: 1;
-    padding: 10px 12px;
+    padding: 10px 14px;
     font-size: 13px;
     background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
     color: #fff;
     outline: none;
     transition: border-color 0.2s ease;
@@ -2402,17 +2402,17 @@ body.ui-advanced .friends-chat-input-row input:focus {
 }
 
 body.ui-advanced .friends-chat-input-row input::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.25);
 }
 
 body.ui-advanced .friends-chat-send-btn {
     background: rgba(var(--theme-accent-rgb), 0.25);
     color: #fff;
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.45);
-    box-shadow: none;
-    width: 38px;
-    height: 38px;
-    border-radius: 8px;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.35);
+    box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb), 0.15);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -2424,7 +2424,8 @@ body.ui-advanced .friends-chat-send-btn {
 body.ui-advanced .friends-chat-send-btn:hover {
     background: rgba(var(--theme-accent-rgb), 0.4);
     border-color: rgba(var(--theme-accent-rgb), 0.7);
-    box-shadow: 0 0 12px rgba(var(--theme-accent-rgb), 0.2);
+    box-shadow: 0 2px 12px rgba(var(--theme-accent-rgb), 0.25);
+    transform: scale(1.05);
 }
 
 body.ui-advanced .friends-chat-send-btn svg {
@@ -2444,14 +2445,56 @@ body.ui-advanced .mp-create-box,
 body.ui-advanced .skin-3d-modal-card,
 body.ui-advanced .confirm-modal-content {
     border-radius: 0;
-    border-color: rgba(var(--theme-accent-rgb), 0.3);
+    border-color: rgba(var(--theme-accent-rgb), 0.25);
     background: rgba(10, 8, 18, 0.9);
 }
 
 body.ui-advanced .friends-sidebar {
     top: var(--top-bar-height);
-    background: rgba(7, 6, 12, 0.96);
-    border-left-color: rgba(var(--theme-accent-rgb), 0.36);
+    background: linear-gradient(180deg, rgba(7, 6, 12, 0.98) 0%, rgba(5, 4, 8, 0.99) 100%);
+    border-left-color: rgba(var(--theme-accent-rgb), 0.3);
+}
+
+body.ui-advanced .friends-sub-panel {
+    background: linear-gradient(180deg, rgba(7, 6, 12, 0.98) 0%, rgba(5, 4, 8, 0.99) 100%);
+}
+
+body.ui-advanced .friends-sub-header .back-btn {
+    border-color: rgba(var(--theme-accent-rgb), 0.25);
+}
+
+body.ui-advanced .friends-sub-header .back-btn:hover {
+    background: rgba(var(--theme-accent-rgb), 0.1);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+}
+
+body.ui-advanced .friends-btn {
+    border-color: rgba(var(--theme-accent-rgb), 0.3);
+}
+
+body.ui-advanced .friends-btn:hover {
+    box-shadow: 0 2px 12px rgba(var(--theme-accent-rgb), 0.3);
+}
+
+body.ui-advanced .search-user-card {
+    border-color: rgba(var(--theme-accent-rgb), 0.15);
+}
+
+body.ui-advanced .search-user-card:hover {
+    border-color: rgba(var(--theme-accent-rgb), 0.3);
+    background: rgba(var(--theme-accent-rgb), 0.05);
+}
+
+body.ui-advanced .settings-section-title {
+    color: var(--theme-accent);
+}
+
+body.ui-advanced .settings-divider {
+    background: rgba(var(--theme-accent-rgb), 0.15);
+}
+
+body.ui-advanced .profile-skin-wrap {
+    border-color: rgba(var(--theme-accent-rgb), 0.2);
 }
 
 /* Theme-specific advanced moods. Each theme has a fully different background palette. */

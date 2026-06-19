@@ -67,15 +67,15 @@
   "command": {
     "build": {
       "description": "Build the Electron application with Vite",
-      "prompt": "Build the Electron application. Run `npm run build` to create production builds, then verify the build with `npm run build:electron`. Check for any build errors and fix them."
+      "template": "Build the Electron application. Run `npm run build` to create production builds. Check for any build errors and fix them."
     },
     "test": {
       "description": "Run tests for the project",
-      "prompt": "Run the project tests. Execute `npm run test` to run all tests, and `npm run test:watch` if you need to run them in watch mode."
+      "template": "Run the project tests. Execute `npm run test` to run all tests, and `npm run test:watch` if you need to run them in watch mode."
     },
     "dev-electron": {
       "description": "Start the Electron development environment",
-      "prompt": "Start the full Electron development environment. Run `npm run dev:electron` to launch the app in development mode with hot reload."
+      "template": "Start the full Electron development environment. Run `npm run dev:electron` to launch the app in development mode with hot reload."
     }
   },
 
@@ -98,7 +98,7 @@
     },
     "github": {
       "type": "remote",
-      "url": "https://github.com/microsoft/vscode",
+      "url": "https://github.com/Jeflacc/idk-launcher",
       "enabled": true,
       "headers": { "Authorization": "Bearer {env:GITHUB_TOKEN}" }
     },
@@ -111,8 +111,7 @@
   },
 
   "plugin": [
-    "opencode-gemini-auth",
-    "./src/backend/plugin.ts"
+    "opencode-gemini-auth"
   ],
 
   "permission": {

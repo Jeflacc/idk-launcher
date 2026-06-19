@@ -62,8 +62,8 @@ jobs:
             [ -n "$OLD_EXE" ] && mv "$OLD_EXE" "$NEW_EXE"
             [ -n "$OLD_ZIP" ] && mv "$OLD_ZIP" "$NEW_ZIP"
             if [ -f "latest.yml" ]; then
-              [ -n "$OLD_EXE" ] && sed -i "s|${OLD_EXE}|${NEW_EXE}|g" latest.yml
-              [ -n "$OLD_ZIP" ] && sed -i "s|${OLD_ZIP}|${NEW_ZIP}|g" latest.yml
+              [ -n "$OLD_EXE" ] && perl -pi -e "s|\Q${OLD_EXE}\E|${NEW_EXE}|g" latest.yml
+              [ -n "$OLD_ZIP" ] && perl -pi -e "s|\Q${OLD_ZIP}\E|${NEW_ZIP}|g" latest.yml
             fi
             cd ..
 
@@ -79,8 +79,8 @@ jobs:
             [ -n "$OLD_DMG" ] && mv "$OLD_DMG" "$NEW_DMG"
             [ -n "$OLD_ZIP" ] && mv "$OLD_ZIP" "$NEW_ZIP"
             if [ -f "latest-mac.yml" ]; then
-              [ -n "$OLD_DMG" ] && sed -i "s|${OLD_DMG}|${NEW_DMG}|g" latest-mac.yml
-              [ -n "$OLD_ZIP" ] && sed -i "s|${OLD_ZIP}|${NEW_ZIP}|g" latest-mac.yml
+              [ -n "$OLD_DMG" ] && perl -pi -e "s|\Q${OLD_DMG}\E|${NEW_DMG}|g" latest-mac.yml
+              [ -n "$OLD_ZIP" ] && perl -pi -e "s|\Q${OLD_ZIP}\E|${NEW_ZIP}|g" latest-mac.yml
             fi
             cd ..
 
@@ -96,8 +96,8 @@ jobs:
             [ -n "$OLD_APP" ] && mv "$OLD_APP" "$NEW_APP"
             [ -n "$OLD_DEB" ] && mv "$OLD_DEB" "$NEW_DEB"
             if [ -f "latest-linux.yml" ]; then
-              [ -n "$OLD_APP" ] && sed -i "s|${OLD_APP}|${NEW_APP}|g" latest-linux.yml
-              [ -n "$OLD_DEB" ] && sed -i "s|${OLD_DEB}|${NEW_DEB}|g" latest-linux.yml
+              [ -n "$OLD_APP" ] && perl -pi -e "s|\Q${OLD_APP}\E|${NEW_APP}|g" latest-linux.yml
+              [ -n "$OLD_DEB" ] && perl -pi -e "s|\Q${OLD_DEB}\E|${NEW_DEB}|g" latest-linux.yml
             fi
             cd ..
 
@@ -106,5 +106,13 @@ jobs:
           echo "Uploading:"
           ls -la upload/
 
-          gh release create "$TAG" upload/* --repo ${{ github.repository }} --title "$TAG" --generate-notes || gh release upload "$TAG" upload/* --clobber --repo ${{ github.repository }}
+          FILE_COUNT=$(ls upload/ 2>/dev/null | wc -l)
+          if [ "$FILE_COUNT" -eq 0 ]; then
+            echo "ERROR: No artifacts found in upload/ directory. Build may have failed or output naming changed."
+            exit 1
+          fi
+          echo "Found $FILE_COUNT artifact(s) to upload."
+
+          gh release create "$TAG" upload/* --repo ${{ github.repository }} --title "$TAG" --generate-notes 2>/dev/null || \
+            gh release upload "$TAG" upload/* --clobber --repo ${{ github.repository }}
           echo "Done"

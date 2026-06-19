@@ -1795,7 +1795,7 @@
   <!-- FRIENDS SIDEBAR -->
   <div class="friends-sidebar" id="friends-sidebar">
     <div class="friends-sidebar-header">
-      <h3>IDK CONNECT <span style="font-size:0.6875rem; color: var(--text-muted); font-weight: 500; vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px; opacity: 0.8;">(Beta)</span></h3>
+      <h3>IDK CONNECT <span style="font-size:0.625rem; color: var(--text-dim); font-weight: 600; vertical-align: middle; margin-left: 8px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.6; background: rgba(var(--theme-accent-rgb), 0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(var(--theme-accent-rgb), 0.15);">Beta</span></h3>
       <button class="friends-sidebar-close" id="btn-friends-sidebar-close">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>

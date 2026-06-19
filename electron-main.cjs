@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut, screen, protocol, net, nativeImage } = require('electron');
+require('dotenv').config();
 
 // --- Main-process heartbeat watchdog ---
 // Windows marks a window as "Not Responding" if the owning process
@@ -721,7 +722,7 @@ ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, 
   for (const dep of missing) {
     try {
       // Search Modrinth for the dependency mod
-      const searchUrl = `https://api.modrinth.com/v2/search?query=${encodeURIComponent(dep.modId)}&facets=${encodeURIComponent(JSON.stringify([["project_type:mod"],["versions:" + mcVersion]]))}}&limit=5`;
+      const searchUrl = `https://api.modrinth.com/v2/search?query=${encodeURIComponent(dep.modId)}&facets=${encodeURIComponent(JSON.stringify([["project_type:mod"],["versions:" + mcVersion]]))}&limit=5`;
       const searchRes = await fetch(searchUrl);
       const searchData = await searchRes.json();
       const hit = searchData.hits && searchData.hits[0];
@@ -1394,6 +1395,148 @@ ipcMain.handle('elyby-authenticate', async (event, { username, password, clientT
     req.on('error', (e) => resolve({ ok: false, data: { errorMessage: e.message } }));
     req.write(postData);
     req.end();
+  });
+});
+
+// Ely.by login — shows a credential window, authenticates via authserver.ely.by
+// Docs: https://docs.ely.by/en/minecraft-auth.html
+ipcMain.handle('elyby-oauth-login', async () => {
+  const CLIENT_ID = process.env.ELYBY_CLIENT_ID || 'idk-launcher';
+  const CLIENT_SECRET = process.env.ELYBY_CLIENT_SECRET || '28grdBLhDN4Af1jRnkOkn9fP7tNvKftuGyb9UVzU6xwiwt1D9e1IGfJGtUUTu_ak';
+  const REDIRECT_PORT = parseInt(process.env.ELYBY_REDIRECT_PORT, 10) || 29487;
+  const REDIRECT_URI = 'http://127.0.0.1:' + REDIRECT_PORT + '/callback';
+
+  return new Promise((resolve) => {
+    const http = require('http');
+    let resolved = false;
+    const doResolve = (val) => { if (!resolved) { resolved = true; resolve(val); } };
+
+    let server = null;
+    let timeout = null;
+
+    const cleanup = () => {
+      if (server) { try { server.close(); } catch (_) {} server = null; }
+      if (timeout) { clearTimeout(timeout); timeout = null; }
+    };
+
+    server = http.createServer((req, res) => {
+      const url = new URL(req.url, 'http://127.0.0.1:' + REDIRECT_PORT);
+
+      if (url.pathname === '/callback') {
+        if (url.searchParams.has('error')) {
+          const errMsg = url.searchParams.get('error_description') || url.searchParams.get('error') || 'Authorization denied';
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end('<html><body style="background:#1b1b1c;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif"><p>Authorization failed: ' + errMsg + '</p><p>You can close this tab.</p></body></html>');
+          cleanup();
+          doResolve({ success: false, error: errMsg });
+          return;
+        }
+
+        const code = url.searchParams.get('code');
+        if (!code) {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end('<html><body style="background:#1b1b1c;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif"><p>No authorization code received.</p><p>You can close this tab.</p></body></html>');
+          doResolve({ success: false, error: 'No authorization code received' });
+          return;
+        }
+
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end('<html><body style="background:#1b1b1c;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif"><p>Logging you in&hellip;</p></body></html>');
+
+        const tokenBody = new URLSearchParams({
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+          grant_type: 'authorization_code',
+          redirect_uri: REDIRECT_URI,
+          code: code
+        });
+
+        const tokenReq = https.request({
+          hostname: 'account.ely.by',
+          port: 443,
+          path: '/api/oauth2/v1/token',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        }, (tokenRes) => {
+          let data = '';
+          tokenRes.on('data', chunk => data += chunk);
+          tokenRes.on('end', () => {
+            try {
+              const tokenData = JSON.parse(data);
+              if (tokenData.access_token) {
+                const userReq = https.request({
+                  hostname: 'account.ely.by',
+                  port: 443,
+                  path: '/api/account/v1/info',
+                  method: 'GET',
+                  headers: { 'Authorization': 'Bearer ' + tokenData.access_token }
+                }, (userRes) => {
+                  let userData = '';
+                  userRes.on('data', chunk => userData += chunk);
+                  userRes.on('end', () => {
+                    try {
+                      const userInfo = JSON.parse(userData);
+                      const result = {
+                        success: true,
+                        data: {
+                          accessToken: tokenData.access_token,
+                          tokenType: tokenData.token_type || 'Bearer',
+                          expiresIn: tokenData.expires_in || 86400,
+                          user: {
+                            username: userInfo.username || userInfo.login || 'Unknown',
+                            uuid: userInfo.uuid || userInfo.id || ''
+                          }
+                        }
+                      };
+                      cleanup();
+                      doResolve(result);
+                    } catch (e) {
+                      cleanup();
+                      doResolve({ success: false, error: 'Failed to parse user info' });
+                    }
+                  });
+                });
+                userReq.on('error', (e) => { cleanup(); doResolve({ success: false, error: e.message }); });
+                userReq.end();
+              } else {
+                cleanup();
+                doResolve({ success: false, error: tokenData.error_description || tokenData.error || 'Token exchange failed' });
+              }
+            } catch (e) {
+              cleanup();
+              doResolve({ success: false, error: 'Failed to parse token response' });
+            }
+          });
+        });
+        tokenReq.on('error', (e) => { cleanup(); doResolve({ success: false, error: e.message }); });
+        tokenReq.write(tokenBody.toString());
+        tokenReq.end();
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end('<html><body style="background:#1b1b1c;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif;flex-direction:column"><h2>IDK Launcher</h2><p>Waiting for authorization callback&hellip;</p></body></html>');
+    });
+
+    server.listen(REDIRECT_PORT, '127.0.0.1', () => {
+      const authUrl = 'https://account.ely.by/oauth2/v1?' +
+        'client_id=' + encodeURIComponent(CLIENT_ID) +
+        '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
+        '&response_type=code' +
+        '&scope=' + encodeURIComponent('account_info');
+
+      shell.openExternal(authUrl);
+    });
+
+    server.on('error', (e) => {
+      cleanup();
+      doResolve({ success: false, error: 'Could not start redirect server: ' + e.message });
+    });
+
+    timeout = setTimeout(() => {
+      cleanup();
+      doResolve({ success: false, error: 'Login timed out' });
+    }, 300000);
   });
 });
 

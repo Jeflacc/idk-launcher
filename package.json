@@ -1,6 +1,6 @@
 {
   "name": "idk-launcher",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "author": "Jeflacc <109415855+Jeflacc@users.noreply.github.com>",
   "private": true,
   "type": "module",
@@ -65,7 +65,7 @@
       "preload.cjs",
       "image-worker.cjs",
       "splash.html",
-      "overlay.html",
+
       "logo.png",
       "public/**/*",
       "src/backend/**/*"

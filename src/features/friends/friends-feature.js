@@ -2,7 +2,312 @@ import { safeParse } from "../../core/safe-parse.js";
 import { state, actions } from "../../core/app-state.js";
 import { loadAvatarForUser, getSkinTextureUrl, resolveSkinTextureBase64 } from "../../core/skin-texture.js";
 
+function renderFriendsSidebar() {
+  if (document.getElementById("friends-search-panel")) return;
+
+  if (!document.getElementById("friends-sidebar-style")) {
+    document.head.insertAdjacentHTML("beforeend",
+'<style id="friends-sidebar-style">' +
+'.friends-sub-panel{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(12,12,14,.98) 0%,rgba(8,8,10,.99) 100%);z-index:10;display:none;flex-direction:column;overflow:hidden}' +
+'.friends-sub-panel.active{display:flex}' +
+'.friends-sub-panel-content{flex:1;overflow-y:auto;padding:0 18px 18px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent}' +
+'.friends-sub-panel-content::-webkit-scrollbar{width:4px}' +
+'.friends-sub-panel-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}' +
+'.friends-sub-header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}' +
+'.friends-sub-header .back-btn{background:0 0;border:1px solid rgba(255,255,255,.08);color:var(--text-muted);cursor:pointer;padding:6px 8px;border-radius:8px;transition:all .2s;display:flex;align-items:center;justify-content:center}' +
+'.friends-sub-header .back-btn:hover{background:rgba(255,255,255,.06);color:white;border-color:rgba(255,255,255,.15)}' +
+'.friends-sub-header span{font-size:.875rem;font-weight:600;color:white}' +
+'.friends-sub-header .search-input-wrap{flex:1;position:relative}' +
+'.friends-sub-header .search-input-wrap input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;padding:8px 12px 8px 34px;font-size:.8125rem;transition:all .2s}' +
+'.friends-sub-header .search-input-wrap input:focus{outline:none;border-color:rgba(var(--theme-accent-rgb),.5);background:rgba(255,255,255,.06)}' +
+'.friends-sub-header .search-input-wrap input::placeholder{color:var(--text-dim)}' +
+'.friends-sub-header .search-input-wrap .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none}' +
+'.search-section-label{font-size:.625rem;font-weight:700;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;padding:8px 0 4px;opacity:.7}' +
+'.search-user-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s}' +
+'.search-user-card:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);transform:translateX(-2px)}' +
+'.search-user-card .search-avatar{width:36px;height:36px;border-radius:8px;overflow:hidden;background:rgba(0,0,0,.3);border:1.5px solid rgba(255,255,255,.1);flex-shrink:0}' +
+'.search-user-card .search-avatar canvas{width:100%;height:100%;image-rendering:pixelated}' +
+'.search-user-card .search-user-info{flex:1;min-width:0}' +
+'.search-user-card .search-user-info strong{display:block;font-size:.8125rem;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+'.search-user-card .search-user-info .search-user-sub{font-size:.6875rem;color:var(--text-dim)}' +
+'.search-user-card .search-user-action{background:rgba(var(--theme-accent-rgb),.1);border:1px solid rgba(var(--theme-accent-rgb),.2);color:var(--theme-accent);padding:5px 10px;border-radius:6px;font-size:.6875rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}' +
+'.search-user-card .search-user-action:hover{background:rgba(var(--theme-accent-rgb),.2);border-color:rgba(var(--theme-accent-rgb),.4)}' +
+'.search-user-card .search-user-action.friend{background:rgba(var(--theme-accent-rgb),.15);color:var(--theme-accent);cursor:default}' +
+'.settings-section{display:flex;flex-direction:column;gap:8px;padding:4px 0}' +
+'.settings-section-title{font-size:.8125rem;font-weight:700;color:white;margin-bottom:2px}' +
+'.settings-section-desc{font-size:.6875rem;color:var(--text-dim);margin-top:-4px}' +
+'.settings-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}' +
+'.settings-row-label{font-size:.8125rem;color:var(--text-secondary)}' +
+'.settings-divider{height:1px;background:rgba(255,255,255,.06);margin:4px 0}' +
+'.idk-toggle{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0}' +
+'.idk-toggle input{opacity:0;width:0;height:0}' +
+'.idk-toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.1);border-radius:20px;transition:all .3s;border:1px solid rgba(255,255,255,.08)}' +
+'.idk-toggle-slider:before{content:"";position:absolute;height:14px;width:14px;left:2px;bottom:2px;background:var(--text-muted);border-radius:50%;transition:all .3s}' +
+'.idk-toggle input:checked+.idk-toggle-slider{background:rgba(var(--theme-accent-rgb),.3);border-color:rgba(var(--theme-accent-rgb),.5)}' +
+'.idk-toggle input:checked+.idk-toggle-slider:before{transform:translateX(16px);background:var(--theme-accent)}' +
+'.profile-hero{display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px 16px;position:relative}' +
+'.profile-skin-wrap{width:120px;height:200px;border-radius:12px;overflow:hidden;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);box-shadow:0 4px 20px rgba(0,0,0,.3)}' +
+'.profile-skin-wrap canvas{width:100%;height:100%}' +
+'.profile-name{font-size:1rem;font-weight:700;color:white;letter-spacing:.3px}' +
+'.profile-status-badge{font-size:.75rem;color:var(--text-muted);display:flex;align-items:center;gap:6px}' +
+'.profile-bio-text{font-size:.8125rem;color:var(--text-muted);text-align:center;line-height:1.6;max-width:260px;padding:0 8px}' +
+'.friends-sidebar-content textarea{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:white;padding:10px 14px;font-size:.8125rem;resize:vertical;min-height:80px;font-family:var(--font-main);transition:border-color .2s}' +
+'.friends-sidebar-content textarea:focus{outline:none;border-color:rgba(var(--theme-accent-rgb),.4)}' +
+'.friends-sidebar-content textarea::placeholder{color:var(--text-dim)}' +
+'.friends-sidebar-content h4{font-size:.8125rem;font-weight:600;color:white;margin:4px 0}' +
+'.friends-sidebar-content input[type="text"],.friends-sidebar-content input[type="password"],.friends-sidebar-content input[type="email"],.friends-sidebar-content input[type="number"]{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:white;padding:10px 14px;font-size:.8125rem;transition:border-color .2s}' +
+'.friends-sidebar-content input:focus{outline:none;border-color:rgba(var(--theme-accent-rgb),.4)}' +
+'.friends-sidebar-content input::placeholder{color:var(--text-dim)}' +
+'</style>');
+  }
+
+  const container = document.getElementById("friends-sidebar");
+  if (container) {
+    const identityInfo = container.querySelector(".friends-identity-info");
+    if (identityInfo && !document.getElementById("btn-my-settings")) {
+      identityInfo.insertAdjacentHTML("beforeend",
+        '<button id="btn-my-settings" class="icon-btn" title="Settings"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>' +
+        '<button id="btn-open-search" class="icon-btn" title="Search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>'
+      );
+    }
+    const content = container.querySelector(".friends-sidebar-content");
+    if (content && !document.getElementById("friends-search-panel")) {
+      content.insertAdjacentHTML("beforeend",
+        '<div id="friends-search-panel" class="friends-sub-panel">' +
+          '<div class="friends-sub-header">' +
+            '<button id="btn-search-back" class="back-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>' +
+            '<div class="search-input-wrap">' +
+              '<svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+              '<input id="input-search-users" type="text" placeholder="Search users..." />' +
+            '</div>' +
+            '<button id="btn-execute-search" class="friends-btn small">Search</button>' +
+          '</div>' +
+          '<div id="search-results-list" class="friends-sub-panel-content"></div>' +
+        '</div>' +
+        '<div id="friends-profile-panel" class="friends-sub-panel">' +
+          '<div class="friends-sub-header">' +
+            '<button id="btn-profile-back" class="back-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>' +
+            '<span id="profile-username" class="username-label"></span>' +
+          '</div>' +
+          '<div class="friends-sub-panel-content">' +
+            '<div class="profile-hero">' +
+              '<div class="profile-skin-wrap"><canvas id="profile-skin-render" width="120" height="200"></canvas></div>' +
+              '<span id="profile-status" class="profile-status-badge"></span>' +
+              '<p id="profile-bio" class="profile-bio-text"></p>' +
+              '<button id="btn-profile-add-friend" class="friends-btn">Add Friend</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div id="friends-settings-panel" class="friends-sub-panel">' +
+          '<div class="friends-sub-header">' +
+            '<button id="btn-settings-back" class="back-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>' +
+            '<span>Settings</span>' +
+          '</div>' +
+          '<div class="friends-sub-panel-content">' +
+            '<div id="settings-error" class="friends-auth-error"></div>' +
+            '<div class="settings-section">' +
+              '<div class="settings-section-title">Bio</div>' +
+              '<textarea id="settings-bio" placeholder="Write something about yourself..."></textarea>' +
+              '<button id="btn-settings-save-bio" class="friends-btn small">Save</button>' +
+            '</div>' +
+            '<div class="settings-divider"></div>' +
+            '<div class="settings-section">' +
+              '<div class="settings-section-title">Two-Factor Auth</div>' +
+              '<div class="settings-row">' +
+                '<span class="settings-row-label" id="settings-2fa">Disabled</span>' +
+                '<label class="idk-toggle"><input type="checkbox" id="settings-2fa-toggle" /><span class="idk-toggle-slider"></span></label>' +
+              '</div>' +
+            '</div>' +
+            '<div class="settings-divider"></div>' +
+            '<div class="settings-section">' +
+              '<div class="settings-section-title">Security</div>' +
+              '<div class="settings-section-desc">Change your password or manage 2FA</div>' +
+              '<input id="settings-new-password" type="password" placeholder="New password" />' +
+              '<div id="settings-security-otp-container" style="display:none">' +
+                '<input id="settings-security-otp" type="text" placeholder="OTP Code" />' +
+              '</div>' +
+              '<button id="btn-settings-save-security" class="friends-btn small">Save</button>' +
+            '</div>' +
+            '<div class="settings-divider"></div>' +
+            '<div class="settings-section">' +
+              '<div class="settings-section-title">Linked Minecraft</div>' +
+              '<div class="settings-section-desc">Link your launcher Minecraft account to your IDK profile</div>' +
+              '<span id="settings-linked-mc-status" style="font-size:.75rem;color:var(--text-dim)">Not linked</span>' +
+              '<button id="btn-settings-link-minecraft" class="friends-btn small">Link Current Account</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }
+    return;
+  }
+
+  const SVG_ICON = {
+    back: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+    settings: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    search: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+    close: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    disconnect: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  };
+
+  const sidebarHtml =
+'<div id="friends-sidebar" class="friends-sidebar">' +
+  '<div class="friends-sidebar-header">' +
+    '<h3>IDK Connect</h3>' +
+    '<button id="btn-friends-sidebar-close" class="friends-sidebar-close">' + SVG_ICON.close + '</button>' +
+  '</div>' +
+  '<div class="friends-sidebar-content">' +
+
+    '<div id="friends-auth-panel" class="friends-auth-panel friends-panel-toggle active">' +
+      '<div class="friends-auth-tabs">' +
+        '<button id="tab-friends-login" class="friends-auth-tab active">Login</button>' +
+        '<button id="tab-friends-register" class="friends-auth-tab">Register</button>' +
+      '</div>' +
+      '<div id="friends-auth-error" class="friends-auth-error"></div>' +
+      '<div class="friends-auth-form">' +
+        '<input id="friends-auth-username" type="text" placeholder="Username" />' +
+        '<input id="friends-auth-email" type="email" placeholder="Email" />' +
+        '<input id="friends-auth-password" type="password" placeholder="Password" />' +
+        '<div id="friends-auth-otp-container" style="display:none">' +
+          '<input id="friends-auth-otp" type="text" placeholder="OTP Code" />' +
+        '</div>' +
+        '<button id="btn-friends-auth-submit" class="friends-btn">Submit</button>' +
+      '</div>' +
+    '</div>' +
+
+    '<div id="friends-main-panel" class="friends-panel-toggle">' +
+      '<div class="friends-user-info">' +
+        '<canvas id="friends-my-avatar" width="40" height="40" class="avatar-canvas"></canvas>' +
+        '<span id="friends-my-username" class="username-label"></span>' +
+        '<button id="btn-my-settings" class="icon-btn" title="Settings">' + SVG_ICON.settings + '</button>' +
+        '<button id="btn-open-search" class="icon-btn" title="Search">' + SVG_ICON.search + '</button>' +
+        '<button id="btn-friends-disconnect" class="icon-btn danger" title="Disconnect">' + SVG_ICON.disconnect + '</button>' +
+      '</div>' +
+
+      '<div id="friends-share-card" class="friends-share-card">' +
+        '<div id="friends-share-instructions" class="share-instructions">' +
+          '<p>Share your local game with friends over the internet.</p>' +
+        '</div>' +
+        '<div id="friends-share-input-row" class="friends-share-input-row">' +
+          '<input id="friends-share-port" type="number" placeholder="Port (e.g. 25565)" />' +
+          '<button id="btn-friends-share" class="friends-btn">Share</button>' +
+        '</div>' +
+        '<button id="btn-friends-share-cancel" class="friends-btn cancel" style="display:none">Cancel</button>' +
+        '<div id="friends-share-tunnel-link" class="friends-share-tunnel-link" style="display:none"></div>' +
+      '</div>' +
+
+      '<div id="frpc-progress-panel" style="display:none">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:.6875rem;color:var(--text-muted)">' +
+          '<span id="frpc-status-text"></span>' +
+          '<span id="frpc-percent-text">0%</span>' +
+        '</div>' +
+        '<div class="frpc-progress-bar"><div id="frpc-progress-fill" class="frpc-progress-fill" style="width:0%"></div></div>' +
+      '</div>' +
+
+      '<div id="friends-requests-section" class="friends-requests-section">' +
+        '<h4>Friend Requests</h4>' +
+        '<div id="friends-requests-list"></div>' +
+      '</div>' +
+
+      '<h4>Friends</h4>' +
+      '<div id="friends-list" class="friends-list-container"></div>' +
+    '</div>' +
+
+    '<div id="friends-search-panel" class="friends-sub-panel">' +
+      '<div class="friends-sub-header">' +
+        '<button id="btn-search-back" class="back-btn">' + SVG_ICON.back + '</button>' +
+        '<div class="search-input-wrap">' +
+          '<svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+          '<input id="input-search-users" type="text" placeholder="Search users..." />' +
+        '</div>' +
+        '<button id="btn-execute-search" class="friends-btn small">Search</button>' +
+      '</div>' +
+      '<div id="search-results-list" class="friends-sub-panel-content"></div>' +
+    '</div>' +
+
+    '<div id="friends-profile-panel" class="friends-sub-panel">' +
+      '<div class="friends-sub-header">' +
+        '<button id="btn-profile-back" class="back-btn">' + SVG_ICON.back + '</button>' +
+        '<span id="profile-username" class="username-label"></span>' +
+      '</div>' +
+      '<div class="friends-sub-panel-content">' +
+        '<div class="profile-hero">' +
+          '<div class="profile-skin-wrap"><canvas id="profile-skin-render" width="120" height="200"></canvas></div>' +
+          '<span id="profile-status" class="profile-status-badge"></span>' +
+          '<p id="profile-bio" class="profile-bio-text"></p>' +
+          '<button id="btn-profile-add-friend" class="friends-btn">Add Friend</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div id="friends-settings-panel" class="friends-sub-panel">' +
+      '<div class="friends-sub-header">' +
+        '<button id="btn-settings-back" class="back-btn">' + SVG_ICON.back + '</button>' +
+        '<span>Settings</span>' +
+      '</div>' +
+      '<div class="friends-sub-panel-content">' +
+        '<div id="settings-error" class="friends-auth-error"></div>' +
+        '<div class="settings-section">' +
+          '<div class="settings-section-title">Bio</div>' +
+          '<textarea id="settings-bio" placeholder="Write something about yourself..."></textarea>' +
+          '<button id="btn-settings-save-bio" class="friends-btn small">Save</button>' +
+        '</div>' +
+        '<div class="settings-divider"></div>' +
+        '<div class="settings-section">' +
+          '<div class="settings-section-title">Two-Factor Auth</div>' +
+          '<div class="settings-row">' +
+            '<span class="settings-row-label" id="settings-2fa">Disabled</span>' +
+            '<label class="idk-toggle"><input type="checkbox" id="settings-2fa-toggle" /><span class="idk-toggle-slider"></span></label>' +
+          '</div>' +
+        '</div>' +
+        '<div class="settings-divider"></div>' +
+        '<div class="settings-section">' +
+          '<div class="settings-section-title">Security</div>' +
+          '<div class="settings-section-desc">Change your password or manage 2FA</div>' +
+          '<input id="settings-new-password" type="password" placeholder="New password" />' +
+          '<div id="settings-security-otp-container" style="display:none">' +
+            '<input id="settings-security-otp" type="text" placeholder="OTP Code" />' +
+          '</div>' +
+          '<button id="btn-settings-save-security" class="friends-btn small">Save</button>' +
+        '</div>' +
+        '<div class="settings-divider"></div>' +
+        '<div class="settings-section">' +
+          '<div class="settings-section-title">Linked Minecraft</div>' +
+          '<div class="settings-section-desc">Link your launcher Minecraft account to your IDK profile</div>' +
+          '<span id="settings-linked-mc-status" style="font-size:.75rem;color:var(--text-dim)">Not linked</span>' +
+          '<button id="btn-settings-link-minecraft" class="friends-btn small">Link Current Account</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div id="friends-chat-panel" class="friends-sub-panel">' +
+      '<div class="friends-sub-header">' +
+        '<button id="btn-friends-chat-back" class="back-btn">' + SVG_ICON.back + '</button>' +
+        '<canvas id="friends-chat-avatar" width="24" height="24" class="avatar-canvas" style="width:24px;height:24px"></canvas>' +
+        '<span id="friends-chat-name" style="flex:1;font-size:.8125rem;font-weight:600;color:white"></span>' +
+        '<span id="friends-chat-status" style="font-size:.625rem;color:var(--text-muted)"></span>' +
+      '</div>' +
+      '<div id="friends-chat-messages" class="friends-chat-messages"></div>' +
+      '<div class="friends-chat-input-row">' +
+        '<input id="friends-chat-input" type="text" placeholder="Type a message..." />' +
+        '<button id="btn-friends-chat-send" class="friends-btn small">Send</button>' +
+      '</div>' +
+    '</div>' +
+
+  '</div>' +
+'</div>';
+
+  const app = document.getElementById("app");
+  if (app) {
+    app.insertAdjacentHTML("afterend", sidebarHtml);
+  } else {
+    document.body.insertAdjacentHTML("beforeend", sidebarHtml);
+  }
+}
+
 export function initFriendsFeature() {
+  renderFriendsSidebar();
+
   // === IDK CONNECT - PREMIUM FRIENDS & CLOUDFLARED LAN SHARING CLIENT ENGINE ===
   // ============================================================================
   (function initFriendsSystem() {
@@ -25,6 +330,14 @@ export function initFriendsFeature() {
       "btn-friends-sidebar-close",
     );
     const badgePending = document.getElementById("friends-pending-badge");
+
+    btnToggleSidebar.addEventListener("click", () => {
+      sidebar.classList.toggle("active");
+    });
+
+    btnCloseSidebar.addEventListener("click", () => {
+      sidebar.classList.remove("active");
+    });
 
     const authPanel = document.getElementById("friends-auth-panel");
     const mainPanel = document.getElementById("friends-main-panel");
@@ -92,7 +405,8 @@ export function initFriendsFeature() {
     const btnSettingsBack = document.getElementById("btn-settings-back");
     const settingsBio = document.getElementById("settings-bio");
     const btnSettingsSaveBio = document.getElementById("btn-settings-save-bio");
-    const settings2fa = document.getElementById("settings-2fa");
+    const settings2fa = document.getElementById("settings-2fa-toggle");
+    const settings2faLabel = document.getElementById("settings-2fa");
     const settingsNewPassword = document.getElementById("settings-new-password");
     const settingsSecurityOtpContainer = document.getElementById("settings-security-otp-container");
     const settingsSecurityOtp = document.getElementById("settings-security-otp");
@@ -105,6 +419,7 @@ export function initFriendsFeature() {
     let activeChatFriendId = null;
     let activeChatFriendUsername = null;
     let chatPollInterval = null;
+    let lastSentClientTime = 0;
 
     // Chat DOM Elements
     const chatPanel = document.getElementById("friends-chat-panel");
@@ -612,6 +927,7 @@ export function initFriendsFeature() {
       searchPanel.style.display = "none";
       profilePanel.style.display = "none";
       settingsPanel.style.display = "none";
+      chatPanel.style.display = "none";
 
       if (panelName === "main") mainPanel.style.display = "flex";
       if (panelName === "search") searchPanel.style.display = "flex";
@@ -622,9 +938,24 @@ export function initFriendsFeature() {
     btnOpenSearch.addEventListener("click", () => {
       showPanel("search");
       inputSearchUsers.value = "";
-      searchResultsList.innerHTML = '<div class="friends-list-empty" style="opacity: 0.5;">Type a name to search</div>';
+      searchResultsList.innerHTML = "";
+      loadDefaultSuggestedUsers();
       setTimeout(() => inputSearchUsers.focus(), 100);
     });
+
+    async function loadDefaultSuggestedUsers() {
+      searchResultsList.innerHTML = '<div class="search-section-label">Suggested</div><div class="friends-list-empty" style="opacity:.5;padding:8px 0">Loading...</div>';
+      try {
+        const res = await idkRequest("/api/users/suggested");
+        if (!res.users || res.users.length === 0) {
+          searchResultsList.innerHTML = '<div class="search-section-label">Suggested</div><div class="friends-list-empty" style="opacity:.5;padding:8px 0">Search for users above</div>';
+          return;
+        }
+        renderSearchResults(res.users, false);
+      } catch (err) {
+        searchResultsList.innerHTML = '<div class="search-section-label">Suggested</div><div class="friends-list-empty" style="opacity:.5;padding:8px 0">Search for users above</div>';
+      }
+    }
 
     btnSearchBack.addEventListener("click", () => showPanel("main"));
     btnProfileBack.addEventListener("click", () => showPanel("search"));
@@ -633,6 +964,10 @@ export function initFriendsFeature() {
       showPanel("settings");
       settingsBio.value = idkUser.bio || "";
       settings2fa.checked = idkUser.twoFactorEnabled || false;
+      settings2faLabel.innerText = settings2fa.checked ? "Enabled" : "Disabled";
+      settings2fa.onchange = () => {
+        settings2faLabel.innerText = settings2fa.checked ? "Enabled" : "Disabled";
+      };
       settingsNewPassword.value = "";
       settingsSecurityOtp.value = "";
       settingsSecurityOtpContainer.style.display = "none";
@@ -691,6 +1026,32 @@ export function initFriendsFeature() {
       if (e.key === "Enter") handleSearchUsers();
     });
 
+    function renderSearchResults(users, showSectionLabel = true) {
+      if (showSectionLabel) {
+        const label = document.createElement("div");
+        label.className = "search-section-label";
+        label.textContent = "Results";
+        searchResultsList.appendChild(label);
+      }
+      users.forEach(user => {
+        const card = document.createElement("div");
+        card.className = "search-user-card";
+        card.innerHTML =
+          '<div class="search-avatar"><canvas id="search-avatar-' + user.id + '" width="36" height="36"></canvas></div>' +
+          '<div class="search-user-info">' +
+            '<strong>' + user.username + '</strong>' +
+            '<span class="search-user-sub">' + (user.status === "offline" ? "Offline" : "Online") + '</span>' +
+          '</div>' +
+          '<button class="search-user-action">View</button>';
+        card.style.cursor = "pointer";
+        card.onclick = () => openUserProfile(user.username);
+        searchResultsList.appendChild(card);
+
+        const canvas = card.querySelector("#search-avatar-" + user.id);
+        if (canvas) renderSkinFaceOnFriendsCanvas(canvas, user.username, "online");
+      });
+    }
+
     async function handleSearchUsers() {
       const q = inputSearchUsers.value.trim();
       if (!q) return;
@@ -698,33 +1059,13 @@ export function initFriendsFeature() {
       btnExecuteSearch.disabled = true;
       searchResultsList.innerHTML = '<div class="friends-list-empty">Searching...</div>';
       try {
-        const res = await idkRequest(`/api/users/search?q=${encodeURIComponent(q)}`);
+        const res = await idkRequest("/api/users/search?q=" + encodeURIComponent(q));
+        searchResultsList.innerHTML = "";
         if (!res.users || res.users.length === 0) {
           searchResultsList.innerHTML = '<div class="friends-list-empty">No users found.</div>';
           return;
         }
-
-        searchResultsList.innerHTML = "";
-        res.users.forEach(user => {
-          const card = document.createElement("div");
-          card.className = "friend-card";
-          card.innerHTML = `
-            <div class="friend-card-left">
-              <div class="friend-avatar">
-                <canvas id="search-avatar-${user.id}" width="32" height="32"></canvas>
-              </div>
-              <div class="friend-info">
-                <strong>${user.username}</strong>
-              </div>
-            </div>
-          `;
-          card.style.cursor = "pointer";
-          card.onclick = () => openUserProfile(user.username);
-          searchResultsList.appendChild(card);
-
-          const canvas = card.querySelector(`#search-avatar-${user.id}`);
-          if (canvas) renderSkinFaceOnFriendsCanvas(canvas, user.username, "online");
-        });
+        renderSearchResults(res.users, true);
       } catch (err) {
         searchResultsList.innerHTML = '<div class="friends-list-empty" style="color:#ef4444;">Search failed.</div>';
       } finally {
@@ -1244,7 +1585,8 @@ export function initFriendsFeature() {
       activeChatFriendId = friend.id;
       activeChatFriendUsername = friend.username;
 
-      // Update UI Views (Chat is a global popup now)
+      // Update UI Views - hide main panel and show chat
+      mainPanel.style.display = "none";
       chatPanel.style.display = "flex";
 
       // Set friend details in header
@@ -1293,6 +1635,7 @@ export function initFriendsFeature() {
       activeChatFriendUsername = null;
 
       chatPanel.style.display = "none";
+      mainPanel.style.display = "flex";
       if (idkToken && idkUser) {
         refreshFriendsData(); // Refresh friends list to clear unread counts instantly
       }
@@ -1357,6 +1700,14 @@ export function initFriendsFeature() {
         if (shouldScroll) {
           chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
         }
+
+        if (lastSentClientTime && Date.now() - lastSentClientTime < 300000) {
+          const meRows = chatMessagesContainer.querySelectorAll(".chat-message-row.me");
+          if (meRows.length > 0) {
+            const lastTimeEl = meRows[meRows.length - 1].querySelector(".chat-message-time");
+            if (lastTimeEl) lastTimeEl.textContent = "Just now";
+          }
+        }
       } catch (err) {
         console.warn("[Chat] Failed to load messages", err.message);
       }
@@ -1368,18 +1719,18 @@ export function initFriendsFeature() {
 
       chatInput.value = "";
       chatInput.focus();
+      lastSentClientTime = Date.now();
 
       // Optimistic locally rendered bubble for premium instant feedback feel
       const msgRow = document.createElement("div");
       msgRow.className = "chat-message-row me";
-      msgRow.innerHTML = `<div class="chat-message-bubble">${escapeHtml(text)}</div>`;
+      msgRow.innerHTML = `<div class="chat-message-bubble">${escapeHtml(text)}</div><div class="chat-message-time">Just now</div>`;
       chatMessagesContainer.appendChild(msgRow);
       chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
 
       try {
         await idkRequest(`/api/messages/${activeChatFriendId}`, "POST", { text });
-        // Refresh messages to sync IDs and states
-        loadChatMessages(false);
+        await loadChatMessages(false);
       } catch (err) {
         actions.showWarningToast(err.message);
       }

@@ -278,18 +278,15 @@ async function initHomeSkinViewer() {
   }
   canvasEl.classList.remove("is-ready");
 
-  const username = state.currentUser || "Steve";
-  const skinUrl = await getSkinTextureUrl(username, state.authMode);
-  const texture = await resolveSkinTextureBase64(skinUrl);
-  const { width, height } = fitHomeCanvasToStage(canvasEl, stage);
-
   try {
+    const username = state.currentUser || "Steve";
+    const skinUrl = await getSkinTextureUrl(username, state.authMode);
+    const texture = await resolveSkinTextureBase64(skinUrl);
+    const { width, height } = fitHomeCanvasToStage(canvasEl, stage);
+
     const { SkinViewer } = await import("skinview3d");
     const THREE = await import("three");
 
-    // Detect GPUs/drivers that reject 3D texture uploads with FLIP_Y
-    // (e.g. some Intel iGPUs). In that case skip the 3D viewer and show
-    // a static 2D preview instead.
     if (!canUse3DTextures()) {
       throw new Error("3D textures unsupported on this GPU");
     }
@@ -344,10 +341,10 @@ async function initHomeSkinViewer() {
     });
     homeSkinResizeObserver.observe(stage);
   } catch (err) {
-    console.error("[Profile] Advanced home skin viewer error:", err);
+    console.error("[Profile] Home skin viewer error:", err);
     if (loaderEl) {
       loaderEl.style.display = "flex";
-      loaderEl.textContent = "Could not load 3D preview";
+      loaderEl.textContent = "Could not load skin preview";
     }
   }
 }
@@ -366,13 +363,12 @@ async function initProfileSkinViewer() {
   }
   canvasEl.classList.remove("is-ready");
 
-  const username = state.currentUser || "Steve";
-  const skinUrl = await getSkinTextureUrl(username, state.authMode);
-  const texture = await resolveSkinTextureBase64(skinUrl);
-
-  const { width, height } = fitCanvasToStage(canvasEl, stage);
-
   try {
+    const username = state.currentUser || "Steve";
+    const skinUrl = await getSkinTextureUrl(username, state.authMode);
+    const texture = await resolveSkinTextureBase64(skinUrl);
+    const { width, height } = fitCanvasToStage(canvasEl, stage);
+
     const { SkinViewer } = await import("skinview3d");
 
     skinViewerInstance = new SkinViewer({
