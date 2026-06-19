@@ -1,0 +1,805 @@
+/* =====================================================================
+   IDK Connect — Friends Sidebar / Sub-panels / Auth / Search / Settings
+   Extracted from the inline <style id="friends-sidebar-style"> block in
+   src/features/friends/friends-feature.js so the styles apply in BOTH
+   classic and advanced UI modes (the inline block worked but had no
+   .friends-btn base rule, which caused every Save/Search/Send/Submit
+   button to render as a default grey OS rectangle).
+   ===================================================================== */
+
+/* ---------- Sub-panel container (Search / Profile / Settings / Chat) -------- */
+.friends-sub-panel {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(12, 12, 14, 0.92) 0%,
+        rgba(8, 8, 10, 0.96) 100%
+    );
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.45);
+}
+
+.friends-sub-panel.active {
+    display: flex;
+    animation: friends-sub-panel-in 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes friends-sub-panel-in {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.friends-sub-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.friends-sub-panel-content::-webkit-scrollbar { width: 6px; }
+.friends-sub-panel-content::-webkit-scrollbar-track { background: transparent; }
+.friends-sub-panel-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+}
+.friends-sub-panel-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+/* ---------- Sub-panel header (back button + title / search) -------- */
+.friends-sub-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.015);
+    flex-shrink: 0;
+}
+
+.friends-sub-header .back-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 8px;
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+}
+
+.friends-sub-header .back-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.friends-sub-header .back-btn:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+.friends-sub-header > span {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.3px;
+    flex: 1;
+}
+
+.friends-sub-header .search-input-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.friends-sub-header .search-input-wrap input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    padding: 8px 12px 8px 34px;
+    font-size: 0.8125rem;
+    font-family: var(--font-main);
+    transition: border-color 0.18s, background 0.18s;
+    min-width: 0;
+}
+
+.friends-sub-header .search-input-wrap input:focus {
+    outline: none;
+    border-color: rgba(var(--theme-accent-rgb), 0.55);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.friends-sub-header .search-input-wrap input::placeholder {
+    color: var(--text-dim);
+}
+
+.friends-sub-header .search-input-wrap .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    pointer-events: none;
+}
+
+/* ---------- CRITICAL: friends-btn base styling (was only defined in
+              advanced-theme.css under body.ui-advanced, leaving every
+              Save / Search / Send / Submit / Link Account button as a
+              default grey OS rectangle in classic mode). -------- */
+.friends-btn {
+    background: linear-gradient(
+        135deg,
+        var(--theme-accent-hover) 0%,
+        var(--theme-accent) 100%
+    );
+    color: white;
+    border: 1px solid var(--theme-accent-shadow);
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-family: var(--font-main);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 2px 8px rgba(var(--theme-accent-rgb), 0.2);
+    transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    flex-shrink: 0;
+    line-height: 1.2;
+}
+
+.friends-btn:hover {
+    filter: brightness(1.1);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 4px 14px rgba(var(--theme-accent-rgb), 0.35);
+    transform: translateY(-1px);
+}
+
+.friends-btn:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
+}
+
+.friends-btn:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+}
+
+.friends-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(0.4);
+}
+
+.friends-btn.small {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    align-self: flex-start;
+    border-radius: 6px;
+}
+
+.friends-btn.cancel {
+    background: linear-gradient(135deg, #3a3a3c, #2a2a2c);
+    border-color: #1a1a1c;
+    color: #d1d1d2;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.friends-btn.cancel:hover {
+    filter: brightness(1.18);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+.friends-btn.danger {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    border-color: #7f1d1d;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 2px 8px rgba(239, 68, 68, 0.25);
+}
+
+.friends-btn.danger:hover {
+    filter: brightness(1.1);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+/* Advanced-mode tint: subtle accent border accentuation */
+body.ui-advanced .friends-btn {
+    border-color: rgba(var(--theme-accent-rgb), 0.45);
+}
+
+body.ui-advanced .friends-btn:hover {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 4px 14px rgba(var(--theme-accent-rgb), 0.4);
+}
+
+/* ---------- Search results -------- */
+.search-section-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    padding: 6px 0 4px;
+    opacity: 0.85;
+}
+
+.search-empty-state {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8125rem;
+    padding: 32px 12px;
+    line-height: 1.5;
+}
+
+.search-user-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, transform 0.18s;
+}
+
+.search-user-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateX(-2px);
+}
+
+.search-user-card .search-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.search-user-card .search-avatar canvas,
+.search-user-card .search-avatar img {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    display: block;
+}
+
+.search-user-card .search-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.search-user-card .search-user-info strong {
+    display: block;
+    font-size: 0.8125rem;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-user-card .search-user-info .search-user-sub {
+    font-size: 0.6875rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+.search-user-card .search-user-action {
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
+    color: var(--theme-accent);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s;
+    white-space: nowrap;
+}
+
+.search-user-card .search-user-action:hover {
+    background: rgba(var(--theme-accent-rgb), 0.22);
+    border-color: rgba(var(--theme-accent-rgb), 0.45);
+}
+
+.search-user-card .search-user-action.friend {
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    color: var(--theme-accent);
+    cursor: default;
+    opacity: 0.7;
+}
+
+body.ui-advanced .search-user-card {
+    border-color: rgba(var(--theme-accent-rgb), 0.15);
+}
+
+body.ui-advanced .search-user-card:hover {
+    border-color: rgba(var(--theme-accent-rgb), 0.32);
+    background: rgba(var(--theme-accent-rgb), 0.05);
+}
+
+/* ---------- Settings sections inside the sidebar -------- */
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 6px 0;
+}
+
+.settings-section-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.3px;
+    margin: 0;
+}
+
+.settings-section-desc {
+    font-size: 0.6875rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+    margin: 0;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    gap: 12px;
+}
+
+.settings-row-label {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.settings-divider {
+    height: 1px;
+    background: linear-gradient(
+        to right,
+        transparent,
+        rgba(255, 255, 255, 0.1) 20%,
+        rgba(255, 255, 255, 0.1) 80%,
+        transparent
+    );
+    margin: 8px 0;
+    border: 0;
+}
+
+body.ui-advanced .settings-section-title {
+    color: var(--theme-accent);
+}
+
+/* ---------- Toggle switch (2FA) -------- */
+.idk-toggle {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.idk-toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.idk-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 22px;
+    transition: background 0.25s, border-color 0.25s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.idk-toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: transform 0.25s, background 0.25s;
+}
+
+.idk-toggle input:checked + .idk-toggle-slider {
+    background: rgba(var(--theme-accent-rgb), 0.35);
+    border-color: rgba(var(--theme-accent-rgb), 0.55);
+}
+
+.idk-toggle input:checked + .idk-toggle-slider::before {
+    transform: translate(16px, -50%);
+    background: var(--theme-accent);
+    box-shadow: 0 0 6px rgba(var(--theme-accent-rgb), 0.6);
+}
+
+.idk-toggle input:focus-visible + .idk-toggle-slider {
+    outline: 2px solid var(--theme-accent-bright);
+    outline-offset: 2px;
+}
+
+/* ---------- Profile sub-panel (skin render hero) -------- */
+.profile-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 16px 24px;
+}
+
+.profile-skin-wrap {
+    width: 120px;
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: radial-gradient(
+        ellipse at center top,
+        rgba(var(--theme-accent-rgb), 0.08),
+        rgba(0, 0, 0, 0.4)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.profile-skin-wrap canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.profile-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.3px;
+    margin: 0;
+}
+
+.profile-status-badge {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-status-badge.online {
+    color: var(--theme-accent);
+}
+
+.profile-bio-text {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.55;
+    max-width: 260px;
+    padding: 0 8px;
+    margin: 0;
+    user-select: text;
+}
+
+/* ---------- Inputs / textareas inside the sidebar -------- */
+.friends-sidebar-content input[type="text"],
+.friends-sidebar-content input[type="password"],
+.friends-sidebar-content input[type="email"],
+.friends-sidebar-content input[type="number"] {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+    font-family: var(--font-main);
+    transition: border-color 0.18s, background 0.18s;
+    box-sizing: border-box;
+}
+
+.friends-sidebar-content input[type="text"]:focus,
+.friends-sidebar-content input[type="password"]:focus,
+.friends-sidebar-content input[type="email"]:focus,
+.friends-sidebar-content input[type="number"]:focus {
+    outline: none;
+    border-color: rgba(var(--theme-accent-rgb), 0.55);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.friends-sidebar-content input::placeholder {
+    color: var(--text-dim);
+}
+
+.friends-sidebar-content textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+    font-family: var(--font-main);
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.18s, background 0.18s;
+    box-sizing: border-box;
+}
+
+.friends-sidebar-content textarea:focus {
+    outline: none;
+    border-color: rgba(var(--theme-accent-rgb), 0.55);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.friends-sidebar-content textarea::placeholder {
+    color: var(--text-dim);
+}
+
+.friends-sidebar-content h4 {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: white;
+    margin: 4px 0;
+    letter-spacing: 0.3px;
+}
+
+/* ---------- Chat panel -------- */
+.friends-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    user-select: text;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.friends-chat-messages::-webkit-scrollbar { width: 6px; }
+.friends-chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+}
+
+.friends-chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.friends-chat-input-row input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    padding: 8px 12px;
+    font-size: 0.8125rem;
+    font-family: var(--font-main);
+    min-width: 0;
+    transition: border-color 0.18s;
+}
+
+.friends-chat-input-row input:focus {
+    outline: none;
+    border-color: rgba(var(--theme-accent-rgb), 0.55);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* ---------- Sidebar backdrop — click outside the sidebar closes it -------- */
+.friends-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 106; /* below sidebar (107), above main UI */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.friends-sidebar-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ---------- Sidebar outer polish: round the left edge + breathing room -------- */
+.friends-sidebar {
+    border-top-left-radius: 14px;
+    border-bottom-left-radius: 14px;
+    overflow: hidden;
+}
+
+.friends-sidebar.active {
+    box-shadow: -24px 0 60px rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- Friends list items — clearer separators + better hover -------- */
+.friends-list-container .friend-card {
+    border-radius: 10px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.friends-list-container .friend-card + .friend-card {
+    margin-top: 4px;
+}
+
+.friends-list-container .friend-card:hover {
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border-color: rgba(var(--theme-accent-rgb), 0.2);
+}
+
+/* ---------- Identity card — better contrast & spacing -------- */
+.friends-identity-card {
+    padding: 12px 14px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(var(--theme-accent-rgb), 0.08),
+            rgba(var(--theme-accent-rgb), 0.03)
+        );
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.22);
+    border-radius: 12px;
+    margin-bottom: 4px;
+}
+
+/* ---------- Share card — slightly larger padding + better focus state -------- */
+.friends-share-card {
+    padding: 14px 16px;
+    gap: 10px;
+}
+
+.friends-share-input-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ---------- Friends sidebar content scrollbar (was missing in main panel) -------- */
+.friends-sidebar-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.friends-sidebar-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.friends-sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.friends-sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+}
+
+.friends-sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+/* ---------- User info row in main panel — align items & spacing -------- */
+.friends-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 4px;
+}
+
+.friends-user-info .username-label {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.friends-user-info .icon-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+    flex-shrink: 0;
+}
+
+.friends-user-info .icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.friends-user-info .icon-btn.danger:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.friends-user-info .icon-btn:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* ---------- Responsive: stack sidebar full-width on narrow windows -------- */
+@media (max-width: 540px) {
+    .friends-sidebar {
+        width: 100vw;
+        right: -100vw;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    .friends-sidebar.active {
+        right: 0;
+    }
+}
+
+/* ---------- Reduced motion -------- */
+@media (prefers-reduced-motion: reduce) {
+    .friends-sub-panel.active,
+    .friends-sidebar,
+    .friends-sidebar-backdrop {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+    }
+}

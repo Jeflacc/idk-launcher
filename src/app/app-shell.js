@@ -1792,6 +1792,9 @@
     </div>
   </div>
 
+  <!-- FRIENDS SIDEBAR BACKDROP — click outside the sidebar closes it -->
+  <div class="friends-sidebar-backdrop" id="friends-sidebar-backdrop"></div>
+
   <!-- FRIENDS SIDEBAR -->
   <div class="friends-sidebar" id="friends-sidebar">
     <div class="friends-sidebar-header">

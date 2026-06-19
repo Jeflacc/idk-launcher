@@ -2,6 +2,7 @@ import "./style.css";
 import "./advanced-theme.css";
 import "./launch-overlay-fix.css";
 import "./fixes.css";
+import "./features/friends/friends.css";
 // Side-effect imports: constructors register UI and IPC behavior
 import "./components/download-progress.js";
 import "./components/accessibility-manager.js";

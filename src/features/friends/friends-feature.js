@@ -5,61 +5,16 @@ import { loadAvatarForUser, getSkinTextureUrl, resolveSkinTextureBase64 } from "
 function renderFriendsSidebar() {
   if (document.getElementById("friends-search-panel")) return;
 
-  if (!document.getElementById("friends-sidebar-style")) {
-    document.head.insertAdjacentHTML("beforeend",
-'<style id="friends-sidebar-style">' +
-'.friends-sub-panel{position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(12,12,14,.98) 0%,rgba(8,8,10,.99) 100%);z-index:10;display:none;flex-direction:column;overflow:hidden}' +
-'.friends-sub-panel.active{display:flex}' +
-'.friends-sub-panel-content{flex:1;overflow-y:auto;padding:0 18px 18px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent}' +
-'.friends-sub-panel-content::-webkit-scrollbar{width:4px}' +
-'.friends-sub-panel-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}' +
-'.friends-sub-header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}' +
-'.friends-sub-header .back-btn{background:0 0;border:1px solid rgba(255,255,255,.08);color:var(--text-muted);cursor:pointer;padding:6px 8px;border-radius:8px;transition:all .2s;display:flex;align-items:center;justify-content:center}' +
-'.friends-sub-header .back-btn:hover{background:rgba(255,255,255,.06);color:white;border-color:rgba(255,255,255,.15)}' +
-'.friends-sub-header span{font-size:.875rem;font-weight:600;color:white}' +
-'.friends-sub-header .search-input-wrap{flex:1;position:relative}' +
-'.friends-sub-header .search-input-wrap input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;padding:8px 12px 8px 34px;font-size:.8125rem;transition:all .2s}' +
-'.friends-sub-header .search-input-wrap input:focus{outline:none;border-color:rgba(var(--theme-accent-rgb),.5);background:rgba(255,255,255,.06)}' +
-'.friends-sub-header .search-input-wrap input::placeholder{color:var(--text-dim)}' +
-'.friends-sub-header .search-input-wrap .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none}' +
-'.search-section-label{font-size:.625rem;font-weight:700;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;padding:8px 0 4px;opacity:.7}' +
-'.search-user-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s}' +
-'.search-user-card:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);transform:translateX(-2px)}' +
-'.search-user-card .search-avatar{width:36px;height:36px;border-radius:8px;overflow:hidden;background:rgba(0,0,0,.3);border:1.5px solid rgba(255,255,255,.1);flex-shrink:0}' +
-'.search-user-card .search-avatar canvas{width:100%;height:100%;image-rendering:pixelated}' +
-'.search-user-card .search-user-info{flex:1;min-width:0}' +
-'.search-user-card .search-user-info strong{display:block;font-size:.8125rem;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
-'.search-user-card .search-user-info .search-user-sub{font-size:.6875rem;color:var(--text-dim)}' +
-'.search-user-card .search-user-action{background:rgba(var(--theme-accent-rgb),.1);border:1px solid rgba(var(--theme-accent-rgb),.2);color:var(--theme-accent);padding:5px 10px;border-radius:6px;font-size:.6875rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}' +
-'.search-user-card .search-user-action:hover{background:rgba(var(--theme-accent-rgb),.2);border-color:rgba(var(--theme-accent-rgb),.4)}' +
-'.search-user-card .search-user-action.friend{background:rgba(var(--theme-accent-rgb),.15);color:var(--theme-accent);cursor:default}' +
-'.settings-section{display:flex;flex-direction:column;gap:8px;padding:4px 0}' +
-'.settings-section-title{font-size:.8125rem;font-weight:700;color:white;margin-bottom:2px}' +
-'.settings-section-desc{font-size:.6875rem;color:var(--text-dim);margin-top:-4px}' +
-'.settings-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}' +
-'.settings-row-label{font-size:.8125rem;color:var(--text-secondary)}' +
-'.settings-divider{height:1px;background:rgba(255,255,255,.06);margin:4px 0}' +
-'.idk-toggle{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0}' +
-'.idk-toggle input{opacity:0;width:0;height:0}' +
-'.idk-toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.1);border-radius:20px;transition:all .3s;border:1px solid rgba(255,255,255,.08)}' +
-'.idk-toggle-slider:before{content:"";position:absolute;height:14px;width:14px;left:2px;bottom:2px;background:var(--text-muted);border-radius:50%;transition:all .3s}' +
-'.idk-toggle input:checked+.idk-toggle-slider{background:rgba(var(--theme-accent-rgb),.3);border-color:rgba(var(--theme-accent-rgb),.5)}' +
-'.idk-toggle input:checked+.idk-toggle-slider:before{transform:translateX(16px);background:var(--theme-accent)}' +
-'.profile-hero{display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px 16px;position:relative}' +
-'.profile-skin-wrap{width:120px;height:200px;border-radius:12px;overflow:hidden;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);box-shadow:0 4px 20px rgba(0,0,0,.3)}' +
-'.profile-skin-wrap canvas{width:100%;height:100%}' +
-'.profile-name{font-size:1rem;font-weight:700;color:white;letter-spacing:.3px}' +
-'.profile-status-badge{font-size:.75rem;color:var(--text-muted);display:flex;align-items:center;gap:6px}' +
-'.profile-bio-text{font-size:.8125rem;color:var(--text-muted);text-align:center;line-height:1.6;max-width:260px;padding:0 8px}' +
-'.friends-sidebar-content textarea{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:white;padding:10px 14px;font-size:.8125rem;resize:vertical;min-height:80px;font-family:var(--font-main);transition:border-color .2s}' +
-'.friends-sidebar-content textarea:focus{outline:none;border-color:rgba(var(--theme-accent-rgb),.4)}' +
-'.friends-sidebar-content textarea::placeholder{color:var(--text-dim)}' +
-'.friends-sidebar-content h4{font-size:.8125rem;font-weight:600;color:white;margin:4px 0}' +
-'.friends-sidebar-content input[type="text"],.friends-sidebar-content input[type="password"],.friends-sidebar-content input[type="email"],.friends-sidebar-content input[type="number"]{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:white;padding:10px 14px;font-size:.8125rem;transition:border-color .2s}' +
-'.friends-sidebar-content input:focus{outline:none;border-color:rgba(var(--theme-accent-rgb),.4)}' +
-'.friends-sidebar-content input::placeholder{color:var(--text-dim)}' +
-'</style>');
-  }
+  // The sub-panel / friends-btn styles now live in
+  // src/features/friends/friends.css (imported from src/main.js) so they
+  // apply in BOTH classic and advanced UI modes. The previous inline
+  // <style id="friends-sidebar-style"> block was removed because:
+  //   1. It defined .friends-sub-panel / .friends-btn inside JS, making
+  //      them easy to miss when refactoring.
+  //   2. .friends-btn had NO base rule here — only an advanced-mode
+  //      override in advanced-theme.css — so every Save / Search / Send /
+  //      Submit button rendered as a default grey OS rectangle in classic
+  //      mode. That was the single biggest visual bug in the launcher.
 
   const container = document.getElementById("friends-sidebar");
   if (container) {
@@ -151,6 +106,8 @@ function renderFriendsSidebar() {
   };
 
   const sidebarHtml =
+(document.getElementById("friends-sidebar-backdrop") ? "" :
+'<div id="friends-sidebar-backdrop" class="friends-sidebar-backdrop"></div>') +
 '<div id="friends-sidebar" class="friends-sidebar">' +
   '<div class="friends-sidebar-header">' +
     '<h3>IDK Connect</h3>' +
@@ -326,17 +283,48 @@ export function initFriendsFeature() {
     // DOM Elements
     const btnToggleSidebar = document.getElementById("btn-friends-toggle");
     const sidebar = document.getElementById("friends-sidebar");
+    const sidebarBackdrop = document.getElementById("friends-sidebar-backdrop");
     const btnCloseSidebar = document.getElementById(
       "btn-friends-sidebar-close",
     );
     const badgePending = document.getElementById("friends-pending-badge");
 
-    btnToggleSidebar.addEventListener("click", () => {
-      sidebar.classList.toggle("active");
-    });
-
-    btnCloseSidebar.addEventListener("click", () => {
+    const openSidebar = () => {
+      if (!sidebar) return;
+      sidebar.classList.add("active");
+      if (sidebarBackdrop) sidebarBackdrop.classList.add("active");
+    };
+    const closeSidebar = () => {
+      if (!sidebar) return;
       sidebar.classList.remove("active");
+      if (sidebarBackdrop) sidebarBackdrop.classList.remove("active");
+      // Also close any open sub-panel so the sidebar re-opens in the main view next time
+      document.querySelectorAll(".friends-sub-panel.active").forEach(p => p.classList.remove("active"));
+    };
+
+    if (btnToggleSidebar) {
+      btnToggleSidebar.addEventListener("click", () => {
+        if (sidebar.classList.contains("active")) closeSidebar();
+        else openSidebar();
+      });
+    }
+    if (btnCloseSidebar) {
+      btnCloseSidebar.addEventListener("click", closeSidebar);
+    }
+    // Click on backdrop → close sidebar (the "click outside the modal closes it" UX)
+    if (sidebarBackdrop) {
+      sidebarBackdrop.addEventListener("click", closeSidebar);
+    }
+    // Escape closes the open sub-panel first, then the sidebar itself.
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (!sidebar || !sidebar.classList.contains("active")) return;
+      const activeSub = document.querySelector(".friends-sub-panel.active");
+      if (activeSub) {
+        activeSub.classList.remove("active");
+        return;
+      }
+      closeSidebar();
     });
 
     const authPanel = document.getElementById("friends-auth-panel");
@@ -551,9 +539,11 @@ export function initFriendsFeature() {
       } else {
         authPanel.style.display = "block";
         mainPanel.style.display = "none";
-        searchPanel.style.display = "none";
-        profilePanel.style.display = "none";
-        settingsPanel.style.display = "none";
+        // Use classList (not inline display:none) so the .active CSS rule
+        // in friends.css can show them again when needed.
+        [searchPanel, profilePanel, settingsPanel].forEach(p => {
+          if (p) p.classList.remove("active");
+        });
         stopHeartbeats();
         exitChat();
       }
@@ -922,17 +912,25 @@ export function initFriendsFeature() {
     });
 
     // --- PANEL SWITCHING ---
+    // Uses classList (not inline display) so CSS in friends.css controls
+    // visibility via the .active class — keeps concerns separated.
     function showPanel(panelName) {
-      mainPanel.style.display = "none";
-      searchPanel.style.display = "none";
-      profilePanel.style.display = "none";
-      settingsPanel.style.display = "none";
-      chatPanel.style.display = "none";
+      [mainPanel, searchPanel, profilePanel, settingsPanel, chatPanel].forEach(p => {
+        if (!p) return;
+        if (p === mainPanel) {
+          // mainPanel toggles via inline display because it's a sibling of
+          // authPanel (both inside friends-sidebar-content), not a sub-panel.
+          p.style.display = "none";
+        } else {
+          p.classList.remove("active");
+        }
+      });
 
-      if (panelName === "main") mainPanel.style.display = "flex";
-      if (panelName === "search") searchPanel.style.display = "flex";
-      if (panelName === "profile") profilePanel.style.display = "flex";
-      if (panelName === "settings") settingsPanel.style.display = "flex";
+      if (panelName === "main" && mainPanel) mainPanel.style.display = "flex";
+      else if (panelName === "search" && searchPanel) searchPanel.classList.add("active");
+      else if (panelName === "profile" && profilePanel) profilePanel.classList.add("active");
+      else if (panelName === "settings" && settingsPanel) settingsPanel.classList.add("active");
+      else if (panelName === "chat" && chatPanel) chatPanel.classList.add("active");
     }
 
     btnOpenSearch.addEventListener("click", () => {
