@@ -43,6 +43,7 @@ tests/
 .claude
 .agents
 .github/prompts
+.github/skills
 .agent
 
 # Environment secrets
@@ -50,3 +51,4 @@ tests/
 .env.local
 .env.*.local
 opencode.json
+NUL
