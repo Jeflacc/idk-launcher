@@ -38,7 +38,7 @@ scratch/
 docs
 plans
 tests/
-
+.vite
 
 .claude
 .agents
