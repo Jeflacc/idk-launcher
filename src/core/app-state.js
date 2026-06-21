@@ -21,7 +21,7 @@ export const state = {
   launcherTheme: localStorage.getItem("idk_launcher_theme") || "emerald",
   launcherUiMode: localStorage.getItem("idk_launcher_ui_mode") || "classic",
   launcherBorderRadius:
-    parseInt(localStorage.getItem("idk_border_radius") || "10"),
+    parseInt(localStorage.getItem("idk_border_radius") || "10", 10),
   launcherAccentColor:
     localStorage.getItem("idk_accent_color") || "#4cb837",
   launcherAnimationSpeed:
@@ -35,9 +35,9 @@ export const state = {
   enableOverlay: localStorage.getItem("idk_enable_overlay") === "true",
   language: localStorage.getItem("idk_language") || "en",
   backgroundEffect: localStorage.getItem("idk_background_effect") || "particles",
-  backgroundIntensity: parseInt(localStorage.getItem("idk_background_intensity") || "50"),
-  concurrentDownloads: parseInt(localStorage.getItem("idk_concurrent_downloads") || "4"),
-  concurrentIO: Math.min(parseInt(localStorage.getItem("idk_concurrent_io") || "2"), 8),
+  backgroundIntensity: parseInt(localStorage.getItem("idk_background_intensity") || "50", 10),
+  concurrentDownloads: parseInt(localStorage.getItem("idk_concurrent_downloads") || "4", 10),
+  concurrentIO: Math.min(parseInt(localStorage.getItem("idk_concurrent_io") || "2", 10), 8),
   autoUpdates: localStorage.getItem("idk_auto_updates") !== "false",
   discordPresence: localStorage.getItem("idk_discord_presence") !== "false",
   betaUpdates: localStorage.getItem("idk_beta_updates") === "true",
@@ -48,12 +48,14 @@ export const state = {
   customMinecraftPath: localStorage.getItem("idk_custom_minecraft_path") || "",
   defaultWindowWidth: parseInt(
     localStorage.getItem("idk_default_window_width") || "1024",
+    10,
   ),
   defaultWindowHeight: parseInt(
     localStorage.getItem("idk_default_window_height") || "768",
+    10,
   ),
   defaultFullscreen: localStorage.getItem("idk_default_fullscreen") === "true",
-  maxMemoryGB: parseInt(localStorage.getItem("craftlaunch_maxMemory") || "4"),
+  maxMemoryGB: parseInt(localStorage.getItem("craftlaunch_maxMemory") || "4", 10),
   allVersions: [],
   sodiumSupportedVersions: new Set(),
   downloadedVersions: [],

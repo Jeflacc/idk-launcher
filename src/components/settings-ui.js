@@ -37,8 +37,6 @@ class SettingsUI {
     
     this._createSettingsPanel();
     this._attachEventListeners();
-    
-    console.log('[SettingsUI] Initialized');
   }
 
   /**
@@ -363,14 +361,23 @@ class SettingsUI {
         const setting = this.settingsMetadata.find(s => s.key === key);
         if (!setting) continue;
 
-        // Type validation
-        if (typeof value !== setting.type) {
-          alert(`Invalid value for ${setting.label}: expected ${setting.type}`);
+        // Type validation (text is a string, not literally the word 'text')
+        const expectedType = setting.type;
+        const actualType = Array.isArray(value) ? 'array' : typeof value;
+        const typeOk =
+          (expectedType === 'text' && actualType === 'string') ||
+          (expectedType === 'boolean' && actualType === 'boolean') ||
+          (expectedType === 'number' && actualType === 'number') ||
+          (expectedType === 'array' && Array.isArray(value)) ||
+          (expectedType === actualType);
+
+        if (!typeOk) {
+          alert(`Invalid value for ${setting.label}: expected ${expectedType}, got ${actualType}`);
           return;
         }
 
         // Range validation
-        if (setting.type === 'number') {
+        if (expectedType === 'number') {
           if (setting.min !== undefined && value < setting.min) {
             alert(`${setting.label} must be at least ${setting.min}`);
             return;
@@ -412,8 +419,9 @@ class SettingsUI {
     try {
       await window.electronAPI.resetSettings();
       
-      // Reload settings
-      const settings = await window.electronAPI.loadSettings();
+      // Reload settings — backend wraps in { success, settings }
+      const result = await window.electronAPI.loadSettings();
+      const settings = (result && result.settings) ? result.settings : (result || {});
       this.currentSettings = { ...settings };
       this.pendingChanges = {};
       this.isDirty = false;
@@ -449,9 +457,9 @@ class SettingsUI {
    */
   async _handleImport() {
     try {
-      const settings = await window.electronAPI.importSettings();
-      
-      // Update current settings
+      const result = await window.electronAPI.importSettings();
+      // Backend returns { success, settings } — unwrap before storing.
+      const settings = (result && result.settings) ? result.settings : (result || {});
       this.currentSettings = { ...settings };
       this.pendingChanges = {};
       this.isDirty = false;

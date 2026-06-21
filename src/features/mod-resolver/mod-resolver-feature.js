@@ -115,7 +115,7 @@ export async function resolveDependencies(modpackId, modId) {
           }
 
           const latestVersion = versions[0];
-          const file = latestVersion.files[0];
+          const file = latestVersion.files && latestVersion.files[0];
 
           if (!file) {
             failed.push({ name: modData.title, reason: 'No download available' });
@@ -177,17 +177,21 @@ export async function checkIncompatibilities(modpackId) {
   const incompatibilities = [];
   const mods = mp.mods || [];
 
-  // Common known incompatibilities
+  // Common known incompatibilities.
+  // Note: Iris REQUIRES Sodium — that is a dependency, not an incompatibility.
+  // Listing it here triggered a false positive for every Fabric user running
+  // the standard Sodium+Iris stack. Removed.
   const knownIncompatibilities = [
-    { mod1: 'optifine', mod2: 'sodium', reason: 'Both are graphics mods and conflict' },
-    { mod1: 'optifine', mod2: 'iris', reason: 'Both are graphics mods and conflict' },
-    { mod1: 'sodium', mod2: 'iris', reason: 'Iris requires Sodium, but may have version conflicts' },
-    { mod1: 'fabric-api', mod2: 'forge', reason: 'Fabric and Forge are incompatible loaders' }
+    { mod1: 'optifine', mod2: 'sodium', reason: 'Optifine and Sodium are both rendering optimizers and conflict' },
+    { mod1: 'optifine', mod2: 'iris', reason: 'Optifine and Iris are both shader pipeline replacements and conflict' },
+    { mod1: 'optifine', mod2: 'rubidium', reason: 'Optifine and Rubidium are both rendering optimizers and conflict' },
+    { mod1: 'fabric-api', mod2: 'forge', reason: 'Fabric and Forge are incompatible loaders' },
+    { mod1: 'quilted-fabric-api', mod2: 'forge', reason: 'Quilt (Fabric API) and Forge are incompatible loaders' }
   ];
 
   for (const incomp of knownIncompatibilities) {
-    const has1 = mods.some(m => m.name.toLowerCase().includes(incomp.mod1));
-    const has2 = mods.some(m => m.name.toLowerCase().includes(incomp.mod2));
+    const has1 = mods.some(m => (m.name || '').toLowerCase().includes(incomp.mod1));
+    const has2 = mods.some(m => (m.name || '').toLowerCase().includes(incomp.mod2));
 
     if (has1 && has2) {
       incompatibilities.push({

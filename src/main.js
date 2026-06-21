@@ -1,10 +1,13 @@
 import "./style.css";
 import "./advanced-theme.css";
 import "./launch-overlay-fix.css";
+import "./fixes.css";
+import "./features/friends/friends.css";
 // Side-effect imports: constructors register UI and IPC behavior
 import "./components/download-progress.js";
 import "./components/accessibility-manager.js";
 import "./components/error-display.js";
+import "./components/modal-manager.js";
 import { renderAppShell } from "./app/app-shell.js";
 import { state, actions } from "./core/app-state.js";
 import { createViewController, initWindowControls } from "./core/views.js";
@@ -35,18 +38,18 @@ if (window.electronAPI) {
       const getMigrated = (key, localKey, defaultValue, isBool = false, isInt = false) => {
         const backendVal = s[key];
         const localValRaw = localStorage.getItem(localKey);
-        
+
         if ((backendVal === defaultValue || backendVal === undefined || backendVal === null) && localValRaw !== null) {
           let localVal = localValRaw;
           if (isBool) localVal = localValRaw === 'true';
-          else if (isInt) localVal = parseInt(localValRaw) || defaultValue;
-          
+          else if (isInt) localVal = parseInt(localValRaw, 10) || defaultValue;
+
           if (localVal !== defaultValue) {
             migrate[key] = localVal;
             return localVal;
           }
         }
-        return backendVal !== undefined ? backendVal : defaultValue;
+        return (backendVal !== undefined && backendVal !== null) ? backendVal : defaultValue;
       };
 
       state.javaPath = getMigrated('javaPath', 'craftlaunch_javaPath', '');

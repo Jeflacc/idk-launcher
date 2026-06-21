@@ -265,10 +265,16 @@
 
               <div class="play-dropdown-divider"></div>
 
-              <button class="play-dropdown-item" id="play-dd-modpacks">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                Modpacks
-              </button>
+              <div class="play-dd-footer" id="play-dd-footer">
+                <button id="play-dd-modpacks">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                  Modpacks
+                </button>
+                <button id="play-dd-all-versions">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  All versions
+                </button>
+              </div>
             </div>
           </div>
           <button class="manage-mods-button" id="manage-mods-btn" style="display: none;">MANAGE MODS</button>
@@ -1593,30 +1599,31 @@
           </div>
         </div>
       </div>
-      <div class="mp-create-modal" id="mp-create-modal">
+      <div class="mp-create-modal" id="mp-create-modal" data-modal>
         <div class="mp-create-box">
           <h3>New Modpack</h3>
-          <div style="display:flex;gap:12px;align-items:center;">
+          <div class="mp-create-body">
             <div class="icon-picker" id="new-mp-icon-picker" title="Select custom icon">
               <div class="icon-picker-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
+              <input type="file" accept="image/*" class="icon-picker-input" id="new-mp-icon-input" />
             </div>
             <input type="hidden" id="new-mp-icon" value="" />
-            <div style="flex:1;display:flex;flex-direction:column;gap:12px;">
-              <input class="clean-input" id="new-mp-name" placeholder="Modpack name..." style="text-align:left;" />
-              <div style="display:flex;gap:12px;">
+            <div class="mp-create-fields">
+              <input class="clean-input" id="new-mp-name" placeholder="Modpack name..." />
+              <div class="mp-create-selects">
                 <select class="clean-select" id="new-mp-version"></select>
                 <select class="clean-select" id="new-mp-loader"><option value="Fabric">Fabric</option><option value="Forge">Forge</option><option value="NeoForge">NeoForge</option><option value="Quilt">Quilt</option><option value="Vanilla">Vanilla</option></select>
               </div>
             </div>
           </div>
-          <div style="display:flex;gap:10px;">
-            <button class="submit-btn" id="btn-confirm-create-mp" style="flex:1;">Create</button>
-            <button class="modal-btn" id="btn-cancel-create-mp" style="flex:1;">Cancel</button>
+          <div class="mp-create-actions">
+            <button class="submit-btn" id="btn-confirm-create-mp">Create</button>
+            <button class="modal-btn cancel" id="btn-cancel-create-mp">Cancel</button>
           </div>
         </div>
       </div>
 
-      <div class="mp-settings-modal" id="mp-settings-modal">
+      <div class="mp-settings-modal" id="mp-settings-modal" data-modal>
         <div class="mp-settings-box">
           <div class="mp-settings-header">
             <h3>Modpack Settings</h3>
@@ -1631,6 +1638,7 @@
             <div style="display:flex;gap:16px;align-items:center;">
               <div class="icon-picker" id="mp-settings-icon-picker" title="Select custom icon">
                 <div class="icon-picker-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
+                <input type="file" accept="image/*" class="icon-picker-input" id="mp-settings-icon-input" />
               </div>
               <input type="hidden" id="mp-settings-icon" value="" />
               <div class="mp-settings-section" style="flex:1;">
@@ -1691,7 +1699,7 @@
   </div>
 
   <!-- Version Download Modal -->
-  <div class="mp-create-modal" id="mp-all-versions-modal">
+  <div class="mp-create-modal" id="mp-all-versions-modal" data-modal>
     <div class="mp-create-box" style="width:480px;max-height:80vh;overflow-y:auto;">
       <h3>All Minecraft Versions</h3>
       <div style="display:flex;gap:8px;margin-bottom:12px;">
@@ -1709,7 +1717,7 @@
   </div>
 
   <!-- LAUNCH OVERLAY -->
-  <div class="launch-overlay" id="launch-overlay">
+  <div class="launch-overlay" id="launch-overlay" data-modal data-modal-noncloseable>
     <div class="launch-overlay-card">
       <div class="launch-card-header">
         <img src="./loading.gif" class="launch-spinner-gif" alt="Loading...">
@@ -1747,7 +1755,7 @@
   </div>
 
   <!-- ERROR MODAL -->
-  <div class="custom-modal" id="error-modal">
+  <div class="custom-modal" id="error-modal" data-modal>
     <div class="modal-content">
       <div class="modal-icon">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -1765,7 +1773,7 @@
   </div>
 
   <!-- UPDATE MODAL -->
-  <div class="custom-modal" id="update-modal">
+  <div class="custom-modal" id="update-modal" data-modal>
     <div class="modal-content update-box">
       <div class="modal-icon update-icon">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
@@ -1792,10 +1800,13 @@
     </div>
   </div>
 
+  <!-- FRIENDS SIDEBAR BACKDROP — click outside the sidebar closes it -->
+  <div class="friends-sidebar-backdrop" id="friends-sidebar-backdrop"></div>
+
   <!-- FRIENDS SIDEBAR -->
   <div class="friends-sidebar" id="friends-sidebar">
     <div class="friends-sidebar-header">
-      <h3>IDK CONNECT <span style="font-size:0.6875rem; color: var(--text-muted); font-weight: 500; vertical-align: middle; margin-left: 6px; letter-spacing: 0.5px; opacity: 0.8;">(Beta)</span></h3>
+      <h3>IDK CONNECT <span style="font-size:0.625rem; color: var(--text-dim); font-weight: 600; vertical-align: middle; margin-left: 8px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.6; background: rgba(var(--theme-accent-rgb), 0.1); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(var(--theme-accent-rgb), 0.15);">Beta</span></h3>
       <button class="friends-sidebar-close" id="btn-friends-sidebar-close">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1960,7 +1971,7 @@
   </div>
 
   <!-- MOD UPDATE CHECKER MODAL -->
-  <div class="custom-modal" id="mod-updates-modal">
+  <div class="custom-modal" id="mod-updates-modal" data-modal>
     <div class="modal-content mod-updates-modal-content">
       <div class="updates-modal-header">
         <div>
@@ -1981,7 +1992,7 @@
   </div>
 
   <!-- CHANGELOG VIEWER MODAL -->
-  <div class="custom-modal" id="changelog-modal">
+  <div class="custom-modal" id="changelog-modal" data-modal>
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 id="changelog-title" style="margin: 0; font-size:1.125rem; font-weight: 700;">Changelog</h3>
@@ -1999,7 +2010,7 @@
   </div>
 
   <!-- CRASH LOG ANALYZER MODAL -->
-  <div class="custom-modal" id="crash-analyzer-modal">
+  <div class="custom-modal" id="crash-analyzer-modal" data-modal>
     <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="margin: 0; font-size:1.125rem; font-weight: 700;">Crash Log Analyzer</h3>
@@ -2022,7 +2033,7 @@
   </div>
 
   <!-- DEPENDENCY RESOLVER MODAL -->
-  <div class="custom-modal" id="dependencies-modal">
+  <div class="custom-modal" id="dependencies-modal" data-modal>
     <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="margin: 0; font-size:1.125rem; font-weight: 700;">Missing Dependencies</h3>
@@ -2040,7 +2051,7 @@
   </div>
 
   <!-- DOWNLOAD CONFIRMATION MODAL -->
-  <div class="custom-modal" id="dl-confirm-modal">
+  <div class="custom-modal" id="dl-confirm-modal" data-modal>
     <div class="modal-content" style="max-width: 400px;">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
         <div id="dl-confirm-icon-wrap" style="width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.04);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;">

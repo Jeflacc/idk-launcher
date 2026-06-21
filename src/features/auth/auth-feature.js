@@ -17,6 +17,11 @@ export function initAuthFeature({ switchView }) {
     handleOnboardingFlow(switchView);
   }
 
+  if (!btnOfflineLogin || !btnElybyLogin || !btnMicrosoftLogin || !loginInput || !btnSubmitLogin) {
+    console.warn("[Auth] Login UI elements missing — feature cannot start.");
+    return;
+  }
+
   btnOfflineLogin.addEventListener("click", () => {
     offlineForm.classList.add("open");
     loginInput.focus();
@@ -24,7 +29,6 @@ export function initAuthFeature({ switchView }) {
 
   btnElybyLogin.addEventListener("click", async () => {
     offlineForm.classList.remove("open");
-
     btnElybyLogin.innerText = "Opening browser...";
     try {
       if (window.electronAPI && window.electronAPI.elybyOAuthLogin) {
@@ -40,9 +44,12 @@ export function initAuthFeature({ switchView }) {
             authMode: state.authMode,
             elybyData: {
               accessToken: res.data.accessToken,
+              clientToken: res.data.clientToken,
               tokenType: res.data.tokenType,
               expiresIn: res.data.expiresIn,
-              selectedProfile: { name: res.data.user.username, id: res.data.user.uuid },
+              refreshToken: res.data.refreshToken || null,
+              tokenCreatedAt: res.data.tokenCreatedAt || Date.now(),
+              selectedProfile: res.data.selectedProfile || { name: res.data.user.username, id: res.data.user.uuid },
               user: res.data.user,
             }
           }).catch(console.error);
@@ -52,14 +59,16 @@ export function initAuthFeature({ switchView }) {
         } else {
           alert(res?.error || "Ely.by login failed or was cancelled.");
         }
+      } else {
+        alert("Ely.by login is not available in this build.");
       }
     } catch (e) {
       console.error(e);
       alert("Error during Ely.by login.");
+    } finally {
+      btnElybyLogin.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Ely.by Account';
     }
-    btnElybyLogin.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Ely.by Account';
   });
-
   btnMicrosoftLogin.addEventListener("click", async () => {
     offlineForm.classList.remove("open");
 
@@ -84,12 +93,15 @@ export function initAuthFeature({ switchView }) {
         } else {
           alert(res?.error || "Microsoft login failed or cancelled.");
         }
+      } else {
+        alert("Microsoft login is not available in this build.");
       }
     } catch (e) {
       console.error(e);
       alert("Error during Microsoft login.");
+    } finally {
+      btnMicrosoftLogin.innerHTML = '<img src="./microsoft.png" alt="Microsoft Logo" width="24" height="24" style="object-fit: contain;" /> Microsoft Account';
     }
-    btnMicrosoftLogin.innerHTML = '<img src="./microsoft.png" alt="Microsoft Logo" width="24" height="24" style="object-fit: contain;" /> Microsoft Account';
   });
 
   loginInput.addEventListener("keydown", (e) => {
@@ -255,8 +267,6 @@ Please review and accept these terms to continue.`,
     state.currentUser = "";
     localStorage.removeItem("craftlaunch_username");
 
-    document.getElementById("btn-friends-disconnect")?.click();
-
     if (window.electronAPI) {
       window.electronAPI
         .saveSettings({
@@ -266,6 +276,8 @@ Please review and accept these terms to continue.`,
         })
         .catch(console.error);
     }
+
+    document.getElementById("btn-friends-disconnect")?.click();
     actions.updateFriendsAuthUI?.();
     switchView("login");
   });

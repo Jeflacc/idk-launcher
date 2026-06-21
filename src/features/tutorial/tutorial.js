@@ -101,8 +101,10 @@ function startTutorial() {
     }
   });
 
-  tooltipEl.querySelector('.tutorial-btn-skip').addEventListener('click', endTutorial);
-  tooltipEl.querySelector('.tutorial-btn-next').addEventListener('click', nextStep);
+  const skipBtn = tooltipEl.querySelector('.tutorial-btn-skip');
+  const nextBtn = tooltipEl.querySelector('.tutorial-btn-next');
+  if (skipBtn) skipBtn.addEventListener('click', endTutorial);
+  if (nextBtn) nextBtn.addEventListener('click', nextStep);
 
   resizeHandler = () => renderStep();
   window.addEventListener('resize', resizeHandler);
@@ -111,56 +113,61 @@ function startTutorial() {
 }
 
 function renderStep() {
-  if (currentStep >= tutorialSteps.length) {
-    endTutorial();
+  // Iterate (not recurse) so a long run of missing targets never overflows
+  // the call stack. Bail out after a sane limit so a broken tutorial never
+  // spins forever.
+  let safety = tutorialSteps.length * 2 + 8;
+  while (currentStep < tutorialSteps.length && safety-- > 0) {
+    const step = tutorialSteps[currentStep];
+
+    if (step.view && actions.switchView) {
+      actions.switchView(step.view);
+    }
+
+    const targetNode = document.querySelector(step.target);
+
+    if (!targetNode || targetNode.offsetParent === null) {
+      currentStep++;
+      continue;
+    }
+
+    // Found a valid target — render the tooltip and exit the loop.
+    const rect = targetNode.getBoundingClientRect();
+    const padding = 8;
+
+    highlightEl.style.top = `${rect.top - padding}px`;
+    highlightEl.style.left = `${rect.left - padding}px`;
+    highlightEl.style.width = `${rect.width + padding * 2}px`;
+    highlightEl.style.height = `${rect.height + padding * 2}px`;
+
+    const cutTop = rect.top - padding;
+    const cutBottom = rect.bottom + padding;
+    const cutLeft = rect.left - padding;
+    const cutRight = rect.right + padding;
+
+    backdropEl.style.clipPath = `polygon(
+      0% 0%, 0% 100%, ${cutLeft}px 100%, ${cutLeft}px ${cutTop}px,
+      ${cutRight}px ${cutTop}px, ${cutRight}px ${cutBottom}px, 
+      ${cutLeft}px ${cutBottom}px, ${cutLeft}px 100%, 100% 100%, 100% 0%
+    )`;
+
+    const titleEl = tooltipEl.querySelector('.tutorial-tooltip-title');
+    const contentEl = tooltipEl.querySelector('.tutorial-tooltip-content');
+    const progressEl = tooltipEl.querySelector('.tutorial-progress');
+    const nextBtnEl = tooltipEl.querySelector('.tutorial-btn-next');
+    if (titleEl) titleEl.textContent = step.title || '';
+    if (contentEl) contentEl.textContent = step.content || '';
+    if (progressEl) progressEl.textContent = `${currentStep + 1} / ${tutorialSteps.length}`;
+    if (nextBtnEl) {
+      nextBtnEl.textContent = (currentStep === tutorialSteps.length - 1) ? 'Got it!' : 'Next';
+    }
+
+    positionTooltip(rect, step.position);
     return;
   }
 
-  const step = tutorialSteps[currentStep];
-
-  if (step.view && actions.switchView) {
-    actions.switchView(step.view);
-  }
-
-  const targetNode = document.querySelector(step.target);
-
-  if (!targetNode || targetNode.offsetParent === null) {
-    currentStep++;
-    renderStep();
-    return;
-  }
-
-  const rect = targetNode.getBoundingClientRect();
-  const padding = 8;
-
-  highlightEl.style.top = `${rect.top - padding}px`;
-  highlightEl.style.left = `${rect.left - padding}px`;
-  highlightEl.style.width = `${rect.width + padding * 2}px`;
-  highlightEl.style.height = `${rect.height + padding * 2}px`;
-
-  const cutTop = rect.top - padding;
-  const cutBottom = rect.bottom + padding;
-  const cutLeft = rect.left - padding;
-  const cutRight = rect.right + padding;
-
-  backdropEl.style.clipPath = `polygon(
-    0% 0%, 0% 100%, ${cutLeft}px 100%, ${cutLeft}px ${cutTop}px,
-    ${cutRight}px ${cutTop}px, ${cutRight}px ${cutBottom}px, 
-    ${cutLeft}px ${cutBottom}px, ${cutLeft}px 100%, 100% 100%, 100% 0%
-  )`;
-
-  tooltipEl.querySelector('.tutorial-tooltip-title').textContent = step.title;
-  tooltipEl.querySelector('.tutorial-tooltip-content').textContent = step.content;
-  tooltipEl.querySelector('.tutorial-progress').textContent = `${currentStep + 1} / ${tutorialSteps.length}`;
-
-  const nextBtn = tooltipEl.querySelector('.tutorial-btn-next');
-  if (currentStep === tutorialSteps.length - 1) {
-    nextBtn.textContent = 'Got it!';
-  } else {
-    nextBtn.textContent = 'Next';
-  }
-
-  positionTooltip(rect, step.position);
+  // No valid target found in any remaining step — end the tutorial.
+  endTutorial();
 }
 
 function positionTooltip(targetRect, position) {

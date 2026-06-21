@@ -1,5 +1,188 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.5.4 Changelog
+
+The stable release **v1.5.4** brings Microsoft cape management, download improvements, login UI updates, and tutorial enhancements.
+---
+
+### 🚀 New Features & Enhancements
+
+* **🪟 Microsoft Cape Management & Skin Preview**
+  - View and manage equipped capes from your Microsoft/Minecraft account.
+  - Equip or unequip capes directly from the launcher.
+  - Instant skin preview after uploading a new skin.
+
+* **⬇️ Download Speed & Progress Tracking**
+  - Minecraft version downloader now shows real-time download speed and percentage.
+
+* **📦 Concurrent Performance Pack Downloads**
+  - Added support for concurrent downloads of performance optimization packs.
+  - UI toggle for force-updating mods regardless of version.
+
+* **🎨 Login UI & IDK Connect OTP Flow**
+  - Updated login screen with refreshed UI styling.
+  - Improved IDK Connect OTP (two-factor authentication) flow.
+  - Updated tutorial features for new users.
+
+* **🖼️ Render Popup Styling**
+  - Stylized the render/preview popup for a more polished look.
+  - Added reset button to render settings.
+  - Fixed verification text display.
+
+### 🔧 Fixes
+
+* **🛑 Version Download Cancellation**
+  - Fixed cancellation of in-progress version downloads when clicking the cancel button on the download panel.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.5.4`
+* **Release Channel:** Stable Release
+* **Platform:** Windows, macOS, Linux
+
+---
+
+## 🎮 IDK Launcher v1.5.3 Changelog
+
+The stable release **v1.5.3** brings favorite modpacks and Classic UI fixes.
+---
+
+### 🚀 New Features & Enhancements
+
+* **⭐ Favorite Modpacks**
+  - Mark modpacks as favorites for quick access.
+  - Favorited modpacks are highlighted and sorted to the top of the modpacks sidebar.
+
+### 🔧 Fixes
+
+* **🖥️ Classic UI Fix**
+  - Fixed layout and styling regressions in Classic Mode that were introduced during the v1.5.0 UI overhaul.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.5.3`
+* **Release Channel:** Stable Release
+* **Platform:** Windows, macOS, Linux
+
+---
+
+## 🎮 IDK Launcher v1.5.2 Changelog
+
+The stable release **v1.5.2** introduces Microsoft Account Authentication and fixes session persistence.
+---
+
+### 🚀 New Features & Enhancements
+
+* **🪟 Microsoft Account Authentication**
+  - Full Microsoft account login flow using `msmc` for Xbox Live / Minecraft Services authentication.
+  - Microsoft login button with custom branded icon in the login screen.
+  - Auth data persisted securely in `settings.json` via `SettingsManager`.
+  - Microsoft accounts can now launch premium Minecraft with full online access.
+  - Upload custom skins directly from the launcher to your Microsoft/Minecraft account.
+
+### 🔧 Fixes
+
+* **💾 Settings Persistence Fix**
+  - Added `microsoftData` to the `SettingsManager` schema to prevent invalid session data on startup.
+  - Resolved a bug where Microsoft auth data was silently dropped during settings load.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.5.2`
+* **Release Channel:** Stable Release
+* **Platform:** Windows, macOS, Linux
+
+---
+
+## 🎮 IDK Launcher v1.5.1 Changelog
+
+Hotfix release **v1.5.1** addresses a taskbar icon issue and release workflow reliability.
+---
+
+### 🔧 Fixes
+
+* **🖼️ Window Icon Fix**
+  - Set the window icon explicitly to prevent the default Electron icon from appearing in the taskbar.
+
+* **📦 Release Workflow Fix**
+  - Automatically creates a GitHub release if one is not found during the build upload step, preventing CI failures.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.5.1`
+* **Release Channel:** Stable Release
+* **Platform:** Windows, macOS, Linux
+
+---
+
+## 🎮 IDK Launcher v1.5.0 Changelog
+
+Hello everyone! The stable release **v1.5.0** is here! This update brings a major UI/UX overhaul, an in-app auto-update system, expanded modpack features, and significant infrastructure improvements.
+---
+
+### 🎨 UI/UX Overhaul
+
+* **🖌️ Advanced Mode & Sidebar Redesign**
+  - Complete visual overhaul of Advanced Mode themes and layout.
+  - Sidebar redesigned with neutral dark background, white borders, and pill-style markers.
+  - Settings button moved to the bottom of the sidebar for improved accessibility.
+
+* **💬 Chat System Upgrade**
+  - Chat GUI upgraded with accent-colored bubbles, smooth animations, and modern input styling.
+  - Xbox-style grouped timestamps and unread message indicators (polling, toast alerts, badges).
+
+* **🛠️ Settings Card & UI Consistency**
+  - Improved settings card styling across all panels.
+  - Overhauled modpack page with improved grid visibility and depth.
+  - Removed green glow from navigation tabs and section title icons for a cleaner look.
+
+---
+
+### 🔔 In-App Auto-Update System
+
+* **⬇️ Download & Install Without Leaving the App**
+  - Built a complete auto-update pipeline: check for updates, download, and install — all without leaving the launcher.
+  - Progress indicator during download with percentage tracking.
+  - One-click install that relaunches the app with the new version.
+
+* **✅ Update Checker Fix**
+  - Fixed `update:check` incorrectly reporting `updateAvailable` when the current version matches the latest.
+
+---
+
+### 🏗️ Architecture & Infrastructure
+
+* **🧪 Test Suite Reorganization**
+  - Moved all tests from `src/backend/` to a dedicated `tests/` directory.
+  - Added 40 auto-update system tests.
+  - Test files gitignored to keep the repository clean.
+
+* **📦 CI/CD Release Workflow**
+  - Switched to GitHub CLI (`gh`) for reliable release publishing.
+  - Direct release upload without artifact middlemen.
+  - Release artifacts renamed with platform labels for clarity.
+  - Automatic GitHub release creation if not found during build.
+
+* **🧩 Code Structure Refactoring**
+  - Extensive refactoring across 29 files with ~3,600 lines added and ~1,600 removed.
+  - Improved `safe-parse.js` with additional helpers.
+  - Updated `download-progress.js`, `accessibility-manager.js`, and `background-effects.js`.
+  - Added `launch-overlay-fix.css` for overlay positioning improvements.
+
+---
+
+### 📦 Build Specifications
+* **Version:** `1.5.0`
+* **Release Channel:** Stable Release
+* **Platform:** Windows, macOS, Linux
+* **CI/CD Build:** Fully integrated with GitHub Actions Workflows for automated multiplatform builds triggered upon pushing release tags!
+
+---
+
 ## 🎮 IDK Launcher v1.4.0 Changelog
 
 Hello everyone! The stable release **v1.4.0** is officially here! This is the biggest update IDK Launcher has ever received, bringing a completely redesigned UI system with multiple themes and UI modes, a comprehensive modpack & version management overhaul, persistent settings, real-time social features, performance boosts, accessibility improvements, and much more!

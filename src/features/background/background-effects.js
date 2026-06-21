@@ -428,7 +428,7 @@ function initStarfield() {
     const py = height * (0.15 + Math.random() * 0.3);
     const pr = 3 + Math.random() * 6;
     const hasRing = Math.random() > 0.5;
-    planetData = { x: px, y: px, r: pr, hasRing, ringW: pr * 2.2, hue: [20, 200, 30, 350][Math.floor(Math.random() * 4)] };
+    planetData = { x: px, y: py, r: pr, hasRing, ringW: pr * 2.2, hue: [20, 200, 30, 350][Math.floor(Math.random() * 4)] };
   }
 }
 
@@ -641,6 +641,8 @@ const effects = {
   particles: { init: initParticles, draw: drawParticles },
 };
 
+let _onVisibility = null;
+
 function startEffect(effect) {
   stopEffect();
   currentEffect = effect;
@@ -651,7 +653,7 @@ function startEffect(effect) {
   const fps = 30;
   const interval = 1000 / fps;
   let hidden = false;
-  const onVisibility = () => {
+  _onVisibility = () => {
     hidden = document.hidden;
     if (hidden) {
       if (animId) { cancelAnimationFrame(animId); animId = null; }
@@ -660,7 +662,7 @@ function startEffect(effect) {
       animId = requestAnimationFrame(frame);
     }
   };
-  document.addEventListener("visibilitychange", onVisibility);
+  document.addEventListener("visibilitychange", _onVisibility);
   function frame(now) {
     if (hidden) return;
     const elapsed = now - lastFrame;
@@ -676,6 +678,10 @@ function startEffect(effect) {
 
 function stopEffect() {
   if (animId) { cancelAnimationFrame(animId); animId = null; }
+  if (_onVisibility) {
+    document.removeEventListener("visibilitychange", _onVisibility);
+    _onVisibility = null;
+  }
 }
 
 export function initBackgroundEffects() {

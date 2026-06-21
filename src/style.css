@@ -15,6 +15,14 @@
 /* General Glassmorphism Theme */
 .view {
     background: rgba(10, 10, 12, 0.85) !important;
+    opacity: 0;
+    pointer-events: none;
+    display: none !important;
+}
+.view.active {
+    opacity: 1 !important;
+    pointer-events: all !important;
+    display: flex !important;
 }
 
 .mods-content-wrapper,
@@ -234,22 +242,6 @@ body {
     pointer-events: none;
 }
 
-/* Custom scrollbars */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.15);
-}
-::-webkit-scrollbar-thumb {
-    background: #3a3a3b;
-    border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #4e4e4f;
-}
-
 /* =========================================================
    TOP TITLE BAR & TABS (MOJANG NAV BAR)
    ========================================================= */
@@ -306,7 +298,7 @@ body {
 .brand-title {
     font-size: 0.625rem;
     font-weight: 700;
-    color: #8d9298;
+    color: var(--text-muted);
     letter-spacing: 1.4px;
     border-right: 1px solid rgba(255, 255, 255, 0.08);
     padding-right: 14px;
@@ -325,7 +317,7 @@ body {
 }
 
 .nav-tab {
-    color: #90959b;
+    color: var(--text-muted);
     font-size: 0.75rem;
     font-weight: 700;
     padding: 0 12px;
@@ -419,7 +411,7 @@ body {
 }
 
 .nav-tab {
-    color: #90959b;
+    color: var(--text-muted);
     font-size: 0.75rem;
     font-weight: 700;
     padding: 0 13px;
@@ -862,24 +854,24 @@ body:has(#view-login.active) .user-profile {
 }
 
 .submit-btn {
-    background-color: var(--theme-accent);
+    background: var(--theme-accent);
     color: white;
-    border: 2px solid #000000;
-    box-shadow:
-        inset 0 3px 0 var(--theme-accent-hover),
-        inset 3px 0 0 var(--theme-accent-hover),
-        inset 0 -3px 0 var(--theme-accent-shadow),
-        inset -3px 0 0 var(--theme-accent-shadow);
+    border: none;
     padding: 12px;
-    border-radius: 4px;
+    border-radius: 6px;
     font-family: var(--font-title);
     font-weight: 700;
     font-size: 0.875rem;
     cursor: pointer;
-    text-shadow: 1px 1px 0px var(--theme-accent-shadow);
-    transition: none;
+    transition: background 0.15s ease;
     font-variant: small-caps;
     text-transform: lowercase;
+}
+.submit-btn:hover {
+    background: var(--theme-accent-hover);
+}
+.submit-btn:active {
+    background: var(--theme-accent-dark);
 }
 
 .submit-btn:hover {
@@ -1012,8 +1004,6 @@ body:has(#view-login.active) .user-profile {
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
 }
 
 .refresh-versions-btn:hover {
@@ -1068,7 +1058,7 @@ body:has(#view-login.active) .user-profile {
     position: absolute;
     bottom: calc(100% + 8px);
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) translateY(8px);
     width: 300px;
     background: rgba(14, 14, 16, 0.98);
     border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
@@ -1076,20 +1066,19 @@ body:has(#view-login.active) .user-profile {
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
     display: flex;
     flex-direction: column;
     z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .custom-select.open .custom-options {
-    max-height: 380px;
     opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
 }
-
 .options-filters {
     display: flex;
     flex-direction: column;
@@ -1660,7 +1649,7 @@ input[type="checkbox"]:checked + .switch::after {
     background: var(--theme-accent);
     border: 2px solid var(--theme-accent-dark);
     border-radius: 2px;
-    animation: blockBounce 2s ease-in-out infinite;
+    animation: blockPulse 3s ease-in-out infinite;
 }
 
 .decoration-block:nth-child(2) {
@@ -1671,13 +1660,13 @@ input[type="checkbox"]:checked + .switch::after {
     animation-delay: 0.4s;
 }
 
-@keyframes blockBounce {
+@keyframes blockPulse {
     0%,
     100% {
-        transform: translateY(0);
+        opacity: 0.6;
     }
     50% {
-        transform: translateY(-6px);
+        opacity: 1;
     }
 }
 
@@ -2145,16 +2134,6 @@ input[type="checkbox"]:checked + .switch::after {
 .modpack-item.active {
     background: rgba(var(--theme-accent-rgb), 0.12);
     border-color: rgba(var(--theme-accent-rgb), 0.25);
-}
-.modpack-item.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 8px;
-    bottom: 8px;
-    width: 2px;
-    border-radius: 1px;
-    background: var(--theme-accent);
 }
 
 .mp-item-icon {
@@ -3539,18 +3518,54 @@ input[type="checkbox"]:checked + .switch::after {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     padding: 28px;
-    width: 380px;
+    width: min(400px, calc(100vw - 32px));
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.mp-create-body {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.mp-create-fields {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.mp-create-selects {
+    display: flex;
+    gap: 10px;
+}
+
+.mp-create-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.mp-create-actions .submit-btn {
+    flex: 1;
+}
+
+.mp-create-actions .modal-btn.cancel {
+    flex: 1;
+}
+
+.icon-picker-input {
+    display: none;
 }
 
 .mp-create-box h3 {
     font-family: var(--font-title);
     font-size: 1.0625rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-main);
     font-variant: small-caps;
     text-transform: lowercase;
     letter-spacing: 0.3px;
@@ -3871,13 +3886,13 @@ input[type="checkbox"]:checked + .switch::after {
 
 .modal-content {
     background: rgba(22, 22, 25, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 40px;
     border-radius: 10px;
     width: 460px;
     max-width: 90vw;
     text-align: center;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
     transform: translateY(16px);
     transition: transform 0.25s ease;
 }
@@ -4186,18 +4201,18 @@ input[type="checkbox"]:checked + .switch::after {
 .friends-sidebar {
     position: absolute;
     top: var(--top-bar-height);
-    right: -320px;
-    width: 320px;
+    right: -340px;
+    width: 340px;
     bottom: 0;
-    background: rgba(16, 16, 18, 0.97);
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(24px) !important;
-    -webkit-backdrop-filter: blur(24px) !important;
+    background: linear-gradient(180deg, rgba(12, 12, 14, 0.98) 0%, rgba(8, 8, 10, 0.99) 100%);
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(32px) !important;
+    -webkit-backdrop-filter: blur(32px) !important;
     z-index: 95;
     transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+    box-shadow: -12px 0 48px rgba(0, 0, 0, 0.6);
 }
 
 .friends-sidebar.active {
@@ -4209,9 +4224,10 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
+    padding: 18px 22px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.015);
 }
 
 .friends-sidebar-header h3 {
@@ -4231,14 +4247,14 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
     transition: all 0.2s;
 }
 
 .friends-sidebar-close:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.08);
     color: white;
 }
 
@@ -4246,10 +4262,10 @@ input[type="checkbox"]:checked + .switch::after {
 .friends-sidebar-content {
     flex: 1;
     overflow-y: auto;
-    padding: 16px;
+    padding: 18px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
 }
 
 /* Auth / Portal Panels */
@@ -4264,16 +4280,17 @@ input[type="checkbox"]:checked + .switch::after {
     text-align: center;
     color: var(--text-muted);
     font-size: 0.8125rem;
-    line-height: 1.5;
-    margin-bottom: 8px;
+    line-height: 1.6;
+    margin-bottom: 4px;
+    padding: 0 8px;
 }
 
 .friends-auth-tabs {
     display: flex;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 8px;
     padding: 3px;
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     gap: 3px;
 }
 
@@ -4293,9 +4310,9 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friends-auth-tab.active {
-    background: rgba(var(--theme-accent-rgb), 0.2);
+    background: rgba(var(--theme-accent-rgb), 0.15);
     color: var(--theme-accent);
-    border: 1px solid var(--theme-accent);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
 }
 
 .friends-auth-form {
@@ -4305,30 +4322,35 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friends-auth-form #friends-auth-username {
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
 .friends-auth-error {
     color: #ef4444;
     font-size: 0.75rem;
-    background: rgba(239, 68, 68, 0.15);
-    border: 2px solid rgba(239, 68, 68, 0.3);
-    padding: 12px 16px;
-    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    padding: 10px 14px;
+    border-radius: 8px;
     display: none;
     text-align: center;
 }
 
 /* User identity header once logged in */
 .friends-identity-card {
-    background: rgba(var(--theme-accent-rgb), 0.08);
-    border: 2px solid rgba(var(--theme-accent-rgb), 0.2);
-    border-radius: 8px;
-    padding: 16px;
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.18);
+    border-radius: 12px;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    transition: border-color 0.2s;
+}
+
+.friends-identity-card:hover {
+    border-color: rgba(var(--theme-accent-rgb), 0.3);
 }
 
 .friends-identity-info {
@@ -4338,18 +4360,20 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friends-identity-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 1.5px solid var(--theme-accent);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 2px solid var(--theme-accent);
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 12px rgba(var(--theme-accent-rgb), 0.2);
 }
 
 .friends-identity-name h4 {
     font-size: 0.8125rem;
-    font-weight: 600;
+    font-weight: 700;
     color: white;
+    letter-spacing: 0.3px;
 }
 
 .friends-identity-name span {
@@ -4359,40 +4383,47 @@ input[type="checkbox"]:checked + .switch::after {
     align-items: center;
     gap: 4px;
     font-weight: 500;
+    opacity: 0.9;
 }
 
 .friends-identity-disconnect {
     background: transparent;
     border: none;
-    color: var(--text-muted);
+    color: var(--text-dim);
     cursor: pointer;
-    transition: color 0.2s;
-    padding: 4px;
+    transition: all 0.2s;
+    padding: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 8px;
 }
 
 .friends-identity-disconnect:hover {
     color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
 }
 
 /* Share LAN/Port frpc controls */
 .friends-share-card {
-    background: rgba(var(--theme-accent-rgb), 0.03);
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.15);
-    border-radius: 8px;
+    background: rgba(var(--theme-accent-rgb), 0.04);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.12);
+    border-radius: 12px;
     padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-top: 32px;
-    margin-bottom: 32px;
+    margin-top: 16px;
+    transition: border-color 0.2s;
+}
+
+.friends-share-card:hover {
+    border-color: rgba(var(--theme-accent-rgb), 0.25);
 }
 
 .friends-share-card.active {
-    background: rgba(var(--theme-accent-glow-rgb), 0.05);
-    border-color: rgba(var(--theme-accent-glow-rgb), 0.3);
+    background: rgba(var(--theme-accent-glow-rgb), 0.06);
+    border-color: rgba(var(--theme-accent-glow-rgb), 0.35);
 }
 
 .friends-share-card h4 {
@@ -4416,72 +4447,72 @@ input[type="checkbox"]:checked + .switch::after {
 
 .friends-share-input-row {
     display: flex;
-    gap: 12px;
+    gap: 10px;
+    align-items: center;
 }
 
 .friends-share-input-row input {
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-size: 0.8125rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: white;
+    transition: border-color 0.2s;
+}
+
+.friends-share-input-row input:focus {
+    outline: none;
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+}
+
+.friends-share-input-row input::placeholder {
+    color: var(--text-dim);
 }
 
 .friends-share-btn {
     background: var(--theme-accent-dark);
     color: white;
-    border: 2px solid #000000;
-    box-shadow:
-        inset 0 2px 0 var(--theme-accent-hover),
-        inset 2px 0 0 var(--theme-accent-hover),
-        inset 0 -2px 0 var(--theme-accent-shadow),
-        inset -2px 0 0 var(--theme-accent-shadow);
-    padding: 6px 12px;
-    border-radius: 4px;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
+    box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb), 0.2);
+    padding: 8px 16px;
+    border-radius: 8px;
     font-family: var(--font-title);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-shadow: 1px 1px 0px var(--theme-accent-shadow);
+    transition: all 0.2s;
 }
 
 .friends-share-btn:hover {
-    background-color: var(--theme-accent);
-    box-shadow:
-        inset 0 2px 0 var(--theme-accent-bright),
-        inset 2px 0 0 var(--theme-accent-bright),
-        inset 0 -2px 0 var(--theme-accent-shadow),
-        inset -2px 0 0 var(--theme-accent-shadow);
+    background: var(--theme-accent);
+    box-shadow: 0 2px 12px rgba(var(--theme-accent-rgb), 0.3);
+    transform: translateY(-1px);
 }
 
 .friends-share-btn.stop-sharing {
-    background: #8f2e2f;
-    border-color: #000000;
-    box-shadow:
-        inset 0 2px 0 #b34344,
-        inset 2px 0 0 #b34344,
-        inset 0 -2px 0 #541617,
-        inset -2px 0 0 #541617;
-    text-shadow: 1px 1px 0px #541617;
+    background: rgba(239, 68, 68, 0.8);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
 }
 
 .friends-share-btn.stop-sharing:hover {
-    background-color: #a33839;
-    box-shadow:
-        inset 0 2px 0 #c75253,
-        inset 2px 0 0 #c75253,
-        inset 0 -2px 0 #631b1c,
-        inset -2px 0 0 #631b1c;
+    background: #ef4444;
+    box-shadow: 0 2px 12px rgba(239, 68, 68, 0.3);
 }
 
 .friends-share-tunnel-link {
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     color: var(--accent-green-hover);
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px dashed rgba(var(--theme-accent-rgb), 0.3);
-    padding: 6px 10px;
-    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px dashed rgba(var(--theme-accent-rgb), 0.25);
+    padding: 8px 12px;
+    border-radius: 8px;
     word-break: break-all;
     cursor: pointer;
     text-align: center;
@@ -4491,6 +4522,13 @@ input[type="checkbox"]:checked + .switch::after {
 .friends-share-tunnel-link:hover {
     background: rgba(var(--theme-accent-glow-rgb), 0.08);
     border-color: var(--theme-accent);
+}
+
+#frpc-progress-panel {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 10px 14px;
 }
 
 /* Download progress bar for frpc */
@@ -4510,13 +4548,6 @@ input[type="checkbox"]:checked + .switch::after {
     transition: width 0.3s ease;
 }
 
-#frpc-progress-panel {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 6px;
-    padding: 10px 12px;
-}
-
 #frpc-progress-panel > div:first-child {
     display: flex;
     justify-content: space-between;
@@ -4529,23 +4560,24 @@ input[type="checkbox"]:checked + .switch::after {
 .friends-requests-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 32px;
+    gap: 10px;
+    margin-bottom: 16px;
 }
 
 .friends-requests-title {
     font-size: 0.625rem;
     font-weight: 700;
     color: var(--text-muted);
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
+    opacity: 0.7;
 }
 
 .friend-request-card {
-    background: rgba(239, 68, 68, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 6px;
-    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -4568,9 +4600,9 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friend-request-btn {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
     border: none;
     cursor: pointer;
     display: flex;
@@ -4602,21 +4634,22 @@ input[type="checkbox"]:checked + .switch::after {
 /* Add Friend Row */
 .friends-add-row {
     display: flex;
-    gap: 12px;
+    gap: 10px;
 }
 
 .friends-add-row input {
-    padding: 8px 12px;
-    font-size: 0.7812rem;
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+    border-radius: 8px;
 }
 
 .friends-add-btn {
-    background: #1b1b1c;
-    border: 1px solid #3c3c3d;
-    color: white;
-    width: 38px;
-    height: 38px;
-    border-radius: 4px;
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
+    color: var(--theme-accent);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -4626,9 +4659,9 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friends-add-btn:hover {
-    background: rgba(var(--theme-accent-glow-rgb), 0.1);
+    background: rgba(var(--theme-accent-rgb), 0.2);
     border-color: var(--theme-accent);
-    color: var(--theme-accent);
+    box-shadow: 0 0 12px rgba(var(--theme-accent-rgb), 0.2);
 }
 
 /* Friends Section and list */
@@ -4636,7 +4669,7 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
 .friends-list-header {
@@ -4650,54 +4683,61 @@ input[type="checkbox"]:checked + .switch::after {
 .friends-list-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .friends-list-empty {
     text-align: center;
     color: var(--text-muted);
     font-size: 0.75rem;
-    padding: 24px 0;
-    border: 1px dashed rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    padding: 28px 0;
+    border: 1px dashed rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    opacity: 0.7;
 }
 
 .friend-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
 }
 
 .friend-card:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(-2px);
 }
 
 .friend-card-left {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
+    cursor: pointer;
+    flex: 1;
 }
 
 .friend-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1.5px solid var(--text-muted);
+    background: rgba(0, 0, 0, 0.3);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
+    transition: border-color 0.2s;
 }
 
 .friend-avatar.online {
     border-color: var(--theme-accent);
+    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.25);
 }
 
 .friend-avatar img,
@@ -4739,6 +4779,12 @@ input[type="checkbox"]:checked + .switch::after {
 .friend-status-dot.online {
     background: var(--theme-accent);
     box-shadow: 0 0 6px var(--theme-accent);
+    animation: pulseDot 2s infinite;
+}
+
+@keyframes pulseDot {
+    0%, 100% { box-shadow: 0 0 4px var(--theme-accent); }
+    50% { box-shadow: 0 0 8px var(--theme-accent); }
 }
 
 .friend-status-text.playing {
@@ -4803,14 +4849,17 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 6px;
 }
 
 .friend-card:hover .friend-remove-btn {
-    opacity: 1;
+    opacity: 0.6;
 }
 
 .friend-remove-btn:hover {
     color: #ef4444;
+    opacity: 1;
+    background: rgba(239, 68, 68, 0.1);
 }
 
 /* Direct Messaging / Chat Panel Styling */
@@ -4824,7 +4873,7 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 4px 0 12px 0;
+    padding: 4px 0 14px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     margin-bottom: 12px;
 }
@@ -4837,10 +4886,11 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 .friends-chat-back:hover {
@@ -4861,7 +4911,7 @@ input[type="checkbox"]:checked + .switch::after {
     padding: 8px 4px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
     margin-bottom: 12px;
 }
 
@@ -4894,58 +4944,69 @@ input[type="checkbox"]:checked + .switch::after {
 .chat-message-bubble {
     padding: 10px 14px;
     font-size: 0.8125rem;
-    line-height: 1.4;
+    line-height: 1.5;
     word-break: break-word;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .chat-message-row.me .chat-message-bubble {
-    background: #3c8527;
+    background: var(--theme-accent-dark);
     color: white;
-    border-radius: 12px 12px 0 12px;
-    border: 1px solid #1c4d12;
+    border-radius: 14px 14px 4px 14px;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
+    box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb), 0.15);
 }
 
 .chat-message-row.friend .chat-message-bubble {
-    background: #202021;
+    background: rgba(255, 255, 255, 0.06);
     color: #e2e8f0;
-    border-radius: 12px 12px 12px 0;
-    border: 1px solid #2d2d2e;
+    border-radius: 14px 14px 14px 4px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .chat-message-time {
     font-size: 0.5625rem;
-    color: var(--text-muted);
-    margin-top: 3px;
+    color: var(--text-dim);
+    margin-top: 4px;
     padding: 0 4px;
 }
 
 .friends-chat-input-row {
     display: flex;
-    gap: 8px;
-    padding-top: 8px;
+    gap: 10px;
+    padding-top: 10px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     align-items: center;
 }
 
 .friends-chat-input-row input {
     flex: 1;
-    padding: 10px 12px;
+    padding: 10px 14px;
     font-size: 0.8125rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    color: white;
+    transition: border-color 0.2s;
+}
+
+.friends-chat-input-row input:focus {
+    outline: none;
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+}
+
+.friends-chat-input-row input::placeholder {
+    color: var(--text-dim);
 }
 
 .friends-chat-send-btn {
-    background: #3c8527;
+    background: var(--theme-accent-dark);
     color: white;
-    border: 1px solid #000000;
-    box-shadow:
-        inset 0 1px 0 #5db63e,
-        inset 1px 0 0 #5db63e,
-        inset 0 -1px 0 #1c4d12,
-        inset -1px 0 0 #1c4d12;
-    width: 38px;
-    height: 38px;
-    border-radius: 4px;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
+    box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb), 0.2);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -4955,29 +5016,26 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .friends-chat-send-btn:hover {
-    background-color: #479a2e;
-    box-shadow:
-        inset 0 1px 0 #68c94b,
-        inset 1px 0 0 #68c94b,
-        inset 0 -1px 0 #225c16,
-        inset -1px 0 0 #225c16;
+    background: var(--theme-accent);
+    box-shadow: 0 2px 12px rgba(var(--theme-accent-rgb), 0.3);
+    transform: scale(1.05);
 }
 
 /* Friend list unread badge */
 .friend-unread-badge {
-    background: #4cb837;
+    background: var(--theme-accent);
     color: white;
     font-size: 0.5625rem;
     font-weight: 700;
-    min-width: 16px;
-    height: 16px;
-    border-radius: 8px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 4px;
+    padding: 0 5px;
     margin-right: 4px;
-    box-shadow: 0 0 8px rgba(76, 184, 55, 0.4);
+    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.4);
 }
 
 .friend-card {
@@ -4987,6 +5045,246 @@ input[type="checkbox"]:checked + .switch::after {
 .friend-card-left {
     cursor: pointer;
     flex: 1;
+}
+
+/* Friends Sidebar: Sub-panel scrollable content */
+.friends-sub-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.friends-sub-panel-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.friends-sub-panel-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+}
+
+/* Friends Sidebar: Back button with SVG */
+.friends-sub-header .back-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.friends-sub-header .back-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Friends Sidebar: Search input with icon */
+.friends-sub-header .search-input-wrap {
+    flex: 1;
+    position: relative;
+}
+
+.friends-sub-header .search-input-wrap input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    padding: 8px 12px 8px 34px;
+    font-size: 0.8125rem;
+    transition: all 0.2s;
+}
+
+.friends-sub-header .search-input-wrap input:focus {
+    outline: none;
+    border-color: rgba(var(--theme-accent-rgb), 0.5);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.friends-sub-header .search-input-wrap input::placeholder {
+    color: var(--text-dim);
+}
+
+.friends-sub-header .search-input-wrap .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    pointer-events: none;
+}
+
+/* Friends Sidebar: Search result cards */
+.search-section-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 8px 0 4px;
+    opacity: 0.7;
+}
+
+.search-user-card {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.search-user-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(-2px);
+}
+
+.search-user-card .search-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.search-user-card .search-avatar canvas {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+.search-user-card .search-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.search-user-card .search-user-info strong {
+    display: block;
+    font-size: 0.8125rem;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-user-card .search-user-info .search-user-sub {
+    font-size: 0.6875rem;
+    color: var(--text-dim);
+}
+
+.search-user-card .search-user-action {
+    background: rgba(var(--theme-accent-rgb), 0.1);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
+    color: var(--theme-accent);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.search-user-card .search-user-action:hover {
+    background: rgba(var(--theme-accent-rgb), 0.2);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+}
+
+/* Friends Sidebar: Profile hero */
+.profile-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 16px;
+    position: relative;
+}
+
+.profile-skin-wrap {
+    width: 120px;
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.profile-skin-wrap canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.profile-status-badge {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-bio-text {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.6;
+    max-width: 260px;
+    padding: 0 8px;
+}
+
+/* Friends Sidebar: Settings sections */
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.settings-section-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 2px;
+}
+
+.settings-section-desc {
+    font-size: 0.6875rem;
+    color: var(--text-dim);
+    margin-top: -4px;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.settings-row-label {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.settings-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 4px 0;
 }
 
 /* =========================================================
@@ -5268,7 +5566,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     .friends-sidebar {
-        width: 280px;
+        width: 300px;
     }
 
     .mods-container {
@@ -5633,7 +5931,6 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 4px;
     overflow: hidden;
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
 }
 
 .progress-bar-fill {
@@ -5646,7 +5943,6 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     width: 0%;
     transition: width 0.3s ease;
     border-radius: 4px;
-    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.4);
 }
 
 /* Status text */
@@ -6148,7 +6444,6 @@ input:focus-visible,
     padding: 8px 12px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 6px;
-    border-left: 3px solid var(--theme-accent);
 }
 
 .download-error-display {
@@ -6387,7 +6682,6 @@ input:focus-visible,
     background: rgba(0, 0, 0, 0.3);
     padding: 8px 12px;
     border-radius: 4px;
-    border-left: 3px solid var(--accent-green);
     display: none;
 }
 
@@ -6420,7 +6714,6 @@ input:focus-visible,
 
 .error-action-btn.primary:hover {
     background: var(--accent-green-hover);
-    box-shadow: 0 0 12px rgba(var(--theme-accent-rgb), 0.3);
 }
 
 .error-action-btn.secondary {
@@ -6441,19 +6734,14 @@ input:focus-visible,
     bottom: 20px;
     left: 20px;
     width: 360px;
-    background: linear-gradient(
-        135deg,
-        rgba(26, 26, 26, 0.95) 0%,
-        rgba(37, 37, 37, 0.95) 100%
-    );
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
+    background: rgba(18, 18, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 16px;
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.5),
-        0 0 20px rgba(var(--theme-accent-rgb), 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     z-index: 9999;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     animation: slideInLeft 0.3s ease-out;
 }
 
@@ -6713,9 +7001,8 @@ input:focus-visible,
 }
 
 .settings-category-btn.active {
-    background: rgba(var(--theme-accent-rgb), 0.2);
-    color: var(--accent-green);
-    border-left: 3px solid var(--accent-green);
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    color: var(--theme-accent);
 }
 
 .settings-main {
@@ -7353,7 +7640,6 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .update-notes-container {
     background: rgba(0, 0, 0, 0.3);
-    border-left: 3px solid var(--theme-accent);
     padding: 12px;
     border-radius: 4px;
     margin: 16px 0;
@@ -7605,16 +7891,13 @@ body[data-launcher-performance="balanced"] .mc-logo {
     position: relative;
     padding: 14px 14px 14px 12px;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-left: 3px solid var(--theme-accent);
     background:
         linear-gradient(
             180deg,
             rgba(255, 255, 255, 0.05),
             rgba(255, 255, 255, 0.02)
-        ),
-        linear-gradient(90deg, rgba(var(--theme-accent-rgb), 0.06), transparent 22%);
+        );
     border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .updates-card.installing {
@@ -9917,7 +10200,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar {
     min-width: 180px;
     background: rgba(18, 18, 19, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
+    border-radius: 10px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -10169,6 +10452,8 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar {
     padding: 16px 20px;
     height: 100%;
     min-height: 0;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .mp-welcome-left {
@@ -10177,7 +10462,9 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar {
     flex-direction: column;
     gap: 12px;
     min-height: 0;
+    min-width: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     scrollbar-width: thin;
 }
 
@@ -10233,6 +10520,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     flex-shrink: 0;
+    min-width: 0;
 }
 
 .mp-onboard-card {
@@ -10243,6 +10531,8 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .mp-onboard-card:hover {
@@ -10403,6 +10693,7 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar {
     gap: 2px;
     max-height: 180px;
     overflow-y: auto;
+    overflow-x: hidden;
     scrollbar-width: thin;
 }
 
@@ -10478,12 +10769,110 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar {
 
 .mp-version-download-item.downloaded {
     opacity: 1;
-    border-left: 2px solid rgba(var(--theme-accent-rgb), 0.4);
-    background: rgba(var(--theme-accent-rgb), 0.04);
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border-bottom: 1px solid rgba(var(--theme-accent-rgb), 0.15);
 }
 
 .mp-version-download-item.downloaded:hover {
     background: rgba(var(--theme-accent-rgb), 0.1);
+}
+
+/* Modpack page responsive */
+@media (max-width: 900px) {
+    .mp-welcome {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+    }
+    .mp-welcome-right {
+        flex: none;
+        width: 100%;
+        max-height: 320px;
+    }
+    .mp-onboard-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    .mp-hero-card {
+        padding: 12px 14px;
+    }
+    .mp-hero-icon {
+        width: 40px;
+        height: 40px;
+    }
+    .mp-hero-text h2 {
+        font-size: 13px;
+    }
+    .mp-hero-text p {
+        font-size: 10px;
+    }
+    .mp-trending-panel {
+        max-height: 300px;
+    }
+    .trending-modpacks-grid {
+        gap: 6px;
+    }
+    .mp-version-download-grid {
+        max-height: 150px;
+    }
+    .mp-onboard-card {
+        padding: 10px;
+    }
+    .mp-onboard-actions {
+        flex-wrap: wrap;
+    }
+    .mp-onboard-action {
+        min-width: 80px;
+    }
+}
+
+@media (max-width: 600px) {
+    .mp-welcome {
+        padding: 8px;
+        gap: 8px;
+    }
+    .mp-hero-card {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    .mp-hero-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+    .mp-hero-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    .mp-hero-text h2 {
+        font-size: 12px;
+    }
+    .mp-hero-text p {
+        font-size: 9px;
+    }
+    .mp-onboard-card {
+        padding: 8px;
+    }
+    .mp-onboard-content h3 {
+        font-size: 12px;
+    }
+    .mp-onboard-content p {
+        font-size: 10px;
+    }
+    .mp-trending-panel {
+        max-height: 260px;
+    }
+    .mp-create-box {
+        padding: 20px;
+        gap: 16px;
+    }
+    .mp-create-body {
+        flex-direction: column;
+        align-items: center;
+    }
+    .mp-create-selects {
+        flex-direction: column;
+    }
 }
 
 /* =========================================================
