@@ -51,32 +51,16 @@ jobs:
           mkdir -p upload
 
           if [ "${{ matrix.platform }}" = "win" ]; then
-            cp "$OUT/IDK Launcher Setup"*.exe upload/ 2>/dev/null || true
-            cp "$OUT"/*.zip upload/ 2>/dev/null || true
-            cp "$OUT/latest.yml" upload/ 2>/dev/null || true
-            cd upload
-            for f in *.exe; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-Windows-x64.exe"; done
-            for f in *.zip; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-Windows-x64.zip"; done
-            cd ..
-
+            cp "$OUT"/*.exe upload/ 2>/dev/null || true
+            cp "$OUT"/*.yml upload/ 2>/dev/null || true
           elif [ "${{ matrix.platform }}" = "mac" ]; then
             cp "$OUT"/*.dmg upload/ 2>/dev/null || true
-            cp "$OUT"/*-mac.zip upload/ 2>/dev/null || true
-            cp "$OUT/latest-mac.yml" upload/ 2>/dev/null || true
-            cd upload
-            for f in *.dmg; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-macOS.dmg"; done
-            for f in *-mac.zip; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-macOS.zip"; done
-            cd ..
-
+            cp "$OUT"/*.zip upload/ 2>/dev/null || true
+            cp "$OUT"/*.yml upload/ 2>/dev/null || true
           elif [ "${{ matrix.platform }}" = "linux" ]; then
             cp "$OUT"/*.AppImage upload/ 2>/dev/null || true
             cp "$OUT"/*.deb upload/ 2>/dev/null || true
-            cp "$OUT/latest-linux.yml" upload/ 2>/dev/null || true
-            cd upload
-            for f in *.AppImage; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-Linux-x64.AppImage"; done
-            for f in *.deb; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-Linux-x64.deb"; done
-            cd ..
-
+            cp "$OUT"/*.yml upload/ 2>/dev/null || true
           fi
 
           echo "Uploading:"
