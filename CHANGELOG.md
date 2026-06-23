@@ -1,5 +1,32 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.5.7 Changelog
+
+This update introduces a highly requested feature for mod management, along with critical fixes for the Windows installer icon and the automated release pipeline!
+
+---
+
+### 🚀 New Features & Enhancements
+
+* **🔽 Mod Version Selection**
+  - You can now explicitly choose which version of a mod, resource pack, or shader to install!
+  - Added a new dropdown arrow (`▾`) next to the **+ Add** button in the Mod Browser.
+  - Clicking the arrow opens a clean modal listing the top 15 most recent compatible versions for your selected game version.
+  - Displays version numbers, release types (Release/Beta/Alpha), and publish dates for both Modrinth and CurseForge.
+  - The standard **+ Add** button behavior remains untouched and will automatically grab the latest/best compatible version for quick 1-click installs.
+  - Required dependencies will still automatically download their best matching version in the background without spamming you with popups.
+
+### 🐛 Bug Fixes
+
+* **🖼️ Windows Installer Icon Fixed**
+  - Fixed an issue where the desktop icon and installer icon for Windows would fallback to the default Electron icon. The launcher will now properly display the custom IDK Launcher logo on Windows setups.
+
+* **⚙️ CI/CD Pipeline & Missing Builds Fixed**
+  - Completely fixed the GitHub Actions automated release pipeline.
+  - Resolved a critical bug where the Windows `.exe` build and macOS `.zip` build were missing from the GitHub release assets due to overly aggressive file renaming logic.
+  - The release pipeline now natively respects `electron-builder` output names, guaranteeing all platform installers (Windows, macOS, Linux AppImage/deb) are correctly uploaded on every release.
+
+---
 ## 🎮 IDK Launcher v1.5.4-preview Changelog (Unreleased)
 
 Welcome to the new upcoming release **v1.5.4-preview**! This update introduces advanced performance renderer selections, faster concurrent mod downloads, and a highly requested launch verification toggle!
