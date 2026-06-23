@@ -724,7 +724,8 @@ body:has(#view-login.active) .user-profile {
     transition:
         opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: scale(0.995);
+    transform: scale(0.995) translateZ(0);
+    will-change: opacity, transform;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -732,7 +733,7 @@ body:has(#view-login.active) .user-profile {
 .view.active {
     opacity: 1;
     pointer-events: all;
-    transform: scale(1);
+    transform: scale(1) translateZ(0);
 }
 
 /* =========================================================
@@ -756,6 +757,8 @@ body:has(#view-login.active) .user-profile {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .login-box h2 {
@@ -915,6 +918,16 @@ body:has(#view-login.active) .user-profile {
     overflow: visible;
     flex-shrink: 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#bg-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    will-change: transform;
+    transform: translateZ(0);
 }
 
 .hero-video {
@@ -10495,4 +10508,108 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+/* Featured Server Banner */
+.featured-server-banner {
+    background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.15) 0%, rgba(0, 0, 0, 0.4) 100%), url('./featured_bg.png') center/cover;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
+    border-radius: 12px;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.featured-server-banner::before {
+    content: 'AD';
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.featured-server-banner:hover {
+    transform: translateY(-2px);
+    border-color: var(--theme-accent);
+    box-shadow: 0 8px 24px rgba(var(--theme-accent-rgb), 0.2);
+}
+
+.featured-server-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 1;
+}
+
+.featured-server-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    object-fit: cover;
+}
+
+.featured-server-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.featured-server-label {
+    color: var(--theme-accent);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.featured-server-title {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: var(--font-main);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.featured-server-desc {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.featured-server-action {
+    z-index: 1;
+}
+
+.featured-join-btn {
+    background: var(--theme-accent);
+    color: #000;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(var(--theme-accent-rgb), 0.3);
+}
+
+.featured-join-btn:hover {
+    transform: scale(1.05);
+    background: #fff;
 }
