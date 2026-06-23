@@ -1,6 +1,7 @@
 import { safeParse, esc } from "../../core/safe-parse.js";
 import { state, actions } from "../../core/app-state.js";
 import { initTutorial } from "../tutorial/tutorial.js";
+import { showListDialog } from "../../components/list-dialog.js";
 
 export function initModpacksFeature({ switchView }) {
   // Safe JSON parser for API responses
@@ -2595,11 +2596,21 @@ export function initModpacksFeature({ switchView }) {
           <strong>${mod.title}</strong><span>${mod.description}</span>
           <div class="mod-result-meta"><span>\u2193 ${dlStr}</span>${mod.follows ? `<span>\u2605 ${followsStr}</span>` : ""}<span>${mod.provider === "modrinth" ? "Modrinth" : "CurseForge"}</span></div>
         </div>
-        <button class="add-mod-btn ${installed ? "installed" : ""}" ${installed ? "disabled" : ""}>${installed ? "\u2713 Added" : state.browserMode === "modpack" ? "+ Import" : "+ Add"}</button>`;
-        if (!installed)
+        <div class="add-mod-split" style="display:flex;">
+          <button class="add-mod-btn ${installed ? "installed" : ""}" ${installed ? "disabled" : ""} style="${!installed && state.browserMode !== 'modpack' ? 'border-top-right-radius: 0; border-bottom-right-radius: 0;' : ''}">${installed ? "\u2713 Added" : state.browserMode === "modpack" ? "+ Import" : "+ Add"}</button>
+          ${!installed && state.browserMode !== "modpack" ? `<button class="add-mod-btn add-mod-version-btn" title="Select Version" style="border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: none; padding: 0 6px;">&#9662;</button>` : ""}
+        </div>`;
+        if (!installed) {
           el.querySelector(".add-mod-btn").addEventListener("click", () =>
-            mpAddItem(mod, el.querySelector(".add-mod-btn")),
+            mpAddItem(mod, el.querySelector(".add-mod-btn"), false, null, false)
           );
+          const versionBtn = el.querySelector(".add-mod-version-btn");
+          if (versionBtn) {
+            versionBtn.addEventListener("click", () =>
+              mpAddItem(mod, el.querySelector(".add-mod-btn"), false, null, true)
+            );
+          }
+        }
         results.appendChild(el);
       });
 
@@ -2667,7 +2678,7 @@ export function initModpacksFeature({ switchView }) {
     }
   }
 
-  async function mpAddItem(mod, btn, isDependency = false, passedMp = null) {
+  async function mpAddItem(mod, btn, isDependency = false, passedMp = null, forceVersionPick = false) {
     const provider =
       typeof mod === "string" ? "modrinth" : mod.provider || "modrinth";
 
@@ -3305,7 +3316,28 @@ export function initModpacksFeature({ switchView }) {
             return bDate - aDate;
           });
 
-          const compatibleFile = scoredFiles[0]?.item || files[0];
+          let compatibleFile;
+          if (isDependency || !forceVersionPick) {
+            compatibleFile = scoredFiles[0]?.item || files[0];
+          } else {
+            const items = scoredFiles.slice(0, 15).map(f => ({
+              id: f.item.id.toString(),
+              label: `${f.item.displayName} (${f.item.releaseType === 1 ? 'Release' : f.item.releaseType === 2 ? 'Beta' : 'Alpha'}) - ${new Date(f.item.fileDate).toISOString().split('T')[0]}`
+            }));
+            const selectedFileId = await showListDialog({
+               title: `Select Version - ${modTitle}`,
+               message: `Available versions for Minecraft ${mp.mcVersion}`,
+               items: items
+            });
+            if (!selectedFileId) {
+              if (btn) {
+                btn.textContent = "+ Add";
+                btn.disabled = false;
+              }
+              return;
+            }
+            compatibleFile = files.find(f => f.id.toString() === selectedFileId);
+          }
 
           if (!compatibleFile) {
             if (btn) {
@@ -3422,7 +3454,28 @@ export function initModpacksFeature({ switchView }) {
 
           // Pick the file whose tagged game versions are closest to mp.mcVersion.
           // Scoring: exact match (0) → same major.minor (1) → ±1 (2) → ±2 (3) → fallback (50).
-          const compatibleFile = pickClosestGameVersion(files, mp.mcVersion, 'gameVersions');
+          let compatibleFile;
+          if (isDependency || !forceVersionPick) {
+            compatibleFile = pickClosestGameVersion(files, mp.mcVersion, 'gameVersions');
+          } else {
+            const items = files.slice(0, 15).map(f => ({
+              id: f.id.toString(),
+              label: `${f.displayName} - ${new Date(f.fileDate).toISOString().split('T')[0]}`
+            }));
+            const selectedFileId = await showListDialog({
+               title: `Select Version - ${modTitle}`,
+               message: `Available versions`,
+               items: items
+            });
+            if (!selectedFileId) {
+              if (btn) {
+                btn.textContent = "+ Add";
+                btn.disabled = false;
+              }
+              return;
+            }
+            compatibleFile = files.find(f => f.id.toString() === selectedFileId);
+          }
 
           if (!compatibleFile) {
             if (btn) {
@@ -3471,7 +3524,28 @@ export function initModpacksFeature({ switchView }) {
           let files = filesData.data || [];
           files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
 
-          const compatibleFile = files[0]; // Shaders might not have version filtering
+          let compatibleFile;
+          if (isDependency || !forceVersionPick) {
+            compatibleFile = files[0]; // Shaders might not have version filtering
+          } else {
+            const items = files.slice(0, 15).map(f => ({
+              id: f.id.toString(),
+              label: `${f.displayName} - ${new Date(f.fileDate).toISOString().split('T')[0]}`
+            }));
+            const selectedFileId = await showListDialog({
+               title: `Select Version - ${modTitle}`,
+               message: `Available versions`,
+               items: items
+            });
+            if (!selectedFileId) {
+              if (btn) {
+                btn.textContent = "+ Add";
+                btn.disabled = false;
+              }
+              return;
+            }
+            compatibleFile = files.find(f => f.id.toString() === selectedFileId);
+          }
           if (!compatibleFile) {
             if (btn) {
               actions.showWarningToast(
@@ -3537,7 +3611,28 @@ export function initModpacksFeature({ switchView }) {
             }
             return;
           }
-          const versionObj = pickClosestGameVersion(versions, mp.mcVersion, 'game_versions');
+          let versionObj;
+          if (isDependency || !forceVersionPick) {
+            versionObj = pickClosestGameVersion(versions, mp.mcVersion, 'game_versions');
+          } else {
+            const items = versions.slice(0, 15).map(v => ({
+              id: v.id,
+              label: `${v.version_number} (${v.version_type}) - ${new Date(v.date_published).toISOString().split('T')[0]}`
+            }));
+            const selectedVersionId = await showListDialog({
+              title: `Select Version - ${modTitle}`,
+              message: `Available versions for Minecraft ${mp.mcVersion}`,
+              items: items
+            });
+            if (!selectedVersionId) {
+              if (btn) {
+                btn.textContent = "+ Add";
+                btn.disabled = false;
+              }
+              return;
+            }
+            versionObj = versions.find(v => v.id === selectedVersionId);
+          }
           fileObj =
             versionObj.files.find((f) => f.primary) || versionObj.files[0];
 
@@ -3660,7 +3755,28 @@ export function initModpacksFeature({ switchView }) {
             }
             return;
           }
-          const versionObj = pickClosestGameVersion(versions, mp.mcVersion, 'game_versions');
+          let versionObj;
+          if (isDependency || !forceVersionPick) {
+            versionObj = pickClosestGameVersion(versions, mp.mcVersion, 'game_versions');
+          } else {
+            const items = versions.slice(0, 15).map(v => ({
+              id: v.id,
+              label: `${v.version_number} (${v.version_type}) - ${new Date(v.date_published).toISOString().split('T')[0]}`
+            }));
+            const selectedVersionId = await showListDialog({
+              title: `Select Version - ${modTitle}`,
+              message: `Available versions for Minecraft ${mp.mcVersion}`,
+              items: items
+            });
+            if (!selectedVersionId) {
+              if (btn) {
+                btn.textContent = "+ Add";
+                btn.disabled = false;
+              }
+              return;
+            }
+            versionObj = versions.find(v => v.id === selectedVersionId);
+          }
           fileObj =
             versionObj.files.find((f) => f.primary) || versionObj.files[0];
           entry = {
@@ -3699,7 +3815,28 @@ export function initModpacksFeature({ switchView }) {
             }
             return;
           }
-          const versionObj = versions[0];
+          let versionObj;
+          if (isDependency || !forceVersionPick) {
+            versionObj = versions[0];
+          } else {
+            const items = versions.slice(0, 15).map(v => ({
+              id: v.id,
+              label: `${v.version_number} (${v.version_type}) - ${new Date(v.date_published).toISOString().split('T')[0]}`
+            }));
+            const selectedVersionId = await showListDialog({
+              title: `Select Version - ${modTitle}`,
+              message: `Available versions`,
+              items: items
+            });
+            if (!selectedVersionId) {
+              if (btn) {
+                btn.textContent = "+ Add";
+                btn.disabled = false;
+              }
+              return;
+            }
+            versionObj = versions.find(v => v.id === selectedVersionId);
+          }
           fileObj =
             versionObj.files.find((f) => f.primary) || versionObj.files[0];
           entry = {

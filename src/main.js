@@ -203,11 +203,3 @@ initFriendsFeature();
 initProfileFeature({ switchView, getReturnView });
 initGameFeaturesIntegration();
 initBackgroundEffects();
-
-setInterval(() => {
-  if (performance && performance.memory) {
-    const usedMB = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
-    const totalMB = Math.round(performance.memory.totalJSHeapSize / 1024 / 1024);
-    console.log(`[Performance] Renderer JS Heap: ${usedMB} MB / ${totalMB} MB`);
-  }
-}, 10000);

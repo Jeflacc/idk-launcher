@@ -50,19 +50,37 @@ jobs:
           OUT="dist-electron"
           mkdir -p upload
 
-          # Copy installers, archives, and auto-updater manifests
-          find "$OUT" -maxdepth 1 -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.zip" -o -name "latest*.yml" \) -exec cp {} upload/ \;
+          if [ "${{ matrix.platform }}" = "win" ]; then
+            cp "$OUT/IDK Launcher Setup"*.exe upload/ 2>/dev/null || true
+            cp "$OUT"/*.zip upload/ 2>/dev/null || true
+            cp "$OUT/latest.yml" upload/ 2>/dev/null || true
+            cd upload
+            for f in *.exe; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-Windows-x64.exe"; done
+            for f in *.zip; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-Windows-x64.zip"; done
+            cd ..
+
+          elif [ "${{ matrix.platform }}" = "mac" ]; then
+            cp "$OUT"/*.dmg upload/ 2>/dev/null || true
+            cp "$OUT"/*-mac.zip upload/ 2>/dev/null || true
+            cp "$OUT/latest-mac.yml" upload/ 2>/dev/null || true
+            cd upload
+            for f in *.dmg; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-macOS.dmg"; done
+            for f in *-mac.zip; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-macOS.zip"; done
+            cd ..
+
+          elif [ "${{ matrix.platform }}" = "linux" ]; then
+            cp "$OUT"/*.AppImage upload/ 2>/dev/null || true
+            cp "$OUT"/*.deb upload/ 2>/dev/null || true
+            cp "$OUT/latest-linux.yml" upload/ 2>/dev/null || true
+            cd upload
+            for f in *.AppImage; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-Linux-x64.AppImage"; done
+            for f in *.deb; do [ -f "$f" ] && mv "$f" "IDK-Launcher-${TAG}-Linux-x64.deb"; done
+            cd ..
+
+          fi
 
           echo "Uploading:"
           ls -la upload/
 
-          FILE_COUNT=$(ls upload/ 2>/dev/null | wc -l)
-          if [ "$FILE_COUNT" -eq 0 ]; then
-            echo "ERROR: No artifacts found in upload/ directory. Build may have failed."
-            exit 1
-          fi
-          echo "Found $FILE_COUNT artifact(s) to upload."
-
-          gh release create "$TAG" upload/* --repo ${{ github.repository }} --title "$TAG" --generate-notes 2>/dev/null || \
-            gh release upload "$TAG" upload/* --clobber --repo ${{ github.repository }}
+          gh release create "$TAG" upload/* --repo ${{ github.repository }} --title "$TAG" --generate-notes || gh release upload "$TAG" upload/* --clobber --repo ${{ github.repository }}
           echo "Done"
