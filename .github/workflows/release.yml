@@ -59,11 +59,11 @@ jobs:
             OLD_ZIP=$(ls *.zip 2>/dev/null | head -1)
             NEW_EXE="IDK-Launcher-${TAG}-Windows-x64.exe"
             NEW_ZIP="IDK-Launcher-${TAG}-Windows-x64.zip"
-            [ -n "$OLD_EXE" ] && mv "$OLD_EXE" "$NEW_EXE"
-            [ -n "$OLD_ZIP" ] && mv "$OLD_ZIP" "$NEW_ZIP"
+            [ -n "$OLD_EXE" ] && mv "$OLD_EXE" "$NEW_EXE" || true
+            [ -n "$OLD_ZIP" ] && mv "$OLD_ZIP" "$NEW_ZIP" || true
             if [ -f "latest.yml" ]; then
-              [ -n "$OLD_EXE" ] && perl -pi -e "s|\Q${OLD_EXE}\E|${NEW_EXE}|g" latest.yml
-              [ -n "$OLD_ZIP" ] && perl -pi -e "s|\Q${OLD_ZIP}\E|${NEW_ZIP}|g" latest.yml
+              [ -n "$OLD_EXE" ] && perl -pi -e "s|\Q${OLD_EXE}\E|${NEW_EXE}|g" latest.yml || true
+              [ -n "$OLD_ZIP" ] && perl -pi -e "s|\Q${OLD_ZIP}\E|${NEW_ZIP}|g" latest.yml || true
             fi
             cd ..
 
@@ -76,11 +76,11 @@ jobs:
             OLD_ZIP=$(ls *-mac.zip 2>/dev/null | head -1)
             NEW_DMG="IDK-Launcher-${TAG}-macOS.dmg"
             NEW_ZIP="IDK-Launcher-${TAG}-macOS.zip"
-            [ -n "$OLD_DMG" ] && mv "$OLD_DMG" "$NEW_DMG"
-            [ -n "$OLD_ZIP" ] && mv "$OLD_ZIP" "$NEW_ZIP"
+            [ -n "$OLD_DMG" ] && mv "$OLD_DMG" "$NEW_DMG" || true
+            [ -n "$OLD_ZIP" ] && mv "$OLD_ZIP" "$NEW_ZIP" || true
             if [ -f "latest-mac.yml" ]; then
-              [ -n "$OLD_DMG" ] && perl -pi -e "s|\Q${OLD_DMG}\E|${NEW_DMG}|g" latest-mac.yml
-              [ -n "$OLD_ZIP" ] && perl -pi -e "s|\Q${OLD_ZIP}\E|${NEW_ZIP}|g" latest-mac.yml
+              [ -n "$OLD_DMG" ] && perl -pi -e "s|\Q${OLD_DMG}\E|${NEW_DMG}|g" latest-mac.yml || true
+              [ -n "$OLD_ZIP" ] && perl -pi -e "s|\Q${OLD_ZIP}\E|${NEW_ZIP}|g" latest-mac.yml || true
             fi
             cd ..
 
@@ -93,11 +93,11 @@ jobs:
             OLD_DEB=$(ls *.deb 2>/dev/null | head -1)
             NEW_APP="IDK-Launcher-${TAG}-Linux-x64.AppImage"
             NEW_DEB="IDK-Launcher-${TAG}-Linux-x64.deb"
-            [ -n "$OLD_APP" ] && mv "$OLD_APP" "$NEW_APP"
-            [ -n "$OLD_DEB" ] && mv "$OLD_DEB" "$NEW_DEB"
+            [ -n "$OLD_APP" ] && mv "$OLD_APP" "$NEW_APP" || true
+            [ -n "$OLD_DEB" ] && mv "$OLD_DEB" "$NEW_DEB" || true
             if [ -f "latest-linux.yml" ]; then
-              [ -n "$OLD_APP" ] && perl -pi -e "s|\Q${OLD_APP}\E|${NEW_APP}|g" latest-linux.yml
-              [ -n "$OLD_DEB" ] && perl -pi -e "s|\Q${OLD_DEB}\E|${NEW_DEB}|g" latest-linux.yml
+              [ -n "$OLD_APP" ] && perl -pi -e "s|\Q${OLD_APP}\E|${NEW_APP}|g" latest-linux.yml || true
+              [ -n "$OLD_DEB" ] && perl -pi -e "s|\Q${OLD_DEB}\E|${NEW_DEB}|g" latest-linux.yml || true
             fi
             cd ..
 
