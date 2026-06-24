@@ -209,13 +209,13 @@ export function initFriendsFeature() {
       });
 
       if (!res.ok) {
+        let err;
         try {
-          const err = await res.json();
-          throw new Error(err.error || `Server error ${res.status}`);
+          err = await res.json();
         } catch (e) {
-          if (e.message.startsWith("Server error")) throw e;
           throw new Error(`Server error ${res.status}`);
         }
+        throw new Error(err.error || `Server error ${res.status}`);
       }
       return res.json();
     }

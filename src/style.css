@@ -10534,19 +10534,22 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 
 /* Featured Server Banner */
 .featured-server-banner {
-    background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.15) 0%, rgba(0, 0, 0, 0.4) 100%), url('./featured_bg.png') center/cover;
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
+    background: rgba(15, 13, 24, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    padding: 24px 32px;
+    padding: 20px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 48px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    margin-bottom: 24px;
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .featured-server-banner::before {
@@ -10565,30 +10568,34 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 
 .featured-server-banner:hover {
     transform: translateY(-2px);
-    border-color: var(--theme-accent);
-    box-shadow: 0 8px 24px rgba(var(--theme-accent-rgb), 0.2);
+    border-color: rgba(var(--theme-accent-rgb), 0.3);
+    background: rgba(15, 13, 24, 0.6);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 
 .featured-server-info {
     display: flex;
-    align-items: center;
-    gap: 20px;
+    align-items: flex-start;
+    gap: 16px;
     z-index: 1;
+    min-width: 0;
 }
 
 .featured-server-icon {
     width: 64px;
     height: 64px;
     border-radius: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     object-fit: cover;
+    flex-shrink: 0;
 }
 
 .featured-server-text {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
 }
 
 .featured-server-label {
@@ -10597,25 +10604,29 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1.5px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 
 .featured-server-title {
     color: #fff;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     font-family: var(--font-main);
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
 .featured-server-desc {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 13px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .featured-server-action {
     z-index: 1;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .featured-join-btn {
@@ -10628,6 +10639,8 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    width: 100%;
     box-shadow: 0 4px 12px rgba(var(--theme-accent-rgb), 0.3);
 }
 
