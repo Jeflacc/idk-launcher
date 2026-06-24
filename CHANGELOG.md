@@ -1,5 +1,23 @@
 # IDK Launcher Changelog
 
+## 🎮 IDK Launcher v1.5.8 Changelog
+
+This update is entirely focused on a massive overhaul to the IDK Connect experience and unlocking unparalleled performance with a brand new "Ultra Eco" mode!
+
+---
+
+### ✨ UX & UI Overhaul (IDK Connect)
+- **Sleek ID Profile Card**: Replaced the boxy profile sidebar with a modern floating ID Profile card. Your avatar now sits cleanly inside a rounded container with a dynamic glowing green status dot for online indication.
+- **Glassmorphic LAN Widget**: The "Host LAN World" section has been completely transformed from a clunky form block into an elegant, interactive glassmorphic widget that aligns beautifully horizontally.
+- **Modernized Action Buttons**: Header buttons (Find Users, Settings, Disconnect) are no longer squished. They have been upgraded to custom glass-styled buttons featuring clean SVG iconography.
+- **Profile Settings Dashboard**: Overhauled the entire Profile Settings page to abandon the restricted content wrappers and instead utilize the sleek new widget layouts, ensuring perfect symmetry.
+- **Dynamic Full-Width Layout**: Removed hardcoded width restrictions. The IDK Connect dashboard now gracefully stretches to the full width of your launcher, matching the Modpack Manager's layout for a much more comfortable, perfectly centered experience.
+
+### 🚀 Performance Optimizations
+- **Ultra Eco Performance Mode**: Added a new mode that aggressively strips away all heavy cosmetics, animations, shadows, and glass (`backdrop-filter`) effects. When enabled, the launcher instantly snaps into a purely functional, blocky, solid-background layout for maximum efficiency on low-end systems.
+- **GPU Hardware Acceleration**: Enforced hardware acceleration (`transform: translateZ(0)` and `will-change: transform`) on heavy scrolling containers like the Mod Browser and Trending Modpacks grids. This eliminates FPS drops by forcing Chromium to put blurred sidebars on isolated rendering layers.
+- **UI Bug Fix**: Fixed an issue where the Browse Mods modal had an ugly transparent background bleeding through to the Modpack screen when Eco mode was toggled on.
+
 ## 🎮 IDK Launcher v1.5.7 Changelog
 
 This update introduces a highly requested feature for mod management, along with critical fixes for the Windows installer icon and the automated release pipeline!
