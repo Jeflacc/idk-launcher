@@ -1326,11 +1326,7 @@ export function renderAppShell() {
     <div class="mods-content-wrapper">
       <div class="mods-page-header">
         <h2 class="view-title">Modpack Manager</h2>
-        <div class="mods-header-actions">
-          <button class="create-modpack-btn" id="btn-browse-modpacks">Browse Modpacks</button>
-          <button class="create-modpack-btn" id="btn-import-modpack">Import Zip</button>
-          <button class="create-modpack-btn" id="btn-new-modpack">+ New Modpack</button>
-        </div>
+
       </div>
       <div class="mods-container">
         <div class="modpacks-sidebar">
@@ -1355,47 +1351,62 @@ export function renderAppShell() {
           <div class="no-modpack-msg" id="no-modpack-msg">
 
             <div class="mp-welcome-hero">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-              <h2>Set up your modpack</h2>
+              <h2>Welcome to Modpack Manager</h2>
+              <p>Choose an option below to get started</p>
             </div>
 
-            <div class="mp-wizard-columns">
+            <div class="mp-quick-actions">
+              <button class="mp-action-card" id="btn-new-modpack-wizard">
+                <div class="mp-ac-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+                </div>
+                <div class="mp-ac-text">
+                  <h3>Create Custom</h3>
+                  <p>Build your own modpack from scratch</p>
+                </div>
+              </button>
+              <button class="mp-action-card" id="btn-browse-modpacks-wizard">
+                <div class="mp-ac-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </div>
+                <div class="mp-ac-text">
+                  <h3>Browse Modpacks</h3>
+                  <p>Download from CurseForge or Modrinth</p>
+                </div>
+              </button>
+              <button class="mp-action-card" id="btn-import-modpack-wizard">
+                <div class="mp-ac-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                </div>
+                <div class="mp-ac-text">
+                  <h3>Import Zip</h3>
+                  <p>Import an existing modpack archive</p>
+                </div>
+              </button>
+            </div>
 
-              <div class="mp-wizard-section" id="mp-version-wizard">
-                <div class="mp-wizard-header">
-                  <span class="mp-wizard-step">Step 1</span>
-                  <h3>Download a Minecraft Version</h3>
+            <div class="mp-dashboard-columns">
+
+              <div class="mp-trending-section">
+                <div class="mp-trending-header">
+                  <h2 class="mp-trending-title">Trending Modpacks</h2>
+                  <span class="mp-trending-brand">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
+                    CurseForge
+                  </span>
                 </div>
-                <div class="mp-version-download-grid" id="mp-version-download-grid">
-                  <!-- Injected by JS -->
-                </div>
-                <div class="mp-wizard-footer">
-                  <button class="mp-dl-btn" id="btn-show-all-versions">Show all versions…</button>
+                <div class="trending-modpacks-grid" id="trending-mods-grid">
+                  <div class="mp-loading-placeholder">Loading modpacks...</div>
                 </div>
               </div>
 
-              <div class="mp-wizard-section">
-                <div class="mp-wizard-header">
-                  <span class="mp-wizard-step">Step 2</span>
-                  <h3>Create or Import a Modpack</h3>
+              <div class="mp-versions-section">
+                <div class="mp-versions-header">
+                  <h3>Vanilla Versions</h3>
+                  <button class="mp-dl-btn" id="btn-show-all-versions">Show all</button>
                 </div>
-                <div class="mp-wizard-buttons">
-                  <button class="mp-action-btn browse" id="btn-new-modpack-wizard">+ New Modpack</button>
-                  <button class="mp-action-btn browse" id="btn-import-modpack-wizard">Import Zip</button>
-                  <button class="mp-action-btn browse" id="btn-browse-modpacks-wizard">Browse Modpacks</button>
-                </div>
-
-                <div class="mp-trending-section">
-                  <div class="mp-trending-header">
-                    <h2 class="mp-trending-title">Trending Modpacks</h2>
-                    <span class="mp-trending-brand">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.489 0H0l2.286 4.5H8.48L6.49 0h-.001zM17.51 0H11.02l1.99 4.5h6.494L17.51 0zM0 6.75l5.614 12.5H9.64L4.025 6.75H0zm19.975 0H15.95L10.337 19.25h4.025L19.975 6.75zm-9.988 0l5.613 12.5H9.988L4.374 6.75h5.613z"/></svg>
-                      CurseForge
-                    </span>
-                  </div>
-                  <div class="trending-modpacks-grid" id="trending-mods-grid">
-                    <div class="mp-loading-placeholder">Loading modpacks...</div>
-                  </div>
+                <div class="mp-version-download-grid" id="mp-version-download-grid">
+                  <!-- Injected by JS -->
                 </div>
               </div>
 
@@ -1760,70 +1771,81 @@ export function renderAppShell() {
     </div>
 
     <!-- MAIN DASHBOARD PANEL -->
-    <div id="friends-main-panel" class="mods-content-wrapper" style="display:none;">
-      <div class="mods-page-header">
-        <h2 class="view-title">IDK Connect</h2>
-        <div class="mods-header-actions">
-          <button class="submit-btn" id="btn-open-search">Find Users</button>
-          <button class="modal-btn" id="btn-my-settings">Settings</button>
-          <button class="modal-btn" id="btn-friends-disconnect" style="color: var(--accent-red);">Disconnect</button>
+    <div id="friends-main-panel" class="connect-dashboard-wrapper" style="display:none; height: 100%; display: flex; flex-direction: column;">
+      <div class="connect-header">
+        <h2 class="connect-title">IDK Connect</h2>
+        <div class="connect-header-actions">
+          <button class="btn-connect-action" id="btn-open-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            Find Users
+          </button>
+          <button class="btn-connect-action" id="btn-my-settings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            Settings
+          </button>
+          <button class="btn-connect-action danger" id="btn-friends-disconnect">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+            Disconnect
+          </button>
         </div>
       </div>
       
-      <div class="mods-container">
+      <div class="connect-dashboard-layout">
         <!-- LEFT COLUMN: Profile Info -->
-        <div class="modpacks-sidebar" style="width: 250px; padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+        <div class="connect-sidebar">
             
-            <!-- Minecraft style profile header -->
-            <div style="text-align: center;">
-                <div style="width: 80px; height: 80px; margin: 0 auto 15px; border-radius: 8px; border: 2px solid var(--border-mojang); background: rgba(0,0,0,0.5); overflow: hidden;">
-                  <canvas id="friends-my-avatar" width="80" height="80" style="image-rendering:pixelated;width:100%;height:100%;"></canvas>
+            <!-- Sleek Profile Card -->
+            <div class="connect-profile-card">
+                <div class="profile-avatar-wrapper">
+                  <canvas id="friends-my-avatar" width="80" height="80"></canvas>
+                  <div class="profile-status-dot online"></div>
                 </div>
-                <h3 id="friends-my-username" style="margin: 0; font-family: var(--font-title); font-size: 18px; color: white;">Username</h3>
-                <div style="color: var(--theme-accent); font-size: 11px; margin-top: 5px; font-weight: bold;">CONNECTED</div>
+                <h3 id="friends-my-username" class="profile-username">Username</h3>
+                <div class="profile-status-text">CONNECTED</div>
             </div>
 
             <!-- Share LAN World Card -->
-            <div class="mp-wizard-section" id="friends-share-card" style="padding: 15px; margin-top: 10px;">
-              <h4 style="margin: 0 0 10px 0; font-family: var(--font-title); font-size: 13px;">Host LAN World</h4>
-              <p id="friends-share-instructions" style="color: var(--text-muted); font-size: 11px; margin-bottom: 10px;">Open your singleplayer world, click "Open to LAN", enter port below.</p>
+            <div class="connect-widget-card" id="friends-share-card">
+              <div class="widget-header">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+                <h4>Host LAN World</h4>
+              </div>
+              <p id="friends-share-instructions" class="widget-desc">Open your singleplayer world, click "Open to LAN", enter port below.</p>
 
-              <div style="display: flex; gap: 8px;">
-                <input type="number" class="clean-input" id="friends-share-port" placeholder="Port" style="flex: 1; padding: 6px; font-size: 12px;" />
-                <button class="submit-btn" id="btn-friends-share" style="padding: 0 10px; font-size: 12px;">Share</button>
-                <button class="modal-btn" id="btn-friends-share-cancel" style="display: none; padding: 0 10px; font-size: 12px; color: var(--accent-red);">Cancel</button>
+              <div class="widget-input-group">
+                <input type="number" class="widget-input" id="friends-share-port" placeholder="Port" />
+                <button class="btn-widget-action" id="btn-friends-share">Share</button>
+                <button class="btn-widget-action danger" id="btn-friends-share-cancel" style="display: none;">Cancel</button>
               </div>
 
-              <div id="friends-share-tunnel-link" style="display:none; margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; color: var(--theme-accent); font-family: monospace; font-size: 11px; word-break: break-all;">
+              <div id="friends-share-tunnel-link" class="widget-code-block" style="display:none;">
                 tcp://...
               </div>
 
               <!-- FRPC Downloader Progress Panel -->
-              <div id="frpc-progress-panel" style="display:none; margin-top: 10px;">
-                <div style="font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between;margin-bottom:4px;">
+              <div id="frpc-progress-panel" class="widget-progress-panel" style="display:none;">
+                <div class="progress-labels">
                   <span id="frpc-status-text">Downloading FRPC...</span>
                   <span id="frpc-percent-text">0%</span>
                 </div>
-                <div style="width: 100%; height: 4px; background: rgba(0,0,0,0.5); border-radius: 2px;">
-                  <div id="frpc-progress-fill" style="height: 100%; width: 0%; background: var(--theme-accent); border-radius: 2px; transition: width 0.2s;"></div>
+                <div class="progress-bar-bg">
+                  <div id="frpc-progress-fill" class="progress-bar-fill"></div>
                 </div>
               </div>
             </div>
         </div>
 
         <!-- RIGHT COLUMN: Social Tabs -->
-        <div class="mp-settings-content" style="flex: 1; padding: 20px; display: flex; flex-direction: column;">
-            
-            <h3 style="margin: 0 0 15px 0; font-family: var(--font-title); font-size: 16px;">Friends</h3>
-
+        <div class="connect-main-content">
+            <h3 class="connect-section-title">Friends</h3>
             <!-- Content Areas -->
-            <div id="friends-list" style="flex: 1; overflow-y: auto;">
-                <div style="color: var(--text-muted); text-align: center; margin-top: 40px; font-size: 13px;">Your friends list is empty.</div>
+            <div id="friends-list" class="connect-friends-list">
+                <div class="connect-empty-state">Your friends list is empty.</div>
             </div>
 
-            <div id="friends-requests-section" style="display:none; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                <h4 style="margin: 0 0 10px 0; font-family: var(--font-title); font-size: 14px;">Friend Requests</h4>
-                <div id="friends-requests-list"></div>
+            <div id="friends-requests-section" class="connect-requests-section" style="display:none;">
+                <h4 class="connect-section-title small">Friend Requests</h4>
+                <div id="friends-requests-list" class="connect-friends-list"></div>
             </div>
         </div>
       </div>
@@ -1882,38 +1904,46 @@ export function renderAppShell() {
     </div>
 
     <!-- SETTINGS PANEL -->
-    <div id="friends-settings-panel" class="mods-content-wrapper" style="display:none;">
-      <div class="mods-page-header">
-        <h2 class="view-title">Profile Settings</h2>
-        <div class="mods-header-actions">
-          <button class="modal-btn" id="btn-settings-back">Back</button>
+    <div id="friends-settings-panel" class="connect-dashboard-wrapper" style="display:none;">
+      <div class="connect-header">
+        <h2 class="connect-title">Profile Settings</h2>
+        <div class="connect-header-actions">
+          <button class="btn-connect-action" id="btn-settings-back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Back
+          </button>
         </div>
       </div>
-      <div class="settings-content-wrapper" style="height: calc(100% - 70px);">
-        <div class="settings-tab-panel active" style="overflow-y: auto; height: 100%;">
-          <div class="settings-page">
+      <div class="connect-dashboard-layout" style="display: block; padding-top: 10px; max-width: 800px; margin: 0 auto; width: 100%; overflow-y: auto;">
+        
+        <div class="connect-widget-card" style="margin-bottom: 24px; padding: 24px;">
+            <div class="widget-header" style="margin-bottom: 16px;">
+              <h4 style="font-size: 16px;">About Me</h4>
+            </div>
+            <p class="widget-desc">Write something about yourself for your public profile.</p>
 
-            <h3 class="settings-section-title">About Me</h3>
-            <p class="settings-section-desc">Write something about yourself for your public profile</p>
-
-            <div class="settings-row">
-              <div class="settings-row-label" style="align-self: flex-start; margin-top: 5px;">
-                <span>Bio</span>
-                <small>Visible to everyone</small>
+            <div style="display: flex; gap: 20px; align-items: flex-start; margin-top: 16px;">
+              <div style="flex: 1;">
+                <div style="margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #fff;">Bio</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Visible to everyone</div>
               </div>
-              <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
-                <textarea class="clean-input" id="settings-bio" rows="3" style="resize: none; width: 100%; font-size: 13px; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);" placeholder="Write something about yourself..."></textarea>
-                <button class="submit-btn" id="btn-settings-save-bio" style="background: var(--theme-accent);">Save Bio</button>
+              <div style="flex: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 12px;">
+                <textarea class="widget-input" id="settings-bio" rows="3" style="resize: none; width: 100%; min-height: 80px;" placeholder="Write something about yourself..."></textarea>
+                <button class="btn-widget-action" id="btn-settings-save-bio">Save Bio</button>
               </div>
             </div>
+        </div>
 
-            <h3 class="settings-section-title">Security & Password</h3>
-            <p class="settings-section-desc">Protect your IDK Connect account</p>
+        <div class="connect-widget-card" style="margin-bottom: 24px; padding: 24px;">
+            <div class="widget-header" style="margin-bottom: 16px;">
+              <h4 style="font-size: 16px;">Security & Password</h4>
+            </div>
+            <p class="widget-desc">Protect your IDK Connect account.</p>
 
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Two-Factor Authentication</span>
-                <small>Require an email OTP to login</small>
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div style="flex: 1;">
+                <div style="margin-bottom: 4px; font-weight: 600; font-size: 13px; color: #fff;">Two-Factor Authentication</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Require an email OTP to login</div>
               </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="settings-2fa" />
@@ -1921,49 +1951,54 @@ export function renderAppShell() {
               </label>
             </div>
 
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Change Password</span>
-                <small>Leave blank to keep current</small>
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div style="flex: 1;">
+                <div style="margin-bottom: 4px; font-weight: 600; font-size: 13px; color: #fff;">Change Password</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Leave blank to keep current</div>
               </div>
-              <input type="password" class="clean-input" id="settings-new-password" placeholder="New Password..." style="width: 250px; font-size: 13px;" />
+              <input type="password" class="widget-input" id="settings-new-password" placeholder="New Password..." style="width: 250px;" />
             </div>
 
-            <div class="settings-row" id="settings-security-otp-container" style="display: none; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
-              <div class="settings-row-label">
-                <span style="color: var(--theme-accent);">Email Verification</span>
-                <small>OTP sent to your email.</small>
+            <div id="settings-security-otp-container" style="display: none; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; margin-top: 16px; border: 1px solid rgba(255,255,255,0.05);">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div>
+                    <div style="color: var(--theme-accent); font-weight: 600; font-size: 13px; margin-bottom: 4px;">Email Verification</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">OTP sent to your email.</div>
+                  </div>
+                  <input type="text" class="widget-input" id="settings-security-otp" placeholder="6-digit OTP" maxlength="6" style="width: 150px; text-align: center; letter-spacing: 4px; font-weight: bold;" />
               </div>
-              <input type="text" class="clean-input" id="settings-security-otp" placeholder="6-digit OTP" maxlength="6" style="width: 150px; text-align: center; letter-spacing: 4px; font-size: 14px; font-weight: bold;" />
             </div>
 
-            <div style="display: flex; justify-content: flex-end; width: 100%; margin-top: 15px; padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <button class="submit-btn" id="btn-settings-save-security" style="background: var(--theme-accent);">Request OTP to Save</button>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+              <button class="btn-widget-action" id="btn-settings-save-security">Request OTP to Save</button>
             </div>
-              
-            <h3 class="settings-section-title" style="margin-top: 25px;">Linked Minecraft Account</h3>
-            <p class="settings-section-desc">Automatically log into IDK Connect when you launch the game</p>
+        </div>
+          
+        <div class="connect-widget-card" style="margin-bottom: 24px; padding: 24px;">
+            <div class="widget-header" style="margin-bottom: 16px;">
+              <h4 style="font-size: 16px;">Linked Minecraft Account</h4>
+            </div>
+            <p class="widget-desc">Automatically log into IDK Connect when you launch the game.</p>
 
-            <div class="settings-row">
-              <div class="settings-row-label">
-                <span>Link Status</span>
-                <small>Currently connected account</small>
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div style="flex: 1;">
+                <div style="margin-bottom: 4px; font-weight: 600; font-size: 13px; color: #fff;">Link Status</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Currently connected account</div>
               </div>
               <div id="settings-linked-mc-status" style="font-size: 14px; font-weight: 600; color: white;">Loading...</div>
             </div>
 
-            <div class="settings-row" style="margin-top: 10px;">
-              <div class="settings-row-label">
-                <span>Link Launcher Account</span>
-                <small>Link your active Ely.by/Microsoft account</small>
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 16px;">
+              <div style="flex: 1;">
+                <div style="margin-bottom: 4px; font-weight: 600; font-size: 13px; color: #fff;">Link Launcher Account</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Link your active Ely.by/Microsoft account</div>
               </div>
-              <button class="submit-btn" id="btn-settings-link-minecraft" style="background: var(--theme-accent);">Link Account</button>
+              <button class="btn-widget-action" id="btn-settings-link-minecraft">Link Account</button>
             </div>
 
             <div id="settings-error" style="color: var(--accent-red); font-size: 13px; margin-top: 20px; display: none; text-align: center; padding: 10px; background: rgba(239,68,68,0.1); border-radius: 6px;"></div>
-
-          </div>
         </div>
+
       </div>
     </div>
 

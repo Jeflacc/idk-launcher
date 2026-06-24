@@ -1168,7 +1168,7 @@ export function initModpacksFeature({ switchView }) {
     document.getElementById("new-mp-name").focus();
   }
 
-  document.getElementById("btn-new-modpack").addEventListener("click", () => {
+  document.getElementById("btn-new-modpack-wizard")?.addEventListener("click", () => {
     openCreateModpackModal();
   });
 
@@ -1463,13 +1463,7 @@ export function initModpacksFeature({ switchView }) {
     });
   }
 
-  // Wire up wizard buttons to existing handlers
-  const wizardNew = document.getElementById('btn-new-modpack-wizard');
-  if (wizardNew) wizardNew.addEventListener('click', () => document.getElementById('btn-new-modpack')?.click());
-  const wizardImport = document.getElementById('btn-import-modpack-wizard');
-  if (wizardImport) wizardImport.addEventListener('click', () => document.getElementById('btn-import-modpack')?.click());
-  const wizardBrowse = document.getElementById('btn-browse-modpacks-wizard');
-  if (wizardBrowse) wizardBrowse.addEventListener('click', () => document.getElementById('btn-browse-modpacks')?.click());
+  // Wizard buttons are now wired directly.
 
   // --- Modpack Settings ---
   document
@@ -1774,8 +1768,8 @@ export function initModpacksFeature({ switchView }) {
 
   // --- Import Modpack (.zip) ---
   document
-    .getElementById("btn-import-modpack")
-    .addEventListener("click", async () => {
+    .getElementById("btn-import-modpack-wizard")
+    ?.addEventListener("click", async () => {
       if (!window.electronAPI) {
         actions.showWarningToast("Only available in the desktop app.");
         return;
@@ -2309,8 +2303,8 @@ export function initModpacksFeature({ switchView }) {
     .getElementById("btn-browse-shaders")
     .addEventListener("click", () => openBrowser("shader"));
   document
-    .getElementById("btn-browse-modpacks")
-    .addEventListener("click", () => openBrowser("modpack"));
+    .getElementById("btn-browse-modpacks-wizard")
+    ?.addEventListener("click", () => openBrowser("modpack"));
   document
     .getElementById("btn-close-browser")
     .addEventListener("click", () =>

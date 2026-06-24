@@ -2954,6 +2954,8 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     background: rgba(15, 13, 24, 0.2) !important;
     backdrop-filter: blur(20px) !important;
+    transform: translateZ(0); /* Hardware acceleration */
+    will-change: transform, backdrop-filter;
 }
 
 /* Layer 2 — Main Areas: barely-tinted clear glass, no blur */
@@ -2974,6 +2976,8 @@ html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-
 html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .details-section {
     background: rgba(15, 13, 24, 0.3) !important;
     backdrop-filter: blur(20px) !important;
+    transform: translateZ(0); /* Hardware acceleration */
+    will-change: transform, backdrop-filter;
 }
 
 /* Layer 2 — Main Areas: barely-tinted clear glass, no blur */
@@ -2994,6 +2998,8 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effec
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .details-section {
     background: rgba(15, 13, 24, 0.9) !important;
     backdrop-filter: blur(20px);
+    transform: translateZ(0); /* Hardware acceleration */
+    will-change: transform, backdrop-filter;
 }
 
 @media (max-width: 980px) {

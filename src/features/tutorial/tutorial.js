@@ -4,19 +4,19 @@ const TUTORIAL_KEY = 'idk_tutorial_modpack_manager_completed';
 
 const tutorialSteps = [
   {
-    target: '#btn-new-modpack',
+    target: '#btn-new-modpack-wizard',
     title: 'Welcome to Modpacks!',
     content: 'Start by creating your own modpack. You can pick your Minecraft version and Mod Loader easily.',
     position: 'bottom'
   },
   {
-    target: '#btn-browse-modpacks',
+    target: '#btn-browse-modpacks-wizard',
     title: 'Discover Modpacks',
     content: 'Don\'t want to build from scratch? Browse and download thousands of pre-made modpacks from Modrinth and CurseForge.',
     position: 'bottom'
   },
   {
-    target: '#btn-import-modpack',
+    target: '#btn-import-modpack-wizard',
     title: 'Import Zip',
     content: 'You can also import standard modpack zip files directly if you downloaded them manually.',
     position: 'bottom'
