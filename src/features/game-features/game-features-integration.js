@@ -12,7 +12,11 @@ import { scanMissingDependencies, resolveDependencies } from '../mod-resolver/mo
 
 let currentModUpdates = [];
 
+let __initGameFeaturesIntegrationInitialized = false;
+
 export function initGameFeaturesIntegration() {
+  if (__initGameFeaturesIntegrationInitialized) return;
+  __initGameFeaturesIntegrationInitialized = true;
   console.log('[GameFeatures] Initializing integration...');
   
   // Setup modal close buttons
@@ -413,9 +417,9 @@ export async function checkDependenciesForMod(modpackId, modId) {
       html += `
         <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; border-left: 3px solid #f97316;">
           <div style="font-size: 12px; color: white;">
-            <strong>${dep.dependencyName}</strong> (required by ${dep.dependentMod})
+            <strong>${esc(dep.dependencyName)}</strong> (required by ${esc(dep.dependentMod)})
           </div>
-          <div style="font-size: 11px; color: #a0a0a0; margin-top: 2px;">Version: ${dep.version}</div>
+          <div style="font-size: 11px; color: #a0a0a0; margin-top: 2px;">Version: ${esc(dep.version)}</div>
         </div>
       `;
     }
@@ -480,7 +484,7 @@ export async function showChangelog(modrinthId, modName) {
     let html = `
       <div style="color: white;">
         <div style="margin-bottom: 16px;">
-          <p style="margin: 0 0 8px 0; color: #a0a0a0; font-size: 12px;">${changelog.description}</p>
+          <p style="margin: 0 0 8px 0; color: #a0a0a0; font-size: 12px;">${esc(changelog.description)}</p>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
             <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
               <div style="font-size: 10px; color: #707070; text-transform: uppercase;">Downloads</div>
@@ -495,7 +499,7 @@ export async function showChangelog(modrinthId, modName) {
         <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
           <h4 style="margin: 0 0 8px 0; font-size: 13px; color: var(--theme-accent); text-transform: uppercase;">Changelog</h4>
           <div style="font-size: 12px; color: #d1d1d2; line-height: 1.6; white-space: pre-wrap; word-break: break-word;">
-            ${changelog.body || 'No detailed changelog available'}
+            ${esc(changelog.body || 'No detailed changelog available')}
           </div>
         </div>
       </div>

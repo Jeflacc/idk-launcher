@@ -165,19 +165,8 @@ actions.switchView = switchView;
 
 initWindowControls();
 
-const [
-  { initAuthFeature },
-  { initSettingsFeature },
-  { initVersionsFeature },
-  { initVersionModsFeature },
-  { initLaunchFeature },
-  { initModpacksFeature },
-  { initContentFeature },
-  { initDesktopHelpers },
-  { initFriendsFeature },
-  { initProfileFeature },
-  { showConfirmDialog },
-] = await Promise.all([
+// Use Promise.allSettled so a single failed feature chunk doesn't kill all inits.
+const featureResults = await Promise.allSettled([
   import("./features/auth/auth-feature.js"),
   import("./features/settings/settings-feature.js"),
   import("./features/versions/version-feature.js"),
@@ -191,26 +180,63 @@ const [
   import("./components/confirm-dialog.js"),
 ]);
 
-actions.showConfirmDialog = showConfirmDialog;
+const [
+  authMod, settingsMod, versionsMod, versionModsMod, launchMod,
+  modpacksMod, contentMod, desktopMod, friendsMod, profileMod, confirmDialogMod,
+] = featureResults.map((r, i) => {
+  if (r.status === 'rejected') {
+    console.error(`[Main] Feature ${i} failed to load:`, r.reason);
+    return {};
+  }
+  return r.value;
+});
 
-initAuthFeature({ switchView });
-initSettingsFeature({ switchView });
-initVersionsFeature();
-initVersionModsFeature({ switchView });
-initLaunchFeature();
-initModpacksFeature({ switchView });
-initContentFeature();
-initDesktopHelpers();
-initFriendsFeature();
-initProfileFeature({ switchView, getReturnView });
-initGameFeaturesIntegration();
-initBackgroundEffects();
+const { initAuthFeature } = authMod;
+const { initSettingsFeature } = settingsMod;
+const { initVersionsFeature } = versionsMod;
+const { initVersionModsFeature } = versionModsMod;
+const { initLaunchFeature } = launchMod;
+const { initModpacksFeature } = modpacksMod;
+const { initContentFeature } = contentMod;
+const { initDesktopHelpers } = desktopMod;
+const { initFriendsFeature } = friendsMod;
+const { initProfileFeature } = profileMod;
+const { showConfirmDialog } = confirmDialogMod;
+
+if (typeof showConfirmDialog === 'function') {
+  actions.showConfirmDialog = showConfirmDialog;
+}
+
+// Wrap each init in try/catch so a single throw doesn't skip subsequent inits.
+const safeInit = (name, fn) => {
+  if (typeof fn !== 'function') {
+    console.warn(`[Main] ${name} is not a function — skipping (module likely failed to load).`);
+    return;
+  }
+  try { fn(); } catch (e) { console.error(`[Main] ${name} init threw:`, e); }
+};
+
+safeInit('initAuthFeature',        () => initAuthFeature({ switchView }));
+safeInit('initSettingsFeature',    () => initSettingsFeature({ switchView }));
+safeInit('initVersionsFeature',    () => initVersionsFeature());
+safeInit('initVersionModsFeature', () => initVersionModsFeature({ switchView }));
+safeInit('initLaunchFeature',      () => initLaunchFeature());
+safeInit('initModpacksFeature',    () => initModpacksFeature({ switchView }));
+safeInit('initContentFeature',     () => initContentFeature());
+safeInit('initDesktopHelpers',     () => initDesktopHelpers());
+safeInit('initFriendsFeature',     () => initFriendsFeature());
+safeInit('initProfileFeature',     () => initProfileFeature({ switchView, getReturnView }));
+safeInit('initGameFeaturesIntegration', () => initGameFeaturesIntegration());
+safeInit('initBackgroundEffects',  () => initBackgroundEffects());
 window.restartCurrentEffect = restartCurrentEffect;
 
-setInterval(() => {
-  if (performance && performance.memory) {
-    const usedMB = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
-    const totalMB = Math.round(performance.memory.totalJSHeapSize / 1024 / 1024);
-    console.log(`[Performance] Renderer JS Heap: ${usedMB} MB / ${totalMB} MB`);
-  }
-}, 10000);
+// Dev-only perf log — gated on import.meta.env.DEV so production builds stay quiet.
+if (import.meta.env?.DEV) {
+  setInterval(() => {
+    if (performance && performance.memory) {
+      const usedMB = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+      const totalMB = Math.round(performance.memory.totalJSHeapSize / 1024 / 1024);
+      console.log(`[Performance] Renderer JS Heap: ${usedMB} MB / ${totalMB} MB`);
+    }
+  }, 10000);
+}

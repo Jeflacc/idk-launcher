@@ -1,4 +1,5 @@
 import "./overlay.css";
+import { esc } from "../../core/safe-parse.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const overlayContainer = document.getElementById("overlay-container");
@@ -256,13 +257,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       card.innerHTML = `
         <div class="friend-card-left">
           <div class="friend-avatar ${isOnline ? "online" : ""}">
-            <canvas id="friend-avatar-${friend.id}" width="32" height="32"></canvas>
+            <canvas id="friend-avatar-${esc(friend.id)}" width="32" height="32"></canvas>
           </div>
           <div class="friend-info">
-            <strong>${friend.username}</strong>
+            <strong>${esc(friend.username)}</strong>
             <span class="friend-status-text ${statusClass}">
               <span class="friend-status-dot ${isOnline ? "online" : ""}"></span>
-              ${statusText}
+              ${esc(statusText)}
             </span>
           </div>
         </div>
@@ -278,7 +279,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       `;
 
-      const canvas = card.querySelector(`#friend-avatar-${friend.id}`);
+      const canvas = card.querySelector(`#friend-avatar-${CSS.escape(String(friend.id))}`);
       if (canvas) renderSkinFace(canvas, friend.username);
 
       card.querySelector(".friend-remove-btn").onclick = async (e) => {
@@ -333,7 +334,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       card.className = "friend-request-card";
       card.innerHTML = `
         <div class="friend-request-info">
-          <strong>${req.username}</strong>
+          <strong>${esc(req.username)}</strong>
           <span>Wants to be friends</span>
         </div>
         <div class="friend-request-actions">

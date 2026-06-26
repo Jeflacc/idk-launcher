@@ -1,7 +1,11 @@
 import { safeParse, esc } from "../../core/safe-parse.js";
 import { state, actions } from "../../core/app-state.js";
 
+let __initModpacksFeatureInitialized = false;
+
 export function initModpacksFeature({ switchView }) {
+  if (__initModpacksFeatureInitialized) return;
+  __initModpacksFeatureInitialized = true;
   // Safe JSON parser for API responses
   async function safeJson(resp, fallback = null) {
     if (!resp) return fallback;
@@ -391,7 +395,7 @@ export function initModpacksFeature({ switchView }) {
         <div class="mp-item-icon" style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(var(--theme-accent-rgb),0.15);flex-shrink:0;border:2px solid rgba(var(--theme-accent-rgb),0.3);">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 0 0z"></path></svg>
         </div>
-        <div class="mp-item-info"><strong>${v.id}</strong><span>${displayLoader}</span></div>`;
+        <div class="mp-item-info"><strong>${esc(v.id)}</strong><span>${esc(displayLoader)}</span></div>`;
         el.addEventListener("click", () => {
           state.activeVersionForMods = v.id;
           state.activeModpackId = null;
@@ -424,7 +428,7 @@ export function initModpacksFeature({ switchView }) {
         const total = modCount + rpCount + shCount;
         const renderablePackIconUrl = getRenderableIconUrl(mp.iconUrl);
         const iconHtml = renderablePackIconUrl
-          ? `<img src="${renderablePackIconUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<svg width=\`20\` height=\`20\` viewBox=\`0 0 24 24\` fill=\`none\` stroke=\`currentColor\` stroke-width=\`2\`><path d=\`M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\`></path></svg>'" />`
+          ? `<img src="${esc(renderablePackIconUrl)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='<svg width=\`20\` height=\`20\` viewBox=\`0 0 24 24\` fill=\`none\` stroke=\`currentColor\` stroke-width=\`2\`><path d=\`M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\`></path></svg>'" />`
           : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`;
         el.style.position = "relative";
         el.innerHTML = `
@@ -775,12 +779,12 @@ export function initModpacksFeature({ switchView }) {
       const renderableIconUrl = getRenderableIconUrl(item.iconUrl);
       const firstLetter = (item.name || "M").charAt(0).toUpperCase();
       const iconHtml = renderableIconUrl
-        ? `<img src="${renderableIconUrl}" class="mod-icon" onerror="this.style.display='none'" />`
-        : `<div class="mod-icon-placeholder" style="display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;color:rgba(255,255,255,0.5);">${firstLetter}</div>`;
+        ? `<img src="${esc(renderableIconUrl)}" class="mod-icon" onerror="this.style.display='none'" />`
+        : `<div class="mod-icon-placeholder" style="display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:11px;color:rgba(255,255,255,0.5);">${esc(firstLetter)}</div>`;
 
       el.innerHTML = `
       ${iconHtml}
-      <div class="installed-mod-info"><strong>${item.name}</strong><span>${version}</span></div>
+      <div class="installed-mod-info"><strong>${esc(item.name)}</strong><span>${esc(version)}</span></div>
       <button class="remove-mod-btn" title="Remove">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1191,7 +1195,7 @@ export function initModpacksFeature({ switchView }) {
         const result = await window.electronAPI.selectImage();
         if (result && result.success && result.url) {
           document.getElementById(inputId).value = result.url;
-          picker.innerHTML = `<img src="${result.url}" />`;
+          picker.innerHTML = `<img src="${esc(result.url)}" />`;
         }
       } else if (fileInput) {
         fileInput.click();
@@ -1205,7 +1209,7 @@ export function initModpacksFeature({ switchView }) {
         reader.onload = (e) => {
           const url = e.target.result;
           document.getElementById(inputId).value = url;
-          picker.innerHTML = `<img src="${url}" />`;
+          picker.innerHTML = `<img src="${esc(url)}" />`;
         };
         reader.readAsDataURL(file);
       });
@@ -1313,11 +1317,11 @@ export function initModpacksFeature({ switchView }) {
       }
       item.innerHTML = `
         <span style="display:flex;align-items:center;gap:8px;">
-          <span class="version-name">${v.id}</span>
-          ${isDownloaded ? `<span class="mp-dl-loader-badge">${loader}</span>` : ''}
+          <span class="version-name">${esc(v.id)}</span>
+          ${isDownloaded ? `<span class="mp-dl-loader-badge">${esc(loader)}</span>` : ''}
           <span class="version-type" style="font-size:9px;text-transform:uppercase;color:var(--text-muted);">Release</span>
         </span>
-        <button class="mp-dl-btn${isDownloaded ? ' downloaded' : ''}" data-version="${v.id}">
+        <button class="mp-dl-btn${isDownloaded ? ' downloaded' : ''}" data-version="${esc(v.id)}">
           ${isDownloaded ? 'Use' : 'Download'}
         </button>
       `;
@@ -1388,11 +1392,11 @@ export function initModpacksFeature({ switchView }) {
       }
       item.innerHTML = `
         <span style="display:flex;align-items:center;gap:8px;">
-          <span class="version-name">${v.id}</span>
-          ${isDownloaded ? `<span class="mp-dl-loader-badge">${loader}</span>` : ''}
-          <span class="version-type">${label}</span>
+          <span class="version-name">${esc(v.id)}</span>
+          ${isDownloaded ? `<span class="mp-dl-loader-badge">${esc(loader)}</span>` : ''}
+          <span class="version-type">${esc(label)}</span>
         </span>
-        <button class="mp-dl-btn${isDownloaded ? ' downloaded' : ''}" data-version="${v.id}">
+        <button class="mp-dl-btn${isDownloaded ? ' downloaded' : ''}" data-version="${esc(v.id)}">
           ${isDownloaded ? 'Use' : 'Download'}
         </button>
       `;
@@ -1574,7 +1578,7 @@ export function initModpacksFeature({ switchView }) {
         document.getElementById("mp-settings-name").value = mp.name;
         document.getElementById("mp-settings-icon").value = mp.iconUrl || "";
         if (mp.iconUrl) {
-          document.getElementById("mp-settings-icon-picker").innerHTML = `<img src="${mp.iconUrl}" />`;
+          document.getElementById("mp-settings-icon-picker").innerHTML = `<img src="${esc(mp.iconUrl)}" />`;
         } else {
           document.getElementById("mp-settings-icon-picker").innerHTML = `<div class="icon-picker-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`;
         }
@@ -2622,10 +2626,10 @@ export function initModpacksFeature({ switchView }) {
           ? (mod.follows / 1000).toFixed(0) + "K"
           : String(mod.follows || 0);
         el.innerHTML = `
-        ${mod.icon_url ? `<img class="mod-result-icon" src="${mod.icon_url}" onerror="this.style.display='none'" />` : `<div class="mod-result-icon mod-icon-placeholder" style="width:56px;height:56px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:22px;color:rgba(255,255,255,0.6);">${firstLetter}</div>`}
+        ${mod.icon_url ? `<img class="mod-result-icon" src="${esc(mod.icon_url)}" onerror="this.style.display='none'" />` : `<div class="mod-result-icon mod-icon-placeholder" style="width:56px;height:56px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:22px;color:rgba(255,255,255,0.6);">${esc(firstLetter)}</div>`}
         <div class="mod-result-info">
-          <strong>${mod.title}</strong><span>${mod.description}</span>
-          <div class="mod-result-meta"><span>\u2193 ${dlStr}</span>${mod.follows ? `<span>\u2605 ${followsStr}</span>` : ""}<span>${mod.provider === "modrinth" ? "Modrinth" : "CurseForge"}</span></div>
+          <strong>${esc(mod.title)}</strong><span>${esc(mod.description)}</span>
+          <div class="mod-result-meta"><span>\u2193 ${esc(dlStr)}</span>${mod.follows ? `<span>\u2605 ${esc(followsStr)}</span>` : ""}<span>${mod.provider === "modrinth" ? "Modrinth" : "CurseForge"}</span></div>
         </div>
         <button class="add-mod-btn ${installed ? "installed" : ""}" ${installed ? "disabled" : ""}>${installed ? "\u2713 Added" : state.browserMode === "modpack" ? "+ Import" : "+ Add"}</button>`;
         if (!installed)

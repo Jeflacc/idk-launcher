@@ -265,8 +265,11 @@ https.request = function(...args) { return trackRequest(originalHttpsRequest.app
 ipcMain.on('cancel-launch', () => {
   try {
     console.log(`[Launch] User requested launch cancellation. Active sockets to destroy: ${activeLaunchSockets.size}`);
+
+    // Capture the launch state BEFORE clearing it — the kill branch below depends on it.
+    const wasDownloading = global.isLaunchDownloading;
     global.isLaunchDownloading = false;
-    
+
     // Brutally destroy all active MCLC sockets
     for (const req of activeLaunchSockets) {
       try { req.destroy(new Error('Launch cancelled')); } catch (e) {}
@@ -274,11 +277,13 @@ ipcMain.on('cancel-launch', () => {
     activeLaunchSockets.clear();
 
     if (activeLaunchProcess && typeof activeLaunchProcess.kill === 'function') {
-      if (!global.isLaunchDownloading) {
+      if (!wasDownloading) {
         console.warn(`[Launch] Launch was cancelled before MCLC started.`);
-        return;
+      } else {
+        try { activeLaunchProcess.kill(); } catch (killErr) {
+          console.warn('[Launch] Failed to kill active launch process:', killErr.message);
+        }
       }
-      activeLaunchProcess.kill();
     }
   } catch (e) {
     console.warn('[Launch] Failed to cancel active launch:', e.message);
@@ -566,7 +571,18 @@ ipcMain.on('open-minecraft-folder', () => {
 });
 
 ipcMain.on('open-external', (event, url) => {
-  shell.openExternal(url);
+  // SECURITY: Only allow http(s) URLs. Block file:, javascript:, ms-msdt:, smb:, etc.
+  // to prevent renderer XSS → arbitrary code execution via shell.openExternal.
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      console.warn(`[OpenExternal] Blocked non-http(s) URL: ${parsed.protocol}`);
+      return;
+    }
+    shell.openExternal(parsed.href);
+  } catch (e) {
+    console.warn(`[OpenExternal] Invalid URL rejected: ${url}`);
+  }
 });
 
 // Forward renderer console.log to terminal
@@ -755,7 +771,7 @@ ipcMain.handle('auto-install-dependencies', async (event, { modpackId, missing, 
       const file = latest.files && latest.files.find(f => f.primary) || latest.files[0];
       if (!file) { results.push({ modId: dep.modId, success: false, reason: 'No file found' }); continue; }
 
-      const destPath = path.join(modsPath, file.filename);
+      const destPath = safePath(modsPath, file.filename);
       if (!fs.existsSync(destPath)) {
         await new Promise((resolve, reject) => {
           downloadFile(file.url, destPath, resolve, reject);
@@ -802,7 +818,7 @@ ipcMain.handle('remove-mod', async (event, { modpackId, filename }) => {
       return { success: true };
     }
 
-    // Fallback: case-insensitive search on Windows
+    // Fallback: case-insensitive search on Windows (filesystems are case-insensitive there)
     if (process.platform === 'win32' && fs.existsSync(basePath)) {
       const dirFiles = fs.readdirSync(basePath);
       const target = filename.toLowerCase();
@@ -814,25 +830,13 @@ ipcMain.handle('remove-mod', async (event, { modpackId, filename }) => {
         return { success: true, deletedAs: match };
       }
 
-      // Second fallback: match by stripping version suffix differences
-      // e.g. "sodium-fabric-0.5.3+mc1.20.1.jar" might match "sodium-0.5.3+mc1.20.1.jar"
-      const baseName = filename.replace(/\.jar$|\.zip$/i, '').toLowerCase();
-      const partialMatch = dirFiles.find((f) => {
-        const fn = f.replace(/\.jar$|\.zip$/i, '').toLowerCase();
-        return fn.includes(baseName.split('-')[0]) && fn.length > 0;
-      });
-
-      if (partialMatch && partialMatch !== filename) {
-        const fallbackPath = safePath(basePath, partialMatch);
-        fs.unlinkSync(fallbackPath);
-        console.log(`[RemoveMod] Deleted (partial match): ${fallbackPath}`);
-        return { success: true, deletedAs: partialMatch };
-      }
-
       console.warn(`[RemoveMod] File not found. Tried "${filename}" in ${basePath}. Directory contains: [${dirFiles.join(', ')}]`);
     }
 
-    // File not found G�� treat as already removed (success)
+    // File not found — treat as already removed (success)
+    // NOTE: A previous "partial match" fallback was removed because it would delete unrelated mods
+    // whose names happened to share a prefix segment (e.g. removing "sodium-fabric-X.jar" also
+    // deleted "sodium-extra.jar"). Only exact (case-insensitive on Windows) matches are deleted now.
     return { success: true, alreadyGone: true };
   } catch (e) {
     console.error(`[RemoveMod] Error:`, e.message);
@@ -1424,7 +1428,13 @@ ipcMain.handle('elyby-oauth-login', async () => {
   elybyOAuthInProgress = true;
 
   const CLIENT_ID = process.env.ELYBY_CLIENT_ID || 'idk-launcher';
-  const CLIENT_SECRET = process.env.ELYBY_CLIENT_SECRET || '28grdBLhDN4Af1jRnkOkn9fP7tNvKftuGyb9UVzU6xwiwt1D9e1IGfJGtUUTu_ak';
+  // SECURITY: Never hardcode the OAuth client secret as a default — it would
+  // leak into every built binary. Require it from the environment instead.
+  const CLIENT_SECRET = process.env.ELYBY_CLIENT_SECRET;
+  if (!CLIENT_SECRET) {
+    elybyOAuthInProgress = false;
+    return { success: false, error: 'Ely.by OAuth client secret is not configured. Set ELYBY_CLIENT_SECRET in the environment.' };
+  }
   const REDIRECT_PORT = parseInt(process.env.ELYBY_REDIRECT_PORT, 10) || 29487;
   const REDIRECT_URI = 'http://127.0.0.1:' + REDIRECT_PORT + '/callback';
 
@@ -1447,8 +1457,13 @@ ipcMain.handle('elyby-oauth-login', async () => {
       if (url.pathname === '/callback') {
         if (url.searchParams.has('error')) {
           const errMsg = url.searchParams.get('error_description') || url.searchParams.get('error') || 'Authorization denied';
+          // SECURITY: HTML-escape the error message before interpolating into the response body
+          // to prevent reflected XSS via crafted callback URLs.
+          const escHtml = (s) => String(s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-          res.end('<html><body style="background:#1b1b1c;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif"><p>Authorization failed: ' + errMsg + '</p><p>You can close this tab.</p></body></html>');
+          res.end('<html><body style="background:#1b1b1c;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif"><p>Authorization failed: ' + escHtml(errMsg) + '</p><p>You can close this tab.</p></body></html>');
           cleanup();
           doResolve({ success: false, error: errMsg });
           return;
@@ -1997,6 +2012,9 @@ ipcMain.on('launch-modpack', async (event, args) => {
   global.lastLaunchTime = Date.now();
   let { username, modpackId, modpackName, mcVersion, loader, loaderVersion, javaPath, maxMemory, authData, quickConnect, windowSize, globalJavaArgs, forceUpdate } = args;
   const safeSend = (channel, data) => { try { if (event.sender && !event.sender.isDestroyed()) event.sender.send(channel, data); } catch (_) {} };
+
+  // Mark launch as downloading so cancel-launch can interrupt MCLC download/launch.
+  global.isLaunchDownloading = true;
 
   console.log(`[Launch] launch-modpack received: modpackId=${modpackId}, name=${modpackName}, version=${mcVersion}, loader=${loader}, memory=${maxMemory}, hasWindowSize=${!!windowSize}, hasQuickConnect=${!!quickConnect}, hasGlobalJavaArgs=${!!globalJavaArgs}`);
 
@@ -4484,9 +4502,10 @@ ipcMain.handle('start-frpc-tunnel', async (event, { port }) => {
     const { spawn } = require('child_process');
     
     // Generate a random remote port between 10000 and 65000
-    const frpcServer = process.env.IDK_FRPC_SERVER || 'play.somniac.me';
-    const frpcPort = process.env.IDK_FRPC_PORT || '7000';
-    const frpcToken = process.env.IDK_FRPC_TOKEN || 'indkingdomisalive';
+    // NOTE: Read both IDK_FRPC_* (legacy) and FRPC_* (matches .env template) — prefer FRPC_*.
+    const frpcServer = process.env.FRPC_SERVER || process.env.IDK_FRPC_SERVER || 'play.somniac.me';
+    const frpcPort = process.env.FRPC_PORT || process.env.IDK_FRPC_PORT || '7000';
+    const frpcToken = process.env.FRPC_TOKEN || process.env.IDK_FRPC_TOKEN || 'indkingdomisalive';
     const remotePort = Math.floor(Math.random() * (65000 - 10000 + 1)) + 10000;
     const proxyName = 'idk_proxy_' + Math.random().toString(36).substring(2, 10);
     
@@ -5503,8 +5522,10 @@ function getIntegrityVerifier() {
 }
 
 // IPC Handler: Start download
-ipcMain.handle('start-download', async (event, downloadId, items, downloadPath) => {
+// NOTE: preload.cjs sends a single object { downloadId, items, downloadPath } — match that shape.
+ipcMain.handle('start-download', async (event, payload) => {
   try {
+    const { downloadId, items, downloadPath } = payload || {};
     const manager = getDownloadManager();
     const session = await manager.startDownload(downloadId, items, downloadPath);
     return { success: true, session };
@@ -5642,7 +5663,14 @@ ipcMain.handle('load-settings', async (event) => {
 ipcMain.handle('save-settings', async (event, newSettings) => {
   try {
     const manager = getSettingsManager();
+    const prevCustomPath = manager.settings.customMinecraftPath?.value;
     await manager.saveSettings(newSettings);
+    // If the custom Minecraft data path changed, invalidate the cached value so
+    // the next call to getMinecraftDataPath() picks up the new path immediately.
+    const newCustomPath = newSettings?.customMinecraftPath;
+    if (prevCustomPath !== newCustomPath) {
+      invalidateMinecraftDataPathCache();
+    }
     return { success: true };
   } catch (error) {
     console.error('[Settings IPC] save-settings error:', error.message);

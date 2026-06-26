@@ -13,7 +13,7 @@
     <img src="https://img.shields.io/github/v/release/Jeflacc/idk-launcher?style=for-the-badge&color=3b82f6" alt="Latest Release" />
   </a>
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-60a5fa?style=for-the-badge" alt="Platforms" />
-  <img src="https://img.shields.io/badge/License-MIT-34d399?style=for-the-badge" alt="License" />
+  <img src="https://img.shields.io/badge/License-GPL%20v3-34d399?style=for-the-badge" alt="License" />
 </p>
 
 ---

@@ -1,6 +1,11 @@
 import { state, actions } from '../../core/app-state.js';
+import { esc } from '../../core/safe-parse.js';
+
+let __initVersionsFeatureInitialized = false;
 
 export function initVersionsFeature() {
+  if (__initVersionsFeatureInitialized) return;
+  __initVersionsFeatureInitialized = true;
 // --- VERSION DROPDOWN LOGIC ---
 const versionDropdown = document.getElementById('version-dropdown');
 const trigger = document.querySelector('.custom-select-trigger');
@@ -201,9 +206,9 @@ function renderVersions() {
       if (state.selectedIsModpack && mp.id === state.selectedModpackId) el.classList.add('selected');
       
       el.innerHTML = `
-        <span style="color:var(--theme-accent-bright);"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="margin-right:4px;vertical-align:-1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>${mp.name}</span>
+        <span style="color:var(--theme-accent-bright);"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="margin-right:4px;vertical-align:-1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>${esc(mp.name)}</span>
         <span style="display:flex;align-items:center;gap:6px;">
-          <span class="option-type">${mp.mcVersion} · ${mp.loader}</span>
+          <span class="option-type">${esc(mp.mcVersion)} · ${esc(mp.loader)}</span>
         </span>
       `;
       
@@ -274,11 +279,11 @@ function renderVersions() {
       : '';
 
     el.innerHTML = `
-      <span>${v.id}</span>
+      <span>${esc(v.id)}</span>
       <span style="display:flex;align-items:center;gap:6px;">
         ${downloadedBadge}
         ${sodiumBadge}
-        <span class="option-type">${label}</span>
+        <span class="option-type">${esc(label)}</span>
       </span>
     `;
     

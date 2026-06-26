@@ -460,8 +460,13 @@ class DownloadProgressTracker {
     // Announce to screen readers via accessibility manager
     accessibilityManager.announceDownloadComplete();
 
-    // Auto-hide after 3 seconds
-    setTimeout(() => this.reset(), 3000);
+    // Auto-hide after 3 seconds. Store the timer handle so reset() can cancel it
+    // (otherwise a new download started within 3s gets wiped by the stale timer).
+    if (this._completeResetTimer) clearTimeout(this._completeResetTimer);
+    this._completeResetTimer = setTimeout(() => {
+      this._completeResetTimer = null;
+      this.reset();
+    }, 3000);
   }
 
   /**
@@ -620,8 +625,15 @@ class DownloadProgressTracker {
    * Reset download UI
    */
   reset() {
+    // Cancel any pending auto-hide timer from completeDownload().
+    if (this._completeResetTimer) {
+      clearTimeout(this._completeResetTimer);
+      this._completeResetTimer = null;
+    }
     this.state = 'idle';
     this.currentDownloadId = null;
+    // Reset the a11y milestone tracker so the next download announces 25% from scratch.
+    this._lastAnnouncedMilestone = 0;
     this.progress = {
       itemsCompleted: 0,
       totalItems: 0,

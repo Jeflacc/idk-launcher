@@ -1,7 +1,11 @@
 import { actions } from "../../core/app-state.js";
 import { esc } from "../../core/safe-parse.js";
 
+let __initContentFeatureInitialized = false;
+
 export function initContentFeature() {
+  if (__initContentFeatureInitialized) return;
+  __initContentFeatureInitialized = true;
   // === MOJANG NEWS FETCHING ================================
   // =========================================================
   async function fetchMojangNews() {

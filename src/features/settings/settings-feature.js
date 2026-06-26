@@ -403,7 +403,11 @@ function setMemory(gb) {
   persistVisualSettings();
 }
 
+let __initSettingsFeatureInitialized = false;
+
 export function initSettingsFeature({ switchView }) {
+  if (__initSettingsFeatureInitialized) return;
+  __initSettingsFeatureInitialized = true;
   // Register all actions
   actions.applyLauncherTheme = applyLauncherTheme;
   actions.applyLauncherUiMode = applyLauncherUiMode;
@@ -468,11 +472,18 @@ export function initSettingsFeature({ switchView }) {
 
   // Mode-aware binding
   function rebindSettingsUI() {
-    // Clear previous binding markers so the current mode can bind fresh
     const view = document.getElementById("view-settings");
-    if (view) {
-      view.classList.remove("classic-bound", "advanced-bound");
+    if (!view) return;
+
+    // Determine the target mode's marker class.
+    const targetMarker = state.launcherUiMode === "advanced" ? "advanced-bound" : "classic-bound";
+    // If the target mode is already bound, this is a no-op (prevents double-binding
+    // when the same mode is re-selected). Only clear the OTHER mode's marker so the
+    // target mode can bind fresh after a mode switch.
+    if (view.classList.contains(targetMarker)) {
+      return;
     }
+    view.classList.remove("classic-bound", "advanced-bound");
 
     if (state.launcherUiMode === "advanced") {
       bindAdvancedUI();

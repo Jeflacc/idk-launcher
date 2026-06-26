@@ -3,7 +3,11 @@ import { loadAvatarForUser } from "../../core/skin-texture.js";
 import { initTutorial } from "../tutorial/tutorial.js";
 import { showAlertDialog } from "../../components/alert-dialog.js";
 
+let __initAuthFeatureInitialized = false;
+
 export function initAuthFeature({ switchView }) {
+  if (__initAuthFeatureInitialized) return;
+  __initAuthFeatureInitialized = true;
   // --- LOGIN LOGIC ---
   const btnOfflineLogin = document.getElementById("btn-offline-login");
   const offlineForm = document.getElementById("offline-form");
@@ -188,7 +192,8 @@ Please review and accept these terms to continue.`,
         state.currentUser = "";
         localStorage.removeItem("craftlaunch_username");
         if (window.electronAPI) {
-          window.electronAPI.saveSettings({ currentUser: "", authMode: "offline", elybyData: null }).catch(console.error);
+          // Clear BOTH auth providers on logout — otherwise Microsoft tokens persist on disk.
+          window.electronAPI.saveSettings({ currentUser: "", authMode: "offline", elybyData: null, microsoftData: null }).catch(console.error);
         }
         actions.updateFriendsAuthUI?.();
         switchViewFn("login");
@@ -319,6 +324,7 @@ Please review and accept these terms to continue.`,
           currentUser: "",
           authMode: "offline",
           elybyData: null,
+          microsoftData: null,  // Clear Microsoft tokens too — they persisted on disk after logout.
         })
         .catch(console.error);
     }

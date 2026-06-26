@@ -602,7 +602,11 @@ async function loadProfileFriendsList() {
   }
 }
 
+let __initProfileFeatureInitialized = false;
+
 export function initProfileFeature({ switchView, getReturnView }) {
+  if (__initProfileFeatureInitialized) return;
+  __initProfileFeatureInitialized = true;
   const openProfile = (returnTo) => {
     profileReturnView = returnTo || getReturnView?.() || "main";
     switchView("profile");

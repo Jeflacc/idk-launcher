@@ -1,6 +1,10 @@
 import { state, actions } from '../../core/app-state.js';
 
+let __initVersionModsFeatureInitialized = false;
+
 export function initVersionModsFeature({ switchView }) {
+  if (__initVersionModsFeatureInitialized) return;
+  __initVersionModsFeatureInitialized = true;
   // This feature integrates version mods into the modpack manager
   // Versions are shown alongside modpacks in the sidebar
   

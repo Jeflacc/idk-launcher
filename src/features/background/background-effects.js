@@ -684,7 +684,11 @@ function stopEffect() {
   }
 }
 
+let __initBackgroundEffectsInitialized = false;
+
 export function initBackgroundEffects() {
+  if (__initBackgroundEffectsInitialized) return;
+  __initBackgroundEffectsInitialized = true;
   canvas = document.getElementById("bg-effects-canvas");
   if (!canvas) return;
   ctx = canvas.getContext("2d");

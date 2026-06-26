@@ -55,7 +55,11 @@ let highlightEl = null;
 let tooltipEl = null;
 let resizeHandler = null;
 
+let __initTutorialInitialized = false;
+
 export function initTutorial() {
+  if (__initTutorialInitialized) return;
+  __initTutorialInitialized = true;
   if (localStorage.getItem(TUTORIAL_KEY) === 'true') {
     return;
   }

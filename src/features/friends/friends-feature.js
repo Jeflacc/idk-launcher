@@ -1,4 +1,4 @@
-import { safeParse } from "../../core/safe-parse.js";
+import { safeParse, esc } from "../../core/safe-parse.js";
 import { state, actions } from "../../core/app-state.js";
 import { loadAvatarForUser, getSkinTextureUrl, resolveSkinTextureBase64 } from "../../core/skin-texture.js";
 
@@ -261,7 +261,11 @@ function renderFriendsSidebar() {
   }
 }
 
+let __initFriendsFeatureInitialized = false;
+
 export function initFriendsFeature() {
+  if (__initFriendsFeatureInitialized) return;
+  __initFriendsFeatureInitialized = true;
   renderFriendsSidebar();
 
   // === IDK CONNECT - PREMIUM FRIENDS & CLOUDFLARED LAN SHARING CLIENT ENGINE ===
@@ -1054,10 +1058,11 @@ export function initFriendsFeature() {
       users.forEach(user => {
         const card = document.createElement("div");
         card.className = "search-user-card";
+        // SECURITY: user.id and user.username come from the IDK Connect API and must be HTML-escaped.
         card.innerHTML =
-          '<div class="search-avatar"><canvas id="search-avatar-' + user.id + '" width="36" height="36"></canvas></div>' +
+          '<div class="search-avatar"><canvas id="search-avatar-' + esc(user.id) + '" width="36" height="36"></canvas></div>' +
           '<div class="search-user-info">' +
-            '<strong>' + user.username + '</strong>' +
+            '<strong>' + esc(user.username) + '</strong>' +
             '<span class="search-user-sub">' + (user.status === "offline" ? "Offline" : "Online") + '</span>' +
           '</div>' +
           '<button class="search-user-action">View</button>';
@@ -1065,7 +1070,7 @@ export function initFriendsFeature() {
         card.onclick = () => openUserProfile(user.username);
         searchResultsList.appendChild(card);
 
-        const canvas = card.querySelector("#search-avatar-" + user.id);
+        const canvas = card.querySelector("#search-avatar-" + CSS.escape(user.id));
         if (canvas) renderSkinFaceOnFriendsCanvas(canvas, user.username, "online");
       });
     }
@@ -1099,7 +1104,8 @@ export function initFriendsFeature() {
       profileStatus.innerText = "Loading...";
       profileBio.innerText = "Loading bio...";
 
-      const canvasEl = document.getElementById("profile-skin-render-canvas");
+      // NOTE: The canvas ID is "profile-skin-render" (matches the DOM at L49/L191), not "profile-skin-render-canvas".
+      const canvasEl = document.getElementById("profile-skin-render");
       if (friendsSkinViewer) {
         try { friendsSkinViewer.dispose(); } catch (e) { }
         friendsSkinViewer = null;
@@ -1322,14 +1328,15 @@ export function initFriendsFeature() {
       requests.forEach((req) => {
         const card = document.createElement("div");
         card.className = "friend-request-card";
+        // SECURITY: req.username and req.requestId come from the IDK Connect API — escape them.
         card.innerHTML = `
         <div class="friend-request-info">
-          <strong>${req.username}</strong>
+          <strong>${esc(req.username)}</strong>
           <span>Wants to be friends</span>
         </div>
         <div class="friend-request-actions">
-          <button class="friend-request-btn accept" data-id="${req.requestId}" title="Accept Request">&#x2713;</button>
-          <button class="friend-request-btn decline" data-id="${req.requestId}" title="Decline Request">&times;</button>
+          <button class="friend-request-btn accept" data-id="${esc(req.requestId)}" title="Accept Request">&#x2713;</button>
+          <button class="friend-request-btn decline" data-id="${esc(req.requestId)}" title="Decline Request">&times;</button>
         </div>
       `;
 
@@ -1394,33 +1401,34 @@ export function initFriendsFeature() {
         }
 
         const badgeHtml = (friend.unreadCount && friend.unreadCount > 0)
-          ? `<div class="friend-unread-badge">${friend.unreadCount}</div>`
+          ? `<div class="friend-unread-badge">${esc(String(friend.unreadCount))}</div>`
           : "";
 
+        // SECURITY: friend.id, friend.username, friend.playingVersion come from the IDK Connect API — escape all.
         card.innerHTML = `
         <div class="friend-card-left">
           <div class="friend-avatar ${isOnline ? "online" : ""}">
-            <canvas id="friend-avatar-${friend.id}" width="28" height="28" style="image-rendering:pixelated;width:100%;height:100%;"></canvas>
+            <canvas id="friend-avatar-${esc(friend.id)}" width="28" height="28" style="image-rendering:pixelated;width:100%;height:100%;"></canvas>
           </div>
           <div class="friend-info">
-            <strong>${friend.username}</strong>
+            <strong>${esc(friend.username)}</strong>
             <span class="friend-status-text ${statusClass}">
               <span class="friend-status-dot ${isOnline ? "online" : ""}"></span>
-              ${statusText}
+              ${esc(statusText)}
             </span>
           </div>
         </div>
         <div class="friend-card-right">
           ${badgeHtml}
           ${isHosting ? `<button class="friend-join-btn" title="Join Friend's LAN game!">JOIN</button>` : ""}
-          <button class="friend-remove-btn" title="Unfriend" data-id="${friend.id}">
+          <button class="friend-remove-btn" title="Unfriend" data-id="${esc(friend.id)}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="17" y1="11" x2="23" y2="11"></line></svg>
           </button>
         </div>
       `;
 
         // Render canvas face async
-        const canvas = card.querySelector(`#friend-avatar-${friend.id}`);
+        const canvas = card.querySelector(`#friend-avatar-${CSS.escape(friend.id)}`);
         if (canvas) {
           loadAvatarForUser(canvas, friend.username, "elyby");
         }

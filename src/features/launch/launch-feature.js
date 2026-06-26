@@ -1,4 +1,5 @@
 import { state, actions } from '../../core/app-state.js';
+import { esc } from '../../core/safe-parse.js';
 
 function updateSetupDisplay() {
   const el = document.getElementById('play-dd-setup-value');
@@ -276,7 +277,11 @@ function updateLoaderUIFromDropdown(loaderName) {
   });
 }
 
+let __initLaunchFeatureInitialized = false;
+
 export function initLaunchFeature() {
+  if (__initLaunchFeatureInitialized) return;
+  __initLaunchFeatureInitialized = true;
 // --- PLAY BUTTON DROPDOWN ---
 const playDropdown = document.getElementById('play-dropdown');
 const playDropdownTrigger = document.getElementById('play-dropdown-trigger');
@@ -463,12 +468,18 @@ if (window.electronAPI) {
   });
   if (window.electronAPI.onEnterGameRunningMode) {
     window.electronAPI.onEnterGameRunningMode(() => {
+      // Pause (don't blank) videos so they can be replayed on launch-close.
+      // Setting v.src='' was unrecoverable — the video would never play again.
       document.querySelectorAll('video').forEach(v => { try { v.pause(); } catch(_) {} });
-      document.querySelectorAll('.hero-video, .bg-video').forEach(v => { try { v.src = ''; } catch(_) {} });
       document.body.classList.add('game-running');
+      // Save the pre-launch grid content so we can restore visibility later.
+      // NOTE: We do NOT restore via innerHTML rewrite (which would destroy event
+      // listeners attached by feature modules). Instead we just hide the grids via
+      // a CSS class and let feature modules re-render themselves on the
+      // 'launch-closed' / 'reload-content' event below.
       try {
         const grids = document.querySelectorAll('.news-grid, .trending-modpacks-grid');
-        grids.forEach(g => { g.dataset.preLaunchContent = g.innerHTML; });
+        grids.forEach(g => { g.classList.add('launch-hidden'); });
       } catch(_) {}
       try {
         document.querySelectorAll('[style*="animation"], [style*="transition"]').forEach(el => {
@@ -477,8 +488,14 @@ if (window.electronAPI) {
         });
       } catch(_) {}
       try {
+        // Resize canvases to 0 to free GPU memory while the game is running.
+        // We save the original dimensions so we can restore them on launch-close.
         const canvases = document.querySelectorAll('canvas');
-        canvases.forEach(c => { try { c.width = 0; c.height = 0; } catch(_) {} });
+        canvases.forEach(c => {
+          if (!c.dataset.preLaunchWidth) c.dataset.preLaunchWidth = String(c.width);
+          if (!c.dataset.preLaunchHeight) c.dataset.preLaunchHeight = String(c.height);
+          try { c.width = 0; c.height = 0; } catch(_) {}
+        });
       } catch(_) {}
       try {
         if (window.particlesJS) window.particlesJS = null;
@@ -486,7 +503,7 @@ if (window.electronAPI) {
       try {
         const style = document.createElement('style');
         style.id = 'ingame-perf-css';
-        style.textContent = '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; }';
+        style.textContent = '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; } .launch-hidden { display: none !important; }';
         document.head.appendChild(style);
       } catch(_) {}
     });
@@ -509,11 +526,21 @@ if (window.electronAPI) {
     try {
       const perfCss = document.getElementById('ingame-perf-css');
       if (perfCss) perfCss.remove();
-      document.querySelectorAll('[data-pre-launch-content]').forEach(g => {
-        g.innerHTML = g.dataset.preLaunchContent;
-        delete g.dataset.preLaunchContent;
+      // Un-hide grids (we hid them via class instead of innerHTML rewrite so
+      // event listeners survived). Feature modules will refresh their content
+      // via the 'reload-content' event dispatched above.
+      document.querySelectorAll('.launch-hidden').forEach(g => g.classList.remove('launch-hidden'));
+      // Restore canvas dimensions.
+      document.querySelectorAll('canvas[data-pre-launch-width]').forEach(c => {
+        try {
+          c.width = parseInt(c.dataset.preLaunchWidth, 10) || c.width;
+          c.height = parseInt(c.dataset.preLaunchHeight, 10) || c.height;
+          delete c.dataset.preLaunchWidth;
+          delete c.dataset.preLaunchHeight;
+        } catch(_) {}
       });
-      document.querySelectorAll('.hero-video, .bg-video').forEach(v => { try { v.play().catch(() => {}); } catch(_) {} });
+      // Resume video playback.
+      document.querySelectorAll('video').forEach(v => { try { v.play().catch(() => {}); } catch(_) {} });
       document.querySelectorAll('[style*="animation"], [style*="transition"]').forEach(el => {
         el.style.animationPlayState = '';
         el.style.transitionDuration = '';
@@ -796,8 +823,8 @@ function showMissingDepsModal(missing, mcVersion) {
 
   const list = missing.map(d =>
     `<li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;">
-      <strong style="color:var(--theme-accent);">${d.modId}</strong>
-      <span style="color:#888;font-size:11px;margin-left:8px;">required by ${d.requiredBy}</span>
+      <strong style="color:var(--theme-accent);">${esc(d.modId)}</strong>
+      <span style="color:#888;font-size:11px;margin-left:8px;">required by ${esc(d.requiredBy)}</span>
     </li>`
   ).join('');
 

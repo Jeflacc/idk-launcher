@@ -4,7 +4,7 @@
 
 IDK Launcher is an Electron-based Minecraft client manager with a glassmorphic UI.
 Tech stack: Vite + Vanilla JS/CSS frontend, Electron + Context Bridge backend.
-Current version: 1.5.3 (package.json).
+Current version: 1.5.5 (package.json).
 
 ## Architecture
 

@@ -1,4 +1,8 @@
+let __initDesktopHelpersInitialized = false;
+
 export function initDesktopHelpers() {
+  if (__initDesktopHelpersInitialized) return;
+  __initDesktopHelpersInitialized = true;
 // Electron Click-Through & Focus Healer
 // ==========================================
 // Instantly restores input focus and typing capability when switching back to the app,

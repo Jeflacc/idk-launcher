@@ -81,7 +81,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   hideOverlayWindow: () => ipcRenderer.send('hide-overlay-window'),
 
   onDownloadProgress: (cb) => {
-    const handler = (_e, downloadId, progress) => cb({ downloadId, ...(progress || {}) });
+    // Backend may send either (downloadId, progress) or a single object { id, ...progress }.
+    // Normalize to { downloadId, ...progress }.
+    const handler = (_e, downloadId, progress) => {
+      if (downloadId && typeof downloadId === 'object' && !Array.isArray(downloadId)) {
+        // Single-object form: backend sent { id, ...progress } as the only arg.
+        const obj = downloadId;
+        cb({ downloadId: obj.id || obj.downloadId, ...obj });
+      } else {
+        cb({ downloadId, ...(progress || {}) });
+      }
+    };
     ipcRenderer.on('download-progress', handler);
     return () => { ipcRenderer.removeListener('download-progress', handler); };
   },
