@@ -279,30 +279,39 @@
           <button class="manage-mods-button" id="manage-mods-btn" style="display: none;">MANAGE MODS</button>
         </div>
       </div>
+      <div class="advanced-server-banner" onclick="if(window.IdkApp) { window.IdkApp.state.quickConnectTarget = { host: 'play.somniac.me' }; window.IdkApp.actions.playGame(); }">
+        <div class="featured-server-info">
+          <img class="featured-server-icon" src="./lunasmp.png" alt="LunaSMP" />
+          <div class="featured-server-text">
+            <span class="featured-server-label">Partner Server</span>
+            <span class="featured-server-title">LunaSMP</span>
+            <span class="featured-server-ip" style="font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 1px; display: flex; align-items: center; gap: 4px; user-select: text;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              play.somniac.me
+            </span>
+          </div>
+        </div>
+        <button class="featured-join-btn" onclick="event.stopPropagation(); if(window.IdkApp) { window.IdkApp.state.quickConnectTarget = { host: 'play.somniac.me' }; window.IdkApp.actions.playGame(); }">Join</button>
+      </div>
     </div>
 
     <div class="details-section">
       <div class="details-content">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">
-              <!-- Minecraft-style sword icon for Time Played -->
-              <img src="./playtime.png" alt="Time Played" style="width:28px;height:28px;image-rendering:pixelated;" />
-            </div>
-            <div class="stat-info">
-              <h4>Time Played</h4>
-              <h2 id="stat-playtime">0.0h</h2>
+        <div class="featured-server-banner">
+          <div class="featured-server-info">
+            <img class="featured-server-icon" src="./lunasmp.png" alt="LunaSMP" />
+            <div class="featured-server-text">
+              <span class="featured-server-label">Partner Server</span>
+              <span class="featured-server-title">LunaSMP</span>
+              <span class="featured-server-desc">The official survival multiplayer experience! Join now for exclusive rewards.</span>
+              <span class="featured-server-ip" style="font-size: 13px; color: var(--text-muted); margin-top: 6px; display: flex; align-items: center; gap: 6px; user-select: text;" title="IP Address">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                play.somniac.me
+              </span>
             </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-icon">
-              <!-- Minecraft-style achievement icon for Achievements -->
-              <img src="./achievement.png" alt="Total Achievements" style="width:28px;height:28px;image-rendering:pixelated;" />
-            </div>
-            <div class="stat-info">
-              <h4>Total Achievements</h4>
-              <h2 id="stat-achievements">0</h2>
-            </div>
+          <div class="featured-server-action">
+            <button class="featured-join-btn" onclick="if(window.IdkApp) { window.IdkApp.state.quickConnectTarget = { host: 'play.somniac.me' }; window.IdkApp.actions.playGame(); } else { alert('Launcher not ready'); }">Join Server</button>
           </div>
         </div>
 

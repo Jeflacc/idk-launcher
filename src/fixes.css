@@ -170,13 +170,16 @@
     border-radius: var(--theme-radius);
 }
 
+.play-dropdown-trigger {
+    display: none;
+}
+
 .play-button {
     flex: 1;
-    border: 2px solid var(--theme-accent-shadow);
-    background: linear-gradient(135deg, var(--theme-accent-hover) 0%, var(--theme-accent) 100%);
+    border: none;
+    background: linear-gradient(180deg, #5ebd3e 0%, #3a8c24 50%, #2d6b1a 100%);
     color: #fff;
-    border-radius: var(--theme-radius) 0 0 var(--theme-radius);
-    border-right: none;
+    border-radius: var(--theme-radius);
     font-family: var(--font-title);
     font-size: 1.125rem;
     font-weight: 700;
@@ -192,13 +195,12 @@
     gap: 1px;
     line-height: 1.1;
     box-shadow:
-        inset 0 2px 0 var(--theme-accent-hover),
-        inset 2px 0 0 var(--theme-accent-hover),
-        inset 0 -2px 0 var(--theme-accent-shadow),
-        0 4px 16px rgba(0, 0, 0, 0.4);
-    text-shadow: 1px 1px 0 var(--theme-accent-shadow);
-    font-variant: small-caps;
-    text-transform: lowercase;
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+        0 2px 0 #1a4d0e,
+        0 4px 12px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    text-transform: uppercase;
     transition: filter 0.12s ease, transform 0.1s ease;
 }
 
@@ -264,6 +266,207 @@
     transform: none !important;
     filter: none !important;
     height: 52px;
+}
+
+/* JS toggles PLAY via #play-btn id (not just .play-button) */
+#play-btn.play-button,
+#play-btn {
+    height: 52px;
+}
+
+/* Ensure disabled/running works for the ID selector too */
+#play-btn:disabled,
+#play-btn.running {
+    background: #2a2a2b !important;
+    border-color: #3c3c3d !important;
+    color: #727273 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    cursor: not-allowed;
+    transform: none !important;
+    filter: none !important;
+}
+
+/* Ensure modpack PLAY button is skinned in all states */
+#btn-play-modpack,
+.mp-action-btn.play {
+    background: linear-gradient(135deg, var(--theme-accent-hover) 0%, var(--theme-accent) 100%);
+    border: 2px solid var(--theme-accent-shadow);
+    color: #fff;
+    border-radius: var(--theme-radius, 10px);
+    font-family: var(--font-title);
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    padding: 0 18px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 1px 1px 0 var(--theme-accent-shadow);
+    box-shadow:
+        inset 0 2px 0 var(--theme-accent-bright),
+        inset 0 -2px 0 var(--theme-accent-shadow),
+        0 4px 16px rgba(0, 0, 0, 0.35);
+    transition: filter 0.12s ease, transform 0.1s ease, box-shadow 0.12s ease;
+}
+
+#btn-play-modpack:hover:not(:disabled),
+.mp-action-btn.play:hover:not(:disabled) {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+#btn-play-modpack:active:not(:disabled),
+.mp-action-btn.play:active:not(:disabled) {
+    transform: translateY(0);
+    filter: brightness(0.95);
+}
+
+#btn-play-modpack:disabled,
+.mp-action-btn.play:disabled,
+#btn-play-modpack.running,
+.mp-action-btn.play.running {
+    background: #2a2a2b !important;
+    border-color: #3c3c3d !important;
+    color: #727273 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    cursor: not-allowed;
+    transform: none !important;
+    filter: none !important;
+}
+
+/* ---------- Featured server banner ("ad" vibe) --------
+   Matches upstream: background image + accent CTA + glass panel. */
+.featured-server-banner {
+    background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.15) 0%, rgba(0, 0, 0, 0.4) 100%), url('../featured_bg.png') center/cover;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
+    border-radius: 12px;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.featured-server-banner::before {
+    content: 'AD';
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.featured-server-banner:hover {
+    transform: translateY(-2px);
+    border-color: var(--theme-accent);
+    box-shadow: 0 8px 24px rgba(var(--theme-accent-rgb), 0.2);
+}
+
+.featured-server-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 1;
+}
+
+.featured-server-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    object-fit: cover;
+    image-rendering: pixelated;
+    flex-shrink: 0;
+}
+
+.featured-server-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.featured-server-label {
+    color: var(--theme-accent);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.featured-server-title {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: var(--font-main);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.featured-server-desc {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    line-height: 1.35;
+    max-width: 560px;
+}
+
+.featured-server-ip {
+    user-select: text;
+    color: rgba(255, 255, 255, 0.6);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.featured-server-action {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    z-index: 1;
+}
+
+.featured-join-btn {
+    background: var(--theme-accent);
+    color: #000;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(var(--theme-accent-rgb), 0.3);
+}
+
+.featured-join-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+    background: #fff;
+}
+
+.featured-join-btn:active:not(:disabled) {
+    transform: scale(1.02);
+}
+
+.featured-join-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.advanced-server-banner {
+    display: none;
 }
 
 /* ---------- 6. Pill switch — single consolidated definition -------- */

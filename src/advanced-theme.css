@@ -5,6 +5,11 @@
     display: none;
 }
 
+/* The advanced server banner (under play button) is hidden in classic mode */
+.advanced-server-banner {
+    display: none !important;
+}
+
 /* Background effects canvas – full-screen, behind all views */
 .bg-effects-canvas {
     position: fixed;
@@ -74,6 +79,35 @@ body[data-bg-effect]:not([data-bg-effect="none"]) .mod-browser {
 
 svg[stroke="#4cb837"] {
     stroke: var(--theme-accent);
+}
+
+/* ---------- Advanced UX overrides: featured server "ad" + play CTAs ---------- */
+body.ui-advanced .featured-server-banner,
+body[data-ui-mode="advanced"] .featured-server-banner {
+    background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.18) 0%, rgba(0, 0, 0, 0.5) 100%), url('../featured_bg.png') center/cover;
+    border-color: rgba(var(--theme-accent-rgb), 0.35);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.40);
+}
+
+body.ui-advanced .featured-server-banner:hover {
+    box-shadow: 0 8px 24px rgba(var(--theme-accent-rgb), 0.25);
+}
+
+body.ui-advanced .featured-join-btn,
+body.ui-advanced .featured-join-btn:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(var(--theme-accent-rgb), 0.35);
+}
+
+/* Ensure main PLAY (classic markup uses #play-btn) stays consistent in Advanced mode */
+body.ui-advanced #play-btn.play-button,
+body.ui-advanced #play-btn {
+    height: 100%;
+}
+
+/* Ensure modpack PLAY keeps Mojang-ish accent and not any washed advanced overrides */
+body.ui-advanced #btn-play-modpack,
+body.ui-advanced .mp-action-btn.play {
+    border-color: var(--theme-accent-shadow);
 }
 
 /* Settings appearance controls */
@@ -599,22 +633,133 @@ body.ui-advanced .main-hero-banner .bottom-bar {
     position: absolute;
     z-index: 4;
     left: 50%;
-    bottom: 118px;
-    width: min(360px, 54%);
-    height: 76px;
+    bottom: 155px;
+    width: min(380px, 56%);
+    height: auto;
+    min-height: 68px;
     padding: 0;
     transform: translateX(-50%);
-    background: linear-gradient(
-        90deg,
-        rgba(32, 35, 38, 0.88),
-        rgba(73, 78, 83, 0.74),
-        rgba(25, 27, 30, 0.9)
-    );
-    border: 1px solid rgba(var(--theme-stage-grid-rgb), 0.44);
-    border-radius: 0;
+    background: rgba(15, 15, 18, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--theme-radius);
     backdrop-filter: blur(var(--theme-blur));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.03) inset;
     overflow: visible;
+}
+
+/* Advanced server banner as a standalone pill below the play button */
+body.ui-advanced .advanced-server-banner {
+    display: flex !important;
+    position: absolute;
+    z-index: 5;
+    left: 50%;
+    bottom: 80px;
+    transform: translateX(-50%);
+    width: min(380px, 56%);
+    padding: 10px 16px;
+    background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.12) 0%, rgba(0, 0, 0, 0.65) 100%), url('../featured_bg.png') center/cover;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
+    border-radius: var(--theme-radius);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+body.ui-advanced .advanced-server-banner:hover {
+    border-color: var(--theme-accent);
+    box-shadow: 0 4px 20px rgba(var(--theme-accent-rgb), 0.25);
+    background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.2) 0%, rgba(0, 0, 0, 0.7) 100%), url('../featured_bg.png') center/cover;
+}
+
+body.ui-advanced .advanced-server-banner .featured-server-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 1;
+}
+
+body.ui-advanced .advanced-server-banner .featured-server-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: none;
+    object-fit: contain;
+    image-rendering: pixelated;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+body.ui-advanced .advanced-server-banner .featured-server-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+body.ui-advanced .advanced-server-banner .featured-server-label {
+    color: var(--theme-accent);
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+body.ui-advanced .advanced-server-banner .featured-server-title {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    line-height: 1.2;
+}
+
+body.ui-advanced .advanced-server-banner .featured-server-desc {
+    display: none;
+}
+
+body.ui-advanced .advanced-server-banner .featured-server-ip {
+    font-size: 10px !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    margin-top: 1px !important;
+}
+
+body.ui-advanced .advanced-server-banner .featured-server-ip svg {
+    width: 10px;
+    height: 10px;
+}
+
+body.ui-advanced .advanced-server-banner .featured-join-btn {
+    background: var(--theme-accent);
+    color: #fff;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb), 0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+body.ui-advanced .advanced-server-banner .featured-join-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--theme-accent-rgb), 0.5);
+    background: color-mix(in srgb, var(--theme-accent) 85%, #fff);
+}
+
+/* Hide the sidebar server banner in advanced mode — it's shown under the play button instead */
+body.ui-advanced .details-section .featured-server-banner {
+    display: none !important;
 }
 
 body.ui-advanced .main-hero-banner .bottom-bar::before {
@@ -630,7 +775,7 @@ body.ui-advanced .manage-mods-button {
 
 body.ui-advanced .controls-right {
     width: 100%;
-    height: 100%;
+    height: 68px;
     gap: 0;
 }
 
@@ -640,10 +785,10 @@ body.ui-advanced .play-button-wrapper {
     height: 100%;
     display: flex;
     align-items: stretch;
-    background: rgba(255, 255, 255, 0.05);
+    background: transparent;
     border-radius: var(--theme-radius);
     overflow: visible;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: none;
 }
 
 body.ui-advanced .play-button {
@@ -651,12 +796,18 @@ body.ui-advanced .play-button {
     height: 100%;
     border: none;
     border-radius: var(--theme-radius) 0 0 var(--theme-radius);
-    background: transparent;
-    box-shadow: none;
+    background: linear-gradient(
+        180deg,
+        rgba(var(--theme-accent-rgb), 0.55) 0%,
+        rgba(var(--theme-accent-rgb), 0.25) 100%
+    );
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
     color: #fff;
     font-size: 26px;
     letter-spacing: 1.2px;
-    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.65);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     cursor: pointer;
 }
 
@@ -699,10 +850,12 @@ body.ui-advanced .play-button:disabled + .play-dropdown-trigger {
 }
 
 body.ui-advanced .play-dropdown-trigger {
+    display: flex !important;
     width: 62px;
+    height: 100%;
     border: none;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    background: transparent;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.25);
     color: rgba(255, 255, 255, 0.85);
     cursor: pointer;
     display: flex;
@@ -712,6 +865,17 @@ body.ui-advanced .play-dropdown-trigger {
     padding: 0;
     flex-shrink: 0;
     border-radius: 0 var(--theme-radius) var(--theme-radius) 0;
+    position: relative;
+}
+
+body.ui-advanced .play-dropdown-trigger::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12%;
+    bottom: 12%;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 body.ui-advanced .play-dropdown-trigger:hover {
@@ -1054,7 +1218,7 @@ body.ui-advanced .section-header {
 
 body.ui-advanced .section-title {
     margin: 0;
-    font-family: var(--font-title);
+    font-family: var(--font-main);
     font-size: 14px;
     letter-spacing: 1.2px;
 }
@@ -1279,7 +1443,7 @@ body.ui-advanced .no-modpack-msg p {
 
 /* "TRENDING MODPACKS" heading kicker text */
 body.ui-advanced .no-modpack-msg .section-title {
-    font-family: var(--font-title);
+    font-family: var(--font-main);
 }
 
 body.ui-advanced .section-title::before {
@@ -1330,6 +1494,16 @@ body.ui-advanced .mem-preset-btn:hover {
     background: rgba(var(--theme-accent-rgb), 0.28);
     border-color: var(--theme-accent);
     color: #fff;
+}
+
+body.ui-advanced .mp-action-btn.back {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+body.ui-advanced .mp-action-btn.back:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 body.ui-advanced .provider-pill.active,
@@ -3850,6 +4024,37 @@ body.ui-advanced #view-settings {
     flex-direction: column;
     gap: 6px;
 }
+
+/* --- Advanced UX: featured server "ad" icon/image visibility fixes (minimal) --- */
+/* Keep wrapper sizing stable so icons/images don’t collapse or vanish in Advanced mode. */
+body.ui-advanced .featured-server-banner,
+body.ui-advanced .featured-server-info {
+    display: flex;
+    align-items: center;
+}
+
+body.ui-advanced .featured-server-icon {
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    object-fit: cover;
+    image-rendering: pixelated;
+    display: block;
+}
+
+body.ui-advanced .featured-server-text {
+    z-index: 1;
+}
+
+body.ui-advanced .featured-join-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 
 /* "OPEN DIRECTORY" button inside the advanced tab bar */
 .adv-open-dir-link {
