@@ -282,82 +282,21 @@ let __initLaunchFeatureInitialized = false;
 export function initLaunchFeature() {
   if (__initLaunchFeatureInitialized) return;
   __initLaunchFeatureInitialized = true;
-// --- PLAY BUTTON DROPDOWN ---
-const playDropdown = document.getElementById('play-dropdown');
-const playDropdownTrigger = document.getElementById('play-dropdown-trigger');
+// --- PLAY BUTTON DROPDOWN (REMOVED) ---
+// The play-dropdown popup was removed from the UI per user request.
+// The Play button is now a simple button. The version/loader selection
+// happens via the left-side version-dropdown and loader-dropdown only.
+// The functions updateSetupDisplay / populateVersionList are kept (no-ops
+// if the elements don't exist) so other code paths that reference them
+// don't throw.
 
-if (playDropdownTrigger && playDropdown) {
-  playDropdownTrigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    playDropdown.classList.toggle('active');
-    playDropdownTrigger.classList.toggle('active');
-    if (playDropdown.classList.contains('active')) {
-      updateSetupDisplay();
-      populateVersionList();
-      updateLoaderUIFromDropdown(state.selectedLoader);
-    }
-  });
-
-  document.getElementById('play-dd-modpacks').addEventListener('click', () => {
-    playDropdown.classList.remove('active');
-    playDropdownTrigger.classList.remove('active');
-    actions.switchView('mods');
-  });
-
-  document.getElementById('play-dd-all-versions').addEventListener('click', (e) => {
-    e.stopPropagation();
-    playDropdown.classList.remove('active');
-    playDropdownTrigger.classList.remove('active');
-    if (window.showLaunchVersionPicker) {
-      window.showLaunchVersionPicker();
-    } else {
-      const versionDropdown = document.getElementById('version-dropdown');
-      if (versionDropdown) {
-        versionDropdown.classList.add('open');
-        document.getElementById('selected-version-text')?.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  });
-
-  // Loader buttons
-  document.querySelectorAll('.play-dd-loader-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const loader = btn.getAttribute('data-loader');
-      state.selectedLoader = loader;
-      localStorage.setItem('idk_selected_loader', loader);
-      if (state.selectedVersion) {
-        if (!state.versionSettings[state.selectedVersion]) {
-          state.versionSettings[state.selectedVersion] = {};
-        }
-        state.versionSettings[state.selectedVersion].loader = loader;
-        localStorage.setItem('idk_version_settings', JSON.stringify(state.versionSettings));
-      }
-      if (window.electronAPI) {
-        window.electronAPI.saveSettings({ lastPlayedLoader: loader, versionSettings: state.versionSettings }).catch(console.error);
-      }
-      updateLoaderUIFromDropdown(loader);
-      updateSetupDisplay();
-      if (actions.updateLoaderUI) actions.updateLoaderUI(loader);
-    });
-  });
-
-  // Force update checkbox (in Settings > Launch tab)
-  const forceUpdateCb = document.getElementById('force-update-toggle');
-  if (forceUpdateCb) {
-    forceUpdateCb.checked = state.forceUpdate;
-    forceUpdateCb.addEventListener('change', () => {
-      state.forceUpdate = forceUpdateCb.checked;
-      localStorage.setItem('idk_force_update', state.forceUpdate);
-    });
-  }
-
-  document.addEventListener('click', (e) => {
-    const wrapper = document.getElementById('play-btn-wrapper');
-    if (wrapper && !wrapper.contains(e.target)) {
-      playDropdown.classList.remove('active');
-      playDropdownTrigger.classList.remove('active');
-    }
+// Force update checkbox (in Settings > Launch tab)
+const forceUpdateCb = document.getElementById('force-update-toggle');
+if (forceUpdateCb) {
+  forceUpdateCb.checked = state.forceUpdate;
+  forceUpdateCb.addEventListener('change', () => {
+    state.forceUpdate = forceUpdateCb.checked;
+    localStorage.setItem('idk_force_update', state.forceUpdate);
   });
 }
 

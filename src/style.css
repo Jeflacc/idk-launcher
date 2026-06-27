@@ -1091,7 +1091,8 @@ body:has(#view-login.active) .user-profile {
 /* Custom Select Trigger styled like Mojang pill */
 .custom-select-wrapper {
     position: relative;
-    width: 230px;
+    width: 220px;
+    flex-shrink: 0;
 }
 
 .custom-select-trigger {

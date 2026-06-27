@@ -193,11 +193,7 @@
             </div>
           </div>
 
-          <button class="refresh-versions-btn" id="btn-refresh-versions" title="Refresh downloaded versions">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-          </button>
-
-          <div class="custom-select-wrapper" style="width: 200px;">
+          <div class="custom-select-wrapper">
             <div class="custom-select" id="loader-dropdown">
               <div class="custom-select-trigger" id="loader-trigger">
                 <span id="selected-loader-text" style="display: flex; align-items: center; gap: 8px;">
@@ -227,59 +223,20 @@
               </div>
             </div>
           </div>
+
+          <button class="refresh-versions-btn" id="btn-refresh-versions" title="Refresh downloaded versions" aria-label="Refresh downloaded versions">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          </button>
         </div>
 
         <div class="controls-right">
           <div class="play-button-wrapper" id="play-btn-wrapper">
             <button class="play-button" id="play-btn">PLAY</button>
-            <button class="play-dropdown-trigger" id="play-dropdown-trigger" aria-label="More options">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-            <div class="play-dropdown" id="play-dropdown">
-              <div class="play-dd-setup" id="play-dd-setup">
-                <span class="play-dd-setup-label">Current Setup</span>
-                <span class="play-dd-setup-value" id="play-dd-setup-value">—</span>
-              </div>
-
-              <div class="play-dropdown-divider"></div>
-
-              <div class="play-dd-section">
-                <div class="play-dd-section-header">Loader</div>
-                <div class="play-dd-loader-list" id="play-dd-loader-list">
-                  <button class="play-dd-loader-btn" data-loader="Vanilla">Vanilla</button>
-                  <button class="play-dd-loader-btn" data-loader="Forge">Forge</button>
-                  <button class="play-dd-loader-btn" data-loader="Fabric">Fabric</button>
-                  <button class="play-dd-loader-btn" data-loader="NeoForge">NeoForge</button>
-                  <button class="play-dd-loader-btn" data-loader="Quilt">Quilt</button>
-                </div>
-              </div>
-
-              <div class="play-dropdown-divider"></div>
-
-              <div class="play-dd-section">
-                <div class="play-dd-version-list" id="play-dd-version-list">
-                  <!-- Injected by JS: section headers + version/modpack items -->
-                </div>
-              </div>
-
-              <div class="play-dropdown-divider"></div>
-
-              <div class="play-dd-footer" id="play-dd-footer">
-                <button id="play-dd-modpacks">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                  Modpacks
-                </button>
-                <button id="play-dd-all-versions">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  All versions
-                </button>
-              </div>
-            </div>
           </div>
           <button class="manage-mods-button" id="manage-mods-btn" style="display: none;">MANAGE MODS</button>
         </div>
       </div>
-      <div class="advanced-server-banner" onclick="if(window.IdkApp) { window.IdkApp.state.quickConnectTarget = { host: 'play.somniac.me' }; window.IdkApp.actions.playGame(); }">
+      <div class="advanced-server-banner" role="button" tabindex="0" aria-label="Join LunaSMP partner server" onclick="if(window.IdkApp) { window.IdkApp.state.quickConnectTarget = { host: 'play.somniac.me' }; window.IdkApp.actions.playGame(); }" onkeydown="if((event.key==='Enter'||event.key===' ')&&window.IdkApp){event.preventDefault();window.IdkApp.state.quickConnectTarget={host:'play.somniac.me'};window.IdkApp.actions.playGame();}">
         <div class="featured-server-info">
           <img class="featured-server-icon" src="./lunasmp.png" alt="LunaSMP" />
           <div class="featured-server-text">

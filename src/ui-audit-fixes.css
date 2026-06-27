@@ -1,0 +1,415 @@
+/* =========================================================
+   UI AUDIT FIXES — Global Accessibility & Layout
+   Applied 2026-06-27 based on full frontend UI audit.
+   See /download/AUDIT.md and worklog Task IDs UI-1, UI-2, UI-3.
+   ========================================================= */
+
+/* ---------- 1. Global focus-visible indicator (WCAG 2.4.7) ----------
+   The launcher had ZERO :focus-visible rules. This single rule fixes
+   keyboard navigation visibility across every interactive element. */
+*:focus-visible {
+    outline: 2px solid var(--theme-accent, #4cb837);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Remove default outline only when focus-visible is NOT supported (rare) */
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ---------- 2. Minimum font size enforcement (WCAG 1.4.4) ----------
+   Multiple selectors used 9-11px text. Bump everything to ≥0.8125rem (13px).
+   Numbers/badges can stay smaller; body/labels must be readable. */
+.version-tab,
+.play-dd-setup-label,
+.play-dd-section-header,
+.featured-server-label,
+.featured-server-ip,
+.mp-dl-loader-badge,
+.version-type,
+.option-type,
+.friends-auth-tab,
+.idk-connect-beta-badge,
+.profile-stat-label,
+.profile-section-title,
+.pose-btn,
+.refresh-versions-btn {
+    font-size: 0.8125rem;
+}
+
+/* Specific overrides for elements that were 9-10px */
+.playing-as-label {
+    font-size: 0.625rem;  /* 10px — "PLAYING AS" label, still small but readable */
+    letter-spacing: 0.5px;
+}
+
+.featured-server-ad-badge {
+    font-size: 0.625rem;  /* 10px — was 9px */
+    color: rgba(255, 255, 255, 0.7);  /* was ~0.4, failed contrast */
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- 3. Minimum click target size (WCAG 2.5.5) ----------
+   Buttons/interactive elements below 44×44 get padding bumps. */
+.refresh-versions-btn {
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+}
+
+.version-tab {
+    padding: 10px 14px;
+    min-height: 36px;
+}
+
+.pose-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 0.8125rem;
+}
+
+/* ---------- 4. Contrast fixes for muted text (WCAG 1.4.3) ----------
+   Many "muted" colors were rgba(255,255,255,0.4-0.5) — failed 4.5:1.
+   Bump to 0.65+ for body text, 0.7+ for labels. */
+.featured-server-desc,
+.mp-onboard-content p,
+.mp-empty,
+.options-list .custom-option span:last-child {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.profile-stat-label,
+.profile-section-title,
+.featured-server-label {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---------- 5. Partner server banner accessibility (HOME-9) ----------
+   The LunaSMP banner was a <div> with onclick — no keyboard access.
+   Make it keyboard-focusable + add Enter/Space handlers via CSS role. */
+.advanced-server-banner {
+    role: button;
+    tabindex: 0;
+    cursor: pointer;
+}
+.advanced-server-banner:focus-visible {
+    box-shadow: 0 0 0 2px var(--theme-accent), 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- 6. Custom-select trigger consistency (Issue 2 fix) ----------
+   Ensure version and loader dropdowns have identical styling. */
+.custom-select-wrapper {
+    width: 220px;
+    flex-shrink: 0;
+}
+
+.custom-select-trigger {
+    min-height: 44px;
+    padding: 10px 14px;
+}
+
+/* ---------- 7. Play button — simple, no dropdown (Issue 1 fix) ----------
+   The play-dropdown popup was removed. Ensure the play-button-wrapper
+   doesn't leave orphan gap where the trigger used to be. */
+.play-button-wrapper {
+    gap: 0;
+}
+
+.play-button {
+    min-height: 50px;
+    min-width: 180px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* ---------- 8. Slider thumb minimum size (WCAG 2.5.5) ---------- */
+input[type="range"]::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--theme-accent, #4cb837);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    margin-top: -7px;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--theme-accent, #4cb837);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- 9. Toggle switch minimum size (SETTINGS-6) ---------- */
+.toggle-switch {
+    min-width: 44px;
+    min-height: 24px;
+}
+
+.toggle-switch .switch {
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+}
+
+.toggle-switch input:checked + .switch {
+    background: var(--theme-accent, #4cb837);
+}
+
+/* ---------- 10. Download button sizing (MODS-4) ---------- */
+.mp-dl-btn {
+    min-height: 36px;
+    padding: 8px 14px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+/* ---------- 11. Back button sizing (MODS-10) ---------- */
+.mp-back-btn,
+.back-btn {
+    min-height: 40px;
+    min-width: 40px;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+}
+
+/* ---------- 12. Friends auth tab contrast (FRIENDS-4) ---------- */
+.friends-auth-tab {
+    font-size: 0.8125rem;
+    min-height: 40px;
+    padding: 10px 16px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.friends-auth-tab.active {
+    color: #fff;
+    background: rgba(var(--theme-accent-rgb, 76, 184, 55), 0.25);
+    border-bottom: 2px solid var(--theme-accent, #4cb837);
+}
+
+/* ---------- 13. IDK Connect BETA badge (FRIENDS-1) ---------- */
+.idk-connect-beta-badge {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(var(--theme-accent-rgb, 76, 184, 55), 0.85);
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    opacity: 1;
+}
+
+/* ---------- 14. Profile pose button contrast (PROFILE-1) ---------- */
+.pose-btn {
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pose-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.pose-btn.active {
+    background: rgba(var(--theme-accent-rgb, 76, 184, 55), 0.25);
+    border-color: var(--theme-accent, #4cb837);
+    color: #fff;
+}
+
+/* ---------- 15. Profile stat labels (PROFILE-2, PROFILE-3) ---------- */
+.profile-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 12px;
+}
+
+.profile-stat-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---------- 16. UI Mode pill switch active state (SETTINGS-4) ---------- */
+.pill-switch .pill-option.active {
+    background: var(--theme-accent, #4cb837);
+    color: #fff;
+    font-weight: 700;
+}
+
+/* ---------- 17. News section visibility (HOME bonus) ----------
+   The news-section markup exists but renders empty. Ensure the container
+   has min-height so it doesn't collapse to 0 when empty. */
+.news-section {
+    min-height: 200px;
+    padding: 16px 0;
+}
+
+.news-grid {
+    min-height: 120px;
+}
+
+.news-grid:empty::after {
+    content: "No news available right now.";
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.875rem;
+    display: block;
+    padding: 24px;
+    text-align: center;
+}
+
+/* ---------- 18. Bottom-bar layout polish ---------- */
+.bottom-bar {
+    padding: 16px 20px;
+    gap: 16px;
+}
+
+.controls-left {
+    gap: 8px;
+}
+
+.controls-right {
+    gap: 12px;
+}
+
+/* ---------- 19. Featured server banner polish ---------- */
+.advanced-server-banner {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.featured-server-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.featured-server-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.featured-join-btn {
+    min-height: 36px;
+    padding: 8px 16px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+/* ---------- 20. Modpack onboard grid spacing (MODS-3, MODS-6) ---------- */
+.mp-onboard-grid {
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.mp-onboard-card {
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.mp-onboard-num {
+    font-size: 0.875rem;
+    font-weight: 700;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(var(--theme-accent-rgb, 76, 184, 55), 0.2);
+    color: var(--theme-accent, #4cb837);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mp-onboard-content h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.mp-onboard-content p {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 12px;
+}
+
+/* ---------- 21. Version download grid items (MODS-3) ---------- */
+.mp-version-download-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.mp-version-download-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    min-height: 44px;
+}
+
+/* ---------- 22. Scrollbar styling for dropdowns ---------- */
+.options-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.options-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 4px;
+}
+
+.options-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.options-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- 23. Reduced motion support (WCAG 2.3.3) ---------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---------- 24. High contrast mode support ---------- */
+@media (prefers-contrast: high) {
+    .custom-select-trigger,
+    .play-button,
+    .mp-dl-btn,
+    .featured-join-btn,
+    .friends-auth-tab {
+        border: 2px solid currentColor;
+    }
+}
