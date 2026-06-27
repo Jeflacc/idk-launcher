@@ -3732,11 +3732,17 @@ body.ui-advanced .adv-slider {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
+    height: 16px;  /* = thumb height, auto-centers */
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+}
+
+body.ui-advanced .adv-slider::-webkit-slider-runnable-track {
+    width: 100%;
     height: 4px;
     border-radius: calc(var(--theme-radius) * 0.2);
     background: rgba(255, 255, 255, 0.08);
-    outline: none;
-    cursor: pointer;
 }
 
 body.ui-advanced .adv-slider::-webkit-slider-thumb {
@@ -3750,8 +3756,26 @@ body.ui-advanced .adv-slider::-webkit-slider-thumb {
     cursor: pointer;
     transition: transform 0.15s;
     box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.3);
-    /* Center thumb on 4px track: (4-16)/2 = -6px */
+    /* Track is 4px at top of input. Track center = 2px. Thumb center = 8px.
+       margin-top = 2 - 8 = -6px */
     margin-top: -6px;
+}
+
+body.ui-advanced .adv-slider::-moz-range-track {
+    width: 100%;
+    height: 4px;
+    border-radius: calc(var(--theme-radius) * 0.2);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+body.ui-advanced .adv-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--theme-accent);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.3);
 }
 
 body.ui-advanced .adv-slider::-webkit-slider-thumb:hover {

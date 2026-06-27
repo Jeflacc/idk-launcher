@@ -1957,11 +1957,17 @@ input[type="checkbox"]:checked + .switch::after {
     flex: 1;
     -webkit-appearance: none;
     appearance: none;
+    height: 20px;  /* = thumb height, auto-centers */
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+}
+
+.memory-slider::-webkit-slider-runnable-track {
+    width: 100%;
     height: 6px;
     border-radius: 3px;
     background: #2d2d2e;
-    outline: none;
-    cursor: pointer;
 }
 
 .memory-slider::-webkit-slider-thumb {
@@ -1974,8 +1980,25 @@ input[type="checkbox"]:checked + .switch::after {
     cursor: pointer;
     border-radius: 2px;
     transition: background 0.15s;
-    /* Center thumb on 6px track: (6-20)/2 = -7px */
+    /* Track is 6px at top of input. Track center = 3px. Thumb center = 10px.
+       margin-top = 3 - 10 = -7px */
     margin-top: -7px;
+}
+
+.memory-slider::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #2d2d2e;
+}
+
+.memory-slider::-moz-range-thumb {
+    width: 14px;
+    height: 20px;
+    background: #a1a1a2;
+    border: 1px solid #3c3c3d;
+    cursor: pointer;
+    border-radius: 2px;
 }
 
 .memory-slider::-webkit-slider-thumb:hover {
@@ -9983,15 +10006,21 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     -webkit-appearance: none;
     appearance: none;
     width: 120px;
+    height: 18px;  /* = thumb height so thumb auto-centers in the input */
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+}
+
+.glass-slider::-webkit-slider-runnable-track {
+    width: 100%;
     height: 8px;
     border-radius: 4px;
     background: linear-gradient(90deg, var(--theme-accent) 0%, var(--theme-accent) 50%, rgba(255, 255, 255, 0.1) 50%);
-    outline: none;
-    cursor: pointer;
     transition: height 0.15s;
 }
 
-.glass-slider:hover {
+.glass-slider:hover::-webkit-slider-runnable-track {
     height: 10px;
 }
 
@@ -10004,15 +10033,13 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     background: var(--theme-accent);
     border: 3px solid rgba(255, 255, 255, 0.2);
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s, margin-top 0.15s;
+    transition: transform 0.15s, box-shadow 0.15s;
     box-shadow: 0 0 10px rgba(var(--theme-accent-rgb), 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
-    /* Center thumb on 8px track: (8-18)/2 = -5px */
+    /* Track is 8px tall, positioned at top of input (y=0 to y=8 within input).
+       Track center is at y=4 within input. Thumb is 18px tall, so to align
+       thumb center with track center: thumb top = 4 - 9 = -5px.
+       margin-top: -5px shifts thumb up by 5px. */
     margin-top: -5px;
-}
-
-.glass-slider:hover::-webkit-slider-thumb {
-    /* On hover, track grows to 10px: (10-18)/2 = -4px */
-    margin-top: -4px;
 }
 
 .glass-slider::-webkit-slider-thumb:hover {
@@ -10036,9 +10063,10 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 }
 
 .glass-slider::-moz-range-track {
-    height: 6px;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.1);
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--theme-accent) 0%, var(--theme-accent) 50%, rgba(255, 255, 255, 0.1) 50%);
 }
 
 .slider-value {

@@ -150,8 +150,10 @@ html, body {
 
 /* ---------- 8. Slider thumb minimum size (WCAG 2.5.5) ----------
    NOTE: -webkit-appearance: none is REQUIRED for custom thumb styling
-   to work in Chromium/WebKit. Without it, all width/height/background
-   rules are ignored. */
+   to work in Chromium/WebKit. The specific .glass-slider, .memory-slider,
+   and .adv-slider rules in style.css/advanced-theme.css handle their own
+   thumb sizing and centering via ::-webkit-slider-runnable-track.
+   This generic rule is a fallback for any range input without a specific class. */
 input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
@@ -166,7 +168,6 @@ input[type="range"]::-webkit-slider-thumb {
     background: var(--theme-accent, #4cb837);
     cursor: pointer;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    margin-top: -6px;
     box-shadow: 0 0 8px rgba(var(--theme-accent-rgb, 76, 184, 55), 0.4);
 }
 
