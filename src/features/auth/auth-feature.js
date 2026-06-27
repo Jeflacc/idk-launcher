@@ -232,11 +232,13 @@ Please review and accept these terms to continue.`,
     if (advancedHomeName) advancedHomeName.innerText = name.toUpperCase();
 
     const wrapper = document.querySelector(".user-profile-wrapper");
-    let badge = wrapper?.querySelector(".auth-badge");
-    if (!badge && wrapper) {
+    const avatar = document.querySelector(".user-profile-avatar");
+    const badgeContainer = avatar || wrapper;  // Prefer avatar so badge sits on the avatar corner
+    let badge = badgeContainer?.querySelector(".auth-badge");
+    if (!badge && badgeContainer) {
       badge = document.createElement("span");
       badge.className = "auth-badge";
-      wrapper.appendChild(badge);
+      badgeContainer.appendChild(badge);
     }
     if (badge) {
       badge.classList.remove("auth-elyby", "auth-microsoft", "auth-offline");

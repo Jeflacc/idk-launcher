@@ -148,15 +148,26 @@ html, body {
     letter-spacing: 1px;
 }
 
-/* ---------- 8. Slider thumb minimum size (WCAG 2.5.5) ---------- */
+/* ---------- 8. Slider thumb minimum size (WCAG 2.5.5) ----------
+   NOTE: -webkit-appearance: none is REQUIRED for custom thumb styling
+   to work in Chromium/WebKit. Without it, all width/height/background
+   rules are ignored. */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
 input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
     width: 20px;
     height: 20px;
     border-radius: 50%;
     background: var(--theme-accent, #4cb837);
     cursor: pointer;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    margin-top: -7px;
+    margin-top: -6px;
+    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb, 76, 184, 55), 0.4);
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -166,6 +177,7 @@ input[type="range"]::-moz-range-thumb {
     background: var(--theme-accent, #4cb837);
     cursor: pointer;
     border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb, 76, 184, 55), 0.4);
 }
 
 /* ---------- 9. Toggle switch minimum size (SETTINGS-6) ---------- */
@@ -454,15 +466,19 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ---------- 26. User profile wrapper overflow fix ----------
-   The user-profile-wrapper was 6px narrower than its content. */
+   The user-profile-wrapper was 6px narrower than its content.
+   NOTE: Do NOT set overflow:hidden here — it clips the profile-dropdown
+   that extends below the wrapper. Instead, use text-overflow on the
+   inner user-profile element only. */
 .user-profile-wrapper {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow: visible;
 }
 
 .user-profile {
     max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* ---------- 27. User details label fix (was 0.5rem = 8px) ---------- */
