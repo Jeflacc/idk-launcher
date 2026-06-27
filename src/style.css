@@ -23,8 +23,6 @@
 .modpacks-sidebar,
 .browser-sidebar {
     background: rgba(15, 13, 24, 0.8) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
 }
 
 .installed-mod-card,
@@ -618,8 +616,6 @@ body:has(#view-idk-connect.active) .nav-tab[data-target="idk-connect"] {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     padding: 6px;
     display: flex;
     flex-direction: column;
@@ -976,8 +972,6 @@ body:has(#view-login.active) .user-profile {
     position: relative;
     z-index: 10;
     background: rgba(18, 18, 20, 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     height: 76px;
@@ -1011,8 +1005,6 @@ body:has(#view-login.active) .user-profile {
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
 }
 
 .refresh-versions-btn:hover {
@@ -1073,8 +1065,6 @@ body:has(#view-login.active) .user-profile {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     max-height: 0;
     opacity: 0;
     overflow: hidden;
@@ -2079,8 +2069,6 @@ input[type="checkbox"]:checked + .switch::after {
     border: none;
     border-radius: 0px;
     background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
     box-shadow: none;
     min-height: 0;
 }
@@ -2919,8 +2907,8 @@ input[type="checkbox"]:checked + .switch::after {
     bottom: 0;
     left: 280px;
     background: rgba(15, 13, 24, 0.7);
-    backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
     border-left: 2px solid #2d2d2e;
     display: flex;
     flex-direction: column;
@@ -3040,8 +3028,6 @@ input[type="checkbox"]:checked + .switch::after {
     flex-shrink: 0;
     border-left: 1px solid rgba(255, 255, 255, 0.06);
     background: rgba(10, 10, 11, 0.35);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     padding: 8px 0;
     overflow-y: auto;
     display: flex;
@@ -3741,8 +3727,6 @@ input[type="checkbox"]:checked + .switch::after {
     right: 0;
     bottom: 0;
     background: rgba(18, 18, 19, 0.95);
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
     z-index: 10000;
     display: flex;
     flex-direction: column;
@@ -3978,8 +3962,6 @@ input[type="checkbox"]:checked + .switch::after {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     z-index: 10000;
     display: flex;
     align-items: center;
@@ -4066,8 +4048,6 @@ input[type="checkbox"]:checked + .switch::after {
     justify-content: center;
     position: relative;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
 }
 
 .friends-toggle-btn:hover {
@@ -4120,8 +4100,6 @@ input[type="checkbox"]:checked + .switch::after {
     bottom: 0;
     background: rgba(16, 16, 18, 0.97);
     border-left: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
     z-index: 95;
     transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
@@ -5972,8 +5950,6 @@ input:focus-visible,
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -6891,8 +6867,6 @@ input:focus-visible,
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -7139,8 +7113,6 @@ body[data-launcher-performance="balanced"] .mc-logo {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
 }
 
 .custom-modal.active {
@@ -7743,8 +7715,6 @@ body[data-launcher-performance="balanced"] .mc-logo {
     justify-content: center;
     padding: 16px;
     background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
@@ -7992,8 +7962,6 @@ body[data-launcher-performance="balanced"] .mc-logo {
     justify-content: center;
     padding: 20px;
     background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.22s ease;
@@ -8329,8 +8297,6 @@ body[data-launcher-performance="balanced"] .mc-logo {
         transform 0.15s ease,
         box-shadow 0.18s ease;
     white-space: nowrap;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     box-shadow:
         0 4px 16px rgba(var(--theme-accent-rgb), 0.35),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -8942,8 +8908,6 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     gap: 0;
     margin: 6px 0 22px;
     background: rgba(13, 13, 15, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border-radius: 10px;
     padding: 4px;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -9024,8 +8988,6 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 /* Settings Page: single container per tab */
 .settings-page {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
-    backdrop-filter: blur(var(--theme-blur));
-    -webkit-backdrop-filter: blur(var(--theme-blur));
     border: 1px solid rgba(var(--theme-accent-rgb), 0.15);
     border-radius: 10px;
     padding: 4px 22px 14px;
@@ -9780,8 +9742,6 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .profile-page-content,
 html body[data-bg-effect]:not([data-bg-effect="none"]) .profile-main-stage,
 html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     background: rgba(15, 13, 24, 0.05) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
 }
 
 /* Layer 1 — Sidebars: heavily frosted glass, strong blur */
@@ -9791,8 +9751,6 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .profile-sidebar,
 html body[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar,
 html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     background: rgba(15, 13, 24, 0.2) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
     transform: translateZ(0); /* Hardware acceleration */
     will-change: transform, backdrop-filter;
 }
@@ -9864,8 +9822,6 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
     padding: 4px;
     display: flex;
     flex-direction: column;
@@ -10548,8 +10504,6 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     transition: all 0.3s ease;
     cursor: pointer;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.2);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
 }
 
 .featured-server-banner::before {
@@ -10746,8 +10700,6 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     align-items: center;
     text-align: center;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.2);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
 }
 
 .profile-avatar-wrapper {
@@ -10806,8 +10758,6 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     display: flex;
     flex-direction: column;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
 }
 
 .widget-header {
@@ -10940,8 +10890,6 @@ body[data-launcher-performance="eco"] * {
     transition: none !important;
     box-shadow: none !important;
     text-shadow: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
     filter: none !important;
 }
 

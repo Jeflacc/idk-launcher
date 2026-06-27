@@ -4086,73 +4086,89 @@ ipcMain.handle('start-frpc-tunnel', async (event, { port }) => {
     return { success: false, error: 'frpc.exe is not installed' };
   }
 
-  return new Promise((resolve) => {
-    const { spawn } = require('child_process');
-    
-    // Generate a random remote port between 10000 and 65000
-    const frpcServer = process.env.IDK_FRPC_SERVER || 'play.somniac.me';
-    const frpcPort = process.env.IDK_FRPC_PORT || '7000';
-    const frpcToken = process.env.IDK_FRPC_TOKEN || 'indkingdomisalive';
-    const remotePort = Math.floor(Math.random() * (65000 - 10000 + 1)) + 10000;
-    const proxyName = 'idk_proxy_' + Math.random().toString(36).substring(2, 10);
-    
-    console.log(`[FRPC] Starting tunnel on local tcp://127.0.0.1:${port} to remote ${frpcServer}:${remotePort}`);
-
-    const proc = spawn(exePath, [
-      'tcp',
-      '-s', frpcServer,
-      '-P', frpcPort,
-      '-t', frpcToken,
-      '-l', port.toString(),
-      '-r', remotePort.toString(),
-      '-n', proxyName
-    ]);
-    
-    activeTunnelProcess = proc;
-
-    let resolved = false;
-    let logBuffer = '';
-
-    const handleLogData = (data, source) => {
-      const line = data.toString();
-      logBuffer += line;
-
-      // Scan for successful start
-      if (line.includes('start proxy success') && !resolved) {
-        resolved = true;
-        const tunnelUrl = `tcp://play.somniac.me:${remotePort}`;
-        console.log(`[FRPC] Tunnel successfully established: ${tunnelUrl}`);
-        resolve({ success: true, url: tunnelUrl });
-      }
+  const MAX_RETRIES = 5;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const result = await new Promise((resolve) => {
+      const { spawn } = require('child_process');
       
-      // Check for port already used
-      if (line.includes('port already used') && !resolved) {
-        resolved = true;
-        resolve({ success: false, error: 'Port collision', retry: true });
-      }
-    };
+      const frpcServer = 'frp.freefrp.net';
+      const frpcPort = '7000';
+      const frpcToken = 'freefrp.net';
+      const remotePort = Math.floor(Math.random() * (65000 - 10000 + 1)) + 10000;
+      const proxyName = 'idk_proxy_' + Math.random().toString(36).substring(2, 10);
+      
+      console.log(`[FRPC] (Attempt ${attempt}) Starting tunnel on local tcp://127.0.0.1:${port} to remote ${frpcServer}:${remotePort}`);
 
-    proc.stderr.on('data', (data) => handleLogData(data, 'Stderr'));
-    proc.stdout.on('data', (data) => handleLogData(data, 'Stdout'));
+      const proc = spawn(exePath, [
+        'tcp',
+        '-s', frpcServer,
+        '-P', frpcPort,
+        '-t', frpcToken,
+        '-l', port.toString(),
+        '-r', remotePort.toString(),
+        '-n', proxyName
+      ]);
+      
+      activeTunnelProcess = proc;
 
-    proc.on('close', (code) => {
-      console.log(`[FRPC] Process exited with code ${code}`);
-      activeTunnelProcess = null;
-      if (!resolved) {
-        resolve({ success: false, error: `FRPC exited with code ${code}` });
-      }
-      event.sender.send('frpc-tunnel-closed');
+      let resolved = false;
+      let logBuffer = '';
+
+      const handleLogData = (data, source) => {
+        const line = data.toString();
+        logBuffer += line;
+
+        // Scan for successful start
+        if (line.includes('start proxy success') && !resolved) {
+          resolved = true;
+          const tunnelUrl = `tcp://${frpcServer}:${remotePort}`;
+          console.log(`[FRPC] Tunnel successfully established: ${tunnelUrl}`);
+          resolve({ success: true, url: tunnelUrl });
+        }
+        
+        // Check for port already used
+        if ((line.includes('port already used') || line.includes('port unavailable')) && !resolved) {
+          resolved = true;
+          resolve({ success: false, error: 'Port collision', retry: true });
+        }
+      };
+
+      proc.stderr.on('data', (data) => handleLogData(data, 'Stderr'));
+      proc.stdout.on('data', (data) => handleLogData(data, 'Stdout'));
+
+      proc.on('close', (code) => {
+        if (!resolved) {
+          console.log(`[FRPC] Process exited with code ${code}`);
+          activeTunnelProcess = null;
+          resolve({ success: false, error: `FRPC exited with code ${code}` });
+        }
+      });
+
+      setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          try { proc.kill(); } catch (e) { }
+          activeTunnelProcess = null;
+          resolve({ success: false, error: 'Tunnel connection timed out (20 seconds)' });
+        }
+      }, 20000);
     });
 
-    setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        try { proc.kill(); } catch (e) { }
-        activeTunnelProcess = null;
-        resolve({ success: false, error: 'Tunnel connection timed out (20 seconds)' });
+    if (result.success) {
+      // Attach the close listener for the frontend only when successful
+      if (activeTunnelProcess) {
+        activeTunnelProcess.on('close', () => {
+          activeTunnelProcess = null;
+          event.sender.send('frpc-tunnel-closed');
+        });
       }
-    }, 20000);
-  });
+      return result;
+    } else if (!result.retry) {
+      return result; // Non-retryable error
+    }
+    // If retry is true, it will loop and try another port
+  }
+  return { success: false, error: 'Failed to find an open port after multiple attempts' };
 });
 
 ipcMain.handle('stop-frpc-tunnel', async () => {
