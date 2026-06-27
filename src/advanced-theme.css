@@ -3789,3 +3789,22 @@ body.ui-advanced #view-settings {
     flex-direction: column;
     gap: 6px;
 }
+/* Fix Dashboard Banners in Advanced UI */
+body.ui-advanced .dashboard-banners-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+body.ui-advanced .dashboard-banners-grid .support-banner {
+    padding: 16px;
+}
+
+body.ui-advanced .dashboard-banners-grid .support-banner-info {
+    gap: 12px;
+}
+
+body.ui-advanced .dashboard-banners-grid .featured-server-banner {
+    margin-top: 50px;
+}
