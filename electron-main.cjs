@@ -1217,8 +1217,8 @@ ipcMain.handle('download-curseforge-modpack', async (event, { downloadUrl }) => 
     const rawLoaderId = manifest.minecraft?.modLoaders?.[0]?.id || "";
     const rawLoaderLower = rawLoaderId.toLowerCase();
     const detectedLoader = rawLoaderLower.includes("fabric") ? "Fabric"
-      : rawLoaderLower.includes("forge") ? "Forge"
       : rawLoaderLower.includes("neoforge") ? "NeoForge"
+      : rawLoaderLower.includes("forge") ? "Forge"
       : "Vanilla";
     const manifestMc = manifest.minecraft?.version || "";
     const profileJson = JSON.stringify({
@@ -1328,8 +1328,8 @@ ipcMain.handle('download-modrinth-modpack', async (event, { downloadUrl }) => {
     const rawLoaderId = manifest.minecraft?.modLoaders?.[0]?.id || "";
     const rawLoaderLower = rawLoaderId.toLowerCase();
     const detectedLoader = rawLoaderLower.includes("fabric") ? "Fabric"
-      : rawLoaderLower.includes("forge") ? "Forge"
       : rawLoaderLower.includes("neoforge") ? "NeoForge"
+      : rawLoaderLower.includes("forge") ? "Forge"
       : "Vanilla";
     const manifestMc = manifest.minecraft?.version || "";
     const profileJson = JSON.stringify({
@@ -4760,8 +4760,8 @@ ipcMain.handle('scan-profiles', async () => {
         const vl = v.toLowerCase();
         if (vl.includes(versionId)) {
           if (vl.includes('fabric')) return 'Fabric';
-          if (vl.includes('forge')) return 'Forge';
           if (vl.includes('neoforge')) return 'NeoForge';
+          if (vl.includes('forge')) return 'Forge';
           if (vl.includes('quilt')) return 'Quilt';
         }
       }

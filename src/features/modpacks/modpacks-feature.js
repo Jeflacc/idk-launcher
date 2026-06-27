@@ -1797,10 +1797,10 @@ export function initModpacksFeature({ switchView }) {
         const loaderStr = rawLoaderId.toLowerCase();
         const loader = loaderStr.includes("fabric")
           ? "Fabric"
-          : loaderStr.includes("forge")
-            ? "Forge"
-            : loaderStr.includes("neoforge")
-              ? "NeoForge"
+          : loaderStr.includes("neoforge")
+            ? "NeoForge"
+            : loaderStr.includes("forge")
+              ? "Forge"
               : "Vanilla";
         const loaderVerMatch = rawLoaderId.match(/^[a-z]+-(.+)$/i);
         const loaderVersion = loaderVerMatch ? loaderVerMatch[1] : "";
@@ -2752,10 +2752,10 @@ export function initModpacksFeature({ switchView }) {
         const loaderStr = rawLoaderId.toLowerCase();
         const loader = loaderStr.includes("fabric")
           ? "Fabric"
-          : loaderStr.includes("forge")
-            ? "Forge"
-            : loaderStr.includes("neoforge")
-              ? "NeoForge"
+          : loaderStr.includes("neoforge")
+            ? "NeoForge"
+            : loaderStr.includes("forge")
+              ? "Forge"
               : "Vanilla";
         // Extract pinned version: 'forge-14.23.5.2860' \u2192 '14.23.5.2860', 'fabric-0.15.11' \u2192 '0.15.11'
         const loaderVerMatch = rawLoaderId.match(/^[a-z]+-(.+)$/i);
@@ -3037,10 +3037,10 @@ export function initModpacksFeature({ switchView }) {
         const loaderStr = rawLoaderId.toLowerCase();
         const loader = loaderStr.includes("fabric")
           ? "Fabric"
-          : loaderStr.includes("forge")
-            ? "Forge"
-            : loaderStr.includes("neoforge")
-              ? "NeoForge"
+          : loaderStr.includes("neoforge")
+            ? "NeoForge"
+            : loaderStr.includes("forge")
+              ? "Forge"
               : "Vanilla";
         const loaderVerMatch = rawLoaderId.match(/^[a-z]+-(.+)$/i);
         const loaderVersion = loaderVerMatch ? loaderVerMatch[1] : "";
