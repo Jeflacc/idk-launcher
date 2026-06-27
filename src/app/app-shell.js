@@ -15,20 +15,20 @@
       <div class="header-nav">
         <div class="brand-title" style="display:none;"></div>
         <div class="nav-tabs">
-          <div class="nav-tab" data-target="main">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <div class="nav-tab" data-target="main" role="button" tabindex="0" aria-label="Play">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             Play
           </div>
-          <div class="nav-tab" data-target="mods">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <div class="nav-tab" data-target="mods" role="button" tabindex="0" aria-label="Modpacks">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             Modpacks
           </div>
-          <div class="nav-tab" data-target="profile">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <div class="nav-tab" data-target="profile" role="button" tabindex="0" aria-label="Profile">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             Profile
           </div>
-          <div class="nav-tab" data-target="settings">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg>
+          <div class="nav-tab" data-target="settings" role="button" tabindex="0" aria-label="Settings">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path></svg>
             Settings
           </div>
         </div>
@@ -128,7 +128,7 @@
       </div>
 
       <div class="offline-form" id="offline-form">
-        <input type="text" class="clean-input" id="login-username" placeholder="Enter username..." />
+        <input type="text" class="clean-input" id="login-username" aria-label="Username" placeholder="Enter username..." />
         <button class="submit-btn" id="btn-submit-login">Enter Launcher</button>
       </div>
     </div>
@@ -175,13 +175,13 @@
                     <button class="version-tab" data-tab="downloaded">Installed</button>
                   </div>
                   <label class="toggle-switch" style="display:none;">
-                    <input type="checkbox" id="show-snapshots" />
+                    <input type="checkbox" id="show-snapshots" aria-label="Show snapshots" />
                     <div class="switch"></div>
                     Snapshots
                   </label>
 
                   <label class="toggle-switch" style="display:none;">
-                    <input type="checkbox" id="show-historical" />
+                    <input type="checkbox" id="show-historical" aria-label="Show historical versions" />
                     <div class="switch"></div>
                     Historical
                   </label>
@@ -381,7 +381,7 @@
               <small>Custom picker for the "Custom" theme</small>
             </div>
             <div class="color-picker-wrap">
-              <input type="color" id="custom-accent-picker" class="color-picker-input" value="#4cb837" />
+              <input type="color" id="custom-accent-picker" aria-label="Custom accent color" class="color-picker-input" value="#4cb837" />
               <span class="color-hex-label" id="custom-accent-hex">#4cb837</span>
             </div>
           </div>
@@ -405,7 +405,7 @@
               <small>How rounded are UI elements</small>
             </div>
             <div class="slider-group">
-              <input type="range" id="border-radius-slider" min="0" max="40" step="1" value="10" class="glass-slider" />
+              <input type="range" id="border-radius-slider" aria-label="Border radius" min="0" max="40" step="1" value="10" class="glass-slider" />
               <span class="slider-value" id="border-radius-value">10px</span>
             </div>
           </div>
@@ -415,7 +415,7 @@
               <small>UI motion multiplier (0 = off)</small>
             </div>
             <div class="slider-group">
-              <input type="range" id="animation-speed-slider" min="0" max="2" step="0.1" value="1" class="glass-slider" />
+              <input type="range" id="animation-speed-slider" aria-label="Animation speed" min="0" max="2" step="0.1" value="1" class="glass-slider" />
               <span class="slider-value" id="animation-speed-value">1.0x</span>
             </div>
           </div>
@@ -446,7 +446,7 @@
               <small>RAM for Minecraft (max ~80% of system)</small>
             </div>
             <div class="slider-group">
-              <input type="range" id="memory-slider" min="1" max="16" step="1" value="4" class="glass-slider" />
+              <input type="range" id="memory-slider" aria-label="Maximum memory in GB" min="1" max="16" step="1" value="4" class="glass-slider" />
               <span class="slider-value mem-value" id="memory-value-label">4 GB</span>
             </div>
           </div>
@@ -495,14 +495,14 @@
               <span>Java Path</span>
               <small>Path to javaw.exe (leave empty for system default)</small>
             </div>
-            <input type="text" class="glass-input" id="java-path" placeholder="Use System Default" />
+            <input type="text" class="glass-input" id="java-path" aria-label="Java path" placeholder="Use System Default" />
           </div>
           <div class="settings-row">
             <div class="settings-row-label">
               <span>Java Arguments</span>
               <small>Global JVM flags for all launches</small>
             </div>
-            <input type="text" class="glass-input" id="global-java-args" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
+            <input type="text" class="glass-input" id="global-java-args" aria-label="Global Java arguments" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
           </div>
           <div class="settings-row">
             <div class="settings-row-label">
@@ -510,9 +510,9 @@
               <small>Default game resolution</small>
             </div>
             <div class="window-size-group">
-              <input type="number" class="glass-input sm" id="default-window-width" value="1024" />
+              <input type="number" class="glass-input sm" id="default-window-width" aria-label="Default window width" value="1024" />
               <span class="win-size-x">&times;</span>
-              <input type="number" class="glass-input sm" id="default-window-height" value="768" />
+              <input type="number" class="glass-input sm" id="default-window-height" aria-label="Default window height" value="768" />
               <label class="tg-switch" style="margin-left:8px;">
                 <input type="checkbox" id="fullscreen-toggle" />
                 <span class="tg-slider"></span>
@@ -546,7 +546,7 @@
               <small>Override the default game data folder</small>
             </div>
             <div class="folder-row">
-              <input type="text" class="glass-input" id="custom-minecraft-path" placeholder="Default Location" readonly />
+              <input type="text" class="glass-input" id="custom-minecraft-path" aria-label="Custom Minecraft data path" placeholder="Default Location" readonly />
               <button class="glass-btn" id="btn-browse-minecraft-path">Browse</button>
               <button class="glass-btn danger" id="btn-clear-minecraft-path" title="Reset">&times;</button>
             </div>
@@ -557,7 +557,7 @@
               <small>Re-verify and re-download game files before every launch</small>
             </div>
             <label class="tg-switch">
-              <input type="checkbox" id="force-update-toggle" />
+              <input type="checkbox" id="force-update-toggle" aria-label="Force update on launch" />
               <span class="tg-slider"></span>
             </label>
           </div>
@@ -578,7 +578,7 @@
               <small>Overall UI text size (80% to 140%)</small>
             </div>
             <div class="slider-group">
-              <input type="range" id="font-scale-slider" min="0.8" max="1.4" step="0.05" value="1" class="glass-slider" />
+              <input type="range" id="font-scale-slider" aria-label="Font scale" min="0.8" max="1.4" step="0.05" value="1" class="glass-slider" />
               <span class="slider-value" id="font-scale-value">100%</span>
             </div>
           </div>
@@ -600,7 +600,7 @@
               <small>Reduce motion (0 = no animations)</small>
             </div>
             <div class="slider-group">
-              <input type="range" id="access-animation-speed-slider" min="0" max="2" step="0.1" value="1" class="glass-slider" />
+              <input type="range" id="access-animation-speed-slider" aria-label="Animation speed" min="0" max="2" step="0.1" value="1" class="glass-slider" />
               <span class="slider-value" id="access-animation-speed-value">1.0x</span>
             </div>
           </div>
@@ -683,7 +683,7 @@
           <h3>Language</h3>
           <p>Interface language preference</p>
         </div>
-        <select class="adv-select" id="adv-language">
+        <select class="adv-select" id="adv-language" aria-label="Language">
           <option value="en">English</option>
           <option value="ru">Русский</option>
           <option value="es">Español</option>
@@ -721,7 +721,7 @@
           </button>
         </div>
         <div class="accent-custom-row" id="adv-accent-custom-row">
-          <input type="color" id="adv-accent-picker" class="accent-picker-input" value="#4cb837" />
+          <input type="color" id="adv-accent-picker" aria-label="Custom accent color" class="accent-picker-input" value="#4cb837" />
           <span class="accent-hex-label" id="adv-accent-hex">#4cb837</span>
         </div>
       </div>
@@ -788,7 +788,7 @@
             <span>Animation Speed</span>
             <span class="adv-slider-field-value" id="adv-animation-speed-value">1.0x</span>
           </div>
-          <input type="range" id="adv-animation-speed" min="0" max="2" step="0.1" value="1" class="adv-slider" />
+          <input type="range" id="adv-animation-speed" aria-label="Animation speed" min="0" max="2" step="0.1" value="1" class="adv-slider" />
           <div class="adv-slider-range">
             <span>0x</span>
             <span>2x</span>
@@ -799,7 +799,7 @@
             <span>Font Scale</span>
             <span class="adv-slider-field-value" id="adv-font-scale-value">100%</span>
           </div>
-          <input type="range" id="adv-font-scale" min="0.8" max="1.4" step="0.05" value="1" class="adv-slider" />
+          <input type="range" id="adv-font-scale" aria-label="Font scale" min="0.8" max="1.4" step="0.05" value="1" class="adv-slider" />
           <div class="adv-slider-range">
             <span>80%</span>
             <span>140%</span>
@@ -810,7 +810,7 @@
             <span>Border Radius</span>
             <span class="adv-slider-field-value" id="adv-border-radius-value">10px</span>
           </div>
-          <input type="range" id="adv-border-radius" min="0" max="40" step="1" value="10" class="adv-slider" />
+          <input type="range" id="adv-border-radius" aria-label="Border radius" min="0" max="40" step="1" value="10" class="adv-slider" />
           <div class="adv-slider-range">
             <span>0px</span>
             <span>40px</span>
@@ -881,7 +881,7 @@
         </div>
         <div class="adv-slider-group">
           <span class="adv-slider-label">Low</span>
-          <input type="range" id="adv-bg-intensity" min="0" max="200" value="50" class="adv-slider" />
+          <input type="range" id="adv-bg-intensity" aria-label="Background intensity" min="0" max="200" value="50" class="adv-slider" />
           <span class="adv-slider-label">High</span>
           <span class="adv-slider-value" id="adv-bg-intensity-value">50</span>
         </div>
@@ -990,7 +990,7 @@
             <span>Allocated RAM</span>
             <span class="adv-slider-field-value" id="adv-memory-value-label">4 GB</span>
           </div>
-          <input type="range" id="adv-memory-slider" min="1" max="16" step="1" value="4" class="adv-slider" />
+          <input type="range" id="adv-memory-slider" aria-label="Maximum memory in GB" min="1" max="16" step="1" value="4" class="adv-slider" />
           <div class="adv-slider-range" style="display:flex;gap:4px;justify-content:space-between;margin-top:8px;">
             <button class="mem-preset-btn adv-mem-preset" data-gb="2">2</button>
             <button class="mem-preset-btn adv-mem-preset" data-gb="4">4</button>
@@ -1012,7 +1012,7 @@
             <span>Concurrent Downloads</span>
             <span class="adv-slider-field-value" id="adv-concurrent-dl-value">4</span>
           </div>
-          <input type="range" id="adv-concurrent-dl" min="1" max="10" step="1" value="4" class="adv-slider" />
+          <input type="range" id="adv-concurrent-dl" aria-label="Concurrent downloads" min="1" max="10" step="1" value="4" class="adv-slider" />
           <div class="adv-slider-range">
             <span>1</span>
             <span>10</span>
@@ -1023,7 +1023,7 @@
             <span>Concurrent I/O Operations</span>
             <span class="adv-slider-field-value" id="adv-concurrent-io-value">2</span>
           </div>
-          <input type="range" id="adv-concurrent-io" min="1" max="8" step="1" value="2" class="adv-slider" />
+          <input type="range" id="adv-concurrent-io" aria-label="Concurrent I/O operations" min="1" max="8" step="1" value="2" class="adv-slider" />
           <div class="adv-slider-range">
             <span>1</span>
             <span>8</span>
@@ -1047,11 +1047,11 @@
         </div>
         <div class="adv-input-field">
           <label class="adv-input-label" for="adv-java-path">Java Path</label>
-          <input type="text" class="adv-input" id="adv-java-path" placeholder="Use System Default" />
+          <input type="text" class="adv-input" id="adv-java-path" aria-label="Java path" placeholder="Use System Default" />
         </div>
         <div class="adv-input-field" style="margin-top:10px;">
           <label class="adv-input-label" for="adv-global-java-args">Global Java Arguments</label>
-          <input type="text" class="adv-input" id="adv-global-java-args" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
+          <input type="text" class="adv-input" id="adv-global-java-args" aria-label="Global Java arguments" placeholder="-XX:+UseG1GC -XX:+ParallelRefProcEnabled" />
         </div>
       </div>
 
@@ -1066,9 +1066,9 @@
             <span class="adv-slider-field-value" id="adv-window-size-value">1024 x 768</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <input type="number" id="adv-default-window-width" class="adv-input adv-input--sm" min="640" max="7680" value="1024" />
+            <input type="number" id="adv-default-window-width" aria-label="Default window width" class="adv-input adv-input--sm" min="640" max="7680" value="1024" />
             <span class="adv-slider-label">x</span>
-            <input type="number" id="adv-default-window-height" class="adv-input adv-input--sm" min="480" max="4320" value="768" />
+            <input type="number" id="adv-default-window-height" aria-label="Default window height" class="adv-input adv-input--sm" min="480" max="4320" value="768" />
           </div>
         </div>
         <div class="adv-toggles" style="margin-top:12px;">
@@ -1091,7 +1091,7 @@
           <p>Override the default game data folder</p>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input type="text" class="adv-input" id="adv-custom-minecraft-path" placeholder="Default Location" readonly style="flex:1;min-width:0;" />
+          <input type="text" class="adv-input" id="adv-custom-minecraft-path" aria-label="Custom Minecraft data path" placeholder="Default Location" readonly style="flex:1;min-width:0;" />
           <button type="button" class="adv-btn" id="adv-btn-browse-minecraft-path">Browse</button>
           <button type="button" class="adv-btn adv-btn--danger" id="adv-btn-clear-minecraft-path" title="Reset">&times;</button>
         </div>
@@ -1539,7 +1539,7 @@
           <div class="browser-main">
             <div class="browser-search-bar">
               <svg class="browser-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input type="text" class="clean-input" id="mod-search" placeholder="Search mods..." />
+              <input type="text" class="clean-input" id="mod-search" aria-label="Search mods" placeholder="Search mods..." />
               <div id="pagination-controls" class="browser-pagination-bar"></div>
             </div>
             <div class="browser-results" id="mod-browser-results"></div>
@@ -1555,7 +1555,7 @@
             </div>
             <div class="browser-filter-section">
               <h4 class="browser-filter-title">Sort By</h4>
-              <select class="clean-select" id="filter-sort">
+              <select class="clean-select" id="filter-sort" aria-label="Sort by">
                 <option value="relevance">Relevance</option>
                 <option value="downloads">Most Downloads</option>
                 <option value="updated">Recently Updated</option>
@@ -1568,7 +1568,7 @@
             </div>
             <div class="browser-filter-section">
               <h4 class="browser-filter-title">Minecraft Version</h4>
-              <select class="clean-select" id="filter-version"></select>
+              <select class="clean-select" id="filter-version" aria-label="Filter by Minecraft version"></select>
             </div>
             <button class="browser-filter-clear" id="btn-clear-filters">Clear Filters</button>
           </div>
@@ -1580,14 +1580,14 @@
           <div class="mp-create-body">
             <div class="icon-picker" id="new-mp-icon-picker" title="Select custom icon">
               <div class="icon-picker-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
-              <input type="file" accept="image/*" class="icon-picker-input" id="new-mp-icon-input" />
+              <input type="file" accept="image/*" class="icon-picker-input" id="new-mp-icon-input" aria-label="Upload modpack icon" />
             </div>
             <input type="hidden" id="new-mp-icon" value="" />
             <div class="mp-create-fields">
-              <input class="clean-input" id="new-mp-name" placeholder="Modpack name..." />
+              <input class="clean-input" id="new-mp-name" aria-label="Modpack name" placeholder="Modpack name..." />
               <div class="mp-create-selects">
-                <select class="clean-select" id="new-mp-version"></select>
-                <select class="clean-select" id="new-mp-loader"><option value="Fabric">Fabric</option><option value="Forge">Forge</option><option value="NeoForge">NeoForge</option><option value="Quilt">Quilt</option><option value="Vanilla">Vanilla</option></select>
+                <select class="clean-select" id="new-mp-version" aria-label="Minecraft version"></select>
+                <select class="clean-select" id="new-mp-loader" aria-label="Mod loader"><option value="Fabric">Fabric</option><option value="Forge">Forge</option><option value="NeoForge">NeoForge</option><option value="Quilt">Quilt</option><option value="Vanilla">Vanilla</option></select>
               </div>
             </div>
           </div>
@@ -1613,28 +1613,28 @@
             <div style="display:flex;gap:16px;align-items:center;">
               <div class="icon-picker" id="mp-settings-icon-picker" title="Select custom icon">
                 <div class="icon-picker-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
-                <input type="file" accept="image/*" class="icon-picker-input" id="mp-settings-icon-input" />
+                <input type="file" accept="image/*" class="icon-picker-input" id="mp-settings-icon-input" aria-label="Upload modpack icon" />
               </div>
-              <input type="hidden" id="mp-settings-icon" value="" />
+              <input type="hidden" id="mp-settings-icon" aria-label="Modpack icon URL" value="" />
               <div class="mp-settings-section" style="flex:1;">
                 <label>Modpack Name</label>
-                <input type="text" class="clean-input" id="mp-settings-name" placeholder="Modpack name..." style="text-align:left;" />
+                <input type="text" class="clean-input" id="mp-settings-name" aria-label="Modpack name" placeholder="Modpack name..." style="text-align:left;" />
               </div>
             </div>
 
             <div class="mp-settings-section">
               <label>Description</label>
-              <textarea class="clean-input" id="mp-settings-description" placeholder="Add a description for this modpack..." style="text-align:left; min-height:80px; resize:vertical;"></textarea>
+              <textarea class="clean-input" id="mp-settings-description" aria-label="Modpack description" placeholder="Add a description for this modpack..." style="text-align:left; min-height:80px; resize:vertical;"></textarea>
             </div>
 
             <div class="mp-settings-section">
               <label>Minecraft Version</label>
-              <select class="clean-select" id="mp-settings-version"></select>
+              <select class="clean-select" id="mp-settings-version" aria-label="Minecraft version"></select>
             </div>
 
             <div class="mp-settings-section">
               <label>Mod Loader</label>
-              <select class="clean-select" id="mp-settings-loader">
+              <select class="clean-select" id="mp-settings-loader" aria-label="Mod loader">
                 <option value="Vanilla">Vanilla</option>
                 <option value="Fabric">Fabric</option>
                 <option value="Forge">Forge</option>
@@ -1645,21 +1645,21 @@
 
             <div class="mp-settings-section">
               <label>Loader Version</label>
-              <input type="text" class="clean-input" id="mp-settings-loader-version" placeholder="Auto-detected" style="text-align:left;" />
+              <input type="text" class="clean-input" id="mp-settings-loader-version" aria-label="Mod loader version" placeholder="Auto-detected" style="text-align:left;" />
             </div>
 
             <div class="mp-settings-section">
               <label>Java Arguments</label>
-              <input type="text" class="clean-input" id="mp-settings-java-args" placeholder="e.g., -XX:+UseG1GC -XX:+ParallelRefProcEnabled" style="text-align:left; font-size:0.6875rem;" />
+              <input type="text" class="clean-input" id="mp-settings-java-args" aria-label="Java arguments" placeholder="e.g., -XX:+UseG1GC -XX:+ParallelRefProcEnabled" style="text-align:left; font-size:0.6875rem;" />
               <small style="color:var(--text-muted); display:block; margin-top:4px;">Advanced JVM arguments for this modpack</small>
             </div>
 
             <div class="mp-settings-section">
               <label>Game Window Size</label>
               <div style="display:flex; gap:8px;">
-                <input type="number" class="clean-input" id="mp-settings-width" placeholder="Width" style="text-align:center; flex:1;" />
+                <input type="number" class="clean-input" id="mp-settings-width" aria-label="Window width" placeholder="Width" style="text-align:center; flex:1;" />
                 <span style="display:flex; align-items:center; color:var(--text-muted);">&times;</span>
-                <input type="number" class="clean-input" id="mp-settings-height" placeholder="Height" style="text-align:center; flex:1;" />
+                <input type="number" class="clean-input" id="mp-settings-height" aria-label="Window height" placeholder="Height" style="text-align:center; flex:1;" />
               </div>
             </div>
 
@@ -1804,9 +1804,9 @@
 
         <div class="friends-auth-form">
           <div class="friends-auth-error" id="friends-auth-error">Error message here</div>
-          <input type="text" class="clean-input" id="friends-auth-username" placeholder="IDK Username..." />
+          <input type="text" class="clean-input" id="friends-auth-username" aria-label="IDK Connect username" placeholder="IDK Username..." />
           <input type="email" class="clean-input" id="friends-auth-email" placeholder="Email Address..." style="display: none; margin-top: 10px;" />
-          <input type="password" class="clean-input" id="friends-auth-password" placeholder="Password..." style="margin-top: 10px;" />
+          <input type="password" class="clean-input" id="friends-auth-password" aria-label="IDK Connect password" placeholder="Password..." style="margin-top: 10px;" />
           <input type="text" class="clean-input" id="friends-auth-otp" placeholder="6-digit OTP Code" style="display: none; margin-top: 10px; text-align: center; letter-spacing: 2px;" maxlength="6" />
           <button class="submit-btn" id="btn-friends-auth-submit" style="margin-top: 10px;">Connect Account</button>
         </div>
@@ -1850,7 +1850,7 @@
           <p id="friends-share-instructions">Open your Minecraft singleplayer world, click "Open to LAN", then enter the port below to invite your friends!</p>
 
           <div class="friends-share-input-row" id="friends-share-input-row">
-            <input type="number" class="clean-input" id="friends-share-port" placeholder="LAN Port (e.g. 54321)" min="1024" max="65535" />
+            <input type="number" class="clean-input" id="friends-share-port" aria-label="Port to share" placeholder="LAN Port (e.g. 54321)" min="1024" max="65535" />
             <button class="friends-share-btn" id="btn-friends-share">Share</button>
             <button class="friends-share-btn stop-sharing" id="btn-friends-share-cancel" style="display:none;">Cancel</button>
           </div>
@@ -1883,7 +1883,7 @@
         <div class="friends-requests-section">
           <span class="friends-requests-title">Add Friend</span>
           <div class="friends-add-row">
-            <input type="text" class="clean-input" id="friends-add-username" placeholder="Friend's username..." />
+            <input type="text" class="clean-input" id="friends-add-username" aria-label="Friend's username" placeholder="Friend's username..." />
             <button class="friends-add-btn" id="btn-friends-add" title="Send Friend Request">
               <!-- Minecraft-style add player icon -->
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1933,7 +1933,7 @@
 
         <!-- Chat Input Form -->
         <div class="friends-chat-input-row">
-          <input type="text" class="clean-input" id="friends-chat-input" placeholder="Type a message..." maxlength="500" />
+          <input type="text" class="clean-input" id="friends-chat-input" aria-label="Type a message" placeholder="Type a message..." maxlength="500" />
           <button class="friends-chat-send-btn" id="btn-friends-chat-send" title="Send Message">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="22" y1="2" x2="11" y2="13"></line>

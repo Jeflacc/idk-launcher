@@ -33,7 +33,7 @@ function renderFriendsSidebar() {
             '<button id="btn-search-back" class="back-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>' +
             '<div class="search-input-wrap">' +
               '<svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
-              '<input id="input-search-users" type="text" placeholder="Search users..." />' +
+              '<input id="input-search-users" aria-label="Search users" type="text" placeholder="Search users..." />' +
             '</div>' +
             '<button id="btn-execute-search" class="friends-btn small">Search</button>' +
           '</div>' +
@@ -62,7 +62,7 @@ function renderFriendsSidebar() {
             '<div id="settings-error" class="friends-auth-error"></div>' +
             '<div class="settings-section">' +
               '<div class="settings-section-title">Bio</div>' +
-              '<textarea id="settings-bio" placeholder="Write something about yourself..."></textarea>' +
+              '<textarea id="settings-bio" aria-label="Bio" placeholder="Write something about yourself..."></textarea>' +
               '<button id="btn-settings-save-bio" class="friends-btn small">Save</button>' +
             '</div>' +
             '<div class="settings-divider"></div>' +
@@ -121,7 +121,7 @@ function renderFriendsSidebar() {
       '</div>' +
       '<div id="friends-auth-error" class="friends-auth-error"></div>' +
       '<div class="friends-auth-form">' +
-        '<input id="friends-auth-username" type="text" placeholder="Username" />' +
+        '<input id="friends-auth-username" aria-label="IDK Connect username" type="text" placeholder="Username" />' +
         '<input id="friends-auth-email" type="email" placeholder="Email" />' +
         '<input id="friends-auth-password" type="password" placeholder="Password" />' +
         '<div id="friends-auth-otp-container" style="display:none">' +
@@ -145,7 +145,7 @@ function renderFriendsSidebar() {
           '<p>Share your local game with friends over the internet.</p>' +
         '</div>' +
         '<div id="friends-share-input-row" class="friends-share-input-row">' +
-          '<input id="friends-share-port" type="number" placeholder="Port (e.g. 25565)" />' +
+          '<input id="friends-share-port" aria-label="Port to share" type="number" placeholder="Port (e.g. 25565)" />' +
           '<button id="btn-friends-share" class="friends-btn">Share</button>' +
         '</div>' +
         '<button id="btn-friends-share-cancel" class="friends-btn cancel" style="display:none">Cancel</button>' +
@@ -245,7 +245,7 @@ function renderFriendsSidebar() {
       '</div>' +
       '<div id="friends-chat-messages" class="friends-chat-messages"></div>' +
       '<div class="friends-chat-input-row">' +
-        '<input id="friends-chat-input" type="text" placeholder="Type a message..." />' +
+        '<input id="friends-chat-input" aria-label="Type a message" type="text" placeholder="Type a message..." />' +
         '<button id="btn-friends-chat-send" class="friends-btn small">Send</button>' +
       '</div>' +
     '</div>' +

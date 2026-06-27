@@ -479,5 +479,13 @@ export function initContentFeature() {
         }
       }
     });
+
+    // Keyboard support: Enter/Space activates the tab (WCAG 2.1.1)
+    tab.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        tab.click();
+      }
+    });
   });
 }

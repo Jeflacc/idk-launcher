@@ -4,6 +4,27 @@
    See /download/AUDIT.md and worklog Task IDs UI-1, UI-2, UI-3.
    ========================================================= */
 
+/* ---------- 0. Prevent horizontal page overflow ----------
+   The friends-sidebar was causing 380px of horizontal scroll because it
+   was positioned at right:-380px. Fixed in friends.css by using transform
+   instead, but add overflow-x:hidden here as a safety net. */
+html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+#app {
+    overflow: hidden;
+}
+
+/* The friends-sidebar uses transform:translateX(100%) when hidden, but its
+   parent (#app) has overflow:visible which lets the transformed element
+   extend the page's scroll width. Use clip-path to make the hidden sidebar
+   not contribute to scroll width. */
+.friends-sidebar:not(.active) {
+    clip-path: inset(0 0 0 calc(100% - 1px)) !important;
+}
+
 /* ---------- 1. Global focus-visible indicator (WCAG 2.4.7) ----------
    The launcher had ZERO :focus-visible rules. This single rule fixes
    keyboard navigation visibility across every interactive element. */
@@ -412,4 +433,74 @@ input[type="range"]::-moz-range-thumb {
     .friends-auth-tab {
         border: 2px solid currentColor;
     }
+}
+
+/* ---------- 25. Custom-select inner overflow fix ----------
+   The version-tabs row was overflowing its container (311px vs 274px).
+   Allow it to wrap and use smaller gap. */
+.options-filters {
+    overflow: hidden;
+}
+
+.version-tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.version-tab {
+    padding: 6px 10px;
+    font-size: 0.6875rem;
+    flex: 0 0 auto;
+}
+
+/* ---------- 26. User profile wrapper overflow fix ----------
+   The user-profile-wrapper was 6px narrower than its content. */
+.user-profile-wrapper {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-profile {
+    max-width: 100%;
+}
+
+/* ---------- 27. User details label fix (was 0.5rem = 8px) ---------- */
+.user-details-label {
+    font-size: 0.625rem;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---------- 28. Sodium label fix (was 9px) ---------- */
+.sodium-label {
+    font-size: 0.6875rem;
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 600;
+}
+
+/* ---------- 29. Auth badge fix (was 7px) ---------- */
+.auth-badge {
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+}
+
+.auth-badge.auth-offline {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ---------- 30. Friends badge fix (was 9px) ---------- */
+.friends-badge {
+    font-size: 0.625rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
