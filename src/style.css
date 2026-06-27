@@ -1966,6 +1966,7 @@ input[type="checkbox"]:checked + .switch::after {
 
 .memory-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
     width: 14px;
     height: 20px;
     background: #a1a1a2;
@@ -1973,6 +1974,8 @@ input[type="checkbox"]:checked + .switch::after {
     cursor: pointer;
     border-radius: 2px;
     transition: background 0.15s;
+    /* Center thumb on 6px track: (6-20)/2 = -7px */
+    margin-top: -7px;
 }
 
 .memory-slider::-webkit-slider-thumb:hover {
@@ -9994,14 +9997,22 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 
 .glass-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
     width: 18px;
     height: 18px;
     border-radius: 50%;
     background: var(--theme-accent);
     border: 3px solid rgba(255, 255, 255, 0.2);
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: transform 0.15s, box-shadow 0.15s, margin-top 0.15s;
     box-shadow: 0 0 10px rgba(var(--theme-accent-rgb), 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
+    /* Center thumb on 8px track: (8-18)/2 = -5px */
+    margin-top: -5px;
+}
+
+.glass-slider:hover::-webkit-slider-thumb {
+    /* On hover, track grows to 10px: (10-18)/2 = -4px */
+    margin-top: -4px;
 }
 
 .glass-slider::-webkit-slider-thumb:hover {

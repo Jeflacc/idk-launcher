@@ -3741,6 +3741,7 @@ body.ui-advanced .adv-slider {
 
 body.ui-advanced .adv-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
     width: 16px;
     height: 16px;
     border-radius: 50%;
@@ -3749,6 +3750,8 @@ body.ui-advanced .adv-slider::-webkit-slider-thumb {
     cursor: pointer;
     transition: transform 0.15s;
     box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.3);
+    /* Center thumb on 4px track: (4-16)/2 = -6px */
+    margin-top: -6px;
 }
 
 body.ui-advanced .adv-slider::-webkit-slider-thumb:hover {
