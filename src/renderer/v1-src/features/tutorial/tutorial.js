@@ -35,15 +35,33 @@ let backdropEl = null;
 let highlightEl = null;
 let tooltipEl = null;
 let resizeHandler = null;
+let viewChangedHandler = null;
 
 export function initTutorial() {
   // Check if tutorial is already completed
   if (localStorage.getItem(TUTORIAL_KEY) === 'true') {
     return;
   }
-  
+
+  // If a tutorial is already running, do not start another one
+  if (overlayEl) return;
+
   // Wait a brief moment to ensure UI is fully rendered
   setTimeout(startTutorial, 500);
+
+  // Subscribe to view-changed events so the tutorial overlay is
+  // torn down when the user navigates away from "mods". Without
+  // this, the overlay persists across pages and visually obscures
+  // the Profile / Settings / etc. pages.
+  if (!viewChangedHandler) {
+    viewChangedHandler = (e) => {
+      const viewName = e?.detail?.viewName;
+      if (viewName && viewName !== 'mods' && overlayEl) {
+        endTutorial();
+      }
+    };
+    document.addEventListener('idk:view-changed', viewChangedHandler);
+  }
 }
 
 function startTutorial() {
@@ -185,7 +203,7 @@ function nextStep() {
 
 function endTutorial() {
   localStorage.setItem(TUTORIAL_KEY, 'true');
-  
+
   if (overlayEl) {
     overlayEl.style.opacity = '0';
     setTimeout(() => {
@@ -195,7 +213,7 @@ function endTutorial() {
       overlayEl = null;
     }, 300);
   }
-  
+
   if (resizeHandler) {
     window.removeEventListener('resize', resizeHandler);
     resizeHandler = null;
