@@ -1,6 +1,6 @@
 import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { Users, ShieldOff } from 'lucide-react';
+import { Users, ShieldWarning } from '@phosphor-icons/react';
 
 export function FriendsView() {
   return (
@@ -14,7 +14,7 @@ export function FriendsView() {
 
       <Card className="border-[var(--color-warning)]/30 mb-4">
         <div className="flex items-start gap-3">
-          <ShieldOff size={20} className="text-[var(--color-warning)] mt-0.5 shrink-0" />
+          <ShieldWarning size={20} weight="fill" className="text-[var(--color-warning)] mt-0.5 shrink-0" />
           <div>
             <h3 className="font-semibold text-sm mb-1">Connect backend not configured</h3>
             <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
@@ -28,7 +28,7 @@ export function FriendsView() {
 
       <Card>
         <div className="flex flex-col items-center text-center py-12">
-          <Users size={40} className="text-[var(--color-text-subtle)] mb-3" />
+          <Users size={40} weight="duotone" className="text-[var(--color-text-subtle)] mb-3" />
           <h3 className="font-semibold mb-1">No friends online</h3>
           <p className="text-sm text-[var(--color-text-muted)] mb-4">
             Once a secure backend is configured, your friend list will appear here.

@@ -1,0 +1,175 @@
+/*
+ * IDK Launcher v2 — Design Tokens
+ *
+ * Distilled from v1's 11,334-line src/style.css + 3,809-line advanced-theme.css.
+ * Every color, radius, shadow, and timing is defined here exactly once.
+ *
+ * Theme variants (emerald/violet/azure/ember) match v1's [data-theme] system.
+ * Default is emerald — the launcher's signature look.
+ */
+
+:root,
+:root[data-theme='emerald'] {
+  /* ── Backgrounds ── */
+  --color-bg: #061008;
+  --color-bg-panel: #0b1710;
+  --color-bg-card: #112419;
+  --color-bg-elevated: #163020;
+  --color-bg-deep: #040a06;
+
+  /* ── Accent (emerald) ── */
+  --color-accent: #4cb837;
+  --color-accent-hover: #5cc844;
+  --color-accent-bright: #6ce24f;
+  --color-accent-dark: #3c8527;
+  --color-accent-shadow: #2d6b1f;
+  --color-accent-text: #86efac;
+  --color-accent-foreground: #ffffff;
+  --color-accent-rgb: 76, 184, 55;
+  --color-accent-glow: rgba(76, 184, 55, 0.4);
+  --color-accent-glow-rgb: 34, 197, 94;
+
+  /* ── Secondary accents ── */
+  --color-elyby: #00a6e0;
+  --color-blue: #00a4ef;
+  --color-danger: #e74c3c;
+  --color-warning: #f39c12;
+  --color-success: #4cb837;
+  --color-info: #00a6e0;
+
+  /* ── Glass surfaces (two-layer system from v1) ── */
+  /* Layer 1: sidebars/panels — moderate frost (reduced from 28px for readability) */
+  --glass-layer-1-bg: rgba(6, 16, 8, 0.85);
+  --glass-layer-1-blur: 18px;
+  --glass-layer-1-saturate: 150%;
+
+  /* Layer 2: main content — barely-tinted, no blur (lets bg show through) */
+  --glass-layer-2-bg: rgba(17, 36, 25, 0.45);
+
+  /* Card glass — frosted with depth */
+  --glass-card-bg: rgba(17, 36, 25, 0.55);
+  --glass-card-blur: 14px;
+  --glass-card-hover-bg: rgba(22, 48, 32, 0.65);
+
+  /* Generic surface */
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-hover: rgba(255, 255, 255, 0.1);
+  --color-surface-active: rgba(76, 184, 55, 0.15);
+  --color-pill-bg: rgba(0, 0, 0, 0.6);
+
+  /* ── Borders ── */
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-strong: rgba(255, 255, 255, 0.2);
+  --color-border-accent: rgba(76, 184, 55, 0.5);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* ── Text (brightened for WCAG AA contrast on glass) ── */
+  --color-text: #ffffff;
+  --color-text-secondary: #f0f0f0;
+  --color-text-muted: #c0c0c0;
+  --color-text-dim: #909090;
+
+  /* ── Radii ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-card: 14px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* ── Shadows (v1 layered) ── */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px rgba(76, 184, 55, 0.25);
+  --shadow-glow-strong: 0 0 32px rgba(76, 184, 55, 0.4);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 16px rgba(76, 184, 55, 0.15);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  /* ── Typography ── */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-title: 'Outfit', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ── Animation timings ── */
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 0.15s;
+  --duration-normal: 0.25s;
+  --duration-slow: 0.4s;
+
+  /* ── Layout ── */
+  --topbar-height: 44px;
+  --sidebar-width: 240px;
+}
+
+/* ── Theme variant: violet/amethyst ── */
+:root[data-theme='violet'] {
+  --color-accent: #8b5cf6;
+  --color-accent-hover: #a78bfa;
+  --color-accent-bright: #c4b5fd;
+  --color-accent-dark: #7c3aed;
+  --color-accent-shadow: #5b21b6;
+  --color-accent-text: #c4b5fd;
+  --color-accent-rgb: 139, 92, 246;
+  --color-accent-glow: rgba(139, 92, 246, 0.4);
+  --color-accent-glow-rgb: 167, 139, 250;
+  --color-bg: #0a0612;
+  --color-bg-panel: #120a1f;
+  --color-bg-card: #1a1029;
+  --color-bg-elevated: #241640;
+  --color-bg-deep: #050208;
+  --glass-layer-1-bg: rgba(10, 6, 18, 0.82);
+  --glass-card-bg: rgba(26, 16, 41, 0.5);
+  --glass-card-hover-bg: rgba(36, 22, 64, 0.6);
+  --color-border-accent: rgba(139, 92, 246, 0.5);
+  --color-surface-active: rgba(139, 92, 246, 0.15);
+}
+
+/* ── Theme variant: azure/ocean ── */
+:root[data-theme='azure'] {
+  --color-accent: #00a6e0;
+  --color-accent-hover: #26b4f5;
+  --color-accent-bright: #5ec8f7;
+  --color-accent-dark: #0086b8;
+  --color-accent-shadow: #006690;
+  --color-accent-text: #5ec8f7;
+  --color-accent-rgb: 0, 166, 224;
+  --color-accent-glow: rgba(0, 166, 224, 0.4);
+  --color-accent-glow-rgb: 38, 180, 245;
+  --color-bg: #06101a;
+  --color-bg-panel: #0b1722;
+  --color-bg-card: #112430;
+  --color-bg-elevated: #163645;
+  --color-bg-deep: #040810;
+  --glass-layer-1-bg: rgba(6, 16, 26, 0.82);
+  --glass-card-bg: rgba(17, 36, 48, 0.5);
+  --glass-card-hover-bg: rgba(22, 54, 69, 0.6);
+  --color-border-accent: rgba(0, 166, 224, 0.5);
+  --color-surface-active: rgba(0, 166, 224, 0.15);
+}
+
+/* ── Theme variant: ember/sunset ── */
+:root[data-theme='ember'] {
+  --color-accent: #f39c12;
+  --color-accent-hover: #f5b041;
+  --color-accent-bright: #f8c471;
+  --color-accent-dark: #d68910;
+  --color-accent-shadow: #9c640c;
+  --color-accent-text: #f8c471;
+  --color-accent-rgb: 243, 156, 18;
+  --color-accent-glow: rgba(243, 156, 18, 0.4);
+  --color-accent-glow-rgb: 245, 176, 65;
+  --color-bg: #140a06;
+  --color-bg-panel: #1f120b;
+  --color-bg-card: #2a1810;
+  --color-bg-elevated: #3d2418;
+  --color-bg-deep: #0a0503;
+  --glass-layer-1-bg: rgba(20, 10, 6, 0.82);
+  --glass-card-bg: rgba(42, 24, 16, 0.5);
+  --glass-card-hover-bg: rgba(61, 36, 24, 0.6);
+  --color-border-accent: rgba(243, 156, 18, 0.5);
+  --color-surface-active: rgba(243, 156, 18, 0.15);
+}

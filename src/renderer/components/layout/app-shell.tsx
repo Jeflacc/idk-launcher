@@ -1,17 +1,17 @@
 import { type ReactNode } from 'react';
 import {
-  Home,
-  Compass,
+  House,
+  CompassRose,
   Package,
-  Boxes,
-  Shirt,
+  Stack,
+  TShirt,
   Bug,
-  Settings as SettingsIcon,
+  Gear,
   Users,
   Minus,
   Square,
   X,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import { useRouter, type ViewId } from '../../stores/router-store';
 import { api } from '../../lib/preload-bridge';
 import { useSession } from '../../stores/session-store';
@@ -19,18 +19,18 @@ import { useSession } from '../../stores/session-store';
 interface NavItem {
   id: ViewId;
   label: string;
-  icon: typeof Home;
+  icon: typeof House;
 }
 
 const NAV: readonly NavItem[] = [
-  { id: 'home', label: 'Home', icon: Home },
-  { id: 'discover', label: 'Discover', icon: Compass },
+  { id: 'home', label: 'Home', icon: House },
+  { id: 'discover', label: 'Discover', icon: CompassRose },
   { id: 'modpacks', label: 'Modpacks', icon: Package },
-  { id: 'versions', label: 'Versions', icon: Boxes },
-  { id: 'skins', label: 'Skins', icon: Shirt },
+  { id: 'versions', label: 'Versions', icon: Stack },
+  { id: 'skins', label: 'Skins', icon: TShirt },
   { id: 'crash-analyzer', label: 'Crash Analyzer', icon: Bug },
   { id: 'friends', label: 'Friends', icon: Users },
-  { id: 'settings', label: 'Settings', icon: SettingsIcon },
+  { id: 'settings', label: 'Settings', icon: Gear },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -40,19 +40,21 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside className="glass-strong w-60 flex flex-col drag-region shrink-0">
-        <div className="px-5 py-6 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--color-accent)] to-[#c084fc] flex items-center justify-center font-bold text-white no-drag">
+      {/* Sidebar — Layer 1 glass (heavy frost) */}
+      <aside className="glass-strong w-[var(--sidebar-width)] flex flex-col drag-region shrink-0">
+        {/* Logo / brand */}
+        <div className="px-5 h-[var(--topbar-height)] flex items-center gap-3 border-b border-[var(--color-border-subtle)]">
+          <div className="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center font-bold text-sm text-white no-drag accent-glow">
             IDK
           </div>
-          <div className="flex flex-col no-drag">
-            <span className="text-sm font-semibold leading-tight">IDK Launcher</span>
-            <span className="text-[11px] text-[var(--color-text-subtle)]">v2.0.0</span>
+          <div className="flex flex-col no-drag leading-tight">
+            <span className="text-sm font-bold">IDK Launcher</span>
+            <span className="text-[10px] text-[var(--color-text-dim)] font-medium">v2.0.0</span>
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-2 flex flex-col gap-1 no-drag overflow-y-auto">
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-4 flex flex-col gap-1 no-drag overflow-y-auto">
           {NAV.map((item) => {
             const Icon = item.icon;
             const active = view === item.id;
@@ -60,29 +62,30 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 key={item.id}
                 onClick={() => navigate(item.id)}
-                className={`flex items-center gap-3 px-3 h-10 rounded-lg text-sm font-medium transition-all ${
+                className={`flex items-center gap-3 px-3 h-9 rounded-[var(--radius-md)] text-sm font-medium transition-all duration-150 ${
                   active
-                    ? 'bg-[var(--color-surface-hover)] text-[var(--color-text)] border border-[var(--color-border-strong)]'
-                    : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]'
+                    ? 'bg-[var(--color-surface-active)] text-[var(--color-accent-bright)] border border-[var(--color-border-accent)]'
+                    : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)] border border-transparent'
                 }`}
               >
-                <Icon size={18} />
+                <Icon size={18} weight={active ? 'fill' : 'regular'} />
                 {item.label}
               </button>
             );
           })}
         </nav>
 
-        <div className="px-3 py-3 no-drag border-t border-[var(--color-border)]">
-          <div className="flex items-center gap-2 px-2 py-2 rounded-lg glass">
-            <div className="w-8 h-8 rounded-full bg-[var(--color-accent)]/30 flex items-center justify-center text-xs font-bold">
+        {/* User profile */}
+        <div className="px-3 py-3 no-drag border-t border-[var(--color-border-subtle)]">
+          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-md)] glass">
+            <div className="w-8 h-8 rounded-full accent-gradient flex items-center justify-center text-xs font-bold text-white shrink-0">
               {session?.username?.[0]?.toUpperCase() ?? '?'}
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-medium truncate">
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-xs font-semibold truncate">
                 {session?.username ?? 'Not signed in'}
               </span>
-              <span className="text-[10px] text-[var(--color-text-subtle)]">
+              <span className="text-[10px] text-[var(--color-text-dim)] capitalize">
                 {session?.provider ?? 'anonymous'}
               </span>
             </div>
@@ -90,35 +93,25 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main */}
+      {/* Main column */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-12 drag-region flex items-center justify-end px-3 shrink-0">
+        {/* Top bar with window controls */}
+        <header className="h-[var(--topbar-height)] drag-region flex items-center justify-end px-3 shrink-0 border-b border-[var(--color-border-subtle)]">
           <div className="flex items-center gap-1 no-drag">
-            <button
-              onClick={() => api.window.minimize()}
-              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[var(--color-surface)] text-[var(--color-text-muted)]"
-              aria-label="Minimize"
-            >
-              <Minus size={16} />
+            <button onClick={() => api.window.minimize()} className="win-btn" aria-label="Minimize">
+              <Minus size={14} weight="bold" />
             </button>
-            <button
-              onClick={() => api.window.maximize()}
-              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[var(--color-surface)] text-[var(--color-text-muted)]"
-              aria-label="Maximize"
-            >
-              <Square size={14} />
+            <button onClick={() => api.window.maximize()} className="win-btn" aria-label="Maximize">
+              <Square size={12} weight="bold" />
             </button>
-            <button
-              onClick={() => api.window.close()}
-              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[var(--color-danger)]/80 text-[var(--color-text-muted)] hover:text-white"
-              aria-label="Close"
-            >
-              <X size={16} />
+            <button onClick={() => api.window.close()} className="win-btn win-btn-close" aria-label="Close">
+              <X size={14} weight="bold" />
             </button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto px-6 pb-6">{children}</main>
+        {/* Main content — Layer 2 glass (transparent, lets ambient bg show) */}
+        <main className="flex-1 overflow-y-auto px-8 py-6">{children}</main>
       </div>
     </div>
   );

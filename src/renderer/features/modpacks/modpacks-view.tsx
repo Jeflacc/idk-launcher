@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Spinner } from '../../components/ui/spinner';
-import { Play, Trash2, Clock, Package as PackageIcon } from 'lucide-react';
+import { Play, Trash, Clock, Package as PackageIcon } from '@phosphor-icons/react';
 import { api } from '../../lib/preload-bridge';
 import { toast } from 'sonner';
 import { useRouter } from '../../stores/router-store';
@@ -35,7 +35,7 @@ export function ModpacksView() {
       {data && data.length === 0 && (
         <Card>
           <div className="flex flex-col items-center text-center py-12">
-            <PackageIcon size={40} className="text-[var(--color-text-subtle)] mb-3" />
+            <PackageIcon size={40} weight="duotone" className="text-[var(--color-text-subtle)] mb-3" />
             <h3 className="font-semibold mb-1">No modpacks yet</h3>
             <p className="text-sm text-[var(--color-text-muted)] mb-4">
               Install one from the Discover tab to get started.
@@ -66,7 +66,7 @@ export function ModpacksView() {
               <Badge variant="success">{mp.modCount} mods</Badge>
               {mp.lastPlayedAt && (
                 <Badge>
-                  <Clock size={10} /> played
+                  <Clock size={10} weight="fill" /> played
                 </Badge>
               )}
             </div>
@@ -82,7 +82,7 @@ export function ModpacksView() {
                   })
                 }
               >
-                <Play size={14} /> Play
+                <Play size={14} weight="fill" /> Play
               </Button>
               <Button
                 size="sm"
@@ -93,7 +93,7 @@ export function ModpacksView() {
                   void refetch();
                 }}
               >
-                <Trash2 size={14} />
+                <Trash size={14} weight="bold" />
               </Button>
             </div>
           </Card>

@@ -6,9 +6,10 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export function Card({ children, interactive = false, className = '', ...rest }: CardProps) {
+  const base = interactive ? 'glass-card cursor-pointer' : 'glass-card';
   return (
     <div
-      className={`glass rounded-[var(--radius-card)] p-5 ${interactive ? 'cursor-pointer transition-all duration-200 hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border-strong)]' : ''} ${className}`}
+      className={`${base} rounded-[var(--radius-card)] p-5 ${interactive ? '' : ''} ${className}`}
       {...rest}
     >
       {children}

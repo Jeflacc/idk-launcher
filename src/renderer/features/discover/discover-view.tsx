@@ -5,7 +5,7 @@ import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Spinner } from '../../components/ui/spinner';
 import { Button } from '../../components/ui/button';
-import { Search, Download, ExternalLink } from 'lucide-react';
+import { MagnifyingGlass, DownloadSimple, ArrowUpRight } from '@phosphor-icons/react';
 import { api } from '../../lib/preload-bridge';
 import { toast } from 'sonner';
 
@@ -23,9 +23,9 @@ export function DiscoverView() {
       </header>
 
       <div className="relative mb-6">
-        <Search
+        <MagnifyingGlass
           size={18}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)]"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-dim)]"
         />
         <Input
           value={query}
@@ -70,7 +70,7 @@ export function DiscoverView() {
                 />
               ) : (
                 <div className="w-14 h-14 rounded-lg glass flex items-center justify-center text-[var(--color-text-subtle)]">
-                  <Package />
+                  <PackagePlaceholder />
                 </div>
               )}
               <div className="min-w-0 flex-1">
@@ -85,7 +85,7 @@ export function DiscoverView() {
                 <Badge key={c}>{c}</Badge>
               ))}
               <Badge variant="success">
-                <Download size={10} /> {(hit.downloads / 1000).toFixed(1)}k
+                <DownloadSimple size={10} weight="fill" /> {(hit.downloads / 1000).toFixed(1)}k
               </Badge>
             </div>
             <div className="flex gap-2 mt-auto">
@@ -106,7 +106,7 @@ export function DiscoverView() {
                 variant="ghost"
                 onClick={() => api.system.openExternal(`https://modrinth.com/modpack/${hit.slug}`)}
               >
-                <ExternalLink size={14} />
+                <ArrowUpRight size={14} weight="bold" />
               </Button>
             </div>
           </Card>
@@ -116,6 +116,6 @@ export function DiscoverView() {
   );
 }
 
-function Package() {
+function PackagePlaceholder() {
   return <div className="w-6 h-6 rounded glass" />;
 }

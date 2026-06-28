@@ -5,7 +5,7 @@ import { Spinner } from '../../components/ui/spinner';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { useState } from 'react';
-import { Download, Search } from 'lucide-react';
+import { DownloadSimple, MagnifyingGlass } from '@phosphor-icons/react';
 import { api } from '../../lib/preload-bridge';
 import { toast } from 'sonner';
 
@@ -48,7 +48,7 @@ export function VersionsView() {
 
       <div className="flex gap-3 mb-4">
         <div className="relative flex-1">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)]" />
+          <MagnifyingGlass size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)]" />
           <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter versions…" className="pl-10" />
         </div>
         <div className="flex gap-1 glass rounded-lg p-1">
@@ -92,7 +92,7 @@ export function VersionsView() {
                 })
               }
             >
-              <Download size={14} /> Download
+              <DownloadSimple size={14} weight="bold" /> Download
             </Button>
           </Card>
         ))}

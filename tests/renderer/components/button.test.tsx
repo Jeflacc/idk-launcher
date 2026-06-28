@@ -25,7 +25,7 @@ describe('Button', () => {
   it('applies the primary variant class', () => {
     render(<Button variant="primary">P</Button>);
     const btn = screen.getByRole('button');
-    expect(btn.className).toContain('bg-[var(--color-accent)]');
+    expect(btn.className).toContain('accent-gradient');
   });
 
   it('applies the danger variant class', () => {

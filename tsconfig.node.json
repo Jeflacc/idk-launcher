@@ -8,7 +8,7 @@
     "verbatimModuleSyntax": false,
     "isolatedModules": false,
     "outDir": "dist-main",
-    "rootDir": ".",
+    "rootDir": "src",
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
@@ -19,5 +19,5 @@
       "@application/*": ["src/application/*"]
     }
   },
-  "include": ["src/main", "src/preload", "src/shared", "src/domain", "src/infrastructure", "src/application", "src/workers", "electron-builder.d.ts"]
+  "include": ["src/main", "src/preload", "src/shared", "src/domain", "src/infrastructure", "src/application"]
 }
