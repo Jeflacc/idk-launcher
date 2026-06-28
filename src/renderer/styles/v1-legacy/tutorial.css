@@ -1,0 +1,114 @@
+.tutorial-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  pointer-events: auto; /* Catch all clicks to prevent interaction with background unless allowed */
+  display: flex;
+  transition: opacity 0.3s ease;
+}
+
+.tutorial-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  transition: clip-path 0.3s ease-out;
+}
+
+.tutorial-highlight {
+  position: absolute;
+  background: transparent;
+  border-radius: 8px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1), 0 0 15px rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+  transition: all 0.3s ease-out;
+  z-index: 100000;
+}
+
+/* Tooltip container */
+.tutorial-tooltip {
+  position: absolute;
+  background-color: #1e1e24;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  width: 320px;
+  z-index: 100001;
+  color: #ffffff;
+  transition: all 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tutorial-tooltip-title {
+  font-family: var(--font-title, sans-serif);
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--theme-accent, #4ade80);
+  margin: 0;
+}
+
+.tutorial-tooltip-content {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.tutorial-tooltip-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.tutorial-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.tutorial-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.tutorial-btn-next {
+  background: var(--theme-accent, #4ade80);
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.tutorial-btn-next:hover {
+  background: var(--theme-accent-hover, #22c55e);
+  color: #0f172a;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
+}
+
+.tutorial-progress {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Animations */
+@keyframes tutorial-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.tutorial-tooltip {
+  animation: tutorial-pulse 2s infinite;
+}

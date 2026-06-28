@@ -1,27 +1,47 @@
 @import "tailwindcss";
+
+/*
+ * IDK Launcher v2 — CSS Entry
+ *
+ * Imports ALL v1 CSS files verbatim so the design matches the original launcher
+ * exactly. The v1 files define the complete design system: color tokens,
+ * glassmorphism, typography, animations, component styles, theme variants.
+ *
+ * v1 CSS files (18,463 lines total):
+ *   v1-legacy/main.css            (11,334) — primary stylesheet, all components
+ *   v1-legacy/advanced-theme.css  (3,809)  — two-layer glass system, theme polish
+ *   v1-legacy/landing-page.css    (1,078)  — landing page styles
+ *   v1-legacy/overlay.css         (891)    — in-game overlay window
+ *   v1-legacy/root.css            (726)    — root-level styles
+ *   v1-legacy/launch-overlay-fix.css (211) — launch overlay fixes
+ *   v1-legacy/temp-support-css.css (235)   — temporary support styles
+ *   v1-legacy/tutorial.css        (114)    — tutorial overlay
+ *   v1-legacy/temp-effects.css    (60)     — temporary effects
+ *   v1-legacy/idk-connect.css     (1)      — IDK Connect
+ *
+ * My refactored tokens/base/glass/animations are also imported to fill any
+ * gaps for v2's React component classes that don't have v1 equivalents.
+ */
+
+/* v1 design system — the source of truth for the visual identity */
+@import "./v1-legacy/main.css";
+@import "./v1-legacy/advanced-theme.css";
+@import "./v1-legacy/overlay.css";
+@import "./v1-legacy/tutorial.css";
+@import "./v1-legacy/idk-connect.css";
+@import "./v1-legacy/launch-overlay-fix.css";
+@import "./v1-legacy/root.css";
+@import "./v1-legacy/temp-effects.css";
+@import "./v1-legacy/temp-support-css.css";
+@import "./v1-legacy/landing-page.css";
+
+/* v2 refactored tokens + utilities (fill gaps for v2 React components) */
 @import "./tokens.css";
 @import "./base.css";
 @import "./glass.css";
 @import "./animations.css";
 
-/*
- * IDK Launcher v2 — Emerald glassmorphic design system.
- *
- * This file is the single CSS entrypoint. It composes:
- *   1. Tailwind 4 utilities (via @tailwindcss/vite plugin)
- *   2. Design tokens (tokens.css) — colors, radii, shadows, theme variants
- *   3. Base reset + ambient background (base.css)
- *   4. Glassmorphism surface utilities (glass.css)
- *   5. Animation keyframes + utilities (animations.css)
- *
- * This replaces v1's 11,334-line src/style.css + 3,809-line advanced-theme.css
- * + 6 other scattered CSS files (total ~18,000 lines, 25+ duplicated selectors,
- * 175 !important declarations). Here, every token is defined exactly once and
- * theme variants are clean [data-theme] overrides.
- */
-
-/* Map design tokens to Tailwind's @theme so utilities like bg-[var(--color-bg)]
-   and text-[var(--color-accent)] resolve at build time. */
+/* Map design tokens to Tailwind's @theme so utilities resolve at build time. */
 @theme {
   --color-bg: var(--color-bg);
   --color-bg-panel: var(--color-bg-panel);
