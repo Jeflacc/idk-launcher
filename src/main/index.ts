@@ -26,7 +26,9 @@ import { ImportModpack } from '@/application/use-cases/import-modpack';
 import type { LauncherSettings } from '@shared/types';
 
 const isDev = Boolean(process.env['VITE_DEV_SERVER_URL']);
-const PRELOAD_PATH = join(__dirname, '..', 'preload', 'index.js');
+// Preload is bundled by scripts/build-main.mjs to a `.cjs` file so Node/Electron
+// treat it as CommonJS regardless of `package.json#type: "module"`.
+const PRELOAD_PATH = join(__dirname, '..', 'preload', 'index.cjs');
 const RENDERER_DIST = join(__dirname, '..', '..', 'dist-renderer');
 
 // Default settings (matches SettingsSchema defaults).

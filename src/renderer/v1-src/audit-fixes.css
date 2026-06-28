@@ -1,0 +1,880 @@
+/* =============================================================
+   IDK Launcher v2 — Round 2 Audit Fixes
+   Addresses VLM-identified issues across all pages:
+   - P0: Modal overlap (version/loader dropdowns, browse wizard)
+   - P0: Buy-me-coffee theme clash (red → accent)
+   - P0: Empty state text centering
+   - P1: Button size consistency (PLAY/Join Server/Ko-Fi/Refresh/triggers)
+   - P1: Loader option buttons consistency
+   - P1: Pose buttons consistency
+   - P2: Theme consistency for pills/toggles/swatches
+   - P2: OFFLINE ACCOUNT label centering
+   - P2: Classic/Advanced UX button heights + theme swatch padding
+   - P3: Polish (hover states, spacing)
+   ============================================================= */
+
+/* ============================================================
+   P0 — MODAL OVERLAP FIXES
+   ============================================================ */
+
+/* Lift the bottom control bar above the details-section so the
+   version/loader dropdowns (which open upward) render ABOVE the
+   partner-server / buy-me-coffee / news sections instead of being
+   clipped by the details-section stacking context. */
+.main-hero-banner .bottom-bar {
+    z-index: 50 !important;
+}
+
+/* Make sure the open dropdown's options always sit above sibling
+   triggers (so the loader trigger doesn't bleed through the open
+   version dropdown, and vice versa). */
+.custom-select.open .custom-options {
+    z-index: 1100;
+}
+
+/* When one custom-select is open, dim the other trigger slightly
+   to make it visually clear which one is active. We do NOT block
+   pointer events because the user should still be able to click
+   the other trigger to switch which dropdown is open. */
+.custom-select-wrapper:has(.custom-select.open) {
+    position: relative;
+    z-index: 1100;
+}
+.controls-left:has(.custom-select.open) .custom-select:not(.open) .custom-select-trigger {
+    opacity: 0.55;
+}
+
+/* Safety net: never show both dropdown option lists at once. The JS
+   outside-click handler closes the other dropdown when one opens,
+   but this rule guarantees only one is ever visually open. */
+.controls-left .custom-select.open ~ .custom-select-wrapper .custom-select.open .custom-options,
+.controls-left > .custom-select-wrapper ~ .custom-select-wrapper .custom-select.open .custom-options {
+    max-height: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* The browse-modpacks wizard (`.mod-browser`) is intentionally an
+   overlay (absolute, left:280px). Add a subtle shadow + backdrop
+   hint so users see it's a slide-over panel, not a "broken overlap".
+   Also add a close-affordance gap on the left edge. */
+.mod-browser.active {
+    box-shadow: -24px 0 60px rgba(0, 0, 0, 0.55);
+}
+.mod-browser::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -2px;
+    width: 2px;
+    background: linear-gradient(to bottom,
+        rgba(var(--theme-accent-rgb), 0.6) 0%,
+        rgba(var(--theme-accent-rgb), 0.2) 100%);
+    pointer-events: none;
+}
+
+/* ============================================================
+   P0 — BUY-ME-COFFEE THEME CLASH FIX
+   Replace red (#ff5e5b) with theme accent so the support banner
+   matches the partner-server ad card visually.
+   ============================================================ */
+
+.support-banner {
+    background: linear-gradient(135deg,
+        rgba(var(--theme-accent-rgb), 0.10),
+        rgba(15, 13, 24, 0.6)) !important;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.30) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        inset 0 0 20px rgba(var(--theme-accent-rgb), 0.05),
+        0 8px 32px rgba(0,0,0,0.3) !important;
+}
+.support-banner::before {
+    background: radial-gradient(circle at center,
+        rgba(var(--theme-accent-rgb), 0.10) 0%, transparent 60%) !important;
+}
+.support-banner:hover {
+    border-color: rgba(var(--theme-accent-rgb), 0.60) !important;
+    background: linear-gradient(135deg,
+        rgba(var(--theme-accent-rgb), 0.15),
+        rgba(15, 13, 24, 0.8)) !important;
+    box-shadow:
+        0 15px 35px rgba(0,0,0,0.4),
+        0 0 20px rgba(var(--theme-accent-rgb), 0.2) !important;
+}
+.support-heart-bg {
+    color: rgba(var(--theme-accent-rgb), 0.05) !important;
+}
+.support-banner:hover .support-heart-bg {
+    color: rgba(var(--theme-accent-rgb), 0.15) !important;
+    filter: drop-shadow(0 0 20px rgba(var(--theme-accent-rgb), 0.5)) !important;
+}
+.support-banner-glow {
+    background: radial-gradient(circle,
+        rgba(var(--theme-accent-rgb), 0.2) 0%, transparent 70%) !important;
+}
+.support-particle {
+    background: rgba(var(--theme-accent-rgb), 0.6) !important;
+}
+.support-banner-icon {
+    background: linear-gradient(135deg,
+        rgba(var(--theme-accent-rgb), 0.2),
+        rgba(var(--theme-accent-rgb), 0.05)) !important;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3) !important;
+    color: var(--theme-accent) !important;
+    box-shadow: 0 4px 15px rgba(var(--theme-accent-rgb), 0.15) !important;
+}
+.support-banner-label {
+    color: var(--theme-accent) !important;
+    text-shadow: 0 0 10px rgba(var(--theme-accent-rgb), 0.3) !important;
+}
+
+/* Donate button: keep the warm "Ko-Fi" identity but blend with theme
+   by using a soft amber→accent gradient. This is more harmonious than
+   the previous bright red. */
+.support-donate-btn {
+    background: linear-gradient(to right,
+        var(--theme-accent),
+        var(--theme-accent-hover)) !important;
+    border: 1px solid var(--theme-accent-bright) !important;
+    box-shadow:
+        0 4px 15px rgba(var(--theme-accent-rgb), 0.3),
+        inset 0 2px 0 rgba(255,255,255,0.2) !important;
+}
+.support-donate-btn:hover {
+    background: linear-gradient(to right,
+        var(--theme-accent-hover),
+        var(--theme-accent-bright)) !important;
+    box-shadow:
+        0 8px 25px rgba(var(--theme-accent-rgb), 0.5),
+        inset 0 2px 0 rgba(255,255,255,0.4) !important;
+}
+.support-donate-btn:active {
+    box-shadow:
+        0 2px 10px rgba(var(--theme-accent-rgb), 0.3),
+        inset 0 2px 5px rgba(0,0,0,0.2) !important;
+}
+
+/* ============================================================
+   P0 — EMPTY STATE TEXT CENTERING
+   ============================================================ */
+
+/* "No modpacks or versions yet" on the Modpacks page */
+.mp-empty,
+.no-modpack-msg .mp-empty {
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 60px 24px !important;
+    color: var(--text-muted) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    gap: 8px;
+}
+.mp-empty::before {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 12px auto;
+    background: rgba(var(--theme-accent-rgb), 0.10);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.20);
+    border-radius: 12px;
+    background-image: linear-gradient(135deg, transparent 45%, rgba(var(--theme-accent-rgb), 0.4) 45%, rgba(var(--theme-accent-rgb), 0.4) 55%, transparent 55%);
+}
+
+/* Loading Mojang news placeholder - ensure centered icon+text */
+.news-grid > div[style*="text-align: center"] {
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+}
+.news-grid > div[style*="text-align: center"] > div {
+    text-align: center !important;
+}
+
+/* Friends list empty state - center the empty text in its container */
+.friends-list-empty {
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px;
+    min-height: 80px;
+}
+
+/* Modpack list empty state ("No modpacks or versions yet") */
+.modpacks-list:empty::after {
+    content: 'No modpacks yet. Click + New Modpack to create one.';
+    display: block;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 24px 12px;
+    font-family: var(--font-main);
+}
+
+/* ============================================================
+   P1 — BUTTON SIZE CONSISTENCY
+   Standardize all primary action buttons to 40px height.
+   ============================================================ */
+
+/* Custom-select triggers (Version + Loader dropdowns) */
+.custom-select-trigger {
+    padding: 10px 14px !important;
+    min-height: 40px;
+    box-sizing: border-box;
+}
+
+/* Refresh versions button - make it match trigger height */
+.refresh-versions-btn {
+    min-width: 40px;
+    min-height: 40px;
+    width: 40px;
+    height: 40px;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Featured-server "Join Server" button - match standard height */
+.featured-join-btn {
+    min-height: 40px;
+    padding: 10px 24px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+}
+
+/* Support on Ko-Fi button - match standard height */
+.support-donate-btn {
+    min-height: 40px;
+    padding: 10px 16px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+}
+
+/* PLAY button - keep at 52px (it's the primary CTA), but ensure the
+   force-update toggle below it aligns horizontally with the same width */
+.play-button-wrapper {
+    min-height: 52px;
+}
+.force-update-container {
+    left: 0;
+    right: 0;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Modpack action buttons in the sidebar */
+.mp-action-btn.back {
+    min-height: 32px;
+    padding: 6px 10px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+/* "Show all" / "Browse" small action buttons */
+.mp-dl-btn {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    font-weight: 600;
+    border-radius: 6px !important;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Profile "Change Skin" / "Manage Capes" / Export buttons */
+.profile-stage-bar-main-text {
+    min-height: 40px;
+    padding: 8px 14px !important;
+    font-size: 12px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+}
+.profile-stage-bar-export-icon {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Settings tab buttons - uniform height */
+.settings-tab {
+    min-height: 40px;
+    padding: 10px 16px !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Confirm-modal action buttons - uniform */
+.confirm-modal-btn {
+    min-height: 40px;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 600;
+}
+
+/* ============================================================
+   P1 — LOADER OPTION BUTTONS CONSISTENCY
+   Force equal height/padding for all loader dropdown options.
+   ============================================================ */
+
+#loader-dropdown .custom-option {
+    padding: 12px 14px !important;
+    min-height: 44px;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box;
+}
+#loader-dropdown .custom-option > span {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+#loader-dropdown .custom-option svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   P1 — POSE BUTTONS CONSISTENCY
+   All pose buttons should be identical size; active uses accent.
+   ============================================================ */
+
+.pose-btn {
+    min-height: 32px;
+    min-width: 60px;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 6px !important;
+    line-height: 1 !important;
+}
+.pose-btn svg {
+    width: 13px !important;
+    height: 13px !important;
+}
+.pose-btn.active {
+    background: var(--theme-accent) !important;
+    border-color: var(--theme-accent-bright) !important;
+    color: #000 !important;
+    box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb), 0.4);
+}
+
+/* ============================================================
+   P2 — THEME CONSISTENCY
+   Pills/badges/toggles all use accent color.
+   ============================================================ */
+
+/* Provider pills (Modrinth / CurseForge) */
+.provider-pill-group {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 8px !important;
+    padding: 3px !important;
+}
+.provider-pill {
+    padding: 6px 14px !important;
+    border-radius: 5px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+.provider-pill:hover {
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.04);
+}
+.provider-pill.active {
+    background: var(--theme-accent) !important;
+    color: #000 !important;
+    box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb), 0.3);
+}
+
+/* Browser filter pills (categories / versions / etc.) */
+.browser-filter-pill {
+    padding: 5px 10px !important;
+    font-size: 10px !important;
+    border-radius: 6px !important;
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s;
+}
+.browser-filter-pill.active {
+    background: rgba(var(--theme-accent-rgb), 0.18) !important;
+    border-color: rgba(var(--theme-accent-rgb), 0.50) !important;
+    color: #fff !important;
+}
+.browser-filter-clear {
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.browser-filter-clear:hover {
+    background: rgba(var(--theme-accent-rgb), 0.12) !important;
+    border-color: rgba(var(--theme-accent-rgb), 0.40) !important;
+    color: #fff !important;
+}
+
+/* CurseForge badge in Trending Modpacks header */
+.mp-trending-brand {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    background: rgba(var(--theme-accent-rgb), 0.10) !important;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.25) !important;
+    color: var(--theme-accent) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
+}
+
+/* "LOG OUT" button on profile - keep semantic red but soften it */
+.profile-stage-bar button[class*="logout"],
+#profile-logout-btn,
+button[data-action="logout"] {
+    background: rgba(239, 68, 68, 0.10) !important;
+    border: 1px solid rgba(239, 68, 68, 0.30) !important;
+    color: #fca5a5 !important;
+    padding: 8px 14px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    min-height: 40px;
+    transition: all 0.2s ease;
+}
+.profile-stage-bar button[class*="logout"]:hover,
+#profile-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.20) !important;
+    border-color: rgba(239, 68, 68, 0.50) !important;
+    color: #fff !important;
+}
+
+/* Slider handles use accent (the input range thumb) */
+input[type="range"] {
+    accent-color: var(--theme-accent);
+}
+input[type="range"]::-webkit-slider-thumb {
+    background: var(--theme-accent) !important;
+}
+input[type="range"]::-moz-range-thumb {
+    background: var(--theme-accent) !important;
+}
+
+/* ============================================================
+   P2 — OFFLINE ACCOUNT label centering
+   The badge container is already flex+center; this ensures the
+   badge text is also centered and uses consistent typography.
+   ============================================================ */
+
+#profile-auth-badge {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    margin: 6px auto 0 auto !important;
+    width: fit-content;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    color: var(--text-muted) !important;
+}
+
+/* Profile character name (TESTPLAYER) - center it */
+.profile-character-name,
+#profile-page-username {
+    text-align: center !important;
+    display: block;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Profile stage heading container - center its children */
+.profile-stage-heading {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================================
+   P2 — CLASSIC/ADVANCED UX BUTTON HEIGHTS + THEME SWATCHES
+   ============================================================ */
+
+/* Classic | Advanced UX toggle - uniform button heights */
+#launcher-ui-modes,
+#adv-launcher-ui-modes {
+    display: inline-flex !important;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 3px;
+}
+#launcher-ui-modes button,
+#adv-launcher-ui-modes button {
+    min-height: 36px;
+    padding: 8px 18px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    border-radius: 5px !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--text-muted) !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+#launcher-ui-modes button.active,
+#adv-launcher-ui-modes button.active {
+    background: var(--theme-accent) !important;
+    color: #000 !important;
+    box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb), 0.3);
+}
+
+/* Theme preset swatches - uniform size and padding */
+.theme-preset,
+.theme-preset-swatch,
+button[data-theme-preset] {
+    min-width: 56px !important;
+    min-height: 56px !important;
+    padding: 8px !important;
+    border-radius: 10px !important;
+    border: 2px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    display: inline-flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.theme-preset:hover,
+.theme-preset-swatch:hover,
+button[data-theme-preset]:hover {
+    border-color: rgba(var(--theme-accent-rgb), 0.40) !important;
+    background: rgba(var(--theme-accent-rgb), 0.05) !important;
+    transform: translateY(-2px);
+}
+.theme-preset.active,
+.theme-preset-swatch.active,
+button[data-theme-preset].active {
+    border-color: var(--theme-accent) !important;
+    background: rgba(var(--theme-accent-rgb), 0.10) !important;
+    box-shadow: 0 0 0 2px rgba(var(--theme-accent-rgb), 0.30);
+}
+.theme-preset .theme-swatch-color,
+.theme-preset-swatch .theme-swatch-color {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================================
+   P2 — MODPACKS WIZARD HEADER / CLOSE BUTTON ALIGNMENT
+   ============================================================ */
+
+.mod-browser-header {
+    padding: 16px 24px !important;
+    align-items: center !important;
+}
+.mod-browser-header h3 {
+    margin: 0 !important;
+    font-family: var(--font-title) !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #fff !important;
+    letter-spacing: 0.5px;
+}
+.mod-browser-close {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0 !important;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+.mod-browser-close:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.40);
+    color: #fca5a5;
+}
+
+/* Modpack action cards (Create Custom / Browse / Import) - uniform */
+.mp-action-card {
+    min-height: 100px !important;
+    padding: 18px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center;
+    gap: 14px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mp-action-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(var(--theme-accent-rgb), 0.40) !important;
+    background: rgba(var(--theme-accent-rgb), 0.05) !important;
+}
+.mp-ac-icon {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 10px !important;
+    background: rgba(var(--theme-accent-rgb), 0.10) !important;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.25) !important;
+    color: var(--theme-accent) !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.mp-ac-text h3 {
+    margin: 0 0 4px 0 !important;
+    font-family: var(--font-title) !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: #fff !important;
+    letter-spacing: 0.3px;
+}
+.mp-ac-text p {
+    margin: 0 !important;
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    line-height: 1.4;
+}
+
+/* Trending modpacks cards - uniform styling */
+.trending-mp-card {
+    min-height: 84px;
+    padding: 0;
+    border-radius: 10px;
+}
+.trending-mp-card .tmp-card-icon,
+.trending-mp-card .tmp-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    background: rgba(var(--theme-accent-rgb), 0.10);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.20);
+    color: var(--theme-accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-title);
+    font-weight: 800;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   P3 — POLISH (hover states, spacing, animations)
+   ============================================================ */
+
+/* Card hover lift - universal */
+.stat-card,
+.connect-widget-card,
+.mp-action-card,
+.trending-mp-card {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s ease,
+                background 0.25s ease,
+                box-shadow 0.25s ease;
+}
+
+/* Section header decoration alignment */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.section-title {
+    font-family: var(--font-title) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px;
+    margin: 0 !important;
+}
+
+/* Featured-server-banner - subtle accent on hover instead of just bg */
+.featured-server-banner:hover {
+    border-color: rgba(var(--theme-accent-rgb), 0.40) !important;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35),
+                0 0 0 1px rgba(var(--theme-accent-rgb), 0.15) !important;
+}
+
+/* AD badge on featured-server-banner - make it less intrusive */
+.featured-server-banner::before {
+    background: rgba(0, 0, 0, 0.5) !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+    border-radius: 3px !important;
+    letter-spacing: 0.8px !important;
+}
+
+/* Confirm modal - tighter, more polished */
+.confirm-modal-content {
+    border-radius: 14px !important;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+.confirm-modal-content h3 {
+    font-family: var(--font-title) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px;
+}
+
+/* Render engine modal buttons - use accent for the recommended one */
+#render-engine-sodium {
+    background: rgba(var(--theme-accent-rgb), 0.10) !important;
+    border: 2px solid rgba(var(--theme-accent-rgb), 0.30) !important;
+}
+#render-engine-sodium:hover {
+    background: rgba(var(--theme-accent-rgb), 0.20) !important;
+    border-color: rgba(var(--theme-accent-rgb), 0.60) !important;
+}
+#render-engine-sodium div[style*="background: rgba(59, 130, 246"] {
+    background: rgba(var(--theme-accent-rgb), 0.20) !important;
+    color: var(--theme-accent) !important;
+}
+#render-engine-sodium span[style*="color: #60a5fa"] {
+    color: var(--theme-accent) !important;
+}
+
+/* ============================================================
+   P3 — ANIMATION VISIBILITY
+   Ensure background animations are actually visible (the dark
+   gradient was sometimes hiding them).
+   ============================================================ */
+
+/* Ensure background canvas/layers are visible */
+#view-main,
+.main-hero-banner {
+    position: relative;
+    overflow: hidden;
+}
+.main-hero-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%,
+        rgba(var(--theme-accent-rgb), 0.06) 0%,
+        transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* MC logo - ensure it's centered above the bottom-bar */
+.main-center {
+    position: relative;
+    z-index: 2;
+    margin: auto 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+/* Bottom-bar - center the controls-left group, give it breathing room */
+.main-hero-banner .bottom-bar {
+    margin-bottom: 24px;
+}
+
+/* ============================================================
+   P3 — SETTINGS TAB UNIFORMITY
+   ============================================================ */
+
+.settings-tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 20px;
+}
+.settings-tab {
+    flex: 1;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.settings-tab:hover {
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.04);
+}
+.settings-tab.active {
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    color: var(--theme-accent);
+    border-color: rgba(var(--theme-accent-rgb), 0.30);
+}
+
+/* Settings section header - uniform */
+.settings-section h3,
+.settings-section .section-title {
+    font-family: var(--font-title) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 12px !important;
+    color: var(--text-muted) !important;
+    margin: 0 0 12px 0 !important;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ============================================================
+   P3 — IPC SHIM SAFETY
+   (No CSS impact, but ensures that if any feature calls an unmapped
+   API, the renderer doesn't crash — this is enforced in the shim.)
+   ============================================================ */
