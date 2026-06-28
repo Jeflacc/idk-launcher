@@ -1365,7 +1365,24 @@ ipcMain.handle('get-microsoft-auth-data', async () => {
   try {
     const manager = getSettingsManager();
     if (manager && manager.settings && manager.settings.microsoftData) {
-      return { success: true, data: manager.settings.microsoftData.value };
+      let data = manager.settings.microsoftData.value;
+      if (data && data.msToken) {
+        try {
+          const authManager = new msmc.Auth("login");
+          const xboxManager = await authManager.refresh(data.msToken);
+          const token = await xboxManager.getMinecraft();
+          const mclcAuth = token.mclc();
+          
+          data.mclcAuth = mclcAuth;
+          data.profile = { name: mclcAuth.name };
+          data.msToken = xboxManager.save();
+          
+          await manager.saveSettings({ microsoftData: data });
+        } catch (refreshErr) {
+          console.warn("[Microsoft Auth] Auto-refresh failed, proceeding with cached token:", refreshErr.message);
+        }
+      }
+      return { success: true, data };
     }
     return { success: false, data: null };
   } catch (e) {
@@ -1412,7 +1429,7 @@ ipcMain.handle('microsoft-authenticate', async (event) => {
     const token = await xboxManager.getMinecraft();
     const mclcAuth = token.mclc();
 
-    return { success: true, data: { profile: { name: mclcAuth.name }, mclcAuth } };
+    return { success: true, data: { profile: { name: mclcAuth.name }, mclcAuth, msToken: xboxManager.save() } };
   } catch (e) {
     console.error("[Microsoft Auth] Error:", e);
     return { success: false, error: e.message || "Failed to authenticate with Microsoft." };
