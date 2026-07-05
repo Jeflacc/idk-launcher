@@ -172,34 +172,59 @@ document.addEventListener('DOMContentLoaded', () => {
         btnReg.disabled = false;
     });
     
-    // OAuth Mock Listeners
+    // OAuth Button Listeners (Redirect to Backend)
     const discordBtn = document.querySelector('.discord-btn');
     const googleBtn = document.querySelector('.google-btn');
     
     if (discordBtn) {
-        discordBtn.addEventListener('click', async () => {
+        discordBtn.addEventListener('click', () => {
             showAuthMsg("Connecting to Discord...");
-            try {
-                const res = await fetch(`${IDK_BACKEND}/api/auth/discord`);
-                const data = await res.json();
-                if(data.error) showAuthMsg(data.error);
-            } catch(e) {
-                showAuthMsg("Failed to reach OAuth endpoint.");
-            }
+            window.location.href = `${IDK_BACKEND}/api/auth/discord`;
         });
     }
     
     if (googleBtn) {
-        googleBtn.addEventListener('click', async () => {
+        googleBtn.addEventListener('click', () => {
             showAuthMsg("Connecting to Google...");
-            try {
-                const res = await fetch(`${IDK_BACKEND}/api/auth/google`);
-                const data = await res.json();
-                if(data.error) showAuthMsg(data.error);
-            } catch(e) {
-                showAuthMsg("Failed to reach OAuth endpoint.");
-            }
+            window.location.href = `${IDK_BACKEND}/api/auth/google`;
         });
+    }
+
+    // Process OAuth JWT Token from URL (Redirected back from Backend)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    const errorFromUrl = urlParams.get('error');
+
+    if (tokenFromUrl) {
+        // Clear the URL to avoid leaking the token if the user copies the link
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        idkToken = tokenFromUrl;
+        localStorage.setItem("idk_connect_token", idkToken);
+        
+        // We don't have the user object yet, so we need to fetch it
+        fetch(`${IDK_BACKEND}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${idkToken}` }
+        }).then(res => res.json()).then(data => {
+            if (data.user) {
+                idkUser = data.user;
+                localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
+                
+                authOverlay.style.display = 'none';
+                setupDashboard();
+            } else {
+                throw new Error("Invalid session");
+            }
+        }).catch(err => {
+            idkToken = "";
+            localStorage.removeItem("idk_connect_token");
+            showAuthMsg("OAuth session expired or invalid. Please login again.");
+            authOverlay.style.display = 'flex';
+        });
+    } else if (errorFromUrl) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        showAuthMsg(`Login failed: ${errorFromUrl}`);
+        authOverlay.style.display = 'flex';
     }
 
     // --- Dashboard Logic ---
