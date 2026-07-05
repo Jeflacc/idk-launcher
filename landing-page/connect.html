@@ -82,6 +82,10 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 Search Users
             </button>
+            <button class="nav-item" id="nav-friends">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Friends & DMs
+            </button>
         </nav>
     </aside>
 
@@ -132,7 +136,7 @@
 
         <!-- View: User Profile (Dynamic) -->
         <div id="view-user-profile" class="view-container">
-            <button id="btn-back-search" class="btn-primary" style="margin-bottom: 20px; background: rgba(255,255,255,0.1);">&larr; Back to Search</button>
+            <button id="btn-back-search" class="btn-primary" style="margin-bottom: 20px; background: rgba(255,255,255,0.1);">&larr; Back</button>
             <div class="glass-card profile-grid">
                 <div class="profile-card">
                     <img id="user-profile-avatar" src="" alt="Avatar">
@@ -142,6 +146,46 @@
                 <div class="profile-details">
                     <h4 style="color: var(--text-muted); margin-bottom: 8px;">Bio</h4>
                     <p id="user-profile-bio" style="font-size: 16px; line-height: 1.6;">...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Friends & DMs -->
+        <div id="view-friends" class="view-container">
+            <div class="friends-layout">
+                <!-- Sidebar for Friend List -->
+                <div class="friends-sidebar glass-card">
+                    <h3 style="margin-bottom: 15px; font-size: 16px;">Pending Requests</h3>
+                    <div id="friend-requests-list" class="friend-requests-list">
+                        <!-- Pending requests go here -->
+                    </div>
+                    
+                    <h3 style="margin-top: 20px; margin-bottom: 15px; font-size: 16px;">My Friends</h3>
+                    <div id="friends-list" class="friends-list">
+                        <!-- Friends go here -->
+                    </div>
+                </div>
+
+                <!-- Chat Area -->
+                <div class="friends-chat-area glass-card">
+                    <div id="chat-placeholder" class="chat-placeholder">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <p>Select a friend to start chatting</p>
+                    </div>
+                    
+                    <div id="chat-active" class="chat-active" style="display: none;">
+                        <div class="chat-header">
+                            <img id="chat-avatar" src="" alt="Avatar">
+                            <h3 id="chat-name">Username</h3>
+                        </div>
+                        <div class="chat-messages" id="chat-messages">
+                            <!-- Messages go here -->
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="chat-input" class="glass-input" placeholder="Type a message..." style="margin-bottom: 0;">
+                            <button id="btn-send-msg" class="btn-primary">Send</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

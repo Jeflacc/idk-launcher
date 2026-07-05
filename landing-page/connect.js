@@ -326,7 +326,9 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.innerHTML = "";
 
         try {
-            const res = await fetch(`${IDK_BACKEND}/api/users/search?q=${encodeURIComponent(q)}`);
+            const res = await fetch(`${IDK_BACKEND}/api/users/search?q=${encodeURIComponent(q)}`, {
+                headers: { 'Authorization': `Bearer ${idkToken}` }
+            });
             const data = await res.json();
             
             if (res.ok && data.users && data.users.length > 0) {
@@ -335,11 +337,46 @@ document.addEventListener('DOMContentLoaded', () => {
                     const card = document.createElement('div');
                     card.className = 'user-card';
                     card.innerHTML = `
-                        <img src="https://minotar.net/helm/${u.username}/48.png" alt="Avatar">
-                        <h4>${u.username}</h4>
+                        <div style="display:flex; align-items:center; gap:12px; flex:1;">
+                            <img src="https://minotar.net/helm/${u.username}/48.png" alt="Avatar">
+                            <h4>${u.username}</h4>
+                        </div>
+                        <button class="add-friend-btn secondary-btn" style="padding: 4px 12px; font-size:12px;">Add</button>
                     `;
-                    card.addEventListener('click', () => {
+                    
+                    // Click avatar/name to load profile
+                    card.querySelector('div').addEventListener('click', () => {
                         loadUserProfile(u.username);
+                    });
+
+                    // Click Add Friend
+                    const btnAdd = card.querySelector('.add-friend-btn');
+                    btnAdd.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        btnAdd.innerText = "...";
+                        btnAdd.disabled = true;
+                        try {
+                            const addRes = await fetch(`${IDK_BACKEND}/api/friends/request`, {
+                                method: 'POST',
+                                headers: { 
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${idkToken}`
+                                },
+                                body: JSON.stringify({ username: u.username })
+                            });
+                            const addData = await addRes.json();
+                            if(addRes.ok) {
+                                btnAdd.innerText = "Sent";
+                                btnAdd.classList.add('success');
+                            } else {
+                                btnAdd.innerText = "Error";
+                                alert(addData.error || "Failed to add friend");
+                                btnAdd.disabled = false;
+                            }
+                        } catch(err) {
+                            btnAdd.innerText = "Error";
+                            btnAdd.disabled = false;
+                        }
                     });
                     resultsContainer.appendChild(card);
                 });
@@ -380,4 +417,178 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('user-profile-bio').innerText = "Network error.";
         }
     }
+
+    // --- Friends & DM Logic ---
+    const navFriends = document.getElementById('nav-friends');
+    const viewFriends = document.getElementById('view-friends');
+    const friendRequestsList = document.getElementById('friend-requests-list');
+    const friendsList = document.getElementById('friends-list');
+    const chatPlaceholder = document.getElementById('chat-placeholder');
+    const chatActive = document.getElementById('chat-active');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const btnSendMsg = document.getElementById('btn-send-msg');
+    
+    let currentChatFriendId = null;
+    let currentChatUsername = null;
+    let chatPollingInterval = null;
+
+    if (navFriends) {
+        navFriends.addEventListener('click', () => {
+            viewMyProfile.classList.remove('active');
+            viewSearch.classList.remove('active');
+            viewUserProfile.classList.remove('active');
+            viewFriends.classList.add('active');
+            
+            navMyProfile.classList.remove('active');
+            navSearch.classList.remove('active');
+            navFriends.classList.add('active');
+            headerTitle.innerText = "Friends & Messages";
+            
+            loadFriends();
+        });
+    }
+
+    async function loadFriends() {
+        if (!idkToken) return;
+        
+        try {
+            // Load Requests
+            const reqRes = await fetch(`${IDK_BACKEND}/api/friends/requests`, {
+                headers: { 'Authorization': `Bearer ${idkToken}` }
+            });
+            const reqData = await reqRes.json();
+            friendRequestsList.innerHTML = "";
+            if (reqData.requests && reqData.requests.length > 0) {
+                reqData.requests.forEach(req => {
+                    friendRequestsList.innerHTML += `
+                        <div class="friend-item">
+                            <img src="https://minotar.net/helm/${req.username}/48.png">
+                            <div class="friend-item-info">
+                                <h4>${req.username}</h4>
+                                <span>Wants to be friends</span>
+                            </div>
+                            <div class="friend-actions">
+                                <button class="btn-icon accept" onclick="handleRequest('${req.id}', 'accept')">✔</button>
+                                <button class="btn-icon reject" onclick="handleRequest('${req.id}', 'decline')">✖</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                friendRequestsList.innerHTML = "<p style='color:var(--text-muted);font-size:14px;'>No pending requests.</p>";
+            }
+
+            // Load Friends
+            const fRes = await fetch(`${IDK_BACKEND}/api/friends`, {
+                headers: { 'Authorization': `Bearer ${idkToken}` }
+            });
+            const fData = await fRes.json();
+            friendsList.innerHTML = "";
+            if (fData.friends && fData.friends.length > 0) {
+                fData.friends.forEach(f => {
+                    const el = document.createElement('div');
+                    el.className = 'friend-item';
+                    el.innerHTML = `
+                        <img src="https://minotar.net/helm/${f.username}/48.png">
+                        <div class="friend-item-info">
+                            <h4>${f.username}</h4>
+                            <span style="color: ${f.status === 'online' ? '#4ade80' : 'var(--text-muted)'}">${f.status === 'online' ? 'Online' : 'Offline'}</span>
+                        </div>
+                    `;
+                    el.addEventListener('click', () => openChat(f.id, f.username));
+                    friendsList.appendChild(el);
+                });
+            } else {
+                friendsList.innerHTML = "<p style='color:var(--text-muted);font-size:14px;'>No friends yet. Search and add some!</p>";
+            }
+            
+        } catch (e) {
+            console.error("Failed to load friends", e);
+        }
+    }
+
+    window.handleRequest = async function(requestId, action) {
+        try {
+            await fetch(`${IDK_BACKEND}/api/friends/requests/handle`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idkToken}` },
+                body: JSON.stringify({ requestId, action })
+            });
+            loadFriends();
+        } catch (e) {}
+    }
+
+    function openChat(friendId, username) {
+        currentChatFriendId = friendId;
+        currentChatUsername = username;
+        
+        chatPlaceholder.style.display = 'none';
+        chatActive.style.display = 'flex';
+        
+        document.getElementById('chat-name').innerText = username;
+        document.getElementById('chat-avatar').src = `https://minotar.net/helm/${username}/48.png`;
+        
+        loadMessages();
+        
+        if (chatPollingInterval) clearInterval(chatPollingInterval);
+        chatPollingInterval = setInterval(() => {
+            if (currentChatFriendId) loadMessages(false);
+        }, 3000);
+    }
+
+    async function loadMessages(scroll = true) {
+        if (!currentChatFriendId) return;
+        try {
+            const res = await fetch(`${IDK_BACKEND}/api/messages/${currentChatFriendId}`, {
+                headers: { 'Authorization': `Bearer ${idkToken}` }
+            });
+            const data = await res.json();
+            
+            if (data.messages) {
+                chatMessages.innerHTML = "";
+                data.messages.forEach(msg => {
+                    const isMe = msg.fromId === idkUser.id;
+                    const date = new Date(msg.timestamp);
+                    const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    chatMessages.innerHTML += `
+                        <div class="chat-msg ${isMe ? 'me' : 'them'}">
+                            <div class="chat-bubble">${msg.content}</div>
+                            <span class="chat-time">${timeStr}</span>
+                        </div>
+                    `;
+                });
+                
+                if (scroll) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+        } catch (e) {}
+    }
+
+    async function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text || !currentChatFriendId) return;
+        
+        chatInput.value = '';
+        try {
+            await fetch(`${IDK_BACKEND}/api/messages/${currentChatFriendId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idkToken}` },
+                body: JSON.stringify({ content: text })
+            });
+            loadMessages(true);
+        } catch(e) {}
+    }
+
+    if (btnSendMsg) {
+        btnSendMsg.addEventListener('click', sendMessage);
+    }
+    if (chatInput) {
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    }
+
 });
