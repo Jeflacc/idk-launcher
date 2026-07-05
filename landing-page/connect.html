@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDK Connect Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="connect.css">
+</head>
+<body>
+    <video autoplay muted loop playsinline class="bg-video">
+        <source src="assets/background.mp4" type="video/mp4">
+    </video>
+    <div class="bg-overlay"></div>
+
+    <!-- Auth Overlay (Shown if not logged in) -->
+    <div id="auth-overlay" class="auth-overlay" style="display: none;">
+        <div class="glass-card auth-box">
+            <a href="index.html" style="display:inline-block; margin-bottom: 20px; color: var(--text-muted); text-decoration: none;">&larr; Back to Home</a>
+            <h2>IDK Connect</h2>
+            <p>Sign in to access your social dashboard.</p>
+            
+            <div class="auth-tabs">
+                <button id="tab-login" class="auth-tab active">Login</button>
+                <button id="tab-register" class="auth-tab">Register</button>
+            </div>
+            
+            <div id="auth-msg" class="auth-msg"></div>
+
+            <div id="form-login" class="auth-form">
+                <input type="text" id="l-user" placeholder="Username" class="glass-input">
+                <input type="password" id="l-pass" placeholder="Password" class="glass-input">
+                <button id="btn-login" class="btn-primary">Login</button>
+            </div>
+            
+            <div id="form-register" class="auth-form" style="display: none;">
+                <input type="text" id="r-user" placeholder="Username" class="glass-input">
+                <input type="email" id="r-email" placeholder="Email Address" class="glass-input">
+                <input type="password" id="r-pass" placeholder="Password" class="glass-input">
+                <input type="text" id="r-otp" placeholder="6-digit OTP" class="glass-input" style="display: none;">
+                <button id="btn-register" class="btn-primary">Request OTP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Sidebar -->
+    <aside class="dashboard-sidebar">
+        <a href="index.html" class="sidebar-brand">
+            <img src="assets/logo.png" alt="Logo">
+            <span>IDK. <span>CONNECT</span></span>
+        </a>
+
+        <nav class="nav-menu">
+            <button class="nav-item active" id="nav-my-profile">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                My Profile
+            </button>
+            <button class="nav-item" id="nav-search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                Search Users
+            </button>
+        </nav>
+    </aside>
+
+    <!-- Dashboard Main Area -->
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <h1 class="header-title" id="header-title">My Profile</h1>
+            <div class="header-actions">
+                <div class="user-badge" id="user-badge">
+                    <img id="nav-avatar" src="" alt="Me">
+                    <span id="nav-username">User</span>
+                </div>
+                <button id="btn-logout" class="btn-danger" style="padding: 8px 16px; font-size: 14px;">Logout</button>
+            </div>
+        </header>
+
+        <!-- View: My Profile -->
+        <div id="view-my-profile" class="view-container active">
+            <div class="glass-card profile-grid">
+                <div class="profile-card">
+                    <img id="my-profile-avatar" src="" alt="Avatar">
+                    <h3 id="my-profile-name">Username</h3>
+                    <span id="my-profile-status" class="status-badge online">Online</span>
+                </div>
+                <div class="profile-details">
+                    <h4 style="color: var(--text-muted); margin-bottom: 8px;">Bio</h4>
+                    <p id="my-profile-bio" style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">...</p>
+                    
+                    <h4 style="color: var(--text-muted); margin-bottom: 8px;">Account Setup</h4>
+                    <p style="font-size: 14px; color: #a1a1aa;">To link your Minecraft account or enable 2FA, please use the IDK Launcher Desktop Application.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Search Users -->
+        <div id="view-search" class="view-container">
+            <div class="glass-card">
+                <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                    <input type="text" id="search-input" class="glass-input" placeholder="Search by username..." style="margin-bottom: 0;">
+                    <button id="btn-do-search" class="btn-primary">Search</button>
+                </div>
+                <div id="search-msg" style="color: var(--text-muted); margin-bottom: 12px;"></div>
+                <div id="search-results" class="search-results-grid">
+                    <!-- Results populate here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- View: User Profile (Dynamic) -->
+        <div id="view-user-profile" class="view-container">
+            <button id="btn-back-search" class="btn-primary" style="margin-bottom: 20px; background: rgba(255,255,255,0.1);">&larr; Back to Search</button>
+            <div class="glass-card profile-grid">
+                <div class="profile-card">
+                    <img id="user-profile-avatar" src="" alt="Avatar">
+                    <h3 id="user-profile-name">Username</h3>
+                    <span id="user-profile-status" class="status-badge">Offline</span>
+                </div>
+                <div class="profile-details">
+                    <h4 style="color: var(--text-muted); margin-bottom: 8px;">Bio</h4>
+                    <p id="user-profile-bio" style="font-size: 16px; line-height: 1.6;">...</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="connect.js"></script>
+</body>
+</html>

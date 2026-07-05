@@ -57,6 +57,10 @@
                     </svg>
                     GitHub
                 </a>
+                <a href="connect.html" id="nav-login-btn" class="nav-login-btn" style="text-decoration:none;">Login</a>
+                <a href="connect.html" id="nav-user-profile" class="nav-user-profile" style="display: none; text-decoration:none;">
+                    <img id="nav-avatar" src="" alt="Avatar" class="nav-avatar">
+                </a>
                 <a href="#download" class="download-btn-small">Download Now</a>
             </div>
         </div>
@@ -226,7 +230,7 @@
                 </div>
             </div>
         </section>
-        
+
         <section class="runtime-recommendation">
             <div class="container">
                 <div class="adoptium-card">
@@ -369,6 +373,7 @@
             </a>
         </div>
     </footer>
+    
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -512,8 +517,23 @@
             } catch (err) {
                 console.error('[GitHub API] Failed to fetch latest preview release:', err);
             }
+
+            // --- Navbar IDK Connect Status ---
+            document.addEventListener('DOMContentLoaded', () => {
+                let idkUser = null;
+                try { idkUser = JSON.parse(localStorage.getItem("idk_connect_user")); } catch(e) {}
+                
+                const btnNavLogin = document.getElementById('nav-login-btn');
+                const navUserProfile = document.getElementById('nav-user-profile');
+                const navAvatar = document.getElementById('nav-avatar');
+                
+                if (idkUser) {
+                    btnNavLogin.style.display = 'none';
+                    navUserProfile.style.display = 'flex';
+                    navAvatar.src = `https://minotar.net/helm/${idkUser.username}/40.png`;
+                }
+            });
         });
     </script>
 </body>
-
 </html>
