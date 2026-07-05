@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const requestsList = document.getElementById("requests-list");
 
   // State
-  let IDK_BACKEND_URL = localStorage.getItem("idk_backend_url") || "http://api.somniac.me:6040";
+  let IDK_BACKEND_URL = localStorage.getItem("idk_backend_url") || "https://api.somniac.me";
   let idkToken = localStorage.getItem("idk_connect_token") || "";
   let idkUser = (() => { try { return JSON.parse(localStorage.getItem("idk_connect_user")); } catch { return null; } })();
 
