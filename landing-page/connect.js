@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const IDK_BACKEND = "http://api.somniac.me:6040";
+    const IDK_BACKEND = "https://api.somniac.me";
     let idkToken = localStorage.getItem("idk_connect_token") || "";
     let idkUser = null;
     
