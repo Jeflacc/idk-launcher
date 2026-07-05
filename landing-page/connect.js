@@ -231,7 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupDashboard() {
         // Set user badge
         document.getElementById('nav-username').innerText = idkUser.username;
-        document.getElementById('nav-avatar').src = `https://minotar.net/helm/${idkUser.username}/40.png`;
+        const navAvatar = document.getElementById('nav-avatar');
+        navAvatar.src = `https://minotar.net/helm/${idkUser.username}/40.png`;
+        navAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/40.png'; };
         
         // Load My Profile initially
         loadMyProfile();
@@ -297,10 +299,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadMyProfile() {
         document.getElementById('my-profile-name').innerText = idkUser.username;
-        document.getElementById('my-profile-avatar').src = `https://minotar.net/helm/${idkUser.username}/120.png`;
+        const profAvatar = document.getElementById('my-profile-avatar');
+        profAvatar.src = `https://minotar.net/helm/${idkUser.username}/120.png`;
+        profAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/120.png'; };
         
         try {
-            const res = await fetch(`${IDK_BACKEND}/api/users/${idkUser.username}/profile`);
+            const res = await fetch(`${IDK_BACKEND}/api/users/${idkUser.username}/profile`, {
+                headers: { 'Authorization': `Bearer ${idkToken}` }
+            });
             const data = await res.json();
             if (res.ok && data.profile) {
                 document.getElementById('my-profile-bio').innerText = data.profile.bio || "No bio available.";
@@ -338,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     card.className = 'user-card';
                     card.innerHTML = `
                         <div style="display:flex; align-items:center; gap:12px; flex:1;">
-                            <img src="https://minotar.net/helm/${u.username}/48.png" alt="Avatar">
+                            <img src="https://minotar.net/helm/${u.username}/48.png" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'" alt="Avatar">
                             <h4>${u.username}</h4>
                         </div>
                         <button class="add-friend-btn secondary-btn" style="padding: 4px 12px; font-size:12px;">Add</button>
@@ -397,13 +403,17 @@ document.addEventListener('DOMContentLoaded', () => {
         switchView('user-profile');
         
         document.getElementById('user-profile-name').innerText = username;
-        document.getElementById('user-profile-avatar').src = `https://minotar.net/helm/${username}/120.png`;
+        const uAvatar = document.getElementById('user-profile-avatar');
+        uAvatar.src = `https://minotar.net/helm/${username}/120.png`;
+        uAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/120.png'; };
         document.getElementById('user-profile-bio').innerText = "Loading...";
         document.getElementById('user-profile-status').innerText = "Loading";
         document.getElementById('user-profile-status').className = 'status-badge';
 
         try {
-            const res = await fetch(`${IDK_BACKEND}/api/users/${username}/profile`);
+            const res = await fetch(`${IDK_BACKEND}/api/users/${username}/profile`, {
+                headers: { 'Authorization': `Bearer ${idkToken}` }
+            });
             const data = await res.json();
             if (res.ok && data.profile) {
                 document.getElementById('user-profile-bio').innerText = data.profile.bio || "No bio available.";
@@ -463,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 reqData.requests.forEach(req => {
                     friendRequestsList.innerHTML += `
                         <div class="friend-item">
-                            <img src="https://minotar.net/helm/${req.username}/48.png">
+                            <img src="https://minotar.net/helm/${req.username}/48.png" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'">
                             <div class="friend-item-info">
                                 <h4>${req.username}</h4>
                                 <span>Wants to be friends</span>
@@ -490,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const el = document.createElement('div');
                     el.className = 'friend-item';
                     el.innerHTML = `
-                        <img src="https://minotar.net/helm/${f.username}/48.png">
+                        <img src="https://minotar.net/helm/${f.username}/48.png" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'">
                         <div class="friend-item-info">
                             <h4>${f.username}</h4>
                             <span style="color: ${f.status === 'online' ? '#4ade80' : 'var(--text-muted)'}">${f.status === 'online' ? 'Online' : 'Offline'}</span>
@@ -527,7 +537,9 @@ document.addEventListener('DOMContentLoaded', () => {
         chatActive.style.display = 'flex';
         
         document.getElementById('chat-name').innerText = username;
-        document.getElementById('chat-avatar').src = `https://minotar.net/helm/${username}/48.png`;
+        const cAvatar = document.getElementById('chat-avatar');
+        cAvatar.src = `https://minotar.net/helm/${username}/48.png`;
+        cAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/48.png'; };
         
         loadMessages();
         
