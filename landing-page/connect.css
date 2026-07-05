@@ -341,3 +341,79 @@ body {
   .nav-menu { display: none; } /* Hide full menu on mobile for simplicity */
   .profile-grid { grid-template-columns: 1fr; }
 }
+
+/* OAuth Buttons */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin-top: 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.auth-divider span {
+  padding: 0 10px;
+}
+.oauth-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+.oauth-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: white;
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.oauth-btn:hover {
+  background: rgba(255,255,255,0.1);
+  transform: translateY(-1px);
+}
+.discord-btn:hover { border-color: #5865F2; }
+.google-btn:hover { border-color: #4285F4; }
+
+/* Auth Loading State */
+.auth-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(168, 85, 247, 0.2);
+  border-top-color: var(--accent-purple);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.auth-loading h3 {
+  font-family: var(--font-title);
+  font-size: 20px;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}

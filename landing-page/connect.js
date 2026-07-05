@@ -76,8 +76,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem("idk_connect_token", idkToken);
                     localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
                     
-                    authOverlay.style.display = 'none';
-                    setupDashboard();
+                    // Simulated loading transition
+                    document.querySelector('.auth-box').style.display = 'none';
+                    const loadingUi = document.getElementById('auth-loading');
+                    const loadingText = document.getElementById('auth-loading-text');
+                    loadingUi.style.display = 'flex';
+                    loadingText.innerText = "Authenticating...";
+                    
+                    setTimeout(() => {
+                        loadingText.innerText = "Fetching Profile Data...";
+                    }, 800);
+                    
+                    setTimeout(() => {
+                        loadingUi.style.display = 'none';
+                        document.querySelector('.auth-box').style.display = 'block'; // Reset for future logout
+                        authOverlay.style.display = 'none';
+                        setupDashboard();
+                    }, 1800);
                 }
             } else {
                 showAuthMsg(data.error || "Login failed.");
@@ -156,6 +171,36 @@ document.addEventListener('DOMContentLoaded', () => {
         btnReg.innerText = "Verify & Register";
         btnReg.disabled = false;
     });
+    
+    // OAuth Mock Listeners
+    const discordBtn = document.querySelector('.discord-btn');
+    const googleBtn = document.querySelector('.google-btn');
+    
+    if (discordBtn) {
+        discordBtn.addEventListener('click', async () => {
+            showAuthMsg("Connecting to Discord...");
+            try {
+                const res = await fetch(`${IDK_BACKEND}/api/auth/discord`);
+                const data = await res.json();
+                if(data.error) showAuthMsg(data.error);
+            } catch(e) {
+                showAuthMsg("Failed to reach OAuth endpoint.");
+            }
+        });
+    }
+    
+    if (googleBtn) {
+        googleBtn.addEventListener('click', async () => {
+            showAuthMsg("Connecting to Google...");
+            try {
+                const res = await fetch(`${IDK_BACKEND}/api/auth/google`);
+                const data = await res.json();
+                if(data.error) showAuthMsg(data.error);
+            } catch(e) {
+                showAuthMsg("Failed to reach OAuth endpoint.");
+            }
+        });
+    }
 
     // --- Dashboard Logic ---
     function setupDashboard() {
