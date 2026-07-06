@@ -615,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     chatMessages.innerHTML += `
                         <div class="chat-msg ${isMe ? 'me' : 'them'}">
-                            <div class="chat-bubble">${msg.content}</div>
+                            <div class="chat-bubble">${msg.text}</div>
                             <span class="chat-time">${timeStr}</span>
                         </div>
                     `;
@@ -637,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await fetch(`${IDK_BACKEND}/api/messages/${currentChatFriendId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idkToken}` },
-                body: JSON.stringify({ content: text })
+                body: JSON.stringify({ text: text })
             });
             loadMessages(true);
         } catch(e) {}
