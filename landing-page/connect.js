@@ -227,13 +227,56 @@ document.addEventListener('DOMContentLoaded', () => {
         authOverlay.style.display = 'flex';
     }
 
+    // --- Avatar Rendering Logic ---
+    function setMinecraftAvatar(imgElement, uObj) {
+        // Find correct username and auth mode
+        const mcUsername = uObj.linkedMinecraftAccount ? uObj.linkedMinecraftAccount.username : uObj.username;
+        const authMode = uObj.linkedMinecraftAccount ? uObj.linkedMinecraftAccount.authMode : 'offline';
+        
+        // Setup initial fallback and source
+        let fallbackStage = 0;
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            
+            const scale = img.naturalWidth / 64;
+            ctx.imageSmoothingEnabled = false;
+            
+            // Draw face
+            ctx.drawImage(img, 8 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, 64, 64);
+            // Draw accessory
+            ctx.drawImage(img, 40 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, 64, 64);
+            
+            imgElement.src = canvas.toDataURL('image/png');
+        };
+        
+        img.onerror = () => {
+            fallbackStage++;
+            if (fallbackStage === 1) {
+                img.src = `https://minotar.net/skin/${mcUsername}`;
+            } else {
+                imgElement.src = `https://minotar.net/helm/MHF_Steve/120.png`;
+            }
+        };
+        
+        if (authMode === 'offline') {
+            img.src = `https://minotar.net/skin/${mcUsername}`;
+        } else {
+            img.src = `https://skinsystem.ely.by/skins/${mcUsername}.png`;
+        }
+    }
+
     // --- Dashboard Logic ---
     function setupDashboard() {
         // Set user badge
         document.getElementById('nav-username').innerText = idkUser.username;
         const navAvatar = document.getElementById('nav-avatar');
-        navAvatar.src = idkUser.avatar || `https://minotar.net/helm/${idkUser.username}/40.png`;
-        navAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/40.png'; };
+        setMinecraftAvatar(navAvatar, idkUser);
         
         // Load My Profile initially
         loadMyProfile();
@@ -300,8 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadMyProfile() {
         document.getElementById('my-profile-name').innerText = idkUser.username;
         const profAvatar = document.getElementById('my-profile-avatar');
-        profAvatar.src = idkUser.avatar || `https://minotar.net/helm/${idkUser.username}/120.png`;
-        profAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/120.png'; };
+        setMinecraftAvatar(profAvatar, idkUser);
         
         try {
             const res = await fetch(`${IDK_BACKEND}/api/users/${idkUser.username}/profile`, {
@@ -344,11 +386,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     card.className = 'user-card';
                     card.innerHTML = `
                         <div style="display:flex; align-items:center; gap:12px; flex:1;">
-                            <img src="${u.avatar || `https://minotar.net/helm/${u.username}/48.png`}" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'" alt="Avatar">
+                            <img id="search-avatar-${u.id}" alt="Avatar">
                             <h4>${u.username}</h4>
                         </div>
                         <button class="add-friend-btn secondary-btn" style="padding: 4px 12px; font-size:12px;">Add</button>
                     `;
+                    resultsContainer.appendChild(card);
+                    setMinecraftAvatar(document.getElementById(`search-avatar-${u.id}`), u);
                     
                     // Click avatar/name to load profile
                     card.querySelector('div').addEventListener('click', () => {
@@ -404,8 +448,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('user-profile-name').innerText = username;
         const uAvatar = document.getElementById('user-profile-avatar');
-        uAvatar.src = `https://minotar.net/helm/${username}/120.png`; // Fallback before fetch
-        uAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/120.png'; };
+        // Fallback before fetch, assume username is minecraft name
+        setMinecraftAvatar(uAvatar, {username: username});
         document.getElementById('user-profile-bio').innerText = "Loading...";
         document.getElementById('user-profile-status').innerText = "Loading";
         document.getElementById('user-profile-status').className = 'status-badge';
@@ -416,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (res.ok && data.profile) {
-                if (data.profile.avatar) uAvatar.src = data.profile.avatar;
+                setMinecraftAvatar(uAvatar, data.profile);
                 document.getElementById('user-profile-bio').innerText = data.profile.bio || "No bio available.";
                 const st = document.getElementById('user-profile-status');
                 st.innerText = data.profile.status === 'online' ? 'Online' : 'Offline';
@@ -473,18 +517,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (reqData.requests && reqData.requests.length > 0) {
                 reqData.requests.forEach(req => {
                     friendRequestsList.innerHTML += `
-                        <div class="friend-item">
-                            <img src="${req.avatar || `https://minotar.net/helm/${req.username}/48.png`}" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'">
+                        <div class="friend-item" id="freq-${req.requestId}">
+                            <img id="freq-avatar-${req.requestId}">
                             <div class="friend-item-info">
                                 <h4>${req.username}</h4>
                                 <span>Wants to be friends</span>
                             </div>
-                            <div class="friend-actions">
-                                <button class="btn-icon accept" onclick="handleRequest('${req.id}', 'accept')">✔</button>
-                                <button class="btn-icon reject" onclick="handleRequest('${req.id}', 'decline')">✖</button>
+                            <div class="friend-item-actions">
+                                <button class="secondary-btn btn-accept" data-id="${req.requestId}">✓</button>
+                                <button class="secondary-btn btn-decline" data-id="${req.requestId}" style="background:var(--bg-lighter)">✗</button>
                             </div>
                         </div>
                     `;
+                });
+                reqData.requests.forEach(req => {
+                    setMinecraftAvatar(document.getElementById(`freq-avatar-${req.requestId}`), req);
                 });
             } else {
                 friendRequestsList.innerHTML = "<p style='color:var(--text-muted);font-size:14px;'>No pending requests.</p>";
@@ -501,14 +548,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     const el = document.createElement('div');
                     el.className = 'friend-item';
                     el.innerHTML = `
-                        <img src="${f.avatar || `https://minotar.net/helm/${f.username}/48.png`}" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'">
+                        <img id="friend-avatar-${f.id}">
                         <div class="friend-item-info">
                             <h4>${f.username}</h4>
                             <span style="color: ${f.status === 'online' ? '#4ade80' : 'var(--text-muted)'}">${f.status === 'online' ? 'Online' : 'Offline'}</span>
                         </div>
                     `;
-                    el.addEventListener('click', () => openChat(f.id, f.username, f.avatar));
+                    el.addEventListener('click', () => openChat(f));
                     friendsList.appendChild(el);
+                    setMinecraftAvatar(document.getElementById(`friend-avatar-${f.id}`), f);
                 });
             } else {
                 friendsList.innerHTML = "<p style='color:var(--text-muted);font-size:14px;'>No friends yet. Search and add some!</p>";
@@ -530,17 +578,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {}
     }
 
-    function openChat(friendId, username, avatar) {
-        currentChatFriendId = friendId;
-        currentChatUsername = username;
+    function openChat(friendObj) {
+        currentChatFriendId = friendObj.id;
+        currentChatUsername = friendObj.username;
         
         chatPlaceholder.style.display = 'none';
         chatActive.style.display = 'flex';
         
-        document.getElementById('chat-name').innerText = username;
+        document.getElementById('chat-name').innerText = currentChatUsername;
         const cAvatar = document.getElementById('chat-avatar');
-        cAvatar.src = avatar || `https://minotar.net/helm/${username}/48.png`;
-        cAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/48.png'; };
+        setMinecraftAvatar(cAvatar, friendObj);
         
         loadMessages();
         
