@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set user badge
         document.getElementById('nav-username').innerText = idkUser.username;
         const navAvatar = document.getElementById('nav-avatar');
-        navAvatar.src = `https://minotar.net/helm/${idkUser.username}/40.png`;
+        navAvatar.src = idkUser.avatar || `https://minotar.net/helm/${idkUser.username}/40.png`;
         navAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/40.png'; };
         
         // Load My Profile initially
@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadMyProfile() {
         document.getElementById('my-profile-name').innerText = idkUser.username;
         const profAvatar = document.getElementById('my-profile-avatar');
-        profAvatar.src = `https://minotar.net/helm/${idkUser.username}/120.png`;
+        profAvatar.src = idkUser.avatar || `https://minotar.net/helm/${idkUser.username}/120.png`;
         profAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/120.png'; };
         
         try {
@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     card.className = 'user-card';
                     card.innerHTML = `
                         <div style="display:flex; align-items:center; gap:12px; flex:1;">
-                            <img src="https://minotar.net/helm/${u.username}/48.png" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'" alt="Avatar">
+                            <img src="${u.avatar || `https://minotar.net/helm/${u.username}/48.png`}" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'" alt="Avatar">
                             <h4>${u.username}</h4>
                         </div>
                         <button class="add-friend-btn secondary-btn" style="padding: 4px 12px; font-size:12px;">Add</button>
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('user-profile-name').innerText = username;
         const uAvatar = document.getElementById('user-profile-avatar');
-        uAvatar.src = `https://minotar.net/helm/${username}/120.png`;
+        uAvatar.src = `https://minotar.net/helm/${username}/120.png`; // Fallback before fetch
         uAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/120.png'; };
         document.getElementById('user-profile-bio').innerText = "Loading...";
         document.getElementById('user-profile-status').innerText = "Loading";
@@ -416,6 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (res.ok && data.profile) {
+                if (data.profile.avatar) uAvatar.src = data.profile.avatar;
                 document.getElementById('user-profile-bio').innerText = data.profile.bio || "No bio available.";
                 const st = document.getElementById('user-profile-status');
                 st.innerText = data.profile.status === 'online' ? 'Online' : 'Offline';
@@ -473,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 reqData.requests.forEach(req => {
                     friendRequestsList.innerHTML += `
                         <div class="friend-item">
-                            <img src="https://minotar.net/helm/${req.username}/48.png" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'">
+                            <img src="${req.avatar || `https://minotar.net/helm/${req.username}/48.png`}" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'">
                             <div class="friend-item-info">
                                 <h4>${req.username}</h4>
                                 <span>Wants to be friends</span>
@@ -500,13 +501,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const el = document.createElement('div');
                     el.className = 'friend-item';
                     el.innerHTML = `
-                        <img src="https://minotar.net/helm/${f.username}/48.png" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'">
+                        <img src="${f.avatar || `https://minotar.net/helm/${f.username}/48.png`}" onerror="this.src='https://minotar.net/helm/MHF_Steve/48.png'">
                         <div class="friend-item-info">
                             <h4>${f.username}</h4>
                             <span style="color: ${f.status === 'online' ? '#4ade80' : 'var(--text-muted)'}">${f.status === 'online' ? 'Online' : 'Offline'}</span>
                         </div>
                     `;
-                    el.addEventListener('click', () => openChat(f.id, f.username));
+                    el.addEventListener('click', () => openChat(f.id, f.username, f.avatar));
                     friendsList.appendChild(el);
                 });
             } else {
@@ -529,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {}
     }
 
-    function openChat(friendId, username) {
+    function openChat(friendId, username, avatar) {
         currentChatFriendId = friendId;
         currentChatUsername = username;
         
@@ -538,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('chat-name').innerText = username;
         const cAvatar = document.getElementById('chat-avatar');
-        cAvatar.src = `https://minotar.net/helm/${username}/48.png`;
+        cAvatar.src = avatar || `https://minotar.net/helm/${username}/48.png`;
         cAvatar.onerror = function() { this.src = 'https://minotar.net/helm/MHF_Steve/48.png'; };
         
         loadMessages();
