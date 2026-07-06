@@ -581,8 +581,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         chatPlaceholder.style.display = 'none';
         chatActive.style.display = 'flex';
-        
         document.getElementById('chat-name').innerText = currentChatUsername;
+        
+        const cStatus = document.getElementById('chat-status');
+        if (cStatus) {
+            cStatus.innerText = friendObj.status === 'online' ? 'Online' : 'Offline';
+            cStatus.className = friendObj.status === 'online' ? 'status-text online' : 'status-text';
+        }
         const cAvatar = document.getElementById('chat-avatar');
         setMinecraftAvatar(cAvatar, friendObj);
         
