@@ -274,9 +274,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Dashboard Logic ---
     function setupDashboard() {
-        // Set user badge across multiple possible secondary sidebars
-        document.querySelectorAll('.nav-username').forEach(el => el.innerText = idkUser.username);
-        document.querySelectorAll('.nav-avatar').forEach(el => setMinecraftAvatar(el, idkUser));
+        // Set user badge in sidebar
+        document.getElementById('nav-username').innerText = idkUser.username;
+        const navAvatar = document.getElementById('nav-avatar');
+        setMinecraftAvatar(navAvatar, idkUser);
         
         // Load My Profile initially
         loadMyProfile();
