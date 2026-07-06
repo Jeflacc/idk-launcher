@@ -301,6 +301,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (targetTab === 'friends') {
                 switchView('view-friends');
                 loadFriends();
+            } else if (targetTab === 'settings') {
+                switchView('view-settings');
+                setupSettingsView();
             } else {
                 switchView('view-my-profile');
                 loadMyProfile();
@@ -374,6 +377,14 @@ document.addEventListener('DOMContentLoaded', () => {
     navSearch.addEventListener('click', () => {
         switchView('view-search');
     });
+
+    const navSettings = document.getElementById('nav-settings');
+    if (navSettings) {
+        navSettings.addEventListener('click', () => {
+            switchView('view-settings');
+            setupSettingsView();
+        });
+    }
 
     document.getElementById('btn-back-search').addEventListener('click', () => {
         switchView('view-search');
@@ -694,6 +705,59 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
+    }
+    
+    // --- Settings View Logic ---
+    async function setupSettingsView() {
+        const bioInput = document.getElementById('settings-bio');
+        const saveBtn = document.getElementById('btn-save-settings');
+        const msgDiv = document.getElementById('settings-msg');
+        msgDiv.innerText = '';
+        
+        try {
+            const res = await fetch(`${IDK_BACKEND}/api/users/${idkUser.username}/profile`, {
+                headers: { 'Authorization': `Bearer ${idkToken}` }
+            });
+            const data = await res.json();
+            if (res.ok && data.profile) {
+                bioInput.value = data.profile.bio || '';
+            }
+        } catch(e) {}
+        
+        // Save Bio
+        saveBtn.onclick = async () => {
+            saveBtn.disabled = true;
+            saveBtn.innerText = 'Saving...';
+            try {
+                const res = await fetch(`${IDK_BACKEND}/api/auth/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idkToken}` },
+                    body: JSON.stringify({ bio: bioInput.value })
+                });
+                if (res.ok) {
+                    msgDiv.innerText = 'Profile updated successfully!';
+                    msgDiv.style.color = '#4ade80';
+                } else {
+                    const err = await res.json();
+                    msgDiv.innerText = err.error || 'Failed to update profile.';
+                    msgDiv.style.color = '#ff4a4a';
+                }
+            } catch(e) {
+                msgDiv.innerText = 'Network error.';
+                msgDiv.style.color = '#ff4a4a';
+            }
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Save Changes';
+            setTimeout(() => { msgDiv.innerText = ''; }, 3000);
+        };
+        
+        // Connect Buttons
+        document.getElementById('btn-sync-discord').onclick = () => {
+            window.location.href = `${IDK_BACKEND}/api/auth/discord`;
+        };
+        document.getElementById('btn-sync-google').onclick = () => {
+            window.location.href = `${IDK_BACKEND}/api/auth/google`;
+        };
     }
 
 });
