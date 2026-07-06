@@ -768,6 +768,39 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (res.ok && data.profile) {
                 bioInput.value = data.profile.bio || '';
+                
+                // Update OAuth Buttons
+                const discordBtn = document.getElementById('btn-sync-discord');
+                const googleBtn = document.getElementById('btn-sync-google');
+                const mcBtn = document.getElementById('btn-sync-mc');
+                
+                if (data.profile.oauthProvider === 'discord') {
+                    discordBtn.innerText = 'Synced';
+                    discordBtn.style.opacity = '0.5';
+                    discordBtn.style.cursor = 'default';
+                    discordBtn.onclick = (e) => e.preventDefault();
+                } else {
+                    discordBtn.onclick = () => {
+                        window.location.href = `${IDK_BACKEND}/api/auth/discord?link_token=${idkToken}`;
+                    };
+                }
+                
+                if (data.profile.oauthProvider === 'google') {
+                    googleBtn.innerText = 'Synced';
+                    googleBtn.style.opacity = '0.5';
+                    googleBtn.style.cursor = 'default';
+                    googleBtn.onclick = (e) => e.preventDefault();
+                } else {
+                    googleBtn.onclick = () => {
+                        window.location.href = `${IDK_BACKEND}/api/auth/google?link_token=${idkToken}`;
+                    };
+                }
+                
+                if (data.profile.linkedMinecraftAccount) {
+                    mcBtn.innerText = 'Synced (' + data.profile.linkedMinecraftAccount.authMode + ')';
+                    mcBtn.style.opacity = '1';
+                    document.getElementById('mc-account-name').innerText = data.profile.linkedMinecraftAccount.username;
+                }
             }
         } catch(e) {}
         
@@ -810,13 +843,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.history.replaceState({}, document.title, currentUrl.toString());
         }
 
-        // Connect Buttons
-        document.getElementById('btn-sync-discord').onclick = () => {
-            window.location.href = `${IDK_BACKEND}/api/auth/discord?link_token=${idkToken}`;
-        };
-        document.getElementById('btn-sync-google').onclick = () => {
-            window.location.href = `${IDK_BACKEND}/api/auth/google?link_token=${idkToken}`;
-        };
+        // Connect Buttons are set inside the fetch above so they don't overwrite if synced
     }
 
 });
