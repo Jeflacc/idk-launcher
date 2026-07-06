@@ -282,9 +282,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Handle Routing
         const currentUrl = new URL(window.location);
         const targetUser = currentUrl.searchParams.get('u');
+        const targetChat = currentUrl.searchParams.get('c');
         
         if (targetUser) {
             loadUserProfile(targetUser);
+        } else if (targetChat) {
+            switchView('view-friends');
+            loadFriends().then(friends => {
+                if (friends) {
+                    const fObj = friends.find(f => f.username.toLowerCase() === targetChat.toLowerCase());
+                    if (fObj) openChat(fObj);
+                }
+            });
         } else {
             // Load My Profile initially
             loadMyProfile();
@@ -323,8 +332,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (viewId !== 'view-user-profile') {
             const currentUrl = new URL(window.location);
+            let changed = false;
             if (currentUrl.searchParams.has('u')) {
                 currentUrl.searchParams.delete('u');
+                changed = true;
+            }
+            if (viewId !== 'view-friends' && currentUrl.searchParams.has('c')) {
+                currentUrl.searchParams.delete('c');
+                changed = true;
+            }
+            if (changed) {
                 window.history.pushState(null, '', currentUrl.toString());
             }
         }
@@ -558,9 +575,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 friendsList.innerHTML = "<p style='color:var(--text-muted);font-size:14px;'>No friends yet. Search and add some!</p>";
             }
-            
+            return fData.friends;
         } catch (e) {
             console.error("Failed to load friends", e);
+            return null;
         }
     }
 
@@ -578,6 +596,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function openChat(friendObj) {
         currentChatFriendId = friendObj.id;
         currentChatUsername = friendObj.username;
+        
+        const currentUrl = new URL(window.location);
+        if (currentUrl.searchParams.get('c') !== friendObj.username) {
+            currentUrl.searchParams.set('c', friendObj.username);
+            window.history.pushState(null, '', currentUrl.toString());
+        }
         
         chatPlaceholder.style.display = 'none';
         chatActive.style.display = 'flex';
