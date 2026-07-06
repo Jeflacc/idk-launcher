@@ -237,6 +237,36 @@
                     </div>
                 </div>
 
+                <div class="xbox-card glass-panel" style="margin-bottom: 24px;">
+                    <div class="section-header">
+                        <h2>Account</h2>
+                    </div>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label>Change Username</label>
+                            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                                <input type="text" id="settings-username" class="glass-input" placeholder="New Username" style="flex: 1;">
+                                <button id="btn-change-username" class="btn-primary">Update</button>
+                            </div>
+                            <div id="settings-username-msg" style="font-size: 14px; margin-bottom: 24px;"></div>
+                        </div>
+                        
+                        <div class="form-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px;">
+                            <label>Change Password</label>
+                            <input type="password" id="settings-old-pass" class="glass-input" placeholder="Current Password (leave blank if you signed up with Google/Discord)" style="margin-bottom: 12px;">
+                            <input type="password" id="settings-new-pass" class="glass-input" placeholder="New Password" style="margin-bottom: 12px;">
+                            <button id="btn-change-password" class="btn-primary" style="margin-bottom: 12px;">Update Password</button>
+                            <div id="settings-password-msg" style="font-size: 14px; margin-bottom: 24px;"></div>
+                        </div>
+
+                        <div class="form-group" style="border-top: 1px solid rgba(255,74,74,0.3); padding-top: 24px;">
+                            <label style="color: #ff4a4a;">Danger Zone</label>
+                            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">Once you delete your account, there is no going back. Please be certain.</p>
+                            <button id="btn-delete-account" class="btn-primary" style="background: rgba(255,74,74,0.1); color: #ff4a4a; border-color: #ff4a4a;">Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="xbox-card glass-panel">
                     <div class="section-header">
                         <h2>Connections</h2>

@@ -831,6 +831,103 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => { msgDiv.innerText = ''; }, 3000);
         };
         
+        // --- Change Username ---
+        document.getElementById('settings-username').value = idkUser.username;
+        const btnChangeUser = document.getElementById('btn-change-username');
+        const userMsg = document.getElementById('settings-username-msg');
+        btnChangeUser.onclick = async () => {
+            const newUsername = document.getElementById('settings-username').value.trim();
+            if (!newUsername) return;
+            btnChangeUser.disabled = true;
+            btnChangeUser.innerText = 'Updating...';
+            try {
+                const res = await fetch(`${IDK_BACKEND}/api/auth/settings/username`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idkToken}` },
+                    body: JSON.stringify({ newUsername })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    idkToken = data.token;
+                    idkUser = data.user;
+                    localStorage.setItem("idk_connect_token", idkToken);
+                    localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
+                    document.getElementById('nav-username').innerText = idkUser.username;
+                    setMinecraftAvatar(document.getElementById('nav-avatar'), idkUser);
+                    userMsg.innerText = 'Username updated!';
+                    userMsg.style.color = '#4ade80';
+                } else {
+                    userMsg.innerText = data.error || 'Failed to update username.';
+                    userMsg.style.color = '#ff4a4a';
+                }
+            } catch(e) {
+                userMsg.innerText = 'Network error.';
+                userMsg.style.color = '#ff4a4a';
+            }
+            btnChangeUser.disabled = false;
+            btnChangeUser.innerText = 'Update';
+            setTimeout(() => { userMsg.innerText = ''; }, 3000);
+        };
+
+        // --- Change Password ---
+        const btnChangePass = document.getElementById('btn-change-password');
+        const passMsg = document.getElementById('settings-password-msg');
+        btnChangePass.onclick = async () => {
+            const oldPassword = document.getElementById('settings-old-pass').value;
+            const newPassword = document.getElementById('settings-new-pass').value;
+            if (!newPassword) return;
+            
+            btnChangePass.disabled = true;
+            btnChangePass.innerText = 'Updating...';
+            try {
+                const res = await fetch(`${IDK_BACKEND}/api/auth/settings/password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idkToken}` },
+                    body: JSON.stringify({ oldPassword, newPassword })
+                });
+                if (res.ok) {
+                    passMsg.innerText = 'Password updated successfully!';
+                    passMsg.style.color = '#4ade80';
+                    document.getElementById('settings-old-pass').value = '';
+                    document.getElementById('settings-new-pass').value = '';
+                } else {
+                    const data = await res.json();
+                    passMsg.innerText = data.error || 'Failed to update password.';
+                    passMsg.style.color = '#ff4a4a';
+                }
+            } catch(e) {
+                passMsg.innerText = 'Network error.';
+                passMsg.style.color = '#ff4a4a';
+            }
+            btnChangePass.disabled = false;
+            btnChangePass.innerText = 'Update Password';
+            setTimeout(() => { passMsg.innerText = ''; }, 3000);
+        };
+
+        // --- Delete Account ---
+        document.getElementById('btn-delete-account').onclick = async () => {
+            const confirmed = confirm("Are you sure you want to permanently delete your account? This action cannot be undone.");
+            if (!confirmed) return;
+            
+            try {
+                const res = await fetch(`${IDK_BACKEND}/api/auth/settings/account`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${idkToken}` }
+                });
+                if (res.ok) {
+                    // Log out
+                    localStorage.removeItem("idk_connect_token");
+                    localStorage.removeItem("idk_connect_user");
+                    window.location.href = "connect.html";
+                } else {
+                    const data = await res.json();
+                    alert(data.error || "Failed to delete account");
+                }
+            } catch(e) {
+                alert("Network error.");
+            }
+        };
+
         // Check for sync success
         const currentParams = new URLSearchParams(window.location.search);
         if (currentParams.get('sync_success')) {
