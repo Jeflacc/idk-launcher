@@ -283,6 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentUrl = new URL(window.location);
         const targetUser = currentUrl.searchParams.get('u');
         const targetChat = currentUrl.searchParams.get('c');
+        const targetTab = currentUrl.searchParams.get('tab');
         
         if (targetUser) {
             loadUserProfile(targetUser);
@@ -294,8 +295,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (fObj) openChat(fObj);
                 }
             });
+        } else if (targetTab) {
+            if (targetTab === 'search') {
+                switchView('view-search');
+            } else if (targetTab === 'friends') {
+                switchView('view-friends');
+                loadFriends();
+            } else {
+                switchView('view-my-profile');
+                loadMyProfile();
+            }
         } else {
             // Load My Profile initially
+            switchView('view-my-profile');
             loadMyProfile();
         }
     }
@@ -341,6 +353,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentUrl.searchParams.delete('c');
                 changed = true;
             }
+            
+            const tabName = viewId.replace('view-', '');
+            if (currentUrl.searchParams.get('tab') !== tabName) {
+                currentUrl.searchParams.set('tab', tabName);
+                changed = true;
+            }
+
             if (changed) {
                 window.history.pushState(null, '', currentUrl.toString());
             }
