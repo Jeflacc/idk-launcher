@@ -274,10 +274,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Dashboard Logic ---
     function setupDashboard() {
-        // Set user badge
-        document.getElementById('nav-username').innerText = idkUser.username;
-        const navAvatar = document.getElementById('nav-avatar');
-        setMinecraftAvatar(navAvatar, idkUser);
+        // Set user badge across multiple possible secondary sidebars
+        document.querySelectorAll('.nav-username').forEach(el => el.innerText = idkUser.username);
+        document.querySelectorAll('.nav-avatar').forEach(el => setMinecraftAvatar(el, idkUser));
         
         // Load My Profile initially
         loadMyProfile();
@@ -304,41 +303,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewMyProfile = document.getElementById('view-my-profile');
     const viewSearch = document.getElementById('view-search');
     const viewUserProfile = document.getElementById('view-user-profile');
-    const headerTitle = document.getElementById('header-title');
 
-    function switchView(viewName) {
-        viewMyProfile.classList.remove('active');
-        viewSearch.classList.remove('active');
-        viewUserProfile.classList.remove('active');
+    function switchView(viewId) {
+        document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
         
-        navMyProfile.classList.remove('active');
-        navSearch.classList.remove('active');
-
-        if (viewName === 'my-profile') {
-            viewMyProfile.classList.add('active');
-            navMyProfile.classList.add('active');
-            headerTitle.innerText = "My Profile";
-        } else if (viewName === 'search') {
-            viewSearch.classList.add('active');
-            navSearch.classList.add('active');
-            headerTitle.innerText = "Search Users";
-        } else if (viewName === 'user-profile') {
-            viewUserProfile.classList.add('active');
-            headerTitle.innerText = "Player Profile";
-        }
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.getElementById('nav-' + viewId.replace('view-', '')).classList.add('active');
     }
 
     navMyProfile.addEventListener('click', () => {
-        switchView('my-profile');
+        switchView('view-my-profile');
         loadMyProfile();
     });
 
     navSearch.addEventListener('click', () => {
-        switchView('search');
+        switchView('view-search');
     });
 
     document.getElementById('btn-back-search').addEventListener('click', () => {
-        switchView('search');
+        switchView('view-search');
     });
 
     async function loadMyProfile() {
@@ -445,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function loadUserProfile(username) {
-        switchView('user-profile');
+        switchView('view-user-profile');
         
         document.getElementById('user-profile-name').innerText = username;
         const uAvatar = document.getElementById('user-profile-avatar');

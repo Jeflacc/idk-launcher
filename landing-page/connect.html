@@ -66,138 +66,177 @@
         </div>
     </div>
 
-    <!-- Dashboard Sidebar -->
-    <aside class="dashboard-sidebar">
-        <a href="index.html" class="sidebar-brand">
-            <img src="assets/logo.png" alt="Logo">
-            <span>IDK<span style="color: var(--accent-green);">.</span> <span>CONNECT</span></span>
-        </a>
+    <!-- Primary Sidebar (Thin Icons Only) -->
+    <nav class="primary-sidebar">
+        <div class="sidebar-top">
+            <a href="index.html" class="nav-item brand-item tooltip-wrap">
+                <img src="assets/logo.png" alt="Logo">
+                <span class="tooltip">Home</span>
+            </a>
+            <div class="sidebar-separator"></div>
+            <button class="nav-item active tooltip-wrap" id="nav-view-my-profile">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span class="tooltip">My Profile</span>
+            </button>
+            <button class="nav-item tooltip-wrap" id="nav-view-search">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span class="tooltip">Search Users</span>
+            </button>
+            <button class="nav-item tooltip-wrap" id="nav-view-friends">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span class="tooltip">Friends & DMs</span>
+            </button>
+        </div>
+        <div class="sidebar-bottom">
+            <button class="nav-item danger tooltip-wrap" id="btn-logout">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span class="tooltip">Logout</span>
+            </button>
+        </div>
+    </nav>
 
-        <nav class="nav-menu">
-            <button class="nav-item active" id="nav-my-profile">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                My Profile
-            </button>
-            <button class="nav-item" id="nav-search">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                Search Users
-            </button>
-            <button class="nav-item" id="nav-friends">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                Friends & DMs
-            </button>
-        </nav>
-    </aside>
-
-    <!-- Dashboard Main Area -->
+    <!-- Main Dashboard Area -->
     <main class="dashboard-main">
-        <header class="dashboard-header">
-            <h1 class="header-title" id="header-title">My Profile</h1>
-            <div class="header-actions">
-                <div class="user-badge" id="user-badge">
-                    <img id="nav-avatar" src="" alt="Me">
-                    <span id="nav-username">User</span>
-                </div>
-                <button id="btn-logout" class="btn-danger" style="padding: 8px 16px; font-size: 14px;">Logout</button>
-            </div>
-        </header>
-
-        <!-- View: My Profile -->
+        <!-- View: My Profile (Full width content) -->
         <div id="view-my-profile" class="view-container active">
-            <div class="glass-card profile-grid">
+            <div class="content-wrapper">
                 <div class="profile-card">
                     <div class="profile-banner"></div>
                     <div class="avatar-container">
-                        <img id="my-profile-avatar" src="" alt="Avatar">
-                        <span id="my-profile-status" class="status-badge online">Online</span>
+                        <img id="my-profile-avatar" class="nav-avatar" src="" alt="Avatar">
+                        <span id="my-profile-status" class="status-badge online"></span>
                     </div>
-                    <h3 id="my-profile-name">Username</h3>
+                    <h3 id="my-profile-name" class="nav-username">Username</h3>
+                    <p style="margin-bottom: 24px; color: var(--text-muted);">#0000</p>
                 </div>
                 <div class="profile-details">
-                    <h4 style="color: var(--text-muted); margin-bottom: 8px;">Bio</h4>
-                    <p id="my-profile-bio" style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">...</p>
+                    <h4 class="section-title">About Me</h4>
+                    <p id="my-profile-bio" class="bio-text">...</p>
                     
-                    <h4 style="color: var(--text-muted); margin-bottom: 8px;">Account Setup</h4>
-                    <p style="font-size: 14px; color: #a1a1aa;">To link your Minecraft account or enable 2FA, please use the IDK Launcher Desktop Application.</p>
+                    <div class="divider"></div>
+
+                    <h4 class="section-title">Account Setup</h4>
+                    <p class="help-text">To link your Minecraft account or enable 2FA, please use the IDK Launcher Desktop Application.</p>
                 </div>
             </div>
         </div>
 
-        <!-- View: Search Users -->
-        <div id="view-search" class="view-container">
-            <div class="glass-card">
-                <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-                    <input type="text" id="search-input" class="glass-input" placeholder="Search by username..." style="margin-bottom: 0;">
-                    <button id="btn-do-search" class="btn-primary">Search</button>
+        <!-- View: Search Users (Split layout) -->
+        <div id="view-search" class="view-container split-layout">
+            <aside class="secondary-sidebar">
+                <header class="sidebar-header">
+                    <h2>Search</h2>
+                </header>
+                <div class="sidebar-content scrollable">
+                    <div class="search-box">
+                        <input type="text" id="search-input" class="glass-input" placeholder="Search by username...">
+                        <button id="btn-do-search" class="btn-primary">Go</button>
+                    </div>
+                    <div id="search-msg" class="search-msg"></div>
+                    <div id="search-results" class="friend-list">
+                        <!-- Results populate here -->
+                    </div>
                 </div>
-                <div id="search-msg" style="color: var(--text-muted); margin-bottom: 12px;"></div>
-                <div id="search-results" class="search-results-grid">
-                    <!-- Results populate here -->
+                <footer class="sidebar-footer">
+                    <div class="user-badge">
+                        <img class="nav-avatar" src="" alt="Me">
+                        <div class="badge-text">
+                            <span class="nav-username">User</span>
+                        </div>
+                    </div>
+                </footer>
+            </aside>
+            <section class="main-content">
+                <div class="empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <p>Search for a user to view their profile</p>
                 </div>
-            </div>
+            </section>
         </div>
 
         <!-- View: User Profile (Dynamic) -->
-        <div id="view-user-profile" class="view-container">
-            <button id="btn-back-search" class="btn-primary" style="margin-bottom: 20px; background: rgba(255,255,255,0.1);">&larr; Back</button>
-            <div class="glass-card profile-grid">
-                <div class="profile-card">
-                    <div class="profile-banner"></div>
-                    <div class="avatar-container">
-                        <img id="user-profile-avatar" src="" alt="Avatar">
-                        <span id="user-profile-status" class="status-badge">Offline</span>
+        <div id="view-user-profile" class="view-container split-layout">
+            <aside class="secondary-sidebar">
+                <header class="sidebar-header">
+                    <h2>Results</h2>
+                </header>
+                <div class="sidebar-content scrollable">
+                    <button id="btn-back-search" class="friend-item" style="justify-content:center;">&larr; Back to Search</button>
+                </div>
+                <footer class="sidebar-footer">
+                    <div class="user-badge">
+                        <img class="nav-avatar" src="" alt="Me">
+                        <div class="badge-text">
+                            <span class="nav-username">User</span>
+                        </div>
                     </div>
-                    <h3 id="user-profile-name">Username</h3>
+                </footer>
+            </aside>
+            <section class="main-content">
+                <div class="content-wrapper">
+                    <div class="profile-card">
+                        <div class="profile-banner"></div>
+                        <div class="avatar-container">
+                            <img id="user-profile-avatar" src="" alt="Avatar">
+                            <span id="user-profile-status" class="status-badge"></span>
+                        </div>
+                        <h3 id="user-profile-name">Username</h3>
+                    </div>
+                    <div class="profile-details">
+                        <h4 class="section-title">About Me</h4>
+                        <p id="user-profile-bio" class="bio-text">...</p>
+                    </div>
                 </div>
-                <div class="profile-details">
-                    <h4 style="color: var(--text-muted); margin-bottom: 8px;">Bio</h4>
-                    <p id="user-profile-bio" style="font-size: 16px; line-height: 1.6;">...</p>
-                </div>
-            </div>
+            </section>
         </div>
 
-        <!-- View: Friends & DMs -->
-        <div id="view-friends" class="view-container">
-            <div class="friends-layout">
-                <!-- Sidebar for Friend List -->
-                <div class="friends-sidebar glass-card">
-                    <h3 style="margin-bottom: 15px; font-size: 16px;">Pending Requests</h3>
-                    <div id="friend-requests-list" class="friend-requests-list">
-                        <!-- Pending requests go here -->
-                    </div>
+        <!-- View: Friends & DMs (Split layout) -->
+        <div id="view-friends" class="view-container split-layout">
+            <aside class="secondary-sidebar">
+                <header class="sidebar-header">
+                    <h2>Direct Messages</h2>
+                </header>
+                <div class="sidebar-content scrollable">
+                    <h3 class="group-title">Pending Requests</h3>
+                    <div id="friend-requests-list" class="friend-list"></div>
                     
-                    <h3 style="margin-top: 20px; margin-bottom: 15px; font-size: 16px;">My Friends</h3>
-                    <div id="friends-list" class="friends-list">
-                        <!-- Friends go here -->
-                    </div>
+                    <h3 class="group-title" style="margin-top: 16px;">Friends</h3>
+                    <div id="friends-list" class="friend-list"></div>
                 </div>
-
-                <!-- Chat Area -->
-                <div class="friends-chat-area glass-card">
-                    <div id="chat-placeholder" class="chat-placeholder">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        <p>Select a friend to start chatting</p>
+                <footer class="sidebar-footer">
+                    <div class="user-badge">
+                        <img class="nav-avatar" src="" alt="Me">
+                        <div class="badge-text">
+                            <span class="nav-username">User</span>
+                        </div>
                     </div>
-                    
-                    <div id="chat-active" class="chat-active" style="display: none;">
-                        <div class="chat-header">
-                            <img id="chat-avatar" src="" alt="Avatar">
-                            <h3 id="chat-name">Username</h3>
-                        </div>
-                        <div class="chat-messages" id="chat-messages">
-                            <!-- Messages go here -->
-                        </div>
-                        <div class="chat-input-area">
-                            <input type="text" id="chat-input" class="glass-input" placeholder="Type a message..." style="margin-bottom: 0;">
-                            <button id="btn-send-msg" class="btn-primary">
+                </footer>
+            </aside>
+            <section class="main-content chat-layout">
+                <div id="chat-placeholder" class="empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <p>Select a friend to start chatting</p>
+                </div>
+                
+                <div id="chat-active" class="chat-active" style="display: none;">
+                    <header class="chat-header">
+                        <span class="at-symbol">@</span>
+                        <h3 id="chat-name">Username</h3>
+                    </header>
+                    <div class="chat-messages scrollable" id="chat-messages">
+                        <!-- Messages go here -->
+                    </div>
+                    <div class="chat-input-container">
+                        <div class="chat-input-wrapper">
+                            <input type="text" id="chat-input" placeholder="Message @friend...">
+                            <button id="btn-send-msg" class="btn-send">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
-
     </main>
 
     <script src="connect.js"></script>
