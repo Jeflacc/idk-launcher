@@ -371,11 +371,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     const card = document.createElement('div');
                     card.className = 'user-card';
                     card.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:12px; flex:1;">
-                            <img id="search-avatar-${u.id}" alt="Avatar">
+                        <img id="search-avatar-${u.id}" alt="Avatar">
+                        <div style="width:100%; display:flex; flex-direction:column; align-items:center;">
                             <h4>${u.username}</h4>
+                            <span class="tag">#${u.id}</span>
                         </div>
-                        <button class="add-friend-btn secondary-btn" style="padding: 4px 12px; font-size:12px;">Add</button>
+                        <button class="add-friend-btn secondary-btn">Add Friend</button>
                     `;
                     resultsContainer.appendChild(card);
                     setMinecraftAvatar(document.getElementById(`search-avatar-${u.id}`), u);
