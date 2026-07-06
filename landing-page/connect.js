@@ -194,8 +194,55 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
     const errorFromUrl = urlParams.get('error');
+    const oauthError = urlParams.get('oauth_error');
+    const oauthPending = urlParams.get('oauth_pending');
+    const sessionToken = urlParams.get('session');
 
-    if (tokenFromUrl) {
+    if (oauthError === 'email_exists') {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        showAuthMsg("Email is already registered. Please login and link your account in Settings.");
+        authOverlay.style.display = 'flex';
+    } else if (oauthPending === 'true' && sessionToken) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        authOverlay.style.display = 'flex';
+        document.querySelector('.auth-box').style.display = 'none';
+        document.getElementById('oauth-setup-overlay').style.display = 'flex';
+        
+        const btnSetup = document.getElementById('btn-oauth-setup');
+        const setupMsg = document.getElementById('oauth-setup-msg');
+        btnSetup.onclick = async () => {
+            const desiredUsername = document.getElementById('oauth-setup-username').value.trim();
+            if(!desiredUsername) {
+                setupMsg.innerText = "Username is required.";
+                setupMsg.className = 'auth-msg error';
+                setupMsg.style.display = 'block';
+                return;
+            }
+            btnSetup.innerText = "Completing...";
+            btnSetup.disabled = true;
+            try {
+                const res = await fetch(`${IDK_BACKEND}/api/auth/oauth-complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session: sessionToken, username: desiredUsername })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    window.location.href = window.location.pathname + "?token=" + data.token;
+                } else {
+                    setupMsg.innerText = data.error || "Failed to set username.";
+                    setupMsg.className = 'auth-msg error';
+                    setupMsg.style.display = 'block';
+                }
+            } catch(e) {
+                setupMsg.innerText = "Network error.";
+                setupMsg.className = 'auth-msg error';
+                setupMsg.style.display = 'block';
+            }
+            btnSetup.innerText = "Complete Signup";
+            btnSetup.disabled = false;
+        };
+    } else if (tokenFromUrl) {
         // Clear the URL to avoid leaking the token if the user copies the link
         window.history.replaceState({}, document.title, window.location.pathname);
         
@@ -751,12 +798,24 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => { msgDiv.innerText = ''; }, 3000);
         };
         
+        // Check for sync success
+        const currentParams = new URLSearchParams(window.location.search);
+        if (currentParams.get('sync_success')) {
+            msgDiv.innerText = `Successfully linked your ${currentParams.get('sync_success')} account!`;
+            msgDiv.style.color = '#4ade80';
+            setTimeout(() => { msgDiv.innerText = ''; }, 5000);
+            
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.delete('sync_success');
+            window.history.replaceState({}, document.title, currentUrl.toString());
+        }
+
         // Connect Buttons
         document.getElementById('btn-sync-discord').onclick = () => {
-            window.location.href = `${IDK_BACKEND}/api/auth/discord`;
+            window.location.href = `${IDK_BACKEND}/api/auth/discord?link_token=${idkToken}`;
         };
         document.getElementById('btn-sync-google').onclick = () => {
-            window.location.href = `${IDK_BACKEND}/api/auth/google`;
+            window.location.href = `${IDK_BACKEND}/api/auth/google?link_token=${idkToken}`;
         };
     }
 

@@ -22,6 +22,7 @@
             <a href="index.html" style="display:inline-block; margin-bottom: 20px; color: var(--text-muted); text-decoration: none;">&larr; Back to Home</a>
             <h2>IDK<span style="color: var(--accent-primary);">.</span> CONNECT</h2>
             <p>Sign in to access your social dashboard.</p>
+            <div id="oauth-error-msg" style="display: none; background: rgba(255, 74, 74, 0.1); border: 1px solid rgba(255, 74, 74, 0.3); color: #ff4a4a; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;"></div>
             
             <div class="auth-tabs">
                 <button id="tab-login" class="auth-tab active">Login</button>
@@ -63,6 +64,22 @@
         <div id="auth-loading" class="auth-loading" style="display: none;">
             <div class="spinner"></div>
             <h3 id="auth-loading-text">Authenticating...</h3>
+        </div>
+    </div>
+
+    <!-- OAuth Setup Overlay (Shown for new OAuth signups) -->
+    <div id="oauth-setup-overlay" class="auth-overlay" style="display: none; z-index: 9999;">
+        <div class="glass-card auth-box">
+            <h2>Welcome to IDK<span style="color: var(--accent-primary);">.</span> CONNECT</h2>
+            <p>You're almost done! Please choose a username for your new account.</p>
+            
+            <div class="form-group" style="margin-top: 24px;">
+                <label>Username</label>
+                <input type="text" id="oauth-setup-username" class="glass-input" placeholder="Enter a unique username">
+            </div>
+            
+            <button id="btn-oauth-setup" class="btn-primary" style="width: 100%; margin-top: 16px;">Complete Signup</button>
+            <div id="oauth-setup-msg" class="auth-msg"></div>
         </div>
     </div>
 
