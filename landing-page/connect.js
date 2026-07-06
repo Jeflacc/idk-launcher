@@ -267,7 +267,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authMode === 'offline') {
             img.src = `https://minotar.net/skin/${mcUsername}`;
         } else {
-            img.src = `https://skinsystem.ely.by/skins/${mcUsername}.png`;
+            // Bypass Ely.by CORS restrictions using our backend proxy
+            img.src = `${IDK_BACKEND}/api/skins/elyby/${mcUsername}`;
         }
     }
 
