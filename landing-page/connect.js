@@ -391,7 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <img id="search-avatar-${u.id}" alt="Avatar">
                         <div style="width:100%; display:flex; flex-direction:column; align-items:center;">
                             <h4>${u.username}</h4>
-                            <span class="tag">#${u.id}</span>
                         </div>
                         <button class="add-friend-btn secondary-btn">Add Friend</button>
                     `;
