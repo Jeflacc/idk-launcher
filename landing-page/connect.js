@@ -476,16 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (navFriends) {
         navFriends.addEventListener('click', () => {
-            viewMyProfile.classList.remove('active');
-            viewSearch.classList.remove('active');
-            viewUserProfile.classList.remove('active');
-            viewFriends.classList.add('active');
-            
-            navMyProfile.classList.remove('active');
-            navSearch.classList.remove('active');
-            navFriends.classList.add('active');
-            headerTitle.innerText = "Friends & Messages";
-            
+            switchView('view-friends');
             loadFriends();
         });
     }
