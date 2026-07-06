@@ -609,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.messages) {
                 chatMessages.innerHTML = "";
                 data.messages.forEach(msg => {
-                    const isMe = msg.fromId === idkUser.id;
+                    const isMe = msg.senderId === idkUser.id;
                     const date = new Date(msg.timestamp);
                     const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     
