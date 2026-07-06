@@ -356,8 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok && data.profile) {
                 document.getElementById('my-profile-bio').innerText = data.profile.bio || "No bio available.";
                 const st = document.getElementById('my-profile-status');
-                st.innerText = data.profile.status === 'online' ? 'Online' : 'Offline';
-                st.className = data.profile.status === 'online' ? 'status-badge online' : 'status-badge';
+                st.className = data.profile.status === 'online' ? 'hero-status-badge online' : 'hero-status-badge';
             }
         } catch(e) { }
     }
@@ -460,8 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fallback before fetch, assume username is minecraft name
         setMinecraftAvatar(uAvatar, {username: username});
         document.getElementById('user-profile-bio').innerText = "Loading...";
-        document.getElementById('user-profile-status').innerText = "Loading";
-        document.getElementById('user-profile-status').className = 'status-badge';
+        document.getElementById('user-profile-status').className = 'hero-status-badge';
 
         try {
             const res = await fetch(`${IDK_BACKEND}/api/users/${username}/profile`, {
@@ -472,8 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setMinecraftAvatar(uAvatar, data.profile);
                 document.getElementById('user-profile-bio').innerText = data.profile.bio || "No bio available.";
                 const st = document.getElementById('user-profile-status');
-                st.innerText = data.profile.status === 'online' ? 'Online' : 'Offline';
-                st.className = data.profile.status === 'online' ? 'status-badge online' : 'status-badge';
+                st.className = data.profile.status === 'online' ? 'hero-status-badge online' : 'hero-status-badge';
             } else {
                 document.getElementById('user-profile-bio').innerText = "Could not load profile.";
             }
