@@ -279,8 +279,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const navAvatar = document.getElementById('nav-avatar');
         setMinecraftAvatar(navAvatar, idkUser);
         
-        // Load My Profile initially
-        loadMyProfile();
+        // Handle Routing
+        const currentUrl = new URL(window.location);
+        const targetUser = currentUrl.searchParams.get('u');
+        
+        if (targetUser) {
+            loadUserProfile(targetUser);
+        } else {
+            // Load My Profile initially
+            loadMyProfile();
+        }
     }
 
     document.getElementById('btn-logout').addEventListener('click', () => {
@@ -310,7 +318,16 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(viewId).classList.add('active');
         
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-        document.getElementById('nav-' + viewId.replace('view-', '')).classList.add('active');
+        const navItem = document.getElementById('nav-' + viewId.replace('view-', ''));
+        if (navItem) navItem.classList.add('active');
+        
+        if (viewId !== 'view-user-profile') {
+            const currentUrl = new URL(window.location);
+            if (currentUrl.searchParams.has('u')) {
+                currentUrl.searchParams.delete('u');
+                window.history.pushState(null, '', currentUrl.toString());
+            }
+        }
     }
 
     navMyProfile.addEventListener('click', () => {
@@ -382,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     setMinecraftAvatar(document.getElementById(`search-avatar-${u.id}`), u);
                     
                     // Click avatar/name to load profile
-                    card.querySelector('div').addEventListener('click', () => {
+                    card.addEventListener('click', () => {
                         loadUserProfile(u.username);
                     });
 
@@ -432,6 +449,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadUserProfile(username) {
         switchView('view-user-profile');
+        
+        const currentUrl = new URL(window.location);
+        if (currentUrl.searchParams.get('u') !== username) {
+            currentUrl.searchParams.set('u', username);
+            window.history.pushState(null, '', currentUrl.toString());
+        }
         
         document.getElementById('user-profile-name').innerText = username;
         const uAvatar = document.getElementById('user-profile-avatar');
