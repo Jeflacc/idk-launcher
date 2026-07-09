@@ -11,9 +11,9 @@ export function initContentFeature() {
       const data = await res.json();
       grid.innerHTML = "";
 
-      const latestNews = data.entries.slice(0, 4); // Show latest 4
+      const latestNews = data.entries.slice(0, 6);
 
-      latestNews.forEach((news) => {
+      latestNews.forEach((news, index) => {
         const imageUrl = news.newsPageImage?.url
           ? "idk-cache://launchercontent.mojang.com" + news.newsPageImage.url
           : news.playPageImage?.url
@@ -31,20 +31,22 @@ export function initContentFeature() {
               .toUpperCase()
           : news.date;
 
+        const isFirst = index === 0;
         grid.innerHTML += `
-        <div class="news-card" onclick="window.electronAPI ? window.electronAPI.openExternal('${news.readMoreLink}') : window.open('${news.readMoreLink}', '_blank')" style="cursor:pointer;">
+        <div class="news-card ${isFirst ? 'news-card-featured' : ''}" onclick="window.electronAPI ? window.electronAPI.openExternal('${news.readMoreLink}') : window.open('${news.readMoreLink}', '_blank')" style="cursor:pointer;">
           <div class="news-img" style="background-image: url('${imageUrl}')"></div>
           <div class="news-content">
-            <span class="news-date" style="display: block; margin-bottom: 6px;">${dateStr} &bull; ${news.category}</span>
-            <h3 style="font-size: 15px; margin-bottom: 6px;">${news.title}</h3>
-            <p style="font-size: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${news.text}</p>
+            <span class="news-category">${news.category || 'Minecraft'}</span>
+            <h3 class="news-title">${news.title}</h3>
+            <p class="news-desc">${news.text}</p>
+            <span class="news-date">${dateStr}</span>
           </div>
         </div>
       `;
       });
     } catch (err) {
       grid.innerHTML =
-        '<div style="padding: 20px; color: var(--text-muted); width: 100%; text-align: center;">Failed to load news.</div>';
+        '<div class="news-empty-state"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg><span>Unable to load news</span></div>';
       console.error("Failed to fetch Mojang news:", err);
     }
   }

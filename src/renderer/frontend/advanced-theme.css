@@ -1,11 +1,11 @@
-/* Theme and advanced UI layer. Imported after the base stylesheet. */
+﻿/* Theme and advanced UI layer. Imported after the base stylesheet. */
 
 /* Hidden by default; shown only when body.ui-advanced is active */
 .advanced-settings {
     display: none;
 }
 
-/* Background effects canvas – full-screen, behind all views */
+/* Background effects canvas — full-screen, behind all views */
 .bg-effects-canvas {
     position: fixed;
     top: 0;
@@ -22,7 +22,7 @@ body[data-bg-effect]:not([data-bg-effect="none"]) .view {
     background: transparent !important;
 }
 
-/* Decorative background areas only — let canvas peek behind hero/details.
+/* Decorative background areas only ΓÇö let canvas peek behind hero/details.
    Content wrappers and panels keep their own backgrounds. */
 body[data-bg-effect]:not([data-bg-effect="none"]) .main-hero-banner,
 body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
@@ -237,7 +237,7 @@ body.ui-advanced .top-bar {
 
 body.ui-advanced .top-bar-left {
     gap: 12px;
-    flex: 0 0 auto; /* Don't stretch — keep brand compact */
+    flex: 0 0 auto; /* Don't stretch ΓÇö keep brand compact */
 }
 
 body.ui-advanced .top-brand {
@@ -460,7 +460,8 @@ body.ui-advanced #view-login {
 /* Advanced home: central skin stage plus right news panel */
 body.ui-advanced #view-main {
     flex-direction: row;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: visible;
 }
 
 body.ui-advanced .main-hero-banner {
@@ -592,9 +593,9 @@ body.ui-advanced .main-hero-banner .bottom-bar {
     position: absolute;
     z-index: 4;
     left: 50%;
-    bottom: 118px;
+    bottom: 150px;
     width: min(360px, 54%);
-    height: 76px;
+    height: 78px;
     padding: 0;
     transform: translateX(-50%);
     background: linear-gradient(
@@ -607,6 +608,7 @@ body.ui-advanced .main-hero-banner .bottom-bar {
     border-radius: 0;
     backdrop-filter: blur(12px);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    overflow: visible;
 }
 
 body.ui-advanced .controls-left,
@@ -619,7 +621,9 @@ body.ui-advanced .manage-mods-button {
 body.ui-advanced .controls-right {
     width: 100%;
     height: 100%;
-    gap: 0;
+    gap: 8px;
+    display: flex;
+    flex-direction: column;
 }
 
 body.ui-advanced .play-container {
@@ -964,7 +968,6 @@ body.ui-advanced .news-grid {
 
 body.ui-advanced .news-card,
 body.ui-advanced .stat-card,
-body.ui-advanced .trending-mp-card,
 body.ui-advanced .mod-result-card {
     display: flex;
     align-items: flex-start;
@@ -975,6 +978,45 @@ body.ui-advanced .mod-result-card {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
     padding: 8px 10px;
     gap: 10px;
+}
+
+body.ui-advanced .trending-mp-card {
+    display: flex;
+    align-items: stretch;
+    min-height: 84px;
+    background: #08080c;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
+    border-radius: 6px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body.ui-advanced .trending-mp-thumb {
+    width: 84px;
+    min-width: 84px;
+    height: 84px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+body.ui-advanced .trending-mp-thumb-fallback {
+    width: 84px;
+    min-width: 84px;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body.ui-advanced .trending-mp-info {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
 }
 
 body.ui-advanced .installed-mod-card {
@@ -1094,7 +1136,7 @@ body.ui-advanced[data-bg-effect="particles"] {
     background-color: var(--theme-bg) !important;
 }
 
-/* Strip ALL gradients from bg-overlay in none/particles — solid dark backdrop, no glow */
+/* Strip ALL gradients from bg-overlay in none/particles ΓÇö solid dark backdrop, no glow */
 body.ui-advanced[data-bg-effect="none"] .bg-overlay,
 body.ui-advanced[data-bg-effect="particles"] .bg-overlay {
     background: #020203 !important;
@@ -1151,7 +1193,7 @@ body.ui-advanced .view-title::before {
     content: none;
 }
 
-/* Fix: Mojang pixel font merges "Select or" into "Selector" — force readable font */
+/* Fix: Mojang pixel font merges "Select or" into "Selector" ΓÇö force readable font */
 body.ui-advanced .no-modpack-msg p {
     font-family: var(--font-main) !important;
     font-variant: normal !important;
@@ -1237,7 +1279,7 @@ body.ui-advanced .mp-action-btn.icon-btn:hover {
     color: #fff;
 }
 
-/* PLAY button — make it prominent */
+/* PLAY button ΓÇö make it prominent */
 body.ui-advanced .mp-action-btn.play {
     border-radius: calc(var(--theme-radius) * 0.4);
     background: rgba(var(--theme-accent-rgb), 0.32);
@@ -1896,7 +1938,7 @@ body.ui-advanced .profile-section-title {
     letter-spacing: 1.4px;
 }
 
-/* removed display:none — stats-section visibility controlled below */
+/* removed display:none ΓÇö stats-section visibility controlled below */
 
 body.ui-advanced .profile-stat-mini-list {
     display: flex;
@@ -2439,17 +2481,13 @@ body.ui-advanced .profile-section-title::before {
 }
 
 body.ui-advanced .profile-stats-section .profile-section-title {
-    /* visible — inherits from .profile-section-title */
+    /* visible ΓÇö inherits from .profile-section-title */
 }
 
 body.ui-advanced .profile-stat-mini-list {
     display: flex;
     flex-direction: row;
     gap: 8px;
-}
-
-body.ui-advanced .profile-stat-mini:nth-child(2) {
-    display: none;
 }
 
 body.ui-advanced .profile-stat-mini {
@@ -2921,10 +2959,10 @@ body.ui-advanced[data-theme="custom"] #view-profile {
 }
 
 /* =========================================================
-   TWO-LAYER GLASS SYSTEM — Background Effect Transparency
+   TWO-LAYER GLASS SYSTEM ΓÇö Background Effect Transparency
    Layer 1 (Sidebars):      rgba(15,13,24,0.9) + blur(20px)
    Layer 2 (Main Areas):    rgba(15,13,24,0.05) + no blur
-   Excludes "none" and "particles" — those keep solid backgrounds.
+   Excludes "none" and "particles" ΓÇö those keep solid backgrounds.
    ========================================================= */
 
 /* Make view wrappers fully transparent so canvas shows through */
@@ -2936,7 +2974,7 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-main .main-h
     background: transparent !important;
 }
 
-/* Layer 2 — Main Areas: barely-tinted clear glass, no blur */
+/* Layer 2 ΓÇö Main Areas: barely-tinted clear glass, no blur */
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .mods-content-wrapper,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .settings-content-wrapper,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-page-content,
@@ -2945,7 +2983,7 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-main-stag
     backdrop-filter: none !important;
 }
 
-/* Layer 1 — Sidebars: heavily frosted glass, strong blur */
+/* Layer 1 ΓÇö Sidebars: heavily frosted glass, strong blur */
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .nav-tabs,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .top-bar,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .browser-sidebar,
@@ -2958,7 +2996,7 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     will-change: transform, backdrop-filter;
 }
 
-/* Layer 2 — Main Areas: barely-tinted clear glass, no blur */
+/* Layer 2 ΓÇö Main Areas: barely-tinted clear glass, no blur */
 html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .mods-content-wrapper,
 html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .settings-content-wrapper,
 html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-page-content,
@@ -2967,7 +3005,7 @@ html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-
     backdrop-filter: none !important;
 }
 
-/* Layer 1 — Sidebars: heavily frosted glass, strong blur */
+/* Layer 1 ΓÇö Sidebars: heavily frosted glass, strong blur */
 html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .nav-tabs,
 html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .top-bar,
 html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .browser-sidebar,
@@ -2980,7 +3018,7 @@ html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-
     will-change: transform, backdrop-filter;
 }
 
-/* Layer 2 — Main Areas: barely-tinted clear glass, no blur */
+/* Layer 2 ΓÇö Main Areas: barely-tinted clear glass, no blur */
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .mods-content-wrapper,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .settings-content-wrapper,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-page-content,
@@ -2989,7 +3027,7 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effec
     backdrop-filter: none !important;
 }
 
-/* Layer 1 — Sidebars: heavily frosted glass, strong blur */
+/* Layer 1 ΓÇö Sidebars: heavily frosted glass, strong blur */
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .nav-tabs,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .top-bar,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .browser-sidebar,
@@ -3013,7 +3051,7 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effec
 }
 
 /* =========================================================
-   ADVANCED SETTINGS UI — accent swatches, toggles, sliders, debug
+   ADVANCED SETTINGS UI ΓÇö accent swatches, toggles, sliders, debug
    ========================================================= */
 body.ui-advanced .advanced-settings {
     display: block;
@@ -3789,22 +3827,114 @@ body.ui-advanced #view-settings {
     flex-direction: column;
     gap: 6px;
 }
-/* Fix Dashboard Banners in Advanced UI */
-body.ui-advanced .dashboard-banners-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
+/* Dashboard Banners in Advanced UI */
 body.ui-advanced .dashboard-banners-grid .support-banner {
     padding: 16px;
 }
 
-body.ui-advanced .dashboard-banners-grid .support-banner-info {
-    gap: 12px;
+/* Compact featured server banner below play button — Minecraft (Mojang) vibe */
+body.ui-advanced .main-hero-banner .featured-server-banner--compact {
+    position: absolute !important;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(380px, 56%);
+    margin: 0;
+    padding: 14px 18px;
+    border-radius: 0;
+    background: #1b1b1f;
+    border: 2px solid #000;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 4px 0 #000,
+        0 6px 16px rgba(0, 0, 0, 0.6);
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    z-index: 3;
+    overflow: visible !important;
 }
 
-body.ui-advanced .dashboard-banners-grid .featured-server-banner {
-    margin-top: 50px;
+body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-server-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0;
+    padding: 4px;
+    background: #0e0e10;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.06), inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+    image-rendering: pixelated;
+    flex-shrink: 0;
+}
+
+body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-server-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+}
+
+body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-server-title {
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+}
+
+body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-server-ip {
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 11px;
+    color: #8b8b8b;
+    text-shadow: 1px 1px 0 #000;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-join-btn {
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: #6abe30;
+    padding: 9px 16px;
+    border-radius: 0;
+    border: 2px solid #000;
+    cursor: pointer;
+    flex-shrink: 0;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+    box-shadow: inset 2px 2px 0 #9bd862, inset -2px -2px 0 #4a8a1f;
+    transition: background 0.08s linear;
+}
+
+body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-join-btn:hover {
+    background: #82d63e;
+}
+
+body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-join-btn:active {
+    background: #4a8a1f;
+    box-shadow: inset -2px -2px 0 #9bd862, inset 2px 2px 0 #2d5c12;
+}
+
+body.ui-advanced .main-hero-banner .featured-server-banner--compact::before {
+    content: 'AD';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #000;
+    color: #8b8b8b;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 9px;
+    padding: 1px 4px;
+    border-left: 2px solid #000;
+    border-bottom: 2px solid #000;
+    letter-spacing: 1px;
 }

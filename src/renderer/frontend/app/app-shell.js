@@ -271,88 +271,28 @@ export function renderAppShell() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 Modpacks
               </button>
-            </div>
-            </div>
-            
-            <div class="force-update-container" onclick="document.getElementById('force-update-cb').click();">
-              <label class="tg-switch" style="transform: scale(0.65); margin:0; pointer-events:none;">
-                <input type="checkbox" id="force-update-cb" style="pointer-events:all;" />
-                <span class="tg-slider"></span>
-              </label>
-              <span class="force-update-label">Force Update</span>
-            </div>
+</div>
           </div>
-          <button class="manage-mods-button" id="manage-mods-btn" style="display: none;">MANAGE MODS</button>
         </div>
       </div>
     </div>
 
-    <div class="details-section">
-      <div class="details-content">
-        <div class="dashboard-banners-grid">
-          <div class="featured-server-banner">
-            <div class="featured-server-info">
-              <img class="featured-server-icon" src="./lunasmp.png" alt="Server Logo" style="image-rendering: pixelated; padding: 8px; background: rgba(0,0,0,0.5);" />
-              <div class="featured-server-text">
-                <span class="featured-server-label">Partner Server</span>
-                <span class="featured-server-title">LunaSMP</span>
-                <span class="featured-server-desc">The official survival multiplayer experience! Join now for exclusive rewards.</span>
-                <span class="featured-server-ip" style="font-size: 13px; color: var(--text-muted); margin-top: 6px; display: flex; align-items: center; gap: 6px; user-select: text;" title="IP Address">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                  play.somniac.me
-                </span>
-              </div>
-            </div>
-            <div class="featured-server-action">
-              <button class="featured-join-btn" onclick="if(window.IdkApp) { window.IdkApp.state.quickConnectTarget = { host: 'play.somniac.me' }; window.IdkApp.actions.playGame(); } else { alert('Launcher not ready'); }">Join Server</button>
-            </div>
-          </div>
-          
-          <div class="support-banner">
-            <!-- Floating Particles -->
-            <div class="support-particle"></div>
-            <div class="support-particle"></div>
-            <div class="support-particle"></div>
-            <div class="support-particle"></div>
-            
-            <div class="support-banner-bg-decoration">
-              <svg class="support-heart-bg" width="120" height="120" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-              <div class="support-banner-glow"></div>
-            </div>
-            <div class="support-banner-info">
-              <div class="support-banner-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <g class="kofi-steam" style="opacity: 0; transform: translateY(0px); transition: all 0.4s ease;">
-                    <path d="M9 4v2" />
-                    <path d="M12 3v3" />
-                    <path d="M15 4v2" />
-                  </g>
-                  <g class="kofi-lid" style="transform-origin: 20% 50%; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-                    <path d="M4 9h16" />
-                    <path d="M6 9V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" />
-                  </g>
-                  <path d="M7 9l1.5 10.5A2.5 2.5 0 0 0 11 22h2a2.5 2.5 0 0 0 2.5-2.5L17 9" />
-                </svg>
-              </div>
-              <div class="support-banner-text">
-                <span class="support-banner-label">❤ Support the Developer</span>
-                <span class="support-banner-title">Buy Me a Coffee!</span>
-                <span class="support-banner-desc">Love IDK Launcher? Treat me to a coffee on Ko-Fi to help fuel future updates and keep it ad-free!</span>
-              </div>
-            </div>
-            <div class="support-banner-action">
-              <a href="https://ko-fi.com/jeflacc" target="_blank" class="support-donate-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-                Support on Ko-Fi
-                <div class="btn-shine"></div>
-              </a>
-            </div>
-          </div>
-        </div>
+    <div class="featured-server-banner featured-server-banner--compact">
+      <img class="featured-server-icon" src="./lunasmp.png" alt="Server Logo" />
+      <div class="featured-server-text">
+        <span class="featured-server-title">LunaSMP</span>
+        <span class="featured-server-ip">play.somniac.me</span>
+      </div>
+      <button class="featured-join-btn" onclick="if(window.IdkApp) { window.IdkApp.state.quickConnectTarget = { host: 'play.somniac.me' }; window.IdkApp.actions.playGame(); } else { alert('Launcher not ready'); }">Join</button>
+    </div>
+  </div>
 
-        <div class="news-section">
+  <div class="details-section">
+    <div class="details-content">
+
+      <div class="news-section">
           <div class="section-header">
-            <h2 class="section-title">Latest News</h2>
+            <h2 class="section-title">What's New</h2>
             <div class="section-decoration">
               <div class="decoration-block"></div>
               <div class="decoration-block"></div>
@@ -795,14 +735,26 @@ export function renderAppShell() {
           <button type="button" class="accent-swatch" data-accent="#3b82f6" style="--swatch:#3b82f6" aria-label="Ocean"></button>
           <button type="button" class="accent-swatch" data-accent="#f97316" style="--swatch:#f97316" aria-label="Sunset"></button>
           <button type="button" class="accent-swatch custom" id="adv-accent-custom" aria-label="Custom color">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"></path></svg>
           </button>
         </div>
+      </div>
+
+      <div class="adv-section">
+        <div class="adv-section-header">
+          <h3>Updates</h3>
+          <p>Launcher update behavior</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="adv-force-update" />
+          <div class="switch"></div>
+          Force Update on Launch
+        </label>
+      </div>
         <div class="accent-custom-row" id="adv-accent-custom-row">
           <input type="color" id="adv-accent-picker" class="accent-picker-input" value="#4cb837" />
           <span class="accent-hex-label" id="adv-accent-hex">#4cb837</span>
         </div>
-      </div>
 
       <div class="adv-section">
         <div class="adv-section-header">
@@ -1135,6 +1087,43 @@ export function renderAppShell() {
             <small>Restore any popups you previously dismissed</small>
           </div>
           <button type="button" class="adv-btn" id="adv-btn-reset-warnings" style="color: #f87171; border-color: rgba(248, 113, 113, 0.3);">Reset</button>
+        </div>
+      </div>
+
+      <div class="adv-section" style="margin-top: 24px;">
+        <div class="support-banner">
+          <div class="support-banner-bg-decoration">
+            <svg class="support-heart-bg" width="120" height="120" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <div class="support-banner-glow"></div>
+          </div>
+          <div class="support-banner-info">
+            <div class="support-banner-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <g class="kofi-steam" style="opacity: 0; transform: translateY(0px); transition: all 0.4s ease;">
+                  <path d="M9 4v2" />
+                  <path d="M12 3v3" />
+                  <path d="M15 4v2" />
+                </g>
+                <g class="kofi-lid" style="transform-origin: 20% 50%; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                  <path d="M4 9h16" />
+                  <path d="M6 9V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" />
+                </g>
+                <path d="M7 9l1.5 10.5A2.5 2.5 0 0 0 11 22h2a2.5 2.5 0 0 0 2.5-2.5L17 9" />
+              </svg>
+            </div>
+            <div class="support-banner-text">
+              <span class="support-banner-label">Support the Developer</span>
+              <span class="support-banner-title">Buy Me a Coffee!</span>
+              <span class="support-banner-desc">Love IDK Launcher? Treat me to a coffee on Ko-Fi to help fuel future updates and keep it ad-free!</span>
+            </div>
+          </div>
+          <div class="support-banner-action">
+            <a href="https://ko-fi.com/jeflacc" target="_blank" class="support-donate-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+              Support on Ko-Fi
+              <div class="btn-shine"></div>
+            </a>
+          </div>
         </div>
       </div>
     </div>

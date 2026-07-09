@@ -2,11 +2,6 @@ import "./electron-api-shim.js";
 import "./style.css";
 import "./advanced-theme.css";
 import "./launch-overlay-fix.css";
-import "./idk-connect.css";
-// Audit-fixes.css MUST be loaded LAST so it overrides prior rules.
-import "./audit-fixes.css";
-// Round 4 fixes — critical layout/background/scroll fixes
-import "./round4-fixes.css";
 // Side-effect imports: constructors register UI and IPC behavior
 import "./components/download-progress.js";
 import "./components/accessibility-manager.js";

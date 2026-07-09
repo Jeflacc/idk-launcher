@@ -943,8 +943,10 @@ export function initFriendsFeature() {
 
         // Update badge count
         const reqCount = reqData.requests.length;
-        badgePending.innerText = reqCount;
-        badgePending.style.display = reqCount > 0 ? "flex" : "none";
+        if (badgePending) {
+          badgePending.innerText = reqCount;
+          badgePending.style.display = reqCount > 0 ? "flex" : "none";
+        }
       } catch (err) {
         console.warn("[IDK Connect] Sync failed", err.message);
       }
