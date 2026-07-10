@@ -20,16 +20,24 @@ export const DEFAULT_HOST_ALLOWLIST: ReadonlySet<string> = new Set([
   'api.mojang.com',
   'sessionserver.mojang.com',
   'textures.minecraft.net',
+  'launchercontent.mojang.com',
   // Modrinth
   'api.modrinth.com',
   'cdn.modrinth.com',
-  // CurseForge
+  // CurseForge (official API + public proxy + CDN)
   'api.curseforge.com',
+  'api.curse.tools',
   'edge.forgecdn.net',
+  'media.forgecdn.net',
   // Ely.by
   'authserver.ely.by',
   'skins.ely.by',
+  'skinsystem.ely.by',
   'api.ely.by',
+  // IDK Connect backend (HTTPS via Cloudflare Origin Rules)
+  'api.somniac.me',
+  // Minotar (Minecraft avatar fallback)
+  'minotar.net',
   // Microsoft auth
   'login.live.com',
   'login.microsoftonline.com',
@@ -48,7 +56,7 @@ export const DEFAULT_HOST_ALLOWLIST: ReadonlySet<string> = new Set([
 ]);
 
 export interface HttpRequestOptions {
-  method?: 'GET' | 'POST' | 'HEAD';
+  method?: 'GET' | 'POST' | 'HEAD' | 'PUT' | 'DELETE' | 'PATCH';
   headers?: Record<string, string>;
   body?: string | Buffer;
   signal?: AbortSignal;
@@ -221,7 +229,7 @@ export class HttpClient {
 
   private async fetchWithRedirects(
     url: string,
-    opts: { method: 'GET' | 'POST' | 'HEAD'; timeoutMs: number } & {
+    opts: { method: 'GET' | 'POST' | 'HEAD' | 'PUT' | 'DELETE' | 'PATCH'; timeoutMs: number } & {
       headers?: Record<string, string>;
       body?: string | Buffer;
       signal?: AbortSignal;

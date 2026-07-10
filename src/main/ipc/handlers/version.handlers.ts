@@ -4,6 +4,7 @@ import { VersionSchema } from '@shared/schemas/version.schema';
 import { z } from 'zod';
 import type { WindowManager } from '../../windows/window-manager';
 import type { MojangClient } from '@/infrastructure/net/api/mojang-client';
+import type { ModrinthClient } from '@/infrastructure/net/api/modrinth-client';
 import type { DownloadQueue } from '@/infrastructure/download/download-queue';
 import type { PathService } from '@/infrastructure/fs/path-service';
 
@@ -12,6 +13,7 @@ export function registerVersionHandlers(
   mojang: MojangClient,
   queue: DownloadQueue,
   paths: PathService,
+  modrinth?: ModrinthClient,
 ): void {
   const senderOk = (event: Electron.IpcMainInvokeEvent) => windows.assertSender(event, 'main');
 
@@ -23,6 +25,36 @@ export function registerVersionHandlers(
       try {
         return await readdir(paths.versions, { withFileTypes: true })
           .then((entries) => entries.filter((e) => e.isDirectory()).map((e) => e.name));
+      } catch {
+        return [];
+      }
+    },
+    { senderCheck: senderOk },
+  );
+
+  // Fetch the full Mojang version manifest (replaces renderer-side fetch)
+  registerInvoke(
+    IpcChannel.Version.GetManifest,
+    z.void(),
+    async () => {
+      return mojang.getManifest();
+    },
+    { senderCheck: senderOk },
+  );
+
+  // Fetch the list of Minecraft versions that support Sodium
+  registerInvoke(
+    IpcChannel.Version.GetSodiumVersions,
+    z.void(),
+    async () => {
+      if (!modrinth) return [];
+      try {
+        const versions = await modrinth.getVersions('sodium');
+        const gameVersions = new Set<string>();
+        for (const v of versions) {
+          for (const gv of v.game_versions) gameVersions.add(gv);
+        }
+        return Array.from(gameVersions).sort();
       } catch {
         return [];
       }

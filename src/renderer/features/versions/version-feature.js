@@ -78,8 +78,7 @@ loaderOptions.forEach(opt => {
   opt.addEventListener('click', (e) => {
     e.stopPropagation();
     state.selectedLoader = opt.getAttribute('data-loader');
-    localStorage.setItem('idk_selected_loader', state.selectedLoader);
-    
+
     // Save loader selection for the currently selected version too
     if (state.selectedVersion) {
       if (!state.versionSettings[state.selectedVersion]) {
@@ -101,12 +100,8 @@ loaderOptions.forEach(opt => {
   });
 });
 
-// Restore loader from localStorage on startup
-const savedLoader = localStorage.getItem('idk_selected_loader');
-if (savedLoader) {
-  state.selectedLoader = savedLoader;
-}
-
+// Loader selection is hydrated from the backend settings store (lastPlayedLoader)
+// and reconciled against disk-installed loaders by scanDownloadedVersions().
 updateLoaderUI(state.selectedLoader);
 
 state.sodiumSupportedVersions = new Set();
@@ -158,7 +153,6 @@ async function scanDownloadedVersions() {
     // Update loader display to reflect actual installed loader for current version
     if (state.selectedVersion && window.__installedLoaders && window.__installedLoaders[state.selectedVersion]) {
       state.selectedLoader = window.__installedLoaders[state.selectedVersion];
-      localStorage.setItem('idk_selected_loader', state.selectedLoader);
       updateLoaderUI(state.selectedLoader);
     }
   } catch (e) {
@@ -171,12 +165,8 @@ scanDownloadedVersions();
 
 async function fetchSodiumVersions() {
   try {
-    const loaders = encodeURIComponent(JSON.stringify(['fabric']));
-    const res = await fetch(`https://api.modrinth.com/v2/project/sodium/version?loaders=${loaders}`);
-    const data = await res.json();
-    data.forEach(entry => {
-      entry.game_versions.forEach(gv => state.sodiumSupportedVersions.add(gv));
-    });
+    const versions = await window.electronAPI.getSodiumVersions();
+    (versions || []).forEach(gv => state.sodiumSupportedVersions.add(gv));
   } catch (e) {
     console.warn('Could not fetch Sodium version list:', e);
   }
@@ -184,13 +174,13 @@ async function fetchSodiumVersions() {
 
 async function fetchVersions() {
   try {
-    const [mojangRes] = await Promise.all([
-      fetch('https://launchermeta.mojang.com/mc/game/version_manifest.json'),
+    const [data] = await Promise.all([
+      window.electronAPI.getVersionManifest(),
       fetchSodiumVersions()
     ]);
-    const data = await mojangRes.json();
+    if (!data || !data.versions) throw new Error('No version manifest available');
     state.allVersions = data.versions;
-    if (!state.selectedVersion) state.selectedVersion = data.latest.release;
+    if (!state.selectedVersion && data.latest) state.selectedVersion = data.latest.release;
     renderVersions();
     window.dispatchEvent(new CustomEvent('versions-loaded'));
   } catch (err) {
@@ -310,7 +300,6 @@ function renderVersions() {
       // Use the actual installed loader from disk, not user preference
       const installedLoader = (window.__installedLoaders && window.__installedLoaders[v.id]) || 'Vanilla';
       state.selectedLoader = installedLoader;
-      localStorage.setItem('idk_selected_loader', state.selectedLoader);
       if (window.electronAPI) {
         window.electronAPI.saveSettings({ lastPlayedLoader: state.selectedLoader }).catch(console.error);
       }

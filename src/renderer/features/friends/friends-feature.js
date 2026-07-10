@@ -1,16 +1,24 @@
-import { safeParse } from "../../core/safe-parse.js";
 import { state, actions } from "../../core/app-state.js";
-import { loadAvatarForUser, getSkinTextureUrl, resolveSkinTextureBase64 } from "../../core/skin-texture.js";
+import { loadAvatarForUser, resolveSkinTextureBase64 } from "../../core/skin-texture.js";
 
 export function initFriendsFeature() {
   // === IDK CONNECT - PREMIUM FRIENDS & CLOUDFLARED LAN SHARING CLIENT ENGINE ===
   // ============================================================================
+  //
+  // v2 architecture notes:
+  //   - All backend calls go through the IdkConnect.* IPC namespace
+  //     (exposed on window.electronAPI.idk*). No direct HTTP requests are
+  //     issued from this file — the social backend URL lives exclusively in
+  //     the main-process IdkConnectClient.
+  //   - The JWT is stored in the encrypted SecretStore in the main process.
+  //     The renderer NEVER sees, reads, or persists the token.
+  //   - `idkUser` is a renderer-side cache of the currently-logged-in user
+  //     object; the source of truth is `idkGetMe()`. It is hydrated on
+  //     startup from `idkGetStoredSession()` + `idkGetMe()`, and refreshed
+  //     after any mutating settings call (updateProfile / updateSecurity /
+  //     linkMinecraft) since those v2 IPC handlers return only `{success}`.
   (function initFriendsSystem() {
-    let IDK_BACKEND_URL = localStorage.getItem("idk_backend_url") || "http://api.somniac.me:6040";
-    let idkToken = localStorage.getItem("idk_connect_token") || "";
-    let idkUser = safeParse(
-      localStorage.getItem("idk_connect_user"),
-    );
+    let idkUser = null;
     let idkAuthTab = "login";
     let activeTunnelUrl = null;
     let activeSharePort = null;
@@ -197,32 +205,9 @@ export function initFriendsFeature() {
       }
     }
 
-    // --- HTTP BACKEND REQUEST WRAPPER ---
-    async function idkRequest(endpoint, method = "GET", body = null) {
-      const headers = { "Content-Type": "application/json" };
-      if (idkToken) headers["Authorization"] = `Bearer ${idkToken}`;
-
-      const res = await fetch(`${IDK_BACKEND_URL}${endpoint}`, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : null,
-      });
-
-      if (!res.ok) {
-        let err;
-        try {
-          err = await res.json();
-        } catch (e) {
-          throw new Error(`Server error ${res.status}`);
-        }
-        throw new Error(err.error || `Server error ${res.status}`);
-      }
-      return res.json();
-    }
-
     // --- UI CONTROLLERS ---
     function updateFriendsAuthUI() {
-      if (idkToken && idkUser) {
+      if (idkUser) {
         authPanel.style.display = "none";
         mainPanel.style.display = "block";
         myUsernameLabel.innerText = idkUser.username;
@@ -289,13 +274,8 @@ export function initFriendsFeature() {
         btnSubmit.innerText = "Requesting OTP...";
         btnSubmit.disabled = true;
         try {
-          const res = await fetch(`${IDK_BACKEND_URL}/api/auth/request-otp`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: user, email })
-          });
-          const data = await res.json();
-          if (res.ok) {
+          const res = await window.electronAPI.idkRequestOtp(email, user);
+          if (res && res.success) {
             otpRequested = true;
             inputOtp.style.display = "block";
             btnSubmit.innerText = "Verify & Register";
@@ -303,11 +283,11 @@ export function initFriendsFeature() {
             errorEl.style.color = "#4ade80"; // temporary green success
             setTimeout(() => errorEl.style.color = "#ef4444", 5000);
           } else {
-            showAuthError(data.error || "Failed to request OTP.");
+            showAuthError("Failed to request OTP.");
             btnSubmit.innerText = "Request OTP";
           }
         } catch (e) {
-          showAuthError("Network error: Backend server not running.");
+          showAuthError(e.message || "Network error: Backend server not running.");
           btnSubmit.innerText = "Request OTP";
         }
         btnSubmit.disabled = false;
@@ -324,11 +304,6 @@ export function initFriendsFeature() {
         return;
       }
 
-      const endpoint =
-        idkAuthTab === "login"
-          ? (otpRequested ? "/api/auth/verify-2fa" : "/api/auth/login")
-          : "/api/auth/register";
-
       const originalText = btnSubmit.innerText;
       btnSubmit.innerText =
         idkAuthTab === "login" ? (otpRequested ? "Verifying..." : "Connecting...") : "Verifying...";
@@ -336,33 +311,33 @@ export function initFriendsFeature() {
       errorEl.style.display = "none";
 
       try {
-        const payload = idkAuthTab === "login"
-          ? (otpRequested ? { username: user, password: pass, otp } : { username: user, password: pass })
-          : { username: user, email, password: pass, otp };
-
-        const res = await fetch(`${IDK_BACKEND_URL}${endpoint}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          if (data.requires2fa) {
-            otpRequested = true;
-            inputOtp.style.display = "block";
-            btnSubmit.innerText = "Verify 2FA";
-            inputPassword.style.display = "none";
-            showAuthError(`2FA OTP sent to ${data.email || "your email"}`);
-            errorEl.style.color = "#4ade80";
-            setTimeout(() => errorEl.style.color = "#ef4444", 5000);
-            return;
+        let result;
+        if (idkAuthTab === "login") {
+          if (otpRequested) {
+            result = await window.electronAPI.idkVerify2fa(user, pass, otp);
+          } else {
+            result = await window.electronAPI.idkLogin(user, pass);
           }
+        } else {
+          result = await window.electronAPI.idkRegister(user, email, pass, otp);
+        }
 
-          idkToken = data.token;
-          idkUser = data.user;
-          localStorage.setItem("idk_connect_token", idkToken);
-          localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
+        // 2FA challenge — backend returned {requires2fa: true} with no token.
+        if (result && result.requires2fa) {
+          otpRequested = true;
+          inputOtp.style.display = "block";
+          btnSubmit.innerText = "Verify 2FA";
+          inputPassword.style.display = "none";
+          showAuthError(`2FA OTP sent to your email`);
+          errorEl.style.color = "#4ade80";
+          setTimeout(() => errorEl.style.color = "#ef4444", 5000);
+          return;
+        }
+
+        if (result && result.success && result.user) {
+          // v2: the JWT is stored in SecretStore by the IPC handler.
+          // The renderer only caches the user object.
+          idkUser = result.user;
           updateFriendsAuthUI();
 
           if (idkAuthTab === "register") {
@@ -375,10 +350,10 @@ export function initFriendsFeature() {
           inputOtp.style.display = "none";
           inputPassword.style.display = "block";
         } else {
-          showAuthError(data.error || "Authentication failed.");
+          showAuthError("Authentication failed.");
         }
       } catch (err) {
-        showAuthError("Network error: Backend server not running.");
+        showAuthError(err.message || "Network error: Backend server not running.");
       } finally {
         btnSubmit.innerText = originalText;
         btnSubmit.disabled = false;
@@ -390,18 +365,18 @@ export function initFriendsFeature() {
       authError.style.display = "block";
     }
 
-    btnDisconnect.addEventListener("click", () => {
+    btnDisconnect.addEventListener("click", async () => {
       if (activeTunnelUrl) {
         btnShare.click(); // Stop sharing first
       }
-      if (window.electronAPI) {
-        // window.electronAPI.stopCloudflaredAccess(); // No longer needed
+      // v2: clear the token from the encrypted SecretStore via IPC.
+      // The renderer never held the token, so there is no localStorage to purge.
+      try {
+        await window.electronAPI.idkClearToken();
+      } catch (e) {
+        // ignore — proceed with local UI reset regardless
       }
-
-      idkToken = "";
       idkUser = null;
-      localStorage.removeItem("idk_connect_token");
-      localStorage.removeItem("idk_connect_user");
 
       updateFriendsAuthUI();
       actions.showWarningToast("Disconnected from IDK Network.");
@@ -631,22 +606,27 @@ export function initFriendsFeature() {
     btnSettingsBack.addEventListener("click", () => showPanel("main"));
     btnMySettings.addEventListener("click", async () => {
       showPanel("settings");
-      settingsBio.value = idkUser.bio || "";
-      settings2fa.checked = idkUser.twoFactorEnabled || false;
+      settingsBio.value = idkUser?.bio || "";
+      settings2fa.checked = idkUser?.twoFactorEnabled || false;
       settingsNewPassword.value = "";
       settingsSecurityOtp.value = "";
       settingsSecurityOtpContainer.style.display = "none";
       settingsError.style.display = "none";
-      
-      // Fetch latest me to check linked account
+
+      // Fetch latest me to check linked account.
+      // v2: idkGetMe() returns the user object directly (not {user: ...}).
       try {
         settingsLinkedMcStatus.innerText = "Loading...";
-        const res = await idkRequest("/api/auth/me");
-        idkUser = res.user;
-        localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
-        if (idkUser.linkedMinecraftAccount) {
-          settingsLinkedMcStatus.innerText = `Linked to: ${idkUser.linkedMinecraftAccount.username} (${idkUser.linkedMinecraftAccount.authMode})`;
-          settingsLinkedMcStatus.style.color = "#4ade80"; // green
+        const me = await window.electronAPI.idkGetMe();
+        if (me) {
+          idkUser = me;
+          if (idkUser.linkedMinecraftAccount) {
+            settingsLinkedMcStatus.innerText = `Linked to: ${idkUser.linkedMinecraftAccount.username} (${idkUser.linkedMinecraftAccount.authMode})`;
+            settingsLinkedMcStatus.style.color = "#4ade80"; // green
+          } else {
+            settingsLinkedMcStatus.innerText = "Not linked";
+            settingsLinkedMcStatus.style.color = "var(--text-muted)";
+          }
         } else {
           settingsLinkedMcStatus.innerText = "Not linked";
           settingsLinkedMcStatus.style.color = "var(--text-muted)";
@@ -668,15 +648,16 @@ export function initFriendsFeature() {
       btnSettingsLinkMinecraft.disabled = true;
       btnSettingsLinkMinecraft.innerText = "Linking...";
       try {
-        const res = await idkRequest("/api/auth/link-minecraft", "POST", {
-          minecraftUsername: mcUser,
-          authMode: mcAuthMode
-        });
-        idkUser = res.user;
-        localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
+        // v2: linkMinecraft IPC returns {success: true} (no user payload).
+        // We re-fetch /me to refresh the cached idkUser + linkedMinecraftAccount.
+        await window.electronAPI.idkLinkMinecraft(mcUser, mcAuthMode);
+        const me = await window.electronAPI.idkGetMe();
+        if (me) idkUser = me;
         actions.showWarningToast("Successfully linked Minecraft account!");
-        settingsLinkedMcStatus.innerText = `Linked to: ${idkUser.linkedMinecraftAccount.username} (${idkUser.linkedMinecraftAccount.authMode})`;
-        settingsLinkedMcStatus.style.color = "#4ade80";
+        if (idkUser?.linkedMinecraftAccount) {
+          settingsLinkedMcStatus.innerText = `Linked to: ${idkUser.linkedMinecraftAccount.username} (${idkUser.linkedMinecraftAccount.authMode})`;
+          settingsLinkedMcStatus.style.color = "#4ade80";
+        }
       } catch (err) {
         actions.showWarningToast(err.message);
       } finally {
@@ -698,14 +679,15 @@ export function initFriendsFeature() {
       btnExecuteSearch.disabled = true;
       searchResultsList.innerHTML = '<div class="friends-list-empty">Searching...</div>';
       try {
-        const res = await idkRequest(`/api/users/search?q=${encodeURIComponent(q)}`);
-        if (!res.users || res.users.length === 0) {
+        // v2: idkSearchUsers returns the user array directly (not {users: [...]}).
+        const users = await window.electronAPI.idkSearchUsers(q);
+        if (!users || users.length === 0) {
           searchResultsList.innerHTML = '<div class="friends-list-empty">No users found.</div>';
           return;
         }
 
         searchResultsList.innerHTML = "";
-        res.users.forEach(user => {
+        users.forEach(user => {
           const card = document.createElement("div");
           card.className = "friend-card";
           card.innerHTML = `
@@ -748,8 +730,8 @@ export function initFriendsFeature() {
 
       try {
         const { SkinViewer, CrouchAnimation } = await import("skinview3d");
-        const skinUrl = await getSkinTextureUrl(username, "elyby");
-        const texture = await resolveSkinTextureBase64(skinUrl);
+        const skinResult = await resolveSkinTextureBase64(username, "elyby");
+        const texture = skinResult?.base64 || '';
 
         friendsSkinViewer = new SkinViewer({
           canvas: canvasEl,
@@ -796,8 +778,13 @@ export function initFriendsFeature() {
       currentProfileUsername = username;
 
       try {
-        const data = await idkRequest(`/api/users/${username}/profile`);
-        const p = data.profile;
+        // v2: idkGetUserProfile returns {profile: IdkUserProfile}.
+        const data = await window.electronAPI.idkGetUserProfile(username);
+        const p = data?.profile;
+        if (!p) {
+          profileBio.innerText = "Could not load profile details.";
+          return;
+        }
         profileStatus.innerText = p.status === 'offline' ? 'Offline' : (p.playingVersion ? `Playing ${p.playingVersion}` : 'Online');
         profileBio.innerText = p.bio || "No bio yet.";
       } catch (err) {
@@ -809,8 +796,9 @@ export function initFriendsFeature() {
       if (!currentProfileUsername) return;
       btnProfileAddFriend.disabled = true;
       try {
-        const res = await idkRequest("/api/friends/request", "POST", { username: currentProfileUsername });
-        actions.showWarningToast(res.message);
+        // v2: idkSendFriendRequest returns {success: true} (no message payload).
+        await window.electronAPI.idkSendFriendRequest(currentProfileUsername);
+        actions.showWarningToast("Friend request sent.");
       } catch (err) {
         actions.showWarningToast(err.message);
       } finally {
@@ -822,9 +810,11 @@ export function initFriendsFeature() {
     btnSettingsSaveBio.addEventListener("click", async () => {
       btnSettingsSaveBio.disabled = true;
       try {
-        const res = await idkRequest("/api/auth/profile", "PUT", { bio: settingsBio.value.trim() });
-        idkUser = res.user;
-        localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
+        // v2: idkUpdateProfile returns {success: true} (no user payload).
+        // Re-fetch /me to refresh the cached idkUser.bio.
+        await window.electronAPI.idkUpdateProfile(settingsBio.value.trim());
+        const me = await window.electronAPI.idkGetMe();
+        if (me) idkUser = me;
         actions.showWarningToast("Bio saved successfully!");
       } catch (err) {
         actions.showWarningToast(err.message);
@@ -840,7 +830,7 @@ export function initFriendsFeature() {
         btnSettingsSaveSecurity.innerText = "Requesting OTP...";
         btnSettingsSaveSecurity.disabled = true;
         try {
-          const res = await idkRequest("/api/auth/request-otp-security", "POST");
+          await window.electronAPI.idkRequestSecurityOtp();
           securityOtpRequested = true;
           settingsSecurityOtpContainer.style.display = "block";
           btnSettingsSaveSecurity.innerText = "Verify OTP & Save";
@@ -865,13 +855,15 @@ export function initFriendsFeature() {
       btnSettingsSaveSecurity.disabled = true;
       btnSettingsSaveSecurity.innerText = "Saving...";
       try {
-        const res = await idkRequest("/api/auth/security", "POST", {
-          newPassword: settingsNewPassword.value || null,
-          twoFactorEnabled: settings2fa.checked,
-          otp
-        });
-        idkUser = res.user;
-        localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
+        // v2: idkUpdateSecurity returns {success: true} (no user payload).
+        // Re-fetch /me to refresh the cached idkUser.twoFactorEnabled.
+        await window.electronAPI.idkUpdateSecurity(
+          settingsNewPassword.value || null,
+          settings2fa.checked,
+          otp,
+        );
+        const me = await window.electronAPI.idkGetMe();
+        if (me) idkUser = me;
         actions.showWarningToast("Security settings saved!");
         settingsSecurityOtpContainer.style.display = "none";
         settingsSecurityOtp.value = "";
@@ -908,7 +900,7 @@ export function initFriendsFeature() {
     }
 
     async function sendPresenceHeartbeat() {
-      if (!idkToken) return;
+      if (!idkUser) return;
 
       // Determine playing state from playBtn class!
       const playBtn = actions.getPlayButton?.();
@@ -918,11 +910,11 @@ export function initFriendsFeature() {
         : null;
 
       try {
-        await idkRequest("/api/presence", "POST", {
-          status: "online",
+        await window.electronAPI.idkSendPresence(
+          "online",
           playingVersion,
-          cloudflaredUrl: activeTunnelUrl,
-        });
+          activeTunnelUrl,
+        );
       } catch (err) {
         console.warn("[IDK Connect] Heartbeat failed", err.message);
       }
@@ -930,19 +922,20 @@ export function initFriendsFeature() {
 
     // --- REFRESH FRIENDS & RENDER LISTS ---
     async function refreshFriendsData() {
-      if (!idkToken) return;
+      if (!idkUser) return;
 
       try {
         // 1. Fetch friend list
-        const friendsData = await idkRequest("/api/friends");
-        renderFriendsList(friendsData.friends);
+        const friendsData = await window.electronAPI.idkGetFriends();
+        renderFriendsList(friendsData?.friends || []);
 
         // 2. Fetch pending requests
-        const reqData = await idkRequest("/api/friends/requests");
-        renderFriendRequests(reqData.requests);
+        const reqData = await window.electronAPI.idkGetFriendRequests();
+        const requests = reqData?.requests || [];
+        renderFriendRequests(requests);
 
         // Update badge count
-        const reqCount = reqData.requests.length;
+        const reqCount = requests.length;
         if (badgePending) {
           badgePending.innerText = reqCount;
           badgePending.style.display = reqCount > 0 ? "flex" : "none";
@@ -986,11 +979,12 @@ export function initFriendsFeature() {
 
     async function handleFriendRequest(requestId, accept) {
       try {
-        const res = await idkRequest("/api/friends/requests/handle", "POST", {
-          requestId,
-          accept,
-        });
-        actions.showWarningToast(res.message);
+        // v2: idkHandleFriendRequest takes (requestId, accept: boolean) and
+        // returns {success: true} (no message payload).
+        await window.electronAPI.idkHandleFriendRequest(requestId, accept);
+        actions.showWarningToast(
+          accept ? "Friend request accepted." : "Friend request declined.",
+        );
         refreshFriendsData();
       } catch (err) {
         actions.showWarningToast(err.message);
@@ -1092,7 +1086,7 @@ export function initFriendsFeature() {
           if (ok) unfriend(friend.id);
         };
 
-        // Hook Join World
+        // Hook Join world
         if (isHosting) {
           card.querySelector(".friend-join-btn").onclick = (e) => {
             e.stopPropagation();
@@ -1106,8 +1100,9 @@ export function initFriendsFeature() {
 
     async function unfriend(friendId) {
       try {
-        const res = await idkRequest(`/api/friends/${friendId}`, "DELETE");
-        actions.showWarningToast(res.message);
+        // v2: idkRemoveFriend returns {success: true} (no message payload).
+        await window.electronAPI.idkRemoveFriend(friendId);
+        actions.showWarningToast("Friend removed.");
         refreshFriendsData();
       } catch (err) {
         actions.showWarningToast(err.message);
@@ -1295,18 +1290,19 @@ export function initFriendsFeature() {
       activeChatFriendUsername = null;
 
       chatPanel.style.display = "none";
-      if (idkToken && idkUser) {
+      if (idkUser) {
         refreshFriendsData(); // Refresh friends list to clear unread counts instantly
       }
     }
 
     let lastMessagesJson = "";
     async function loadChatMessages(isInitial = false) {
-      if (!idkToken || !activeChatFriendId) return;
+      if (!idkUser || !activeChatFriendId) return;
 
       try {
-        const res = await idkRequest(`/api/messages/${activeChatFriendId}`);
-        const messages = res.messages || [];
+        // v2: idkGetMessages returns {messages: IdkMessage[]}.
+        const res = await window.electronAPI.idkGetMessages(activeChatFriendId);
+        const messages = res?.messages || [];
 
         // Check if messages actually changed to avoid unnecessary re-rendering
         const currentJson = JSON.stringify(messages);
@@ -1379,8 +1375,9 @@ export function initFriendsFeature() {
       chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
 
       try {
-        await idkRequest(`/api/messages/${activeChatFriendId}`, "POST", { text });
-        // Refresh messages to sync IDs and states
+        // v2: idkSendMessage returns {message: IdkMessage} — we don't use the
+        // response here, we just trigger a refresh to sync IDs and states.
+        await window.electronAPI.idkSendMessage(activeChatFriendId, text);
         loadChatMessages(false);
       } catch (err) {
         actions.showWarningToast(err.message);
@@ -1413,30 +1410,25 @@ export function initFriendsFeature() {
 
     // --- AUTO LOGIN VIA MINECRAFT ACCOUNT ---
     async function attemptAutoLogin() {
-      if (idkToken) return; // Already logged in
+      if (idkUser) return; // Already logged in
       const mcUser = state.currentUser;
       const mcAuthMode = state.authMode;
 
       if (!mcUser || mcAuthMode === "offline") return;
 
       try {
-        const res = await idkRequest("/api/auth/login-minecraft", "POST", {
-          minecraftUsername: typeof mcUser === 'string' ? mcUser : mcUser.name,
-          authMode: mcAuthMode
-        });
-        idkToken = res.token;
-        idkUser = res.user;
-        localStorage.setItem("idk_connect_token", idkToken);
-        localStorage.setItem("idk_connect_user", JSON.stringify(idkUser));
-        updateFriendsAuthUI();
-        actions.showWarningToast(`Auto-logged into IDK Connect as ${idkUser.username}`);
+        // v2: idkLoginWithMinecraft returns {success: true, user} on success.
+        // The JWT is stored in SecretStore by the IPC handler.
+        const res = await window.electronAPI.idkLoginWithMinecraft(mcUser, mcAuthMode);
+        if (res && res.success && res.user) {
+          idkUser = res.user;
+          updateFriendsAuthUI();
+          actions.showWarningToast(`Auto-logged into IDK Connect as ${idkUser.username}`);
+        }
       } catch (err) {
         // Silently fail if not linked or other error
       }
     }
-
-    // Attempt auto-login on startup
-    attemptAutoLogin();
 
     // Attempt auto-login when returning to main view (e.g. after Minecraft login)
     document.addEventListener("idk:view-changed", (e) => {
@@ -1445,13 +1437,30 @@ export function initFriendsFeature() {
       }
     });
 
-    // --- INITIAL CHECK ---
-    updateFriendsAuthUI();
+    // --- INITIAL CHECK / SESSION HYDRATION ---
+    // v2: hydrate `idkUser` from the SecretStore-backed session (no JWT in
+    // localStorage anymore). If there's a stored session, fetch the user
+    // object via idkGetMe(); otherwise fall through to attemptAutoLogin().
+    (async function initializeAuth() {
+      try {
+        const session = await window.electronAPI.idkGetStoredSession();
+        if (session) {
+          const me = await window.electronAPI.idkGetMe();
+          if (me) idkUser = me;
+        }
+      } catch (e) {
+        // ignore — fall through to attemptAutoLogin
+      }
+      if (!idkUser) {
+        attemptAutoLogin();
+      }
+      updateFriendsAuthUI();
+    })();
 
     // Register action to allow updating from outside
     actions.updateFriendsAuthUI = () => {
       updateFriendsAuthUI();
-      if (!idkToken) attemptAutoLogin();
+      if (!idkUser) attemptAutoLogin();
     };
 
     // Expose enterChat so profile sidebar can open chat with a friend
@@ -1470,10 +1479,10 @@ export function initFriendsFeature() {
     let isFirstUnreadPoll = true;
     const unreadDot = document.getElementById("friends-unread-dot");
     const pollInterval = setInterval(async () => {
-      if (!idkToken || !idkUser) return;
+      if (!idkUser) return;
       try {
-        const res = await idkRequest("/api/friends");
-        const friends = res.friends || [];
+        const res = await window.electronAPI.idkGetFriends();
+        const friends = res?.friends || [];
         let totalUnread = 0;
         for (const friend of friends) {
           const prev = lastUnreadTotals[friend.id] || 0;

@@ -18,6 +18,8 @@ describe('IpcChannel registry', () => {
       'Overlay',
       'Achievements',
       'Crash',
+      'Content',
+      'IdkConnect',
       'Update',
       'Tunnel',
       'Startup',
@@ -31,7 +33,7 @@ describe('IpcChannel registry', () => {
       for (const [key, value] of Object.entries(obj)) {
         const full = `${prefix}.${key}`;
         if (typeof value === 'string') {
-          expect(value).toMatch(/^[a-z]+:[a-z0-9-]+$/);
+          expect(value).toMatch(/^[a-z][a-z-]*:[a-z0-9-]+$/);
         } else if (typeof value === 'object' && value !== null) {
           check(value as Record<string, unknown>, full);
         }

@@ -1,7 +1,5 @@
 import { state, actions } from "../../core/app-state.js";
 import {
-  getSkinTextureUrl,
-  getCapeTextureUrl,
   resolveSkinTextureBase64,
   loadAvatarForUser,
 } from "../../core/skin-texture.js";
@@ -280,10 +278,10 @@ async function initHomeSkinViewer() {
   canvasEl.classList.remove("is-ready");
 
   const username = state.currentUser || "Steve";
-  const skinUrl = await getSkinTextureUrl(username, state.authMode);
-  const texture = await resolveSkinTextureBase64(skinUrl);
-  const capeUrl = await getCapeTextureUrl(username, state.authMode);
-  const capeTexture = capeUrl ? await resolveSkinTextureBase64(capeUrl) : null;
+  const skinResult = await resolveSkinTextureBase64(username, state.authMode);
+  const texture = skinResult?.base64 || "";
+  // Cape resolution is server-side in v2; no cape support in MVP
+  const capeTexture = null;
   const { width, height } = fitHomeCanvasToStage(canvasEl, stage);
 
   try {
@@ -370,11 +368,11 @@ async function initProfileSkinViewer() {
   canvasEl.classList.remove("is-ready");
 
   const username = state.currentUser || "Steve";
-  const skinUrl = await getSkinTextureUrl(username, state.authMode);
-  const texture = await resolveSkinTextureBase64(skinUrl);
+  const skinResult = await resolveSkinTextureBase64(username, state.authMode);
+  const texture = skinResult?.base64 || "";
 
-  const capeUrl = await getCapeTextureUrl(username, state.authMode);
-  const capeTexture = capeUrl ? await resolveSkinTextureBase64(capeUrl) : null;
+  // Cape resolution is server-side in v2; no cape support in MVP
+  const capeTexture = null;
 
   const { width, height } = fitCanvasToStage(canvasEl, stage);
 

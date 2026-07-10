@@ -7,6 +7,11 @@ import type {
   DownloadItem,
   AuthSession,
   Modpack,
+  IdkUser,
+  IdkUserProfile,
+  Friend,
+  FriendRequest,
+  IdkMessage,
 } from '@shared/types';
 
 /**
@@ -112,6 +117,8 @@ export const preloadApi = {
 
   version: {
     scanDownloaded: () => ipcRenderer.invoke(IpcChannel.Version.ScanDownloaded) as Promise<string[]>,
+    getManifest: () => ipcRenderer.invoke(IpcChannel.Version.GetManifest),
+    getSodiumVersions: () => ipcRenderer.invoke(IpcChannel.Version.GetSodiumVersions) as Promise<string[]>,
     download: (versionId: string, loader = 'vanilla', loaderVersion?: string) =>
       ipcRenderer.invoke(IpcChannel.Version.Download, { versionId, loader, loaderVersion }),
     cancelDownload: (versionId?: string) =>
@@ -123,6 +130,12 @@ export const preloadApi = {
       ipcRenderer.invoke(IpcChannel.Skin.FetchImageBase64, url) as Promise<string>,
     uploadMicrosoftSkin: (filePath: string, variant: 'classic' | 'slim') =>
       ipcRenderer.invoke(IpcChannel.Skin.UploadMicrosoftSkin, { filePath, variant }),
+    fetchElybySkinBase64: (username: string) =>
+      ipcRenderer.invoke(IpcChannel.Skin.FetchElybySkinBase64, { username }) as Promise<string>,
+    fetchMinotarSkinBase64: (username: string) =>
+      ipcRenderer.invoke(IpcChannel.Skin.FetchMinotarSkinBase64, { username }) as Promise<string>,
+    resolveSkinTextureBase64: (username: string, authMode: 'offline' | 'microsoft' | 'elyby') =>
+      ipcRenderer.invoke(IpcChannel.Skin.ResolveSkinTextureBase64, { username, authMode }) as Promise<{ base64: string; source: string }>,
   },
 
   tunnel: {
@@ -145,6 +158,106 @@ export const preloadApi = {
       ipcRenderer.on(IpcChannel.Update.Downloaded, (_e, i) => cb(i)),
     onError: (cb: (err: { message: string }) => void) =>
       ipcRenderer.on(IpcChannel.Update.Error, (_e, e) => cb(e)),
+  },
+
+  content: {
+    getMojangNews: () => ipcRenderer.invoke(IpcChannel.Content.GetMojangNews),
+    getTrendingModpacks: () => ipcRenderer.invoke(IpcChannel.Content.GetTrendingModpacks),
+  },
+
+  mod: {
+    search: (query: string, loader: string | null, projectType: 'mod' | 'modpack' | 'resourcepack' | 'shader', limit?: number) =>
+      ipcRenderer.invoke(IpcChannel.Mod.Search, { query, loader, projectType, limit }),
+    getProject: (projectId: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.GetProject, { projectId }),
+    getVersions: (projectId: string, gameVersion?: string, loader?: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.GetVersions, { projectId, gameVersion, loader }),
+    getDependencies: (projectId: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.GetDependencies, { projectId }),
+    checkUpdates: (mods: Array<{ projectId: string | null; fileId: string; fileName: string; gameVersion: string; loader: string }>) =>
+      ipcRenderer.invoke(IpcChannel.Mod.CheckUpdates, { mods }),
+    getChangelog: (projectId: string, versionId: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.GetChangelog, { projectId, versionId }),
+    scanMissingDependencies: (mods: Array<{ projectId: string | null; fileName: string }>) =>
+      ipcRenderer.invoke(IpcChannel.Mod.ScanMissingDependencies, { mods }),
+    checkIncompatibilities: (modIds: string[]) =>
+      ipcRenderer.invoke(IpcChannel.Mod.CheckIncompatibilities, { modIds }),
+  },
+
+  crash: {
+    analyze: (crashLog: string) =>
+      ipcRenderer.invoke(IpcChannel.Crash.Analyze, { crashLog }),
+    autoInstallDependencies: (missingMods: string[]) =>
+      ipcRenderer.invoke(IpcChannel.Crash.AutoInstallDependencies, { missingMods }),
+  },
+
+  idkConnect: {
+    // Auth
+    requestOtp: (email: string, username: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.RequestOtp, { email, username }),
+    register: (username: string, email: string, password: string, otp: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.Register, { username, email, password, otp }) as Promise<{ success: boolean; user: IdkUser }>,
+    login: (username: string, password: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.Login, { username, password }) as Promise<{ success?: boolean; user?: IdkUser; requires2fa?: boolean }>,
+    verify2fa: (username: string, password: string, otp: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.Verify2fa, { username, password, otp }) as Promise<{ success: boolean; user: IdkUser }>,
+    getMe: () =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.GetMe) as Promise<IdkUser | null>,
+    loginWithMinecraft: (minecraftUsername: string, authMode: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.LoginWithMinecraft, { minecraftUsername, authMode }) as Promise<{ success: boolean; user: IdkUser }>,
+    // OAuth
+    getDiscordOAuthUrl: (linkToken?: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.GetDiscordOAuthUrl, { linkToken }) as Promise<{ url: string }>,
+    getGoogleOAuthUrl: (linkToken?: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.GetGoogleOAuthUrl, { linkToken }) as Promise<{ url: string }>,
+    completeOAuth: (session: string, username: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.CompleteOAuth, { session, username }) as Promise<{ success: boolean; user: IdkUser }>,
+    // Settings
+    updateProfile: (bio: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.UpdateProfile, { bio }),
+    changeUsername: (newUsername: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.ChangeUsername, { newUsername }) as Promise<{ success: boolean; user: IdkUser }>,
+    changePassword: (oldPassword: string, newPassword: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.ChangePassword, { oldPassword, newPassword }),
+    deleteAccount: () =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.DeleteAccount),
+    requestSecurityOtp: () =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.RequestSecurityOtp),
+    updateSecurity: (newPassword: string, twoFactorEnabled: boolean, otp: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.UpdateSecurity, { newPassword, twoFactorEnabled, otp }),
+    linkMinecraft: (minecraftUsername: string, authMode: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.LinkMinecraft, { minecraftUsername, authMode }),
+    // Users
+    searchUsers: (query: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.SearchUsers, { query }) as Promise<IdkUser[]>,
+    getUserProfile: (username: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.GetUserProfile, { username }) as Promise<{ profile: IdkUserProfile }>,
+    // Friends
+    getFriends: () =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.GetFriends) as Promise<{ friends: Friend[] }>,
+    getFriendRequests: () =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.GetFriendRequests) as Promise<{ requests: FriendRequest[] }>,
+    sendFriendRequest: (username: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.SendFriendRequest, { username }),
+    handleFriendRequest: (requestId: string, accept: boolean) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.HandleFriendRequest, { requestId, accept }),
+    removeFriend: (friendId: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.RemoveFriend, { friendId }),
+    // Messages
+    getMessages: (friendId: string, limit?: number) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.GetMessages, { friendId, limit }) as Promise<{ messages: IdkMessage[] }>,
+    sendMessage: (friendId: string, text: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.SendMessage, { friendId, text }) as Promise<{ message: IdkMessage }>,
+    // Presence
+    sendPresence: (status: string, playingVersion?: string, cloudflaredUrl?: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.SendPresence, { status, playingVersion, cloudflaredUrl }),
+    // Token management
+    getStoredSession: () =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.GetStoredSession) as Promise<{ username: string } | null>,
+    storeToken: (token: string, username: string) =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.StoreToken, { token, username }),
+    clearToken: () =>
+      ipcRenderer.invoke(IpcChannel.IdkConnect.ClearToken),
   },
 } as const;
 

@@ -6,6 +6,10 @@ import { HttpClient, DEFAULT_HOST_ALLOWLIST } from '@/infrastructure/net/http-cl
 import { ModrinthClient } from '@/infrastructure/net/api/modrinth-client';
 import { MojangClient } from '@/infrastructure/net/api/mojang-client';
 import { ElybyClient } from '@/infrastructure/net/api/elyby-client';
+import { IdkConnectClient } from '@/infrastructure/net/api/idk-connect-client';
+import { MinotarClient } from '@/infrastructure/net/api/minotar-client';
+import { MojangContentClient } from '@/infrastructure/net/api/mojang-content-client';
+import { CurseforgeClient } from '@/infrastructure/net/api/curseforge-client';
 import { SecretStore } from '@/infrastructure/crypto/secret-store';
 import { SettingsStore } from '@/infrastructure/fs/settings-store';
 import { ModpackRepository } from '@/infrastructure/fs/modpack-repository';
@@ -64,6 +68,12 @@ async function bootstrap(): Promise<void> {
   const modrinth = new ModrinthClient(http);
   const mojang = new MojangClient(http);
   const elyby = new ElybyClient(http);
+  const idkConnect = new IdkConnectClient(http);
+  const minotar = new MinotarClient(http);
+  const mojangContent = new MojangContentClient(http);
+  // CurseForge API key — in production this should come from env or settings.
+  // For now, use the public proxy at api.curse.tools which doesn't require a key.
+  const curseforge = new CurseforgeClient(http, process.env['CURSEFORGE_API_KEY'] ?? '');
   const modpackRepo = new ModpackRepository(paths);
   const downloadQueue = new DownloadQueue(http, settings.network.concurrentDownloads);
   const integrity = new IntegrityPolicyService(settings);
@@ -108,6 +118,10 @@ async function bootstrap(): Promise<void> {
     modrinth,
     mojang,
     elyby,
+    idkConnect,
+    minotar,
+    mojangContent,
+    curseforge,
     secrets,
     settingsStore,
     modpackRepo,

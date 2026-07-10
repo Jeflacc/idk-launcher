@@ -7,17 +7,16 @@ export function initContentFeature() {
     const grid = document.getElementById("mojang-news-grid");
     if (!grid) return;
     try {
-      const res = await fetch("https://launchercontent.mojang.com/news.json");
-      const data = await res.json();
+      const entries = await window.electronAPI.getMojangNews();
       grid.innerHTML = "";
 
-      const latestNews = data.entries.slice(0, 6);
+      const latestNews = (entries || []).slice(0, 6);
 
       latestNews.forEach((news, index) => {
         const imageUrl = news.newsPageImage?.url
-          ? "idk-cache://launchercontent.mojang.com" + news.newsPageImage.url
+          ? news.newsPageImage.url
           : news.playPageImage?.url
-            ? "idk-cache://launchercontent.mojang.com" + news.playPageImage.url
+            ? news.playPageImage.url
             : "";
 
         const dateObj = new Date(news.date);
@@ -96,11 +95,8 @@ export function initContentFeature() {
     ];
     let packs = null;
     try {
-      const res = await fetch(
-        "https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=4471&sortField=2&sortOrder=desc&pageSize=4",
-      );
-      const json = await res.json();
-      if (json.data && json.data.length > 0) packs = json.data;
+      const data = await window.electronAPI.getTrendingModpacks();
+      if (data && data.length > 0) packs = data;
     } catch (e) {
       // offline — fall through to defaults
     }
@@ -108,9 +104,7 @@ export function initContentFeature() {
     grid.innerHTML = "";
     if (packs) {
       packs.forEach((mp) => {
-        const thumb = mp.logo
-          ? mp.logo.thumbnailUrl.replace("https://", "idk-cache://")
-          : "";
+        const thumb = mp.logo ? mp.logo.thumbnailUrl : "";
         const initial = (mp.name || "M").charAt(0).toUpperCase();
         const dl =
           mp.downloadCount >= 1e6
@@ -136,7 +130,6 @@ export function initContentFeature() {
       });
     } else {
       FALLBACK.forEach((mp) => {
-        const thumbCached = mp.thumb.replace("https://", "idk-cache://");
         const modObj = JSON.stringify({
           project_id: mp.id,
           title: mp.name,
@@ -144,7 +137,7 @@ export function initContentFeature() {
           provider: "curseforge",
         }).replace(/"/g, "&quot;");
         grid.innerHTML += `<div class="trending-mp-card" onclick="clickTrendingMod(JSON.parse('${modObj}'));" style="cursor:pointer;">
-        <img class="trending-mp-thumb" src="${thumbCached}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'trending-mp-thumb trending-mp-thumb-fallback',textContent:'${mp.name.charAt(0).toUpperCase()}'}))" />
+        <img class="trending-mp-thumb" src="${mp.thumb}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'trending-mp-thumb trending-mp-thumb-fallback',textContent:'${mp.name.charAt(0).toUpperCase()}'}))" />
         <div class="trending-mp-info"><strong>${mp.name}</strong><p>${mp.summary}</p>
           <div class="trending-mp-meta"><span>&#x2B07; ${mp.dl}</span><span class="trending-mp-tag">${mp.loader}</span></div>
         </div></div>`;
@@ -361,7 +354,7 @@ export function initContentFeature() {
         const closeSettings = document.getElementById("btn-close-settings");
         if (document.getElementById("view-mods")?.classList.contains("active") && closeMods) closeMods.click();
         else if (document.getElementById("view-settings")?.classList.contains("active") && closeSettings) closeSettings.click();
-        
+
         setTimeout(() => actions.switchView?.("idk-connect"), 50);
       }
     });

@@ -25,6 +25,12 @@ export interface PersistedSecrets {
     uuid: string;
     expiresAt: number;
   };
+  /** IDK Connect JWT token (for the social backend at api.somniac.me). */
+  idkConnect?: {
+    token: string;
+    username: string;
+    expiresAt?: number;
+  };
   connectTunnelToken?: string;
 }
 

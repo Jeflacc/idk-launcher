@@ -31,10 +31,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const requestsSection = document.getElementById("requests-section");
   const requestsList = document.getElementById("requests-list");
 
-  // State
-  let IDK_BACKEND_URL = localStorage.getItem("idk_backend_url") || "http://api.somniac.me:6040";
-  let idkToken = localStorage.getItem("idk_connect_token") || "";
-  let idkUser = (() => { try { return JSON.parse(localStorage.getItem("idk_connect_user")); } catch { return null; } })();
+  // State — token is now stored in the v2 SecretStore (encrypted), accessed via IPC.
+  // The renderer NEVER sees the JWT.
+  let idkUser = null;
 
   let activeTunnelUrl = null;
   let activeSharePort = null;
@@ -58,98 +57,64 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // --- AVATAR RENDERING HELPER ---
-  function renderSkinFace(canvas, username) {
+  // Uses the v2 IPC skin resolver — no direct URL construction in the renderer.
+  async function renderSkinFace(canvas, username) {
+    if (!canvas || !username) return;
     const ctx = canvas.getContext("2d");
-    const img = new Image();
-
-    img.onload = () => {
-      const scale = img.naturalWidth / 64;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.imageSmoothingEnabled = false;
-      // Face base
-      ctx.drawImage(
-        img,
-        8 * scale,
-        8 * scale,
-        8 * scale,
-        8 * scale,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      );
-      // Accessory layer
-      ctx.drawImage(
-        img,
-        40 * scale,
-        8 * scale,
-        8 * scale,
-        8 * scale,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      );
-    };
-
-    let fallbackStage = 0;
-    img.onerror = () => {
-      fallbackStage++;
-      if (fallbackStage === 1) {
-        img.src = `https://minotar.net/skin/${username}`;
-      } else {
-        ctx.fillStyle = "#4cb837";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "white";
-        ctx.font = "bold 16px Inter";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(
-          username.substring(0, 2).toUpperCase(),
-          canvas.width / 2,
-          canvas.height / 2,
-        );
+    try {
+      const result = await window.electronAPI.resolveSkinTextureBase64(username, "offline");
+      if (!result?.base64) {
+        drawFallbackAvatar(ctx, canvas, username);
+        return;
       }
-    };
+      const img = new Image();
+      img.onload = () => {
+        const scale = img.naturalWidth / 64;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = false;
+        // Face base
+        ctx.drawImage(img, 8 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, canvas.width, canvas.height);
+        // Accessory layer
+        ctx.drawImage(img, 40 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, canvas.width, canvas.height);
+      };
+      img.onerror = () => drawFallbackAvatar(ctx, canvas, username);
+      img.src = `data:image/png;base64,${result.base64}`;
+    } catch (e) {
+      drawFallbackAvatar(ctx, canvas, username);
+    }
+  }
 
-    img.src = `https://skinsystem.ely.by/skins/${username}.png`;
+  function drawFallbackAvatar(ctx, canvas, username) {
+    ctx.fillStyle = "#4cb837";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 16px Inter";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(username.substring(0, 2).toUpperCase(), canvas.width / 2, canvas.height / 2);
   }
 
   // --- API HELPER ---
-  async function idkRequest(endpoint, method = "GET", body = null) {
-    const headers = { "Content-Type": "application/json" };
-    if (idkToken) headers["Authorization"] = `Bearer ${idkToken}`;
-
-    const res = await fetch(`${IDK_BACKEND_URL}${endpoint}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : null,
-    });
-
-    if (!res.ok) {
-      let err;
-      try {
-        err = await res.json();
-      } catch (e) {
-        throw new Error(`Server error ${res.status}`);
-      }
-      throw new Error(err.error || `Server error ${res.status}`);
-    }
-    return res.json();
-  }
+  // All IDK Connect API calls now go through IPC (window.electronAPI.idk*).
+  // The token is managed by the v2 SecretStore — the renderer never sees it.
 
   // --- AUTH UI SYNC ---
-  function updateAuthUI() {
-    idkToken = localStorage.getItem("idk_connect_token") || "";
-    try { idkUser = JSON.parse(localStorage.getItem("idk_connect_user")); } catch { idkUser = null; }
+  async function updateAuthUI() {
+    // Check if there's a stored session via IPC (token is in SecretStore)
+    const session = window.electronAPI?.idkGetStoredSession
+      ? await window.electronAPI.idkGetStoredSession()
+      : null;
 
-    if (idkToken && idkUser) {
+    if (session) {
+      // Fetch the current user via IPC
+      idkUser = window.electronAPI?.idkGetMe ? await window.electronAPI.idkGetMe() : null;
       loggedOutPanel.style.display = "none";
       activePanel.style.display = "block";
       overlayUsername.textContent = idkUser.username;
       renderSkinFace(myAvatarCanvas, idkUser.username);
       startHeartbeats();
     } else {
+      idkUser = null;
       activePanel.style.display = "none";
       loggedOutPanel.style.display = "block";
       stopHeartbeats();
@@ -165,8 +130,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       // window.electronAPI.stopCloudflaredAccess(); // No longer needed
     }
 
-    localStorage.removeItem("idk_connect_token");
-    localStorage.removeItem("idk_connect_user");
+    // Clear the token via IPC (removes it from SecretStore)
+    if (window.electronAPI?.idkClearToken) {
+      await window.electronAPI.idkClearToken();
+    }
     showToast("Disconnected from IDK Network.");
     updateAuthUI();
   });
@@ -189,25 +156,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function sendPresenceHeartbeat() {
-    if (!idkToken) return;
+    if (!idkUser) return;
     try {
-      await idkRequest("/api/presence", "POST", {
-        status: "online",
-        playingVersion: currentPlayingVersion,
-        cloudflaredUrl: activeTunnelUrl,
-      });
+      await window.electronAPI.idkSendPresence(
+        "online",
+        currentPlayingVersion,
+        activeTunnelUrl,
+      );
     } catch (e) {
       console.warn("[Overlay] Heartbeat failed:", e.message);
     }
   }
 
   async function refreshFriendsData() {
-    if (!idkToken) return;
+    if (!idkUser) return;
     try {
-      const friendsData = await idkRequest("/api/friends");
+      const friendsData = await window.electronAPI.idkGetFriends();
       renderFriendsList(friendsData.friends);
 
-      const reqData = await idkRequest("/api/friends/requests");
+      const reqData = await window.electronAPI.idkGetFriendRequests();
       renderFriendRequests(reqData.requests);
     } catch (e) {
       console.warn("[Overlay] Sync failed:", e.message);
@@ -300,7 +267,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         if (!proceed) return;
         try {
-          await idkRequest(`/api/friends/${friend.id}`, "DELETE");
+          await window.electronAPI.idkRemoveFriend(friend.id);
           showToast(`Removed ${friend.username}.`);
           refreshFriendsData();
         } catch (err) {
@@ -352,11 +319,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function handleFriendRequest(requestId, accept) {
     try {
-      const res = await idkRequest("/api/friends/requests/handle", "POST", {
-        requestId,
-        accept,
-      });
-      showToast(res.message);
+      await window.electronAPI.idkHandleFriendRequest(requestId, accept);
+      showToast(accept ? "Friend request accepted." : "Friend request declined.");
       refreshFriendsData();
     } catch (err) {
       showToast(err.message, "error");
@@ -375,11 +339,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     btnAddFriend.disabled = true;
     try {
-      const res = await idkRequest("/api/friends/request", "POST", {
-        username: friendName,
-      });
+      await window.electronAPI.idkSendFriendRequest(friendName);
       inputAddFriend.value = "";
-      showToast(res.message);
+      showToast("Friend request sent.");
       refreshFriendsData();
     } catch (err) {
       showToast(err.message, "error");

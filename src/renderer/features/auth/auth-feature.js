@@ -99,6 +99,8 @@ export function initAuthFeature({ switchView }) {
     try {
       let ok = false;
       let data = {};
+      // v2: Always use IPC for Ely.by auth. No direct fetch() — the backend
+      // handles the request via ElybyClient with proper HTTPS + SSRF protection.
       if (window.electronAPI && window.electronAPI.elybyAuthenticate) {
         const res = await window.electronAPI.elybyAuthenticate({
           username,
@@ -108,18 +110,7 @@ export function initAuthFeature({ switchView }) {
         ok = res.ok;
         data = res.data;
       } else {
-        const res = await fetch("https://authserver.ely.by/auth/authenticate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            agent: { name: "Minecraft", version: 1 },
-            username,
-            password,
-            clientToken: "idklauncher-token-" + Date.now(),
-          }),
-        });
-        data = await res.json();
-        ok = res.ok;
+        throw new Error("Ely.by authentication requires the desktop launcher (IPC not available).");
       }
 
       if (ok && data.accessToken) {

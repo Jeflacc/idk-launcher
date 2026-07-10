@@ -148,6 +148,9 @@
     fetchImageBase: (url) => idk?.skin.fetchImageBase64(url) ?? Promise.resolve(''),
     uploadMicrosoftSkin: (filePath, variant) => idk?.skin.uploadMicrosoftSkin(filePath, variant) ?? Promise.resolve({ success: false }),
     equipMicrosoftCape: stub('equipMicrosoftCape', { success: false }),
+    fetchElybySkinBase64: (username) => idk?.skin.fetchElybySkinBase64(username) ?? Promise.resolve(''),
+    fetchMinotarSkinBase64: (username) => idk?.skin.fetchMinotarSkinBase64(username) ?? Promise.resolve(''),
+    resolveSkinTextureBase64: (username, authMode) => idk?.skin.resolveSkinTextureBase64(username, authMode) ?? Promise.resolve({ base64: '', source: 'steve' }),
 
     // ── Mods / resources ──
     installMod: stub('installMod', { success: false }),
@@ -155,6 +158,56 @@
     installResourcepack: stub('installResourcepack', { success: false }),
     installShader: stub('installShader', { success: false }),
     importExternalFiles: stub('importExternalFiles', { success: false }),
+    searchMods: (query, loader, projectType, limit) => idk?.mod.search(query, loader, projectType, limit) ?? Promise.resolve({ hits: [], total_hits: 0 }),
+    getModProject: (projectId) => idk?.mod.getProject(projectId) ?? Promise.resolve(null),
+    getModVersions: (projectId, gameVersion, loader) => idk?.mod.getVersions(projectId, gameVersion, loader) ?? Promise.resolve([]),
+    getModDependencies: (projectId) => idk?.mod.getDependencies(projectId) ?? Promise.resolve([]),
+    checkModUpdates: (mods) => idk?.mod.checkUpdates(mods) ?? Promise.resolve([]),
+    getModChangelog: (projectId, versionId) => idk?.mod.getChangelog(projectId, versionId) ?? Promise.resolve(null),
+    scanMissingDependencies: (mods) => idk?.mod.scanMissingDependencies(mods) ?? Promise.resolve([]),
+    checkIncompatibilities: (modIds) => idk?.mod.checkIncompatibilities(modIds) ?? Promise.resolve([]),
+
+    // ── Content ──
+    getMojangNews: () => idk?.content.getMojangNews() ?? Promise.resolve([]),
+    getTrendingModpacks: () => idk?.content.getTrendingModpacks() ?? Promise.resolve([]),
+
+    // ── Crash analysis ──
+    analyzeCrash: (crashLog) => idk?.crash.analyze(crashLog) ?? Promise.resolve(null),
+
+    // ── Version manifest ──
+    getVersionManifest: () => idk?.version.getManifest() ?? Promise.resolve(null),
+    getSodiumVersions: () => idk?.version.getSodiumVersions() ?? Promise.resolve([]),
+
+    // ── IDK Connect (social backend) ──
+    idkRequestOtp: (email, username) => idk?.idkConnect.requestOtp(email, username) ?? Promise.resolve({ success: false }),
+    idkRegister: (username, email, password, otp) => idk?.idkConnect.register(username, email, password, otp) ?? Promise.resolve({ success: false }),
+    idkLogin: (username, password) => idk?.idkConnect.login(username, password) ?? Promise.resolve({ requires2fa: false }),
+    idkVerify2fa: (username, password, otp) => idk?.idkConnect.verify2fa(username, password, otp) ?? Promise.resolve({ success: false }),
+    idkGetMe: () => idk?.idkConnect.getMe() ?? Promise.resolve(null),
+    idkLoginWithMinecraft: (mcUsername, authMode) => idk?.idkConnect.loginWithMinecraft(mcUsername, authMode) ?? Promise.resolve({ success: false }),
+    idkGetDiscordOAuthUrl: (linkToken) => idk?.idkConnect.getDiscordOAuthUrl(linkToken) ?? Promise.resolve({ url: '' }),
+    idkGetGoogleOAuthUrl: (linkToken) => idk?.idkConnect.getGoogleOAuthUrl(linkToken) ?? Promise.resolve({ url: '' }),
+    idkCompleteOAuth: (session, username) => idk?.idkConnect.completeOAuth(session, username) ?? Promise.resolve({ success: false }),
+    idkUpdateProfile: (bio) => idk?.idkConnect.updateProfile(bio) ?? Promise.resolve({ success: false }),
+    idkChangeUsername: (newUsername) => idk?.idkConnect.changeUsername(newUsername) ?? Promise.resolve({ success: false }),
+    idkChangePassword: (oldPassword, newPassword) => idk?.idkConnect.changePassword(oldPassword, newPassword) ?? Promise.resolve({ success: false }),
+    idkDeleteAccount: () => idk?.idkConnect.deleteAccount() ?? Promise.resolve({ success: false }),
+    idkRequestSecurityOtp: () => idk?.idkConnect.requestSecurityOtp() ?? Promise.resolve({ success: false }),
+    idkUpdateSecurity: (newPassword, twoFactorEnabled, otp) => idk?.idkConnect.updateSecurity(newPassword, twoFactorEnabled, otp) ?? Promise.resolve({ success: false }),
+    idkLinkMinecraft: (mcUsername, authMode) => idk?.idkConnect.linkMinecraft(mcUsername, authMode) ?? Promise.resolve({ success: false }),
+    idkSearchUsers: (query) => idk?.idkConnect.searchUsers(query) ?? Promise.resolve([]),
+    idkGetUserProfile: (username) => idk?.idkConnect.getUserProfile(username) ?? Promise.resolve({ profile: null }),
+    idkGetFriends: () => idk?.idkConnect.getFriends() ?? Promise.resolve({ friends: [] }),
+    idkGetFriendRequests: () => idk?.idkConnect.getFriendRequests() ?? Promise.resolve({ requests: [] }),
+    idkSendFriendRequest: (username) => idk?.idkConnect.sendFriendRequest(username) ?? Promise.resolve({ success: false }),
+    idkHandleFriendRequest: (requestId, accept) => idk?.idkConnect.handleFriendRequest(requestId, accept) ?? Promise.resolve({ success: false }),
+    idkRemoveFriend: (friendId) => idk?.idkConnect.removeFriend(friendId) ?? Promise.resolve({ success: false }),
+    idkGetMessages: (friendId, limit) => idk?.idkConnect.getMessages(friendId, limit) ?? Promise.resolve({ messages: [] }),
+    idkSendMessage: (friendId, text) => idk?.idkConnect.sendMessage(friendId, text) ?? Promise.resolve({ message: null }),
+    idkSendPresence: (status, playingVersion, cloudflaredUrl) => idk?.idkConnect.sendPresence(status, playingVersion, cloudflaredUrl) ?? Promise.resolve({ success: false }),
+    idkGetStoredSession: () => idk?.idkConnect.getStoredSession() ?? Promise.resolve(null),
+    idkStoreToken: (token, username) => idk?.idkConnect.storeToken(token, username) ?? Promise.resolve({ success: false }),
+    idkClearToken: () => idk?.idkConnect.clearToken() ?? Promise.resolve({ success: false }),
 
     // ── Tunnel (IDK Connect) ──
     ensureFrpc: () => idk?.tunnel.ensureFrpc() ?? Promise.resolve({ success: false }),

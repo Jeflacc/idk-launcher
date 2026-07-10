@@ -46,6 +46,9 @@ export const IpcChannel = {
     EquipMicrosoftCape: 'skin:equip-microsoft-cape',
     SelectMicrosoftCape: 'skin:select-microsoft-cape',
     FetchImageBase64: 'skin:fetch-image-base64',
+    FetchElybySkinBase64: 'skin:fetch-elyby-skin-base64',
+    FetchMinotarSkinBase64: 'skin:fetch-minotar-skin-base64',
+    ResolveSkinTextureBase64: 'skin:resolve-skin-texture-base64',
   },
   // Versions
   Version: {
@@ -53,6 +56,8 @@ export const IpcChannel = {
     Download: 'version:download',
     CancelDownload: 'version:cancel-download',
     ScanVersionMods: 'version:scan-mods',
+    GetManifest: 'version:get-manifest',
+    GetSodiumVersions: 'version:get-sodium-versions',
   },
   // Launch
   Launch: {
@@ -89,6 +94,17 @@ export const IpcChannel = {
     ExtractIcon: 'mod:extract-icon',
     ExtractAllIcons: 'mod:extract-all-icons',
     ExportModpack: 'mod:export',
+    Search: 'mod:search',
+    GetProject: 'mod:get-project',
+    GetVersions: 'mod:get-versions',
+    GetDependencies: 'mod:get-dependencies',
+    InstallFromBrowser: 'mod:install-from-browser',
+    CheckUpdates: 'mod:check-updates',
+    InstallUpdate: 'mod:install-update',
+    GetChangelog: 'mod:get-changelog',
+    ScanMissingDependencies: 'mod:scan-missing-dependencies',
+    ResolveDependencies: 'mod:resolve-dependencies',
+    CheckIncompatibilities: 'mod:check-incompatibilities',
   },
   // Downloads (the unified queue)
   Download: {
@@ -136,6 +152,52 @@ export const IpcChannel = {
   Crash: {
     MissingDependencies: 'crash:missing-dependencies',
     AutoInstallDependencies: 'crash:auto-install',
+    Analyze: 'crash:analyze',
+  },
+  // Content (news, trending)
+  Content: {
+    GetMojangNews: 'content:get-mojang-news',
+    GetTrendingModpacks: 'content:get-trending-modpacks',
+  },
+  // IDK Connect (social backend at api.somniac.me)
+  IdkConnect: {
+    // Auth
+    RequestOtp: 'idk-connect:request-otp',
+    Register: 'idk-connect:register',
+    Login: 'idk-connect:login',
+    Verify2fa: 'idk-connect:verify-2fa',
+    GetMe: 'idk-connect:get-me',
+    LoginWithMinecraft: 'idk-connect:login-with-minecraft',
+    // OAuth
+    GetDiscordOAuthUrl: 'idk-connect:get-discord-oauth-url',
+    GetGoogleOAuthUrl: 'idk-connect:get-google-oauth-url',
+    CompleteOAuth: 'idk-connect:complete-oauth',
+    // Settings
+    UpdateProfile: 'idk-connect:update-profile',
+    ChangeUsername: 'idk-connect:change-username',
+    ChangePassword: 'idk-connect:change-password',
+    DeleteAccount: 'idk-connect:delete-account',
+    RequestSecurityOtp: 'idk-connect:request-security-otp',
+    UpdateSecurity: 'idk-connect:update-security',
+    LinkMinecraft: 'idk-connect:link-minecraft',
+    // Users
+    SearchUsers: 'idk-connect:search-users',
+    GetUserProfile: 'idk-connect:get-user-profile',
+    // Friends
+    GetFriends: 'idk-connect:get-friends',
+    GetFriendRequests: 'idk-connect:get-friend-requests',
+    SendFriendRequest: 'idk-connect:send-friend-request',
+    HandleFriendRequest: 'idk-connect:handle-friend-request',
+    RemoveFriend: 'idk-connect:remove-friend',
+    // Messages
+    GetMessages: 'idk-connect:get-messages',
+    SendMessage: 'idk-connect:send-message',
+    // Presence
+    SendPresence: 'idk-connect:send-presence',
+    // Token management (stored in SecretStore, not localStorage)
+    GetStoredSession: 'idk-connect:get-stored-session',
+    StoreToken: 'idk-connect:store-token',
+    ClearToken: 'idk-connect:clear-token',
   },
   // Auto-updater
   Update: {
