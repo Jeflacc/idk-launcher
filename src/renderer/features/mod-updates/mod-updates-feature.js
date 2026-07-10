@@ -179,26 +179,19 @@ export async function installModUpdate(modpackId, update) {
 }
 
 async function findModrinthProject(item, modName) {
-  const params = new URLSearchParams({
-    query: modName,
-    limit: '5'
-  });
-  const facets = buildSearchFacets(item);
-  if (facets.length) params.set('facets', JSON.stringify(facets));
-
-  const searchRes = await fetch(`https://api.modrinth.com/v2/search?${params.toString()}`);
-  if (!searchRes.ok) {
-    console.warn('[ModUpdates] Search failed for', modName, '- status:', searchRes.status);
+  const loader = getLoader(item);
+  const projectType = item.type === 'modpack' ? 'modpack' : 'mod';
+  try {
+    const searchData = await window.electronAPI.searchMods(modName, loader, projectType, 5);
+    if (!searchData?.hits || searchData.hits.length === 0) {
+      console.log('[ModUpdates] No search results for', modName);
+      return null;
+    }
+    return pickBestProjectMatch(searchData.hits, modName);
+  } catch (e) {
+    console.warn('[ModUpdates] Search failed for', modName, '-', e.message);
     return null;
   }
-
-  const searchData = await searchRes.json();
-  if (!searchData.hits || searchData.hits.length === 0) {
-    console.log('[ModUpdates] No search results for', modName);
-    return null;
-  }
-
-  return pickBestProjectMatch(searchData.hits, modName);
 }
 
 function buildSearchFacets(item) {
@@ -245,15 +238,15 @@ async function fetchProjectVersions(projectId, item) {
 }
 
 async function requestProjectVersions(projectId, item) {
-  // Modrinth uses the singular "/version" route for a project's version list.
-  const res = await fetch(buildVersionsUrl(projectId, item));
-  if (!res.ok) {
-    console.warn('[ModUpdates] API error for', item.name, '- status:', res.status);
+  const gameVersion = getMinecraftVersion(item);
+  const loader = getLoader(item);
+  try {
+    const versions = await window.electronAPI.getModVersions(projectId, gameVersion || undefined, loader || undefined);
+    return Array.isArray(versions) ? versions : [];
+  } catch (e) {
+    console.warn('[ModUpdates] API error for', item.name, '-', e.message);
     return [];
   }
-
-  const versions = await res.json();
-  return Array.isArray(versions) ? versions : [];
 }
 
 function getMinecraftVersion(item) {
@@ -419,10 +412,8 @@ function normalizeFileName(filename) {
  */
 export async function getModChangelog(modrinthId) {
   try {
-    const res = await fetch(`https://api.modrinth.com/v2/project/${modrinthId}`);
-    if (!res.ok) return null;
-
-    const data = await res.json();
+    const data = await window.electronAPI.getModProject(modrinthId);
+    if (!data) return null;
     return {
       name: data.title,
       description: data.description,

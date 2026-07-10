@@ -96,13 +96,13 @@
       if (idk) { try { await idk.settings.reset(); return { success: true }; } catch { return { success: false }; } }
       return { success: false };
     },
-    exportSettings: stub('exportSettings', { success: false }),
-    importSettings: stub('importSettings', { success: false, settings: {} }),
+    exportSettings: () => idk?.settings.export() ?? Promise.resolve({ success: false }),
+    importSettings: (data) => idk?.settings.import(data) ?? Promise.resolve({ success: false, settings: {} }),
 
     // ── Auth ──
     microsoftAuthenticate: (interactive = true) => idk?.auth.microsoftAuthenticate(interactive) ?? Promise.resolve(null),
     getMicrosoftAuthData: () => idk?.auth.getMicrosoftAuthData() ?? Promise.resolve(null),
-    fetchMicrosoftProfile: stub('fetchMicrosoftProfile', null),
+    fetchMicrosoftProfile: () => idk?.auth.fetchMicrosoftProfile() ?? Promise.resolve(null),
     elybyAuthenticate: (username, password) => idk?.auth.elybyAuthenticate(username, password) ?? Promise.resolve(null),
     fetchElybyProfile: (username) => idk?.auth.fetchElybyProfile(username) ?? Promise.resolve(null),
     getElybyAuthData: () => idk?.auth.getElybyAuthData() ?? Promise.resolve(null),
@@ -110,14 +110,14 @@
     // ── Launch ──
     launchMinecraft: (options) => idk?.launch.minecraft(options) ?? noop(),
     cancelLaunch: () => idk?.launch.cancel() ?? noop(),
-    resumeGame: stub('resumeGame'),
+    resumeGame: () => idk?.overlay.resumeGame() ?? noop(),
     onLaunchProgress: (cb) => idk?.launch.onProgress(cb) ?? noop(),
     onGameLaunched: (cb) => idk?.launch.onGameLaunched(cb) ?? noop(),
     onLaunchClosed: (cb) => idk?.launch.onClosed(cb) ?? noop(),
     onLaunchError: (cb) => idk?.launch.onError(cb) ?? noop(),
     onLaunchWarning: (cb) => idk?.launch.onWarning(cb) ?? noop(),
     onMissingDependencies: listenerStub('onMissingDependencies'),
-    autoInstallDependencies: stub('autoInstallDependencies', { success: false }),
+    autoInstallDependencies: (missingMods) => idk?.crash.autoInstallDependencies(missingMods) ?? Promise.resolve({ success: false }),
 
     // ── Modpacks ──
     scanProfiles: () => idk?.modpack.scanProfiles() ?? Promise.resolve([]),
@@ -126,7 +126,7 @@
     launchModpack: (modpackId, quickConnect) => idk?.modpack.launch(modpackId, quickConnect) ?? Promise.resolve({ success: false }),
     downloadModrinthModpack: (projectId, minecraftVersion, loader, name) =>
       idk?.modpack.install(projectId, minecraftVersion, loader, name) ?? Promise.resolve({ success: false }),
-    downloadCurseforgeModpack: stub('downloadCurseforgeModpack', { success: false }),
+    downloadCurseforgeModpack: (projectId, fileId, name) => idk?.mod.downloadCurseforgeModpack(projectId, fileId, name) ?? Promise.resolve({ success: false }),
     exportModpack: (modpackId, targetPath) => idk?.modpack.export(modpackId, targetPath) ?? Promise.resolve({ success: false }),
     unzipCurseforge: (zipPath, name) => idk?.modpack.importZip(zipPath, name) ?? Promise.resolve({ success: false }),
 
@@ -147,17 +147,27 @@
     // ── Skins ──
     fetchImageBase: (url) => idk?.skin.fetchImageBase64(url) ?? Promise.resolve(''),
     uploadMicrosoftSkin: (filePath, variant) => idk?.skin.uploadMicrosoftSkin(filePath, variant) ?? Promise.resolve({ success: false }),
-    equipMicrosoftCape: stub('equipMicrosoftCape', { success: false }),
+    equipMicrosoftCape: (capeId) => idk?.skin.equipMicrosoftCape(capeId) ?? Promise.resolve({ success: false }),
     fetchElybySkinBase64: (username) => idk?.skin.fetchElybySkinBase64(username) ?? Promise.resolve(''),
     fetchMinotarSkinBase64: (username) => idk?.skin.fetchMinotarSkinBase64(username) ?? Promise.resolve(''),
     resolveSkinTextureBase64: (username, authMode) => idk?.skin.resolveSkinTextureBase64(username, authMode) ?? Promise.resolve({ base64: '', source: 'steve' }),
 
     // ── Mods / resources ──
-    installMod: stub('installMod', { success: false }),
-    installModToVersion: stub('installModToVersion', { success: false }),
-    installResourcepack: stub('installResourcepack', { success: false }),
-    installShader: stub('installShader', { success: false }),
-    importExternalFiles: stub('importExternalFiles', { success: false }),
+    installMod: (modpackId, projectId, versionId, downloadUrl, fileName, type = 'mod') =>
+      idk?.mod.installFromBrowser(modpackId, projectId, versionId, downloadUrl, fileName, type) ??
+      Promise.resolve({ success: false }),
+    installModToVersion: (versionId, projectId, versionIdTarget, downloadUrl, fileName) =>
+      idk?.mod.installToVersion(versionId, projectId, versionIdTarget, downloadUrl, fileName) ??
+      Promise.resolve({ success: false }),
+    installResourcepack: (modpackId, projectId, versionId, downloadUrl, fileName) =>
+      idk?.mod.installResourcepack(modpackId, projectId, versionId, downloadUrl, fileName) ??
+      Promise.resolve({ success: false }),
+    installShader: (modpackId, projectId, versionId, downloadUrl, fileName) =>
+      idk?.mod.installShader(modpackId, projectId, versionId, downloadUrl, fileName) ??
+      Promise.resolve({ success: false }),
+    importExternalFiles: (modpackId, filePaths) =>
+      idk?.mod.importExternalFiles(modpackId, filePaths) ??
+      Promise.resolve({ success: false }),
     searchMods: (query, loader, projectType, limit) => idk?.mod.search(query, loader, projectType, limit) ?? Promise.resolve({ hits: [], total_hits: 0 }),
     getModProject: (projectId) => idk?.mod.getProject(projectId) ?? Promise.resolve(null),
     getModVersions: (projectId, gameVersion, loader) => idk?.mod.getVersions(projectId, gameVersion, loader) ?? Promise.resolve([]),
@@ -218,11 +228,11 @@
     onFrpcInstallProgress: listenerStub('onFrpcInstallProgress'),
 
     // ── Achievements ──
-    scanAllAchievements: stub('scanAllAchievements', []),
-    scanProfileAchievements: stub('scanProfileAchievements', []),
+    scanAllAchievements: () => idk?.achievements.scanAll() ?? Promise.resolve([]),
+    scanProfileAchievements: (modpackId) => idk?.achievements.scanProfile(modpackId) ?? Promise.resolve([]),
 
     // ── Overlay ──
-    getOverlayData: stub('getOverlayData', null),
+    getOverlayData: () => idk?.overlay.getOverlayData() ?? Promise.resolve(null),
     onOverlayInit: listenerStub('onOverlayInit'),
     onToggleOverlay: listenerStub('onToggleOverlay'),
 

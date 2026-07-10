@@ -50,6 +50,8 @@ export const preloadApi = {
       ipcRenderer.invoke(IpcChannel.Auth.MicrosoftAuthenticate, { interactive }) as Promise<AuthSession>,
     getMicrosoftAuthData: () =>
       ipcRenderer.invoke(IpcChannel.Auth.GetMicrosoftAuthData) as Promise<AuthSession | null>,
+    fetchMicrosoftProfile: () =>
+      ipcRenderer.invoke(IpcChannel.Auth.FetchMicrosoftProfile),
     elybyAuthenticate: (username: string, password: string) =>
       ipcRenderer.invoke(IpcChannel.Auth.ElybyAuthenticate, { username, password }) as Promise<AuthSession>,
     fetchElybyProfile: (username: string) =>
@@ -110,6 +112,8 @@ export const preloadApi = {
     save: (settings: Partial<import('@shared/types').LauncherSettings>) =>
       ipcRenderer.invoke(IpcChannel.Settings.Save, settings),
     reset: () => ipcRenderer.invoke(IpcChannel.Settings.Reset),
+    export: () => ipcRenderer.invoke(IpcChannel.Settings.Export),
+    import: (data: string) => ipcRenderer.invoke(IpcChannel.Settings.Import, { data }),
     getByCategory: (category: string) => ipcRenderer.invoke(IpcChannel.Settings.GetByCategory, category),
     search: (query: string) => ipcRenderer.invoke(IpcChannel.Settings.Search, query),
     getCategories: () => ipcRenderer.invoke(IpcChannel.Settings.GetCategories),
@@ -182,6 +186,34 @@ export const preloadApi = {
       ipcRenderer.invoke(IpcChannel.Mod.ScanMissingDependencies, { mods }),
     checkIncompatibilities: (modIds: string[]) =>
       ipcRenderer.invoke(IpcChannel.Mod.CheckIncompatibilities, { modIds }),
+    installFromBrowser: (modpackId: string, projectId: string, versionId: string, downloadUrl: string, fileName: string, type: 'mod' | 'resourcepack' | 'shader') =>
+      ipcRenderer.invoke(IpcChannel.Mod.InstallFromBrowser, { modpackId, projectId, versionId, downloadUrl, fileName, type }),
+    installToVersion: (versionId: string, projectId: string, versionIdTarget: string, downloadUrl: string, fileName: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.InstallToVersion, { versionId, projectId, versionIdTarget, downloadUrl, fileName }),
+    installUpdate: (modpackId: string, fileId: string, downloadUrl: string, fileName: string, oldFileName?: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.InstallUpdate, { modpackId, fileId, downloadUrl, fileName, oldFileName }),
+    resolveDependencies: (modpackId: string, modId: string, dependencyIds: string[]) =>
+      ipcRenderer.invoke(IpcChannel.Mod.ResolveDependencies, { modpackId, modId, dependencyIds }),
+    remove: (modpackId: string, modFileName: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.Remove, { modpackId, modFileName }),
+    installResourcepack: (modpackId: string, projectId: string, versionId: string, downloadUrl: string, fileName: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.InstallResourcepack, { modpackId, projectId, versionId, downloadUrl, fileName }),
+    removeResourcepack: (modpackId: string, resourcepackFileName: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.RemoveResourcepack, { modpackId, resourcepackFileName }),
+    installShader: (modpackId: string, projectId: string, versionId: string, downloadUrl: string, fileName: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.InstallShader, { modpackId, projectId, versionId, downloadUrl, fileName }),
+    removeShader: (modpackId: string, shaderFileName: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.RemoveShader, { modpackId, shaderFileName }),
+    extractIcon: (jarPath: string, outputPath: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.ExtractIcon, { jarPath, outputPath }),
+    extractAllIcons: (modpackId: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.ExtractAllIcons, { modpackId }),
+    importExternalFiles: (modpackId: string, filePaths: string[]) =>
+      ipcRenderer.invoke(IpcChannel.Mod.ImportExternalFiles, { modpackId, filePaths }),
+    downloadCurseforgeModpack: (projectId: string, fileId: string, name: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.DownloadCurseforgeModpack, { projectId, fileId, name }),
+    downloadModrinthModpack: (projectId: string, minecraftVersion: string, loader: string, name: string) =>
+      ipcRenderer.invoke(IpcChannel.Mod.DownloadModrinthModpack, { projectId, minecraftVersion, loader, name }),
   },
 
   crash: {
@@ -189,6 +221,26 @@ export const preloadApi = {
       ipcRenderer.invoke(IpcChannel.Crash.Analyze, { crashLog }),
     autoInstallDependencies: (missingMods: string[]) =>
       ipcRenderer.invoke(IpcChannel.Crash.AutoInstallDependencies, { missingMods }),
+  },
+
+  achievements: {
+    scanProfile: (modpackId: string) =>
+      ipcRenderer.invoke(IpcChannel.Achievements.ScanProfile, { modpackId }),
+    scanAll: () => ipcRenderer.invoke(IpcChannel.Achievements.ScanAll),
+  },
+
+  overlay: {
+    getOverlayData: () => ipcRenderer.invoke(IpcChannel.Overlay.GetOverlayData),
+    setIdkConnectData: (data: Record<string, unknown>) =>
+      ipcRenderer.invoke(IpcChannel.Overlay.SetIdkConnectData, data),
+    init: () => ipcRenderer.invoke(IpcChannel.Overlay.Init),
+    toggleUi: () => ipcRenderer.invoke(IpcChannel.Overlay.ToggleUi),
+    toggle: () => ipcRenderer.invoke(IpcChannel.Overlay.Toggle),
+    syncConnect: (data?: Record<string, unknown>) =>
+      ipcRenderer.invoke(IpcChannel.Overlay.SyncConnect, data),
+    resumeGame: () => ipcRenderer.send(IpcChannel.Overlay.ResumeGame),
+    close: () => ipcRenderer.send(IpcChannel.Overlay.Close),
+    hideWindow: () => ipcRenderer.send(IpcChannel.Overlay.HideWindow),
   },
 
   idkConnect: {

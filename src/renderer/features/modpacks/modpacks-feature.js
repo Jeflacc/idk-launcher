@@ -1,84 +1,14 @@
-import { safeParse, esc } from "../../core/safe-parse.js";
+import { esc } from "../../core/safe-parse.js";
 import { state, actions } from "../../core/app-state.js";
 import { initTutorial } from "../tutorial/tutorial.js";
 import { showListDialog } from "../../components/list-dialog.js";
 
 export function initModpacksFeature({ switchView }) {
-  // Safe JSON parser for API responses
-  async function safeJson(resp, fallback = null) {
-    if (!resp) return fallback;
-    if (!resp.ok) {
-      let body = "";
-      try { body = await resp.text(); } catch (_) {}
-      throw new Error(`API error ${resp.status}: ${resp.statusText}. ${body.slice(0, 200)}`);
-    }
-    try {
-      return await resp.json();
-    } catch (e) {
-      let body = "";
-      try { body = await resp.text(); } catch (_) {}
-      throw new Error(`Invalid JSON from API: ${body.slice(0, 200)}`);
-    }
-  }
-
-  // Fetch with hard timeout — prevents hangs on slow/unreachable APIs.
-  // `statusOnTimeout` updates the panel status so the user sees a clear
-  // "TIMED OUT" message instead of a silent hang.
-  async function fetchWithTimeout(url, options = {}, timeoutMs = 10000, statusOnTimeout = null) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      return await fetch(url, { ...options, signal: controller.signal });
-    } catch (e) {
-      if (e?.name === "AbortError") {
-        if (statusOnTimeout) {
-          const statusEl = document.getElementById("ddp-status");
-          if (statusEl) statusEl.innerText = statusOnTimeout;
-        }
-        throw new Error(`Request timed out after ${Math.round(timeoutMs / 1000)}s: ${url}`);
-      }
-      throw e;
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-
   // === MODPACK MANAGER =====================================
   // =========================================================
-  state.modpacks = safeParse(localStorage.getItem("idk_modpacks"), []);
-  // Migrate old state.modpacks and remove any "Default Modpack" or generic "Modpack" placeholders
-  const originalCount = state.modpacks.length;
-  state.modpacks = state.modpacks.filter((mp) => {
-    const n = (mp.name || "").trim().toLowerCase();
-    return n !== "default modpack" && n !== "modpack" && n !== "new modpack";
-  });
-  state.modpacks = state.modpacks.map((mp) => ({
-    mods: [],
-    resourcepacks: [],
-    shaders: [],
-    ...mp,
-  }));
-
-  // Ensure all state.modpacks have iconUrl property
-  state.modpacks = state.modpacks.map((mp) => ({
-    ...mp,
-    iconUrl: mp.iconUrl || "",
-  }));
-
-  // Fix IDs that were incorrectly stored with the 'modpack-' prefix
-  // The id should be the raw part (e.g. 'mp9qv96i3i3uqistkjd'), not 'modpack-mp9qv96...'
-  state.modpacks = state.modpacks.map((mp) => ({
-    ...mp,
-    id: mp.id.startsWith("modpack-") ? mp.id.replace(/^modpack-/, "") : mp.id,
-  }));
-
-  // Remove any entries whose id still contains 'modpack-' after stripping (double-nested duplicates)
-  state.modpacks = state.modpacks.filter((mp) => !mp.id.startsWith("modpack-"));
-
-  // Save immediately if we filtered anything out to prevent it from coming back
-  if (state.modpacks.length !== originalCount) {
-    localStorage.setItem("idk_modpacks", JSON.stringify(state.modpacks));
-  }
+  // state.modpacks is populated from disk by loadProfilesFromDisk() on
+  // startup. The backend ModpackRepository is authoritative — no
+  // localStorage mirror is kept in the renderer.
 
   // Global flag to pause profile scanning during deletion
   let isDeleting = false;
@@ -233,7 +163,6 @@ export function initModpacksFeature({ switchView }) {
             state.activeModpackId = oldMp?.id || null;
           }
 
-          localStorage.setItem("idk_modpacks", JSON.stringify(state.modpacks));
           console.log(
             `[Modpacks] Synced ${diskProfiles.length} profiles from disk`,
           );
@@ -271,10 +200,9 @@ export function initModpacksFeature({ switchView }) {
   };
 
   function mpSave() {
-    // Filter out temporary modpacks before saving to localStorage
-    const modpacksToSave = state.modpacks.filter((mp) => !mp.isTemporary);
-    localStorage.setItem("idk_modpacks", JSON.stringify(modpacksToSave));
-    // Sync each permanent modpack's profile to disk so the file system matches localStorage
+    // Persist each permanent modpack's profile metadata to disk via IPC.
+    // The mods/resourcepacks/shaders arrays are in-memory only — disk is
+    // the source of truth (reconciled by loadProfilesFromDisk).
     saveModpacksToDisk();
   }
 
@@ -1826,10 +1754,8 @@ export function initModpacksFeature({ switchView }) {
           shaders: [],
         };
 
-        // First save the modpack base structure to localStorage so it registers
-        const mpData = safeParse(localStorage.getItem("idk_modpacks"), []);
-        mpData.push(newMp);
-        localStorage.setItem("idk_modpacks", JSON.stringify(mpData));
+        // Register the new modpack in renderer state (disk state is
+        // managed by the main process via IPC).
         state.modpacks.push(newMp);
         state.activeModpackId = newMp.id;
         mpRenderList();
@@ -1841,23 +1767,38 @@ export function initModpacksFeature({ switchView }) {
 
         const downloadTask = async (f) => {
           try {
-            const [fRes, projRes] = await Promise.all([
-              fetch(
-                `https://api.curse.tools/v1/cf/mods/${f.projectID}/files/${f.fileID}`,
-              ),
-              fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}`),
+            // Fetch the file's version metadata + project category in
+            // parallel via IPC. The backend resolves CurseForge or Modrinth
+            // based on the project ID and returns a Modrinth-shaped response.
+            const [versionArr, projData] = await Promise.all([
+              window.electronAPI.getModVersions(String(f.projectID)),
+              window.electronAPI.getModProject(String(f.projectID)),
             ]);
-
-            if (!fRes.ok) {
+            const versions = Array.isArray(versionArr) ? versionArr : [];
+            if (!versions.length) {
               console.warn(
-                `[CurseForge] Failed to fetch file ${f.fileID}: ${fRes.status}`,
+                `[Modpacks] No versions returned for project ${f.projectID}`,
               );
               return;
             }
-
-            const fData = await safeJson(fRes);
-            if (!fData.data) return;
-            const mf = fData.data;
+            // Try to find the requested file ID; fall back to the first version.
+            const versionObj =
+              versions.find((v) => String(v.id) === String(f.fileID)) ||
+              versions[0];
+            const fileObj =
+              versionObj?.files?.find((file) => file.primary) ||
+              versionObj?.files?.[0];
+            if (!fileObj?.url) {
+              console.warn(
+                `[Modpacks] No download URL for project ${f.projectID} file ${f.fileID}`,
+              );
+              return;
+            }
+            const mf = {
+              fileName: fileObj.filename,
+              displayName: versionObj.name || fileObj.filename,
+              downloadUrl: fileObj.url,
+            };
 
             // Check if file loader matches modpack loader
             const fileName = mf.fileName.toLowerCase();
@@ -1872,25 +1813,19 @@ export function initModpacksFeature({ switchView }) {
                 fileName.includes("quilt"))
             ) {
               console.warn(
-                `[CurseForge] WARNING: File ${mf.fileName} is for a different loader than ${newMp.loader}. Expected ${expectedLoader} but got ${fileName}`,
+                `[Modpacks] WARNING: File ${mf.fileName} is for a different loader than ${newMp.loader}. Expected ${expectedLoader} but got ${fileName}`,
               );
             }
 
-            let mUrl = mf.downloadUrl;
-            if (!mUrl) {
-              const mp1 = Math.floor(mf.id / 1000),
-                mp2 = (mf.id % 1000).toString().padStart(3, "0");
-              mUrl = `https://edge.forgecdn.net/files/${mp1}/${mp2}/${encodeURIComponent(mf.fileName)}`;
-            }
-            let classId = 6;
-            try {
-              if (projRes.ok) {
-                const pj = await safeJson(projRes);
-                classId = pj.data?.classId ?? 6;
-              }
-            } catch (e) {
-              console.warn("[CurseForge] Error parsing project data:", e);
-            }
+            const mUrl = mf.downloadUrl;
+            // Derive classId from the project_type returned by the IPC.
+            const projectType = projData?.project_type;
+            const classId =
+              projectType === "resourcepack"
+                ? 12
+                : projectType === "shader"
+                  ? 6552
+                  : 6;
 
             if (classId === 12) {
               newMp.resourcepacks.push({
@@ -1993,13 +1928,9 @@ export function initModpacksFeature({ switchView }) {
           }
         });
 
-        const mpData2 = JSON.parse(
-          localStorage.getItem("idk_modpacks") || "[]",
-        );
-        const idx = mpData2.findIndex((m) => m.id === newMp.id);
-        if (idx >= 0) mpData2[idx] = newMp;
-        else mpData2.push(newMp);
-        localStorage.setItem("idk_modpacks", JSON.stringify(mpData2));
+        const idx = state.modpacks.findIndex((m) => m.id === newMp.id);
+        if (idx >= 0) state.modpacks[idx] = newMp;
+        else state.modpacks.push(newMp);
         mpRenderDetail();
         updateDlPanel("Import complete.", 100);
         hideDlPanel();
@@ -2368,113 +2299,32 @@ export function initModpacksFeature({ switchView }) {
       const pageSize = 20;
       const offset = page * pageSize;
 
-      if (state.currentProvider === "modrinth") {
-        const facetGroups = [];
-
-        // Project type facet
-        if (state.browserMode === "mod")
-          facetGroups.push([`project_type:mod`]);
-        else if (state.browserMode === "resourcepack")
-          facetGroups.push([`project_type:resourcepack`]);
-        else if (state.browserMode === "shader")
-          facetGroups.push([`project_type:shader`]);
-        else if (state.browserMode === "modpack")
-          facetGroups.push([`project_type:modpack`]);
-
-        // Loader facet from filter (mods and shaders only — resource packs have no loader).
-        // "All" = all loaders from the Modrinth discover page as an OR group, matching the discover URL.
-        if (state.browserMode !== "modpack" && state.browserMode !== "resourcepack") {
-          if (state.browserFilters.loader !== "all") {
-            facetGroups.push([`categories:${state.browserFilters.loader}`]);
-          } else {
-            const allLoaders = MODRINTH_FILTERS[state.browserMode]?.Loader;
-            if (allLoaders && allLoaders.length) {
-              facetGroups.push(allLoaders.map(l => `categories:${l}`));
-            }
-          }
-        }
-
-        // Resolution facet from filter (resource packs only)
-        if (state.browserMode === "resourcepack" && state.browserFilters.resolution !== "all") {
-          facetGroups.push([`categories:${state.browserFilters.resolution}`]);
-        }
-
-        // Version facet from filter or context
-        if (state.browserFilters.version !== "all") {
-          facetGroups.push([`versions:${state.browserFilters.version}`]);
-        } else if (mp && state.browserMode !== "modpack") {
-          // Use simple candidates (exact + major.minor) matching the Modrinth discover page.
-          // Shaders have no version filter (the Modrinth discover page never includes v=).
-          if (state.browserMode !== "shader") {
-            const candidates = buildSimpleVersionCandidates(mp.mcVersion);
-            facetGroups.push(candidates.map(v => `versions:${v}`));
-          }
-        }
-
-        // Category facet from filter
-        if (state.browserFilters.category !== "all") {
-          facetGroups.push([`categories:${state.browserFilters.category}`]);
-        }
-
-        const facets = encodeURIComponent(JSON.stringify(facetGroups));
-
-        // Sort parameter
-        const sortMap = {
-          relevance: "",
-          downloads: "&index=downloads",
-          updated: "&index=updated",
-          follows: "",
-        };
-        const sortParam = sortMap[state.browserFilters.sort] || "";
-
-        const res = await fetch(
-          `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&facets=${facets}&limit=${pageSize}&offset=${offset}${sortParam}`,
-        );
-        if (!res.ok) throw new Error(`Modrinth API error: ${res.status}`);
-        const data = await safeJson(res);
-        hits = (data.hits || []).map((m) => ({
-          project_id: m.project_id,
-          title: m.title,
-          description: m.description,
-          icon_url: m.icon_url,
-          downloads: m.downloads,
-          follows: m.follows,
-          provider: "modrinth",
-        }));
-        state.browserTotalResults = data.total_hits || 0;
-      } else {
-        let classId = 6;
-        if (state.browserMode === "resourcepack") classId = 12;
-        else if (state.browserMode === "shader") classId = 6552;
-        else if (state.browserMode === "modpack") classId = 4471;
-
-        // Game version from filter or context (CurseForge API only accepts a single gameVersion).
-        // Shaders don't filter by version (matching the Modrinth discover page).
-        const curseGameVer = state.browserFilters.version !== "all"
-          ? state.browserFilters.version
-          : (mp && state.browserMode !== "modpack" && state.browserMode !== "shader" ? mp.mcVersion : "");
-        const gameVerStr = curseGameVer ? `&gameVersion=${curseGameVer}` : "";
-
-        // Sort field: 2=downloads, 3=updated, 4=last updated
-        const sortFieldMap = { relevance: 2, downloads: 2, updated: 3, follows: 4 };
-        const sortField = sortFieldMap[state.browserFilters.sort] || 2;
-
-        const res = await fetch(
-          `https://api.curse.tools/v1/cf/mods/search?gameId=432&classId=${classId}&searchFilter=${encodeURIComponent(query)}${gameVerStr}&sortField=${sortField}&sortOrder=desc&pageSize=${pageSize}&index=${offset}`,
-        );
-        if (!res.ok) throw new Error(`CurseForge API error: ${res.status}`);
-        const data = await safeJson(res);
-        hits = (data.data || []).map((m) => ({
-          project_id: m.id.toString(),
-          title: m.name,
-          description: m.summary,
-          icon_url: m.logo ? m.logo.thumbnailUrl : "",
-          downloads: m.downloadCount,
-          follows: 0,
-          provider: "curseforge",
-        }));
-        state.browserTotalResults = data.pagination?.totalCount || 0;
-      }
+      // Search via IPC — the backend resolves Modrinth or CurseForge based
+      // on `state.currentProvider` and returns Modrinth-shaped hits.
+      const providerLabel =
+        state.currentProvider === "curseforge" ? "curseforge" : "modrinth";
+      const loaderFilter =
+        state.browserMode !== "modpack" &&
+        state.browserMode !== "resourcepack" &&
+        state.browserFilters.loader !== "all"
+          ? state.browserFilters.loader
+          : null;
+      const data = await window.electronAPI.searchMods(
+        query,
+        loaderFilter,
+        state.browserMode,
+        pageSize,
+      );
+      hits = (data.hits || []).map((m) => ({
+        project_id: m.project_id,
+        title: m.title,
+        description: m.description,
+        icon_url: m.icon_url,
+        downloads: m.downloads,
+        follows: m.follows,
+        provider: providerLabel,
+      }));
+      state.browserTotalResults = data.total_hits || 0;
       results.innerHTML = "";
       if (!hits.length) {
         results.innerHTML = `<div class="mp-loading">No results found for "${esc(query)}"</div>`;
@@ -2686,34 +2536,21 @@ export function initModpacksFeature({ switchView }) {
       const modName = typeof mod === "string" ? "Modpack" : mod.title;
       showDlPanel("Resolving modpack metadata...", 2, modName);
       try {
-
-        // Fetch modpack details to get icon
+        // Fetch modpack details (icon) via IPC
         let modpackIcon = "";
         try {
-          const modDetailsRes = await fetchWithTimeout(
-            `https://api.curse.tools/v1/cf/mods/${projectId}`,
-            {},
-            8000,
-            "CurseForge API unreachable (icon)...",
-          );
-          const modDetails = await safeJson(modDetailsRes);
-          if (modDetails.data?.logo?.thumbnailUrl) {
-            modpackIcon = modDetails.data.logo.thumbnailUrl;
+          const modDetails = await window.electronAPI.getModProject(String(projectId));
+          if (modDetails?.icon_url) {
+            modpackIcon = modDetails.icon_url;
           }
         } catch (e) {
           console.warn("Could not fetch modpack icon:", e);
         }
 
-        const filesRes = await fetchWithTimeout(
-          `https://api.curse.tools/v1/cf/mods/${projectId}/files`,
-          {},
-          10000,
-          "CurseForge API timed out...",
-        );
-        const filesData = await safeJson(filesRes);
-        let files = filesData.data || [];
-        files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
-        if (!files.length) {
+        const versionsArr = await window.electronAPI.getModVersions(String(projectId));
+        let versions = Array.isArray(versionsArr) ? versionsArr : [];
+        versions.sort((a, b) => new Date(b.date_published || 0) - new Date(a.date_published || 0));
+        if (!versions.length) {
           hideDlPanel();
           actions.showWarningToast("No downloadable files found.");
           if (btn) {
@@ -2722,14 +2559,10 @@ export function initModpacksFeature({ switchView }) {
           }
           return;
         }
-        const fileObj = files[0];
-        const dlFileName = fileObj.fileName || "modpack.zip";
-        let dlUrl = fileObj.downloadUrl;
-        if (!dlUrl) {
-          const p1 = Math.floor(fileObj.id / 1000);
-          const p2 = (fileObj.id % 1000).toString().padStart(3, "0");
-          dlUrl = `https://edge.forgecdn.net/files/${p1}/${p2}/${encodeURIComponent(dlFileName)}`;
-        }
+        const versionObj = versions[0];
+        const fileObj = versionObj?.files?.find((f) => f.primary) || versionObj?.files?.[0];
+        const dlFileName = fileObj?.filename || "modpack.zip";
+        const fileId = String(versionObj?.id || "");
         document.getElementById("mod-browser").classList.remove("active");
         showDlPanel(`Downloading ${dlFileName}...`, 5, modName);
         if (!window.electronAPI) {
@@ -2739,9 +2572,11 @@ export function initModpacksFeature({ switchView }) {
         }
         const onDlProg = (p) => updateDlPanel(p.status || "Downloading...", p.percent, p.speed, p.eta, dlFileName);
         if (window.electronAPI.onDownloadProgress) window.electronAPI.onDownloadProgress(onDlProg);
-        const importRes = await window.electronAPI.downloadCurseforgeModpack({
-          downloadUrl: dlUrl,
-        });
+        const importRes = await window.electronAPI.downloadCurseforgeModpack(
+          String(projectId),
+          fileId,
+          modName,
+        );
         if (!importRes.success)
           throw new Error(importRes.error || "Import failed");
         const manifest = importRes.manifest;
@@ -2773,9 +2608,8 @@ export function initModpacksFeature({ switchView }) {
           resourcepacks: [],
           shaders: [],
         };
-        const mpData = safeParse(localStorage.getItem("idk_modpacks"), []);
-        mpData.push(newMp);
-        localStorage.setItem("idk_modpacks", JSON.stringify(mpData));
+        // Register the new modpack in renderer state (disk state is
+        // managed by the main process via IPC).
         state.modpacks.push(newMp);
         state.activeModpackId = newMp.id;
         mpRenderList();
@@ -2791,34 +2625,41 @@ export function initModpacksFeature({ switchView }) {
         const downloadTask = async (f) => {
           let mf = null;
           try {
-            // Fetch file metadata + project category in parallel
-            const [fRes, projRes] = await Promise.all([
-              fetch(
-                `https://api.curse.tools/v1/cf/mods/${f.projectID}/files/${f.fileID}`,
-              ),
-              fetch(`https://api.curse.tools/v1/cf/mods/${f.projectID}`),
+            // Fetch version metadata + project category in parallel via IPC.
+            // The backend resolves CurseForge or Modrinth based on the
+            // project ID and returns Modrinth-shaped versions.
+            const [versionArr, projData] = await Promise.all([
+              window.electronAPI.getModVersions(String(f.projectID)),
+              window.electronAPI.getModProject(String(f.projectID)),
             ]);
-            const fData = await safeJson(fRes);
-            if (!fData.data) return;
-            mf = fData.data;
-            let mUrl = mf.downloadUrl;
-            if (!mUrl) {
-              const mp1 = Math.floor(mf.id / 1000),
-                mp2 = (mf.id % 1000).toString().padStart(3, "0");
-              mUrl = `https://edge.forgecdn.net/files/${mp1}/${mp2}/${encodeURIComponent(mf.fileName)}`;
-            }
+            const versions = Array.isArray(versionArr) ? versionArr : [];
+            if (!versions.length) return;
+            const versionObj =
+              versions.find((v) => String(v.id) === String(f.fileID)) ||
+              versions[0];
+            const fileEntry =
+              versionObj?.files?.find((file) => file.primary) ||
+              versionObj?.files?.[0];
+            if (!fileEntry?.url) return;
+            mf = {
+              fileName: fileEntry.filename,
+              displayName: versionObj.name || fileEntry.filename,
+              downloadUrl: fileEntry.url,
+            };
+            const mUrl = mf.downloadUrl;
             if (/^(fabric|forge|neoforge|quilt)-loader-.*\.jar$/i.test(mf.fileName || "")) {
               console.info("Skipping bundled loader artifact:", mf.fileName);
               return;
             }
-            // Determine type from classId: 6=Mod, 12=ResourcePack, 6552=Shader
-            let classId = 6;
-            let projectIcon = ""; // Fetch icon from project data
-            try {
-              const pj = await safeJson(projRes);
-              classId = pj.data?.classId ?? 6;
-              projectIcon = pj.data?.logo?.thumbnailUrl || ""; // Get icon from project
-            } catch (_) {}
+            // Derive classId from the project_type returned by the IPC.
+            const projectType = projData?.project_type;
+            const classId =
+              projectType === "resourcepack"
+                ? 12
+                : projectType === "shader"
+                  ? 6552
+                  : 6;
+            const projectIcon = projData?.icon_url || "";
 
             if (classId === 12) {
               // Resource Pack
@@ -2927,13 +2768,9 @@ export function initModpacksFeature({ switchView }) {
           }
         });
         // -----------------------------------------------------------------------
-        const mpData2 = JSON.parse(
-          localStorage.getItem("idk_modpacks") || "[]",
-        );
-        const idx = mpData2.findIndex((m) => m.id === newMp.id);
-        if (idx >= 0) mpData2[idx] = newMp;
-        else mpData2.push(newMp);
-        localStorage.setItem("idk_modpacks", JSON.stringify(mpData2));
+        const idx = state.modpacks.findIndex((m) => m.id === newMp.id);
+        if (idx >= 0) state.modpacks[idx] = newMp;
+        else state.modpacks.push(newMp);
         mpRenderDetail();
         if (currentImportCancelled) {
           actions.showWarningToast(`"${newMp.name}" import cancelled.`);
@@ -2978,16 +2815,10 @@ export function initModpacksFeature({ switchView }) {
       const modpackIcon = mod.icon_url || "";
       showDlPanel("Resolving modpack metadata...", 2, modName);
       try {
-
-        // Fetch Modrinth modpack versions
-        const versionsRes = await fetchWithTimeout(
-          `https://api.modrinth.com/v2/project/${projectId}/version`,
-          {},
-          10000,
-          "Modrinth API timed out...",
-        );
-        const versions = await safeJson(versionsRes);
-        if (!Array.isArray(versions) || !versions.length) {
+        // Fetch Modrinth modpack versions via IPC
+        const versions = await window.electronAPI.getModVersions(String(projectId));
+        const versionsArr = Array.isArray(versions) ? versions : [];
+        if (!versionsArr.length) {
           hideDlPanel();
           actions.showWarningToast("No versions found.");
           if (btn) {
@@ -2998,7 +2829,7 @@ export function initModpacksFeature({ switchView }) {
         }
 
         // Get latest version
-        const latestVersion = versions[0];
+        const latestVersion = versionsArr[0];
         const files = latestVersion.files || [];
         const primaryFile = files.find((f) => f.primary) || files[0];
         if (!primaryFile) {
@@ -3012,7 +2843,6 @@ export function initModpacksFeature({ switchView }) {
         }
         const dlFileName = primaryFile.filename || latestVersion.name || latestVersion.version_number || "modpack.mrpack";
 
-        const dlUrl = primaryFile.url;
         document.getElementById("mod-browser").classList.remove("active");
         showDlPanel(`Downloading ${dlFileName}...`, 5, modName);
         if (!window.electronAPI) {
@@ -3023,9 +2853,12 @@ export function initModpacksFeature({ switchView }) {
 
         const onDlProg = (p) => updateDlPanel(p.status || "Downloading...", p.percent, p.speed, p.eta, dlFileName);
         if (window.electronAPI.onDownloadProgress) window.electronAPI.onDownloadProgress(onDlProg);
-        const importRes = await window.electronAPI.downloadModrinthModpack({
-          downloadUrl: dlUrl,
-        });
+        const importRes = await window.electronAPI.downloadModrinthModpack(
+          String(projectId),
+          "", // mcVersion — backend picks latest
+          "", // loader — backend picks latest
+          modName,
+        );
         if (!importRes.success)
           throw new Error(importRes.error || "Import failed");
         const manifest = importRes.manifest;
@@ -3056,9 +2889,8 @@ export function initModpacksFeature({ switchView }) {
           resourcepacks: [],
           shaders: [],
         };
-        const mpData = safeParse(localStorage.getItem("idk_modpacks"), []);
-        mpData.push(newMp);
-        localStorage.setItem("idk_modpacks", JSON.stringify(mpData));
+        // Register the new modpack in renderer state (disk state is
+        // managed by the main process via IPC).
         state.modpacks.push(newMp);
         state.activeModpackId = newMp.id;
         mpRenderList();
@@ -3086,17 +2918,12 @@ export function initModpacksFeature({ switchView }) {
               return;
             }
 
-            // Try to fetch project icon from Modrinth API if we have a project ID
+            // Try to fetch project icon via IPC if we have a project ID
             let projectIcon = "";
             if (f.project_id) {
               try {
-                const projRes = await fetch(
-                  `https://api.modrinth.com/v2/project/${f.project_id}`,
-                );
-                if (projRes.ok) {
-                  const projData = await safeJson(projRes);
-                  projectIcon = projData.icon_url || "";
-                }
+                const projData = await window.electronAPI.getModProject(String(f.project_id));
+                projectIcon = projData?.icon_url || "";
               } catch (e) {
                 console.warn(
                   `Failed to fetch icon for project ${f.project_id}:`,
@@ -3180,13 +3007,9 @@ export function initModpacksFeature({ switchView }) {
           });
         await Promise.all(workers);
 
-        const mpData2 = JSON.parse(
-          localStorage.getItem("idk_modpacks") || "[]",
-        );
-        const idx = mpData2.findIndex((m) => m.id === newMp.id);
-        if (idx >= 0) mpData2[idx] = newMp;
-        else mpData2.push(newMp);
-        localStorage.setItem("idk_modpacks", JSON.stringify(mpData2));
+        const idx = state.modpacks.findIndex((m) => m.id === newMp.id);
+        if (idx >= 0) state.modpacks[idx] = newMp;
+        else state.modpacks.push(newMp);
         mpRenderDetail();
         if (currentImportCancelled) {
           actions.showWarningToast(`"${newMp.name}" import cancelled.`);
@@ -3269,28 +3092,25 @@ export function initModpacksFeature({ switchView }) {
             return;
           }
 
-          const filesRes = await fetch(
-            `https://api.curse.tools/v1/cf/mods/${projectId}/files`,
-          );
-          if (!filesRes.ok)
-            throw new Error(`CurseForge API error: ${filesRes.status}`);
-          const filesData = await safeJson(filesRes);
-
-          let files = filesData.data || [];
-          files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
+          const versionsArr = await window.electronAPI.getModVersions(String(projectId));
+          let versions = Array.isArray(versionsArr) ? versionsArr : [];
+          versions.sort((a, b) => new Date(b.date_published || 0) - new Date(a.date_published || 0));
 
           console.log(
-            `[CurseForge] Fetching ${modTitle} for MC ${mp.mcVersion} + ${mp.loader}`,
+            `[Modpacks] Fetching ${modTitle} for MC ${mp.mcVersion} + ${mp.loader}`,
           );
-          console.log(`[CurseForge] Found ${files.length} files`);
+          console.log(`[Modpacks] Found ${versions.length} versions`);
 
           // Use proximity scoring to pick the closest version by MC version.
           const loaderName = mp.loader.toLowerCase();
 
-          // Score each file: lower = closer version + has matching loader
-          const scoredFiles = files.map((f) => {
-            const hasLoader = f.fileName.toLowerCase().includes(loaderName);
-            const gvList = f.gameVersions || [];
+          // Score each version: lower = closer version + has matching loader
+          const scoredVersions = versions.map((v) => {
+            const fileEntry = v.files?.[0];
+            const hasLoader =
+              (v.loaders || []).includes(loaderName) ||
+              (fileEntry?.filename || "").toLowerCase().includes(loaderName);
+            const gvList = v.game_versions || [];
             const candidates = buildMcVersionCandidates(mp.mcVersion);
             let bestScore = 100;
             for (const gv of gvList) {
@@ -3300,40 +3120,40 @@ export function initModpacksFeature({ switchView }) {
             }
             // Loader bonus: halve the score if loader matches
             if (hasLoader && bestScore < 100) bestScore = bestScore / 2;
-            return { item: f, score: bestScore };
+            return { item: v, score: bestScore };
           });
 
-          scoredFiles.sort((a, b) => {
+          scoredVersions.sort((a, b) => {
             if (a.score !== b.score) return a.score - b.score;
-            const aDate = new Date(a.item.fileDate || 0).getTime();
-            const bDate = new Date(b.item.fileDate || 0).getTime();
+            const aDate = new Date(a.item.date_published || 0).getTime();
+            const bDate = new Date(b.item.date_published || 0).getTime();
             return bDate - aDate;
           });
 
-          let compatibleFile;
+          let compatibleVersion;
           if (isDependency || !forceVersionPick) {
-            compatibleFile = scoredFiles[0]?.item || files[0];
+            compatibleVersion = scoredVersions[0]?.item || versions[0];
           } else {
-            const items = scoredFiles.slice(0, 15).map(f => ({
-              id: f.item.id.toString(),
-              label: `${f.item.displayName} (${f.item.releaseType === 1 ? 'Release' : f.item.releaseType === 2 ? 'Beta' : 'Alpha'}) - ${new Date(f.item.fileDate).toISOString().split('T')[0]}`
+            const items = scoredVersions.slice(0, 15).map(v => ({
+              id: v.item.id,
+              label: `${v.item.name} - ${new Date(v.item.date_published || 0).toISOString().split('T')[0]}`
             }));
-            const selectedFileId = await showListDialog({
+            const selectedVersionId = await showListDialog({
                title: `Select Version - ${modTitle}`,
                message: `Available versions for Minecraft ${mp.mcVersion}`,
                items: items
             });
-            if (!selectedFileId) {
+            if (!selectedVersionId) {
               if (btn) {
                 btn.textContent = "+ Add";
                 btn.disabled = false;
               }
               return;
             }
-            compatibleFile = files.find(f => f.id.toString() === selectedFileId);
+            compatibleVersion = versions.find(v => v.id === selectedVersionId);
           }
 
-          if (!compatibleFile) {
+          if (!compatibleVersion) {
             if (btn) {
               actions.showWarningToast(
                 `${modTitle} has no downloadable version`,
@@ -3344,21 +3164,37 @@ export function initModpacksFeature({ switchView }) {
             return;
           }
 
-          console.log(`[CurseForge] Selected file: ${compatibleFile.fileName}`);
+          const compatibleFileEntry =
+            compatibleVersion.files?.find((f) => f.primary) ||
+            compatibleVersion.files?.[0];
+          if (!compatibleFileEntry) {
+            if (btn) {
+              actions.showWarningToast(
+                `${modTitle} has no downloadable file`,
+              );
+              btn.textContent = "+ Add";
+              btn.disabled = false;
+            }
+            return;
+          }
+          // Normalize to the legacy CurseForge field names so the entry
+          // construction below doesn't need to change.
+          const compatibleFile = {
+            fileName: compatibleFileEntry.filename,
+            displayName: compatibleVersion.name || compatibleFileEntry.filename,
+            downloadUrl: compatibleFileEntry.url,
+          };
 
-          // Fetch project icon from CurseForge API if not already available
+          console.log(`[Modpacks] Selected file: ${compatibleFile.fileName}`);
+
+          // Fetch project icon via IPC if not already available
           let projectIcon = modIcon;
           if (!projectIcon) {
             try {
-              const projRes = await fetch(
-                `https://api.curse.tools/v1/cf/mods/${projectId}`,
-              );
-              if (projRes.ok) {
-                const projData = await safeJson(projRes);
-                projectIcon = projData.data?.logo?.thumbnailUrl || "";
-              }
+              const projData = await window.electronAPI.getModProject(String(projectId));
+              projectIcon = projData?.icon_url || "";
             } catch (e) {
-              console.warn("[CurseForge] Failed to fetch project icon:", e);
+              console.warn("[Modpacks] Failed to fetch project icon:", e);
             }
           }
 
@@ -3436,42 +3272,36 @@ export function initModpacksFeature({ switchView }) {
             return;
           }
 
-          const filesRes = await fetch(
-            `https://api.curse.tools/v1/cf/mods/${projectId}/files`,
-          );
-          if (!filesRes.ok)
-            throw new Error(`CurseForge API error: ${filesRes.status}`);
-          const filesData = await safeJson(filesRes);
+          const rpVersionsArr = await window.electronAPI.getModVersions(String(projectId));
+          let rpVersions = Array.isArray(rpVersionsArr) ? rpVersionsArr : [];
+          rpVersions.sort((a, b) => new Date(b.date_published || 0) - new Date(a.date_published || 0));
 
-          let files = filesData.data || [];
-          files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
-
-          // Pick the file whose tagged game versions are closest to mp.mcVersion.
+          // Pick the version whose tagged game versions are closest to mp.mcVersion.
           // Scoring: exact match (0) → same major.minor (1) → ±1 (2) → ±2 (3) → fallback (50).
-          let compatibleFile;
+          let compatibleVersion;
           if (isDependency || !forceVersionPick) {
-            compatibleFile = pickClosestGameVersion(files, mp.mcVersion, 'gameVersions');
+            compatibleVersion = pickClosestGameVersion(rpVersions, mp.mcVersion, 'game_versions');
           } else {
-            const items = files.slice(0, 15).map(f => ({
-              id: f.id.toString(),
-              label: `${f.displayName} - ${new Date(f.fileDate).toISOString().split('T')[0]}`
+            const items = rpVersions.slice(0, 15).map(v => ({
+              id: v.id,
+              label: `${v.name} - ${new Date(v.date_published || 0).toISOString().split('T')[0]}`
             }));
-            const selectedFileId = await showListDialog({
+            const selectedVersionId = await showListDialog({
                title: `Select Version - ${modTitle}`,
                message: `Available versions`,
                items: items
             });
-            if (!selectedFileId) {
+            if (!selectedVersionId) {
               if (btn) {
                 btn.textContent = "+ Add";
                 btn.disabled = false;
               }
               return;
             }
-            compatibleFile = files.find(f => f.id.toString() === selectedFileId);
+            compatibleVersion = rpVersions.find(v => v.id === selectedVersionId);
           }
 
-          if (!compatibleFile) {
+          if (!compatibleVersion) {
             if (btn) {
               actions.showWarningToast(
                 `${modTitle} has no downloadable version`,
@@ -3481,6 +3311,23 @@ export function initModpacksFeature({ switchView }) {
             }
             return;
           }
+
+          const rpFileEntry = compatibleVersion.files?.find((f) => f.primary) || compatibleVersion.files?.[0];
+          if (!rpFileEntry) {
+            if (btn) {
+              actions.showWarningToast(
+                `${modTitle} has no downloadable file`,
+              );
+              btn.textContent = "+ Add";
+              btn.disabled = false;
+            }
+            return;
+          }
+          const compatibleFile = {
+            fileName: rpFileEntry.filename,
+            displayName: compatibleVersion.name || rpFileEntry.filename,
+            downloadUrl: rpFileEntry.url,
+          };
 
           entry = {
             modrinthId: projectId,
@@ -3508,39 +3355,33 @@ export function initModpacksFeature({ switchView }) {
             return;
           }
 
-          const filesRes = await fetch(
-            `https://api.curse.tools/v1/cf/mods/${projectId}/files`,
-          );
-          if (!filesRes.ok)
-            throw new Error(`CurseForge API error: ${filesRes.status}`);
-          const filesData = await safeJson(filesRes);
+          const shVersionsArr = await window.electronAPI.getModVersions(String(projectId));
+          let shVersions = Array.isArray(shVersionsArr) ? shVersionsArr : [];
+          shVersions.sort((a, b) => new Date(b.date_published || 0) - new Date(a.date_published || 0));
 
-          let files = filesData.data || [];
-          files.sort((a, b) => new Date(b.fileDate) - new Date(a.fileDate));
-
-          let compatibleFile;
+          let compatibleVersion;
           if (isDependency || !forceVersionPick) {
-            compatibleFile = files[0]; // Shaders might not have version filtering
+            compatibleVersion = shVersions[0]; // Shaders might not have version filtering
           } else {
-            const items = files.slice(0, 15).map(f => ({
-              id: f.id.toString(),
-              label: `${f.displayName} - ${new Date(f.fileDate).toISOString().split('T')[0]}`
+            const items = shVersions.slice(0, 15).map(v => ({
+              id: v.id,
+              label: `${v.name} - ${new Date(v.date_published || 0).toISOString().split('T')[0]}`
             }));
-            const selectedFileId = await showListDialog({
+            const selectedVersionId = await showListDialog({
                title: `Select Version - ${modTitle}`,
                message: `Available versions`,
                items: items
             });
-            if (!selectedFileId) {
+            if (!selectedVersionId) {
               if (btn) {
                 btn.textContent = "+ Add";
                 btn.disabled = false;
               }
               return;
             }
-            compatibleFile = files.find(f => f.id.toString() === selectedFileId);
+            compatibleVersion = shVersions.find(v => v.id === selectedVersionId);
           }
-          if (!compatibleFile) {
+          if (!compatibleVersion) {
             if (btn) {
               actions.showWarningToast(
                 `${modTitle} has no downloadable version`,
@@ -3550,6 +3391,23 @@ export function initModpacksFeature({ switchView }) {
             }
             return;
           }
+
+          const shFileEntry = compatibleVersion.files?.find((f) => f.primary) || compatibleVersion.files?.[0];
+          if (!shFileEntry) {
+            if (btn) {
+              actions.showWarningToast(
+                `${modTitle} has no downloadable file`,
+              );
+              btn.textContent = "+ Add";
+              btn.disabled = false;
+            }
+            return;
+          }
+          const compatibleFile = {
+            fileName: shFileEntry.filename,
+            displayName: compatibleVersion.name || shFileEntry.filename,
+            downloadUrl: shFileEntry.url,
+          };
 
           entry = {
             modrinthId: projectId,
@@ -3580,19 +3438,24 @@ export function initModpacksFeature({ switchView }) {
             return;
           }
 
-          // Query Modrinth with the exact version + a ±2 version range and a fallback (no game version).
-          // This way we always pick the closest available match instead of warning the user.
-          const candidates = buildMcVersionCandidates(mp.mcVersion);
-          const loaderArr = [mp.loader.toLowerCase()];
-          const q = (gvs) => `https://api.modrinth.com/v2/project/${projectId}/version?loaders=${encodeURIComponent(JSON.stringify(loaderArr))}&game_versions=${encodeURIComponent(JSON.stringify(gvs))}`;
+          // Query Modrinth via IPC with the exact mcVersion + loader, then
+          // fall back to all versions if no exact match exists.
           let versions = [];
-          for (const gvs of [candidates, []]) {
-            const r = await fetch(q(gvs));
-            if (!r.ok) continue;
-            const data = await safeJson(r);
-            if (data && data.length) {
-              versions = data;
-              break;
+          try {
+            const filtered = await window.electronAPI.getModVersions(
+              String(projectId),
+              mp.mcVersion,
+              mp.loader.toLowerCase(),
+            );
+            if (Array.isArray(filtered) && filtered.length) {
+              versions = filtered;
+            }
+          } catch (_) { /* ignore — will fall back below */ }
+
+          if (!versions.length) {
+            const allVersions = await window.electronAPI.getModVersions(String(projectId));
+            if (Array.isArray(allVersions)) {
+              versions = allVersions;
             }
           }
           if (!versions.length) {
@@ -3630,17 +3493,12 @@ export function initModpacksFeature({ switchView }) {
           fileObj =
             versionObj.files.find((f) => f.primary) || versionObj.files[0];
 
-          // Fetch project icon from Modrinth API if not already available
+          // Fetch project icon via IPC if not already available
           let projectIcon = modIcon;
           if (!projectIcon) {
             try {
-              const projRes = await fetch(
-                `https://api.modrinth.com/v2/project/${projectId}`,
-              );
-              if (projRes.ok) {
-                const projData = await safeJson(projRes);
-                projectIcon = projData.icon_url || "";
-              }
+              const projData = await window.electronAPI.getModProject(String(projectId));
+              projectIcon = projData?.icon_url || "";
             } catch (e) {
               console.warn("[Modrinth] Failed to fetch project icon:", e);
             }
@@ -3726,17 +3584,22 @@ export function initModpacksFeature({ switchView }) {
             }
           }
         } else if (state.browserMode === "resourcepack") {
-          // Resource packs have no loader — query with a ±2 version range, then fall back to all versions.
-          const candidates = buildMcVersionCandidates(mp.mcVersion);
-          const q = (gvs) => `https://api.modrinth.com/v2/project/${projectId}/version?game_versions=${encodeURIComponent(JSON.stringify(gvs))}`;
+          // Resource packs have no loader — query with mcVersion, then fall back to all versions.
           let versions = [];
-          for (const gvs of [candidates, []]) {
-            const r = await fetch(q(gvs));
-            if (!r.ok) continue;
-            const data = await safeJson(r);
-            if (data && data.length) {
-              versions = data;
-              break;
+          try {
+            const filtered = await window.electronAPI.getModVersions(
+              String(projectId),
+              mp.mcVersion,
+            );
+            if (Array.isArray(filtered) && filtered.length) {
+              versions = filtered;
+            }
+          } catch (_) { /* ignore — will fall back below */ }
+
+          if (!versions.length) {
+            const allVersions = await window.electronAPI.getModVersions(String(projectId));
+            if (Array.isArray(allVersions)) {
+              versions = allVersions;
             }
           }
           if (!versions.length) {
@@ -3791,14 +3654,8 @@ export function initModpacksFeature({ switchView }) {
               filename: fileObj.filename,
             });
         } else {
-          const res = await fetch(
-            `https://api.modrinth.com/v2/project/${projectId}/version`,
-          );
-          if (!res.ok)
-            throw new Error(
-              `Modrinth API error: ${res.status} ${res.statusText}`,
-            );
-          versions = await safeJson(res);
+          const versionsArr = await window.electronAPI.getModVersions(String(projectId));
+          let versions = Array.isArray(versionsArr) ? versionsArr : [];
           if (!versions.length) {
             actions.showWarningToast(
               `${modTitle} has no downloadable version.`,
@@ -3897,14 +3754,11 @@ export function initModpacksFeature({ switchView }) {
     setPanelActions({ cancel: true, retry: false, dismiss: false });
   }
 
-  // Remove a partially-imported modpack from state, localStorage, and disk
-  // so a retry doesn't create a duplicate entry/folder.
+  // Remove a partially-imported modpack from state and disk so a retry
+  // doesn't create a duplicate entry/folder.
   function cleanupPartialModpack(modpackId, modpackName) {
     if (!modpackId) return;
     try {
-      const mpData = safeParse(localStorage.getItem("idk_modpacks"), []);
-      const filtered = mpData.filter((m) => m.id !== modpackId);
-      localStorage.setItem("idk_modpacks", JSON.stringify(filtered));
       state.modpacks = (state.modpacks || []).filter((m) => m.id !== modpackId);
       if (state.activeModpackId === modpackId) state.activeModpackId = null;
       if (typeof mpRenderList === "function") mpRenderList();

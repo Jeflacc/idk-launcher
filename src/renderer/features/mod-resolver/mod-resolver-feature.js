@@ -42,35 +42,16 @@ export async function scanMissingDependencies(modpackId) {
  */
 async function getModDependencies(modrinthId) {
   try {
-    const res = await fetch(`https://api.modrinth.com/v2/project/${modrinthId}`);
-    if (!res.ok) return [];
-
-    const data = await res.json();
-    const dependencies = [];
-
-    // Get all versions to find dependencies
-    const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${modrinthId}/version`);
-    if (!versionsRes.ok) return [];
-
-    const versions = await versionsRes.json();
-    if (!versions || versions.length === 0) return [];
-
-    // Get latest version's dependencies
-    const latestVersion = versions[0];
-    if (latestVersion.dependencies) {
-      for (const dep of latestVersion.dependencies) {
-        if (dep.project_id) {
-          dependencies.push({
-            projectId: dep.project_id,
-            name: dep.project_id, // Will be replaced with actual name
-            type: dep.dependency_type || 'required',
-            version: dep.version_id || 'latest'
-          });
-        }
-      }
-    }
-
-    return dependencies;
+    const deps = await window.electronAPI.getModDependencies(modrinthId);
+    if (!Array.isArray(deps)) return [];
+    return deps
+      .filter((d) => d.project_id)
+      .map((d) => ({
+        projectId: d.project_id,
+        name: d.project_id,
+        type: d.dependency_type || 'required',
+        version: d.version_id || 'latest',
+      }));
   } catch (e) {
     console.error('[ModResolver] Failed to get dependencies:', e);
     return [];
@@ -92,23 +73,13 @@ export async function resolveDependencies(modpackId, modId) {
     for (const dep of deps) {
       if (dep.type === 'required' || dep.type === 'optional') {
         try {
-          // Get mod details
-          const modRes = await fetch(`https://api.modrinth.com/v2/project/${dep.projectId}`);
-          if (!modRes.ok) {
+          const modData = await window.electronAPI.getModProject(dep.projectId);
+          if (!modData) {
             failed.push({ name: dep.projectId, reason: 'Not found' });
             continue;
           }
 
-          const modData = await modRes.json();
-          
-          // Get download URL for latest version
-          const versionsRes = await fetch(`https://api.modrinth.com/v2/project/${dep.projectId}/version`);
-          if (!versionsRes.ok) {
-            failed.push({ name: modData.title, reason: 'No versions found' });
-            continue;
-          }
-
-          const versions = await versionsRes.json();
+          const versions = await window.electronAPI.getModVersions(dep.projectId);
           if (!versions || versions.length === 0) {
             failed.push({ name: modData.title, reason: 'No versions available' });
             continue;
