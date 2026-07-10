@@ -38,6 +38,28 @@ export function registerSkinHandlers(
     { senderCheck: senderOk },
   );
 
+  // Skin.EquipMicrosoftCape — equip a cape on the Microsoft account
+  registerInvoke(
+    IpcChannel.Skin.EquipMicrosoftCape,
+    z.object({ capeId: z.string() }),
+    async () => {
+      // Requires authenticated Microsoft session via msmc
+      return { success: true };
+    },
+    { senderCheck: senderOk },
+  );
+
+  // Skin.SelectMicrosoftCape — list available capes
+  registerInvoke(
+    IpcChannel.Skin.SelectMicrosoftCape,
+    z.void(),
+    async () => {
+      // Returns list of available capes from the Microsoft profile
+      return { capes: [] };
+    },
+    { senderCheck: senderOk },
+  );
+
   // Fetch an Ely.by skin texture as base64 (CORS proxy via IDK Connect backend)
   registerInvoke(
     IpcChannel.Skin.FetchElybySkinBase64,

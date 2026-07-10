@@ -66,4 +66,7 @@ export function registerDownloadHandlers(
   forwardEvent(queue, 'progress', IpcChannel.Download.Progress, (p) => [p], mainContents);
   forwardEvent(queue, 'complete', IpcChannel.Download.Complete, (id) => [id], mainContents);
   forwardEvent(queue, 'error', IpcChannel.Download.Error, (id, msg) => [id, msg], mainContents);
+  forwardEvent(queue, 'paused', IpcChannel.Download.Paused, (id) => [id], mainContents);
+  forwardEvent(queue, 'resumed', IpcChannel.Download.Resumed, (id) => [id], mainContents);
+  forwardEvent(queue, 'cancelled', IpcChannel.Download.Cancelled, (id) => [id], mainContents);
 }

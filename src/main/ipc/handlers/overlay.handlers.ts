@@ -1,4 +1,4 @@
-import { registerInvoke } from '../register';
+import { registerInvoke, registerSend } from '../register';
 import { IpcChannel } from '@shared/ipc-channels';
 import { z } from 'zod';
 import type { WindowManager } from '../../windows/window-manager';
@@ -21,6 +21,53 @@ export function registerOverlayHandlers(windows: WindowManager): void {
     { senderCheck: senderOk },
   );
 
+  // Overlay.Init — called by the overlay window on load
+  registerInvoke(
+    IpcChannel.Overlay.Init,
+    z.void(),
+    async () => ({ success: true }),
+    { senderCheck: senderOk },
+  );
+
+  // Overlay.ToggleUi — toggle overlay visibility
+  registerInvoke(
+    IpcChannel.Overlay.ToggleUi,
+    z.void(),
+    async () => {
+      const overlay = windows.get('overlay');
+      if (!overlay) return { success: false };
+      if (overlay.isVisible()) overlay.hide();
+      else overlay.show();
+      return { success: true };
+    },
+    { senderCheck: senderOk },
+  );
+
+  // Overlay.Toggle — alias for ToggleUi
+  registerInvoke(
+    IpcChannel.Overlay.Toggle,
+    z.void(),
+    async () => {
+      const overlay = windows.get('overlay');
+      if (!overlay) return { success: false };
+      if (overlay.isVisible()) overlay.hide();
+      else overlay.show();
+      return { success: true };
+    },
+    { senderCheck: senderOk },
+  );
+
+  // Overlay.SyncConnect — sync IDK Connect data to the overlay window
+  registerInvoke(
+    IpcChannel.Overlay.SyncConnect,
+    z.record(z.string(), z.unknown()).optional(),
+    async (_event, _data) => {
+      // The overlay reads its data via GetOverlayData on init
+      return { success: true };
+    },
+    { senderCheck: senderOk },
+  );
+
   registerSend(IpcChannel.Overlay.Close, z.void(), () => {
     const overlay = windows.get('overlay');
     if (overlay) overlay.close();
@@ -36,5 +83,3 @@ export function registerOverlayHandlers(windows: WindowManager): void {
     if (overlay) overlay.close();
   });
 }
-
-import { registerSend } from '../register';

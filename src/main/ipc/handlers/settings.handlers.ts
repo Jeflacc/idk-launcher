@@ -52,4 +52,31 @@ export function registerSettingsHandlers(
     { id: 'network', label: 'Network', description: 'Downloads and integrity', icon: 'globe' },
     { id: 'connect', label: 'IDK Connect', description: 'Multiplayer tunneling', icon: 'users' },
   ]), { senderCheck: senderOk });
+
+  // Settings.Export — serialize settings to a JSON string
+  registerInvoke(
+    IpcChannel.Settings.Export,
+    z.void(),
+    async () => {
+      const settings = await store.load();
+      return { success: true, data: JSON.stringify(settings, null, 2) };
+    },
+    { senderCheck: senderOk },
+  );
+
+  // Settings.Import — import settings from a JSON string
+  registerInvoke(
+    IpcChannel.Settings.Import,
+    z.object({ data: z.string() }),
+    async (_event, args) => {
+      try {
+        const parsed = JSON.parse(args.data);
+        await store.save(parsed);
+        return { success: true, settings: await store.load() };
+      } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : 'Invalid JSON' };
+      }
+    },
+    { senderCheck: senderOk },
+  );
 }

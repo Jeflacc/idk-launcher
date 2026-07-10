@@ -87,4 +87,24 @@ export function registerVersionHandlers(
     },
     { senderCheck: senderOk },
   );
+
+  // Scan a version's mods folder and return installed mod info
+  registerInvoke(
+    IpcChannel.Version.ScanVersionMods,
+    z.object({ versionId: z.string() }),
+    async (_event, args) => {
+      const { readdir } = await import('node:fs/promises');
+      const { join } = await import('node:path');
+      try {
+        const modsDir = join(paths.versions, args.versionId, 'mods');
+        const entries = await readdir(modsDir, { withFileTypes: true });
+        return entries
+          .filter((e) => e.isFile() && (e.name.endsWith('.jar') || e.name.endsWith('.disabled')))
+          .map((e) => ({ fileName: e.name, path: join(modsDir, e.name) }));
+      } catch {
+        return [];
+      }
+    },
+    { senderCheck: senderOk },
+  );
 }

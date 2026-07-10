@@ -79,6 +79,18 @@ export function registerSystemHandlers(
     // eslint-disable-next-line no-console
     console.log('[renderer]', msg);
   });
+
+  // Startup.ShowNotification — show a system notification from the main process
+  registerSend(
+    IpcChannel.Startup.ShowNotification,
+    z.object({ title: z.string(), body: z.string().optional() }),
+    (_event, args) => {
+      const win = windows.get('main');
+      if (win && !win.isDestroyed()) {
+        win.webContents.send(IpcChannel.Startup.ShowNotification, args);
+      }
+    },
+  );
 }
 
 export function forwardWindowState(windows: WindowManager): void {

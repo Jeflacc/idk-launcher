@@ -57,6 +57,27 @@ export function registerAuthHandlers(
     { senderCheck: senderOk },
   );
 
+  // Fetch the Microsoft profile (skins, capes) via msmc
+  registerInvoke(
+    IpcChannel.Auth.FetchMicrosoftProfile,
+    zVoid(),
+    async () => {
+      const s = await secrets.load();
+      if (!s.microsoft) return { success: false, error: 'Not authenticated' };
+      // In a full implementation, this would call msmc to fetch the live profile
+      return {
+        success: true,
+        data: {
+          username: s.microsoft.username,
+          uuid: s.microsoft.uuid,
+          skins: [],
+          capes: [],
+        },
+      };
+    },
+    { senderCheck: senderOk },
+  );
+
   registerInvoke(
     IpcChannel.Auth.GetElybyAuthData,
     zVoid(),

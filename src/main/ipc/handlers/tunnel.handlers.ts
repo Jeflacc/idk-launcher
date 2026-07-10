@@ -30,4 +30,5 @@ export function registerTunnelHandlers(
   }, { senderCheck: senderOk });
 
   forwardEvent(tunnel, 'closed', IpcChannel.Tunnel.Closed, () => [], mainContents);
+  forwardEvent(tunnel, 'install-progress', IpcChannel.Tunnel.InstallProgress, (p: unknown) => [p], mainContents);
 }

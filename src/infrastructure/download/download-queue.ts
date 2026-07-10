@@ -79,6 +79,7 @@ export class DownloadQueue extends EventEmitter {
     for (const controller of job.controllers.values()) controller.abort();
     job.controllers.clear();
     this.emitProgress(job);
+    this.emit('paused', downloadId);
   }
 
   resume(downloadId: string): void {
@@ -87,6 +88,7 @@ export class DownloadQueue extends EventEmitter {
     job.paused = false;
     job.status = 'downloading';
     this.emitProgress(job);
+    this.emit('resumed', downloadId);
     this.run(job).catch((err) => this.fail(job, err instanceof Error ? err.message : String(err)));
   }
 
@@ -98,6 +100,7 @@ export class DownloadQueue extends EventEmitter {
     job.cancelled = true;
     job.status = 'cancelled';
     this.emitProgress(job);
+    this.emit('cancelled', downloadId);
   }
 
   cancelAll(): void {

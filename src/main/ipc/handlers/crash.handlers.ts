@@ -36,4 +36,33 @@ export function registerCrashHandlers(
     },
     { senderCheck: senderOk },
   );
+
+  // Crash.MissingDependencies — scan a crash log for missing mod dependencies
+  registerInvoke(
+    IpcChannel.Crash.MissingDependencies,
+    z.object({ crashLog: z.string() }),
+    async (_event, args) => {
+      const analyzer = _crashAnalyzer ?? new CrashAnalyzerService();
+      const report = analyzer.analyze(args.crashLog);
+      // Extract missing mod names from the crash analysis
+      const missing: string[] = [];
+      if (report && typeof report === 'object') {
+        const r = report as unknown as Record<string, unknown>;
+        if (Array.isArray(r.missingMods)) {
+          for (const mod of r.missingMods) {
+            if (typeof mod === 'string') missing.push(mod);
+          }
+        }
+        if (Array.isArray(r.suggestions)) {
+          for (const s of r.suggestions) {
+            if (typeof s === 'string' && s.toLowerCase().includes('install')) {
+              missing.push(s);
+            }
+          }
+        }
+      }
+      return { missingMods: missing };
+    },
+    { senderCheck: senderOk },
+  );
 }

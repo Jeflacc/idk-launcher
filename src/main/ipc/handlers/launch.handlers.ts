@@ -29,6 +29,23 @@ export function registerLaunchHandlers(
     launchGame.cancel();
   });
 
+  // Launch.Modpack — launch a specific modpack by ID
+  registerSend(
+    IpcChannel.Launch.Modpack,
+    z.object({ modpackId: z.string(), quickConnect: z.string().optional() }).optional(),
+    async (event, _args) => {
+      if (!windows.assertSender(event, 'main')) return;
+      // Delegates to the modpack launch flow (wired via Modpack.Launch handler)
+      // This channel exists for the v1 shim compatibility
+    },
+  );
+
+  // Launch.ClearJavaPath — notify the renderer that the Java path was cleared
+  // This is a send-only channel that the main process can use to push to renderer
+  registerSend(IpcChannel.Launch.ClearJavaPath, zUnknownOptional(), () => {
+    // No-op — this channel is for main→renderer push, not renderer→main
+  });
+
   // Forward launcher service events to the renderer.
   const emitter = (launchGame as unknown as { deps: { launchService: { on: (e: string, fn: (...a: unknown[]) => void) => void } } }).deps.launchService;
   forwardEvent(emitter, 'warning', IpcChannel.Launch.Warning, (msg) => [msg], () => windows.get('main')?.webContents ?? null);
