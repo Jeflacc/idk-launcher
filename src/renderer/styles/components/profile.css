@@ -801,3 +801,113 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     }
 }
 
+
+
+/* =========================================================
+   VLM AUDIT FIXES — Round 1 (Profile page)
+   ========================================================= */
+
+/* Fix: Add hover states to stat cards (Issue #7) */
+.profile-stat-mini {
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+}
+.profile-stat-mini:hover {
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border-color: rgba(var(--theme-accent-rgb), 0.3);
+}
+
+/* Fix: Add hover states to quick action buttons (Issue #7) */
+.profile-quick-action {
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+}
+.profile-quick-action:hover {
+    background: rgba(var(--theme-accent-rgb), 0.08);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    transform: translateY(-1px);
+}
+.profile-quick-action:active {
+    transform: scale(0.98);
+}
+.profile-quick-action:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Fix: Add hover states to pose selector buttons (Issue #9) */
+.pose-btn {
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+.pose-btn:hover {
+    background: rgba(var(--theme-accent-rgb), 0.08);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+}
+.pose-btn.active {
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    border-color: var(--theme-accent);
+    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.2);
+}
+.pose-btn:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Fix: Add focus-visible to profile action buttons */
+.profile-action-primary,
+.profile-action-danger,
+#profile-btn-logout {
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+}
+.profile-action-primary:hover,
+.profile-action-danger:hover,
+#profile-btn-logout:hover {
+    transform: translateY(-1px);
+}
+.profile-action-primary:focus-visible,
+.profile-action-danger:focus-visible,
+#profile-btn-logout:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Fix: Improve stat label contrast (Issue #10) */
+.profile-stat-mini-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Fix: Improve stat value contrast (Issue #16) */
+.profile-stat-mini-value {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 700;
+}
+
+/* Fix: Consistent section dividers (Issue #1) */
+.profile-section-header {
+    border-left: 3px solid rgba(var(--theme-accent-rgb), 0.4);
+    padding-left: 10px;
+}
+
+/* Fix: Skin loading state — add animated spinner */
+.profile-skin-loading {
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: center;
+    padding: 40px;
+    animation: profile-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes profile-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Fix: Friends empty state styling (Issue #12) */
+.profile-friends-empty {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+    opacity: 0.7;
+}

@@ -1419,3 +1419,85 @@ input[type="checkbox"]:checked + .switch::after {
     background: rgba(var(--theme-accent-rgb), 0.1);
 }
 
+
+
+/* =========================================================
+   VLM AUDIT FIXES — Round 1 (Main/Home view)
+   ========================================================= */
+
+/* Fix: Add hover states to custom select triggers (Issue #3) */
+.custom-select-trigger {
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+.custom-select:hover .custom-select-trigger,
+.custom-select-trigger:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* Fix: Add hover state to refresh button (Issue #12) */
+.refresh-versions-btn {
+    transition: color 0.18s ease, transform 0.3s ease, background 0.18s ease;
+    border-radius: 6px;
+    padding: 6px;
+}
+.refresh-versions-btn:hover {
+    color: var(--theme-accent-hover);
+    transform: rotate(180deg);
+    background: rgba(var(--theme-accent-rgb), 0.08);
+}
+
+/* Fix: Improve "READY TO PLAY" text contrast (Issue #4) */
+.play-button[data-status]::after {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 4px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Fix: Improve "PLAYING AS" text contrast (Issue #13) */
+.advanced-home-username {
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Fix: What's New section — add loading placeholder (Issue #5) */
+.details-section .section-header {
+    margin-bottom: 16px;
+}
+.news-empty-state {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 40px 20px;
+    opacity: 0.6;
+}
+
+/* Fix: Add aria-label visible focus on nav tabs (Issue #18) */
+.nav-tab:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: -2px;
+    border-radius: 4px;
+}
+
+/* Fix: Server card — add border to Join button (Issue #8) */
+.featured-join-btn {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.featured-join-btn:hover {
+    box-shadow: 0 4px 16px rgba(var(--theme-accent-glow-rgb), 0.3);
+}
+
+/* Fix: Server URL text contrast (Issue #9) */
+.featured-server-desc {
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Fix: Pagination dots spacing (Issue #10) */
+.bg-dots {
+    padding-right: 16px;
+}

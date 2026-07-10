@@ -106,7 +106,7 @@ export function renderAppShell() {
   <div id="view-login" class="view active">
     <div class="login-box">
       <h2>Welcome Back</h2>
-      <p style="color: var(--text-muted); margin-bottom: 10px;">Select your login method to enter the launcher.</p>
+      <p class="login-subtitle">Choose your login method.</p>
 
       <div class="login-btn microsoft" id="btn-microsoft-login">
         <img src="./microsoft.png" alt="Microsoft Logo" width="24" height="24" style="object-fit: contain;" />
@@ -118,8 +118,9 @@ export function renderAppShell() {
         Ely.by Account
       </div>
 
-      <div id="btn-offline-login" style="text-align: center; margin-top: 15px; cursor: pointer; color: #8c9096; font-size: 12px; text-decoration: underline; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#8c9096'">
-        Play Minecraft with Username (Offline)
+      <div class="login-btn offline-toggle" id="btn-offline-login">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        Play with Username (Offline)
       </div>
 
       <div class="offline-form" id="offline-form">
@@ -1388,7 +1389,7 @@ export function renderAppShell() {
             </div>
 
             <div class="mp-quick-actions">
-              <button class="mp-action-card" id="btn-new-modpack-wizard">
+              <button class="mp-action-card" id="btn-new-modpack-wizard" aria-label="Create a custom modpack from scratch">
                 <div class="mp-ac-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
                 </div>
@@ -1397,7 +1398,7 @@ export function renderAppShell() {
                   <p>Build your own modpack from scratch</p>
                 </div>
               </button>
-              <button class="mp-action-card" id="btn-browse-modpacks-wizard">
+              <button class="mp-action-card" id="btn-browse-modpacks-wizard" aria-label="Browse and download modpacks from CurseForge or Modrinth">
                 <div class="mp-ac-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </div>
@@ -1406,7 +1407,7 @@ export function renderAppShell() {
                   <p>Download from CurseForge or Modrinth</p>
                 </div>
               </button>
-              <button class="mp-action-card" id="btn-import-modpack-wizard">
+              <button class="mp-action-card" id="btn-import-modpack-wizard" aria-label="Import a modpack from a zip file">
                 <div class="mp-ac-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 </div>

@@ -399,3 +399,144 @@
     border-radius: 12px;
 }
 
+
+
+/* =========================================================
+   VLM AUDIT FIXES — Round 1 (IDK Connect page)
+   ========================================================= */
+
+/* Fix: Add hover states to login/register tab buttons (Issue #5, #6) */
+.friends-auth-tab {
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    cursor: pointer;
+}
+.friends-auth-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.9);
+}
+.friends-auth-tab.active {
+    background: rgba(var(--theme-accent-rgb), 0.1);
+    color: var(--theme-accent-text);
+    border-bottom: 2px solid var(--theme-accent);
+}
+.friends-auth-tab:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: -2px;
+}
+
+/* Fix: Add hover states to connect/login buttons (Issue #5) */
+.friends-auth-submit,
+.btn-connect-action {
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease, box-shadow 0.18s ease;
+}
+.friends-auth-submit:hover,
+.btn-connect-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--theme-accent-glow-rgb), 0.25);
+}
+.friends-auth-submit:active,
+.btn-connect-action:active {
+    transform: scale(0.98);
+}
+.friends-auth-submit:focus-visible,
+.btn-connect-action:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Fix: Improve form field contrast and visibility (Issue #4) */
+.friends-auth-form input,
+#friends-auth-username,
+#friends-auth-email,
+#friends-auth-password,
+#friends-auth-otp {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.95);
+    transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+.friends-auth-form input:focus,
+#friends-auth-username:focus,
+#friends-auth-email:focus,
+#friends-auth-password:focus,
+#friends-auth-otp:focus {
+    border-color: var(--theme-accent);
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), 0.12);
+    outline: none;
+}
+
+/* Fix: Improve descriptive text contrast (Issue #11) */
+.connect-dashboard-wrapper p,
+.connect-empty-state,
+.friends-auth-welcome p {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+/* Fix: Add focus-visible to all interactive elements (Issue #13) */
+.connect-dashboard-wrapper button:focus-visible,
+.connect-dashboard-wrapper a:focus-visible,
+.connect-dashboard-wrapper input:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Fix: Add hover states to nav items in IDK Connect */
+.connect-sidebar .nav-item,
+.connect-dashboard-layout .nav-item {
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    cursor: pointer;
+}
+.connect-sidebar .nav-item:hover,
+.connect-dashboard-layout .nav-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+.connect-sidebar .nav-item.active,
+.connect-dashboard-layout .nav-item.active {
+    background: rgba(var(--theme-accent-rgb), 0.08);
+    border-left: 3px solid var(--theme-accent);
+}
+
+/* Fix: Add hover states to friend cards */
+.connect-friends-list .friend-card {
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+.connect-friends-list .friend-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(var(--theme-accent-rgb), 0.3);
+}
+
+/* Fix: Add loading state animation to connect button */
+.friends-auth-submit.loading {
+    opacity: 0.7;
+    pointer-events: none;
+    position: relative;
+}
+.friends-auth-submit.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: idk-spin 0.6s linear infinite;
+}
+
+@keyframes idk-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Fix: Error message styling */
+.friends-auth-error {
+    color: #f87171;
+    font-size: 13px;
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    margin-top: 8px;
+}

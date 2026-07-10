@@ -963,3 +963,163 @@ body.compact-mode .ui-mode-card span {
     display: none;
 }
 
+
+
+/* =========================================================
+   VLM AUDIT FIXES — Round 1 (Settings page)
+   ========================================================= */
+
+/* Fix: Add hover states to theme preset cards (Issue #6) */
+.theme-choice-card {
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease, box-shadow 0.18s ease;
+    cursor: pointer;
+}
+.theme-choice-card:hover {
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.theme-choice-card:active {
+    transform: scale(0.98);
+}
+.theme-choice-card:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+.theme-choice-card.active {
+    border-color: var(--theme-accent);
+    box-shadow: 0 0 0 1px var(--theme-accent), 0 4px 12px rgba(var(--theme-accent-glow-rgb), 0.15);
+}
+
+/* Fix: Add hover states to UI mode cards (Issue #6) */
+.ui-mode-card {
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+    cursor: pointer;
+}
+.ui-mode-card:hover {
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    transform: translateY(-1px);
+}
+.ui-mode-card:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Fix: Add hover states to blur choice cards (Issue #6) */
+.blur-choice-card {
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+    cursor: pointer;
+}
+.blur-choice-card:hover {
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+}
+.blur-choice-card:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Fix: Add hover states to background effect cards (Issue #6) */
+.bg-effect-card {
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+    cursor: pointer;
+}
+.bg-effect-card:hover {
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    transform: translateY(-1px);
+}
+.bg-effect-card:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Fix: Improve slider thumb size and visibility (Issue #5, #8) */
+.glass-slider::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--theme-accent);
+    border: 2px solid var(--theme-accent-bright);
+    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.3);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+.glass-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+.glass-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--theme-accent);
+    border: 2px solid var(--theme-accent-bright);
+    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.3);
+    cursor: pointer;
+}
+
+/* Fix: Improve slider track contrast (Issue #5) */
+.glass-slider {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    outline: none;
+}
+.glass-slider:focus-visible {
+    box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), 0.2);
+}
+
+/* Fix: Add focus-visible to settings tab buttons (Issue #16) */
+.settings-tab,
+.advanced-tab {
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.settings-tab:focus-visible,
+.advanced-tab:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: -2px;
+}
+
+/* Fix: Add focus-visible to toggle switches (Issue #16) */
+.tg-switch input:focus-visible + .tg-slider,
+.toggle-switch input:focus-visible + .switch {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Fix: Improve settings description text contrast (Issue #14) */
+.settings-row-label small,
+.settings-description {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* Fix: Improve settings section title contrast (Issue #14) */
+.settings-section-title,
+.settings-section h3 {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Fix: Add hover states to settings buttons (Issue #6) */
+.settings-btn-primary,
+.settings-btn-secondary,
+.glass-btn {
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+}
+.settings-btn-primary:hover,
+.settings-btn-secondary:hover,
+.glass-btn:hover {
+    transform: translateY(-1px);
+}
+.settings-btn-primary:focus-visible,
+.settings-btn-secondary:focus-visible,
+.glass-btn:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Fix: Improve custom theme card icon visibility (Issue #3) */
+.theme-choice-card .custom-swatch {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}

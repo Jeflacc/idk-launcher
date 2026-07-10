@@ -19,58 +19,116 @@
 }
 
 .login-box {
-    background: #1b1b1c;
+    background: linear-gradient(145deg, #1e1e20 0%, #181819 100%);
     border: 1px solid #3c3c3d;
-    border-radius: 4px; /* Classic sharp corners */
+    border-radius: 8px;
     padding: 40px;
-    width: 420px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    width: 440px;
+    max-width: 90vw;
+    box-shadow:
+        0 16px 48px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
 .login-box h2 {
     font-family: var(--font-title);
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
-    color: white;
+    color: #ffffff;
     text-align: center;
     font-variant: small-caps;
     text-transform: lowercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
 }
 
+.login-subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 8px;
+    margin-top: -4px;
+}
+
+/* =========================================================
+   LOGIN BUTTONS
+   ========================================================= */
 .login-btn {
     background: #313132;
     border: 1px solid #4a4a4b;
     color: white;
-    padding: 12px;
-    border-radius: 4px;
+    padding: 14px 16px;
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.1s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
+    user-select: none;
 }
 
 .login-btn:hover {
     background: #3e3e3f;
-    border-color: #5c5c5d;
+    border-color: #6a6a6b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+.login-btn:active {
+    transform: scale(0.98);
+    background: #2a2a2b;
+}
+
+.login-btn:focus-visible {
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
+}
+
+/* Microsoft login — blue accent */
 .login-btn.microsoft {
     background: #2a2a2b;
     border-color: rgba(0, 164, 239, 0.3);
-    font-size: 16px;
+    font-size: 15px;
     padding: 16px 20px;
 }
 .login-btn.microsoft:hover {
     background: #333335;
     border-color: #00a4ef;
-    box-shadow: 0 0 16px rgba(0, 164, 239, 0.2);
+    box-shadow: 0 0 20px rgba(0, 164, 239, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Ely.by login — cyan accent */
+.login-btn.elyby {
+    background: #2a2a2b;
+    border-color: rgba(0, 166, 224, 0.3);
+    font-size: 15px;
+    padding: 16px 20px;
+}
+.login-btn.elyby:hover {
+    background: #333335;
+    border-color: #00a6e0;
+    box-shadow: 0 0 20px rgba(0, 166, 224, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Offline toggle — subtle dark button with moon icon */
+.login-btn.offline-toggle {
+    background: transparent;
+    border: 1px dashed #4a4a4b;
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 10px 16px;
+}
+.login-btn.offline-toggle:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: #6a6a6b;
+    border-style: solid;
+    color: var(--text-secondary);
 }
 
 .secondary-login-row {
@@ -96,6 +154,9 @@
     box-shadow: 0 0 12px rgba(var(--theme-accent-rgb), 0.15);
 }
 
+/* =========================================================
+   OFFLINE / ELY.BY FORM PANELS (expandable)
+   ========================================================= */
 .offline-form {
     overflow: hidden;
     max-height: 0;
@@ -107,31 +168,44 @@
 }
 
 .offline-form.open {
-    max-height: 160px;
+    max-height: 200px;
     opacity: 1;
-    margin-top: 10px;
+    margin-top: 4px;
 }
 
+/* =========================================================
+   FORM INPUTS
+   ========================================================= */
 .clean-input {
     background: #111112;
     border: 1px solid #3c3c3d;
     color: white;
     padding: 12px 14px;
-    border-radius: 4px;
+    border-radius: 6px;
     font-family: var(--font-main);
     font-size: 14px;
     outline: none;
     width: 100%;
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.clean-input::placeholder {
+    color: #707070;
 }
 
 .clean-input:focus {
-    border-color: var(--accent-green-hover);
-    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.15);
+    border-color: var(--theme-accent-hover);
+    background: #141415;
+    box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), 0.12);
 }
 
+.clean-input:focus-visible {
+    outline: none; /* Use box-shadow ring instead */
+}
+
+/* =========================================================
+   SUBMIT BUTTON (Mojang 3D style)
+   ========================================================= */
 .submit-btn {
     background-color: var(--theme-accent);
     color: white;
@@ -142,15 +216,16 @@
         inset 0 -3px 0 var(--theme-accent-shadow),
         inset -3px 0 0 var(--theme-accent-shadow);
     padding: 12px;
-    border-radius: 4px;
+    border-radius: 6px;
     font-family: var(--font-title);
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
     text-shadow: 1px 1px 0px var(--theme-accent-shadow);
-    transition: none;
+    transition: transform 0.1s ease;
     font-variant: small-caps;
     text-transform: lowercase;
+    letter-spacing: 0.5px;
 }
 
 .submit-btn:hover {
@@ -172,3 +247,7 @@
     text-shadow: 1px 1px 0px var(--theme-accent-shadow);
 }
 
+.submit-btn:focus-visible {
+    outline: 2px solid var(--theme-accent-bright);
+    outline-offset: 2px;
+}
