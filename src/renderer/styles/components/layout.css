@@ -1,0 +1,590 @@
+/* ============================================================================
+   components/layout.css — Background layers, top bar, nav, view roots
+   ----------------------------------------------------------------------------
+   Contains:
+     - Glassmorphism override rules (!important background tints)
+     - Background layers (video, overlay, effects canvas)
+     - Top title bar, brand, nav tabs, window controls, user profile
+     - View root configuration (.view, .view.active)
+     - Two-layer glass system overrides (background effect transparency)
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   1. GLASSMORPHISM OVERRIDES
+   These !important rules force translucent glass backgrounds on core
+   containers. They must load early so component rules below can override
+   other properties (border, padding, etc.) without fighting the background.
+   --------------------------------------------------------------------------- */
+.view {
+    background: var(--color-bg-glass) !important;
+}
+
+.mods-content-wrapper,
+.settings-content-wrapper,
+.profile-page-content,
+.modpacks-sidebar,
+.browser-sidebar {
+    background: var(--color-bg-glass-panel) !important;
+}
+
+.installed-mod-card,
+.mod-result-card,
+.trending-mp-card {
+    background: var(--color-bg-glass-card) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   2. BACKGROUND LAYERS
+   --------------------------------------------------------------------------- */
+.background-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-background);
+    opacity: 0.15; /* Subtle background movie */
+    transition: opacity var(--transition-slower) ease-out;
+    pointer-events: none;
+}
+
+.bg-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        circle at center,
+        transparent 30%,
+        var(--color-bg-app) 100%
+    );
+    z-index: var(--z-content);
+    pointer-events: none;
+}
+
+/* =========================================================
+   TOP TITLE BAR & TABS (MOJANG NAV BAR)
+   ========================================================= */
+.top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--top-bar-height);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 18px;
+    z-index: 999999;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(18, 19, 22, 0.98) 0%,
+            rgba(8, 9, 12, 0.98) 100%
+        ),
+        radial-gradient(
+            circle at top,
+            rgba(255, 255, 255, 0.05),
+            transparent 55%
+        );
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    -webkit-app-region: drag;
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04) inset,
+        0 8px 20px rgba(0, 0, 0, 0.3);
+    min-width: 0;
+}
+
+.top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 100%;
+    min-width: 0;
+    flex: 1;
+}
+
+.top-brand {
+    font-family: var(--font-title);
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    line-height: 1;
+    color: #f4f6f9;
+    -webkit-app-region: no-drag;
+    font-variant: small-caps;
+    text-transform: lowercase;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.brand-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #8d9298;
+    letter-spacing: 1.4px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    padding-right: 14px;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 2px;
+    height: 100%;
+    align-items: stretch;
+    min-width: 0;
+    flex-shrink: 1;
+    -webkit-app-region: no-drag !important;
+}
+
+.nav-tab {
+    color: #90959b;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition:
+        color 0.2s ease,
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+    height: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-family: var(--font-title);
+    font-variant: small-caps;
+    text-transform: lowercase;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    letter-spacing: 0.5px;
+}
+
+.top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 100%;
+    min-width: 0;
+    flex: 1;
+}
+
+.top-brand {
+    font-family: var(--font-title);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    line-height: 1;
+    color: #f4f6f9;
+    -webkit-app-region: no-drag;
+    font-variant: small-caps;
+    text-transform: lowercase;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.top-brand .brand-mark {
+    color: #f4f6f9;
+}
+
+.top-brand .brand-mark::first-letter {
+    color: inherit;
+}
+
+.top-brand .brand-word {
+    margin-left: 6px;
+    color: var(--accent-green-hover);
+    font-size: 0.82em;
+    letter-spacing: 0.8px;
+}
+
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 100%;
+    min-width: 0;
+    flex: 1;
+    -webkit-app-region: no-drag;
+}
+
+.brand-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #8d9298;
+    letter-spacing: 1.6px;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    padding-right: 16px;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.nav-tabs {
+    display: flex;
+    gap: 4px;
+    height: 100%;
+    align-items: stretch;
+    min-width: 0;
+    flex-shrink: 1;
+}
+
+.nav-tab {
+    color: #90959b;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 13px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition:
+        color 0.2s ease,
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 999999;
+    pointer-events: all;
+    -webkit-app-region: no-drag !important;
+    gap: 7px;
+    font-family: var(--font-title);
+    font-variant: small-caps;
+    text-transform: lowercase;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    letter-spacing: 0.6px;
+}
+
+.nav-tab svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2;
+    flex-shrink: 0;
+    display: block;
+}
+
+.nav-tab:hover {
+    color: #f2f4f8;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Dynamic active state mapped to views using CSS :has */
+body:has(#view-main.active) .nav-tab[data-target="main"],
+body:has(#view-mods.active) .nav-tab[data-target="mods"],
+body:has(#view-settings.active) .nav-tab[data-target="settings"],
+body:has(#view-idk-connect.active) .nav-tab[data-target="idk-connect"] {
+    color: #ffffff;
+    border-bottom-color: var(--theme-accent-bright);
+}
+
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 100%;
+    min-width: 0;
+    flex-shrink: 0;
+    -webkit-app-region: no-drag;
+}
+
+/* User Profile (Mojang style, dropdown-like glass card) */
+/* User Profile (Premium Overlapping 3D Pill Card) */
+.user-profile {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    cursor: pointer;
+    height: 36px;
+    min-height: 36px;
+    width: max-content;
+    max-width: min(330px, calc(100vw - 520px));
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(
+        180deg,
+        rgba(35, 38, 43, 0.9) 0%,
+        rgba(18, 20, 24, 0.9) 100%
+    );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.user-profile:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: linear-gradient(
+        180deg,
+        rgba(40, 43, 48, 0.9) 0%,
+        rgba(22, 24, 28, 0.9) 100%
+    );
+}
+
+.user-profile-avatar {
+    position: static;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    pointer-events: none;
+    margin-right: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.user-profile-avatar canvas {
+    width: 26px;
+    height: 26px;
+    display: block;
+    transform: none;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.user-details-label {
+    font-size: 8px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.62);
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    line-height: 1;
+    white-space: nowrap;
+    font-family: var(--font-main);
+}
+
+.user-details h4,
+#display-username {
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: 0.4px;
+    font-family: var(--font-title);
+    font-variant: small-caps;
+    text-transform: lowercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.user-details p {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Wide windows: show full username (MC names are Γëñ16 chars) */
+@media (min-width: 1280px) {
+    .user-profile {
+        max-width: none;
+    }
+
+    .user-details h4,
+    #display-username {
+        overflow: visible;
+        text-overflow: clip;
+    }
+}
+
+/* User Profile Dropdown Menu styling */
+.user-profile-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 200px;
+    background: rgba(18, 18, 19, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-dropdown.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+.profile-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    font-size: 12px;
+    color: #d1d1d2;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    font-family: var(--font-main);
+}
+
+.profile-dropdown-item svg {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.profile-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: white;
+}
+
+.profile-dropdown-item:hover svg {
+    color: var(--theme-accent);
+}
+
+.profile-dropdown-item.logout:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.profile-dropdown-item.logout:hover svg {
+    color: #ef4444;
+}
+
+.window-controls {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    -webkit-app-region: no-drag;
+}
+
+.window-controls .ctrl {
+    width: 44px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 11px;
+    transition: all 0.2s;
+}
+
+.window-controls .ctrl:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+.window-controls .close:hover {
+    background-color: #ef4444;
+}
+
+/* Hide navigation/profile in login screen */
+body:has(#view-login.active) .header-nav,
+body:has(#view-login.active) .user-profile {
+    display: none !important;
+}
+
+/* =========================================================
+   VIEWS ROOT CONFIGURATION
+   ========================================================= */
+.view {
+    position: absolute;
+    top: var(--top-bar-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0.995);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.view.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: scale(1);
+}
+
+/* =========================================================
+   BACKGROUND EFFECT ΓÇö Classic Mode Transparency (override opaque view backgrounds)
+   ========================================================= */
+body[data-bg-effect]:not([data-bg-effect="none"]) #view-main,
+body[data-bg-effect]:not([data-bg-effect="none"]) #view-settings,
+body[data-bg-effect]:not([data-bg-effect="none"]) #view-profile,
+body[data-bg-effect]:not([data-bg-effect="none"]) #view-mods {
+    background: transparent !important;
+}
+
+/* =========================================================
+   TWO-LAYER GLASS SYSTEM ΓÇö Background Effect Transparency
+   Layer 1 (Sidebars):      rgba(15,13,24,0.9) ΓÇö Opaque Glass
+   Layer 2 (Main Areas):    rgba(15,13,24,0.05) ΓÇö Clear Glass
+   ========================================================= */
+
+/* Layer 2 ΓÇö Main Areas: barely-tinted clear glass, no blur */
+html body[data-bg-effect]:not([data-bg-effect="none"]) .mods-content-wrapper,
+html body[data-bg-effect]:not([data-bg-effect="none"]) .settings-content-wrapper,
+html body[data-bg-effect]:not([data-bg-effect="none"]) .profile-page-content,
+html body[data-bg-effect]:not([data-bg-effect="none"]) .profile-main-stage,
+html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
+    background: rgba(15, 13, 24, 0.05) !important;
+}
+
+/* Layer 1 ΓÇö Sidebars: heavily frosted glass, strong blur */
+html body[data-bg-effect]:not([data-bg-effect="none"]) .modpacks-sidebar,
+html body[data-bg-effect]:not([data-bg-effect="none"]) .browser-sidebar,
+html body[data-bg-effect]:not([data-bg-effect="none"]) .profile-sidebar,
+html body[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar,
+html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
+    background: rgba(15, 13, 24, 0.2) !important;
+    transform: translateZ(0); /* Hardware acceleration */
+    will-change: transform, backdrop-filter;
+}
+

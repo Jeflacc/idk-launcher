@@ -1,0 +1,86 @@
+/* ============================================================================
+   advanced/glass-system.css — Two-layer glass system (body.ui-advanced)
+   ----------------------------------------------------------------------------
+   Consolidated two-layer glass system for background effect transparency.
+   When a background effect is active (not "none"), view wrappers become
+   transparent so the animated canvas shows through. Two glass layers:
+     Layer 1 (Sidebars):   frosted glass + strong blur
+     Layer 2 (Main Areas): barely-tinted clear glass, no blur
+
+   Previously duplicated 4x with conflicting opacity values — consolidated
+   here.
+   ============================================================================ */
+
+/* =========================================================
+   TWO-LAYER GLASS SYSTEM — Background Effect Transparency
+   ----------------------------------------------------------------------------
+   When a background effect is active (not "none"), view wrappers become
+   transparent so the animated canvas shows through. Two glass layers:
+     Layer 1 (Sidebars):   frosted glass + strong blur
+     Layer 2 (Main Areas): barely-tinted clear glass, no blur
+
+   "particles" effect uses a lighter sidebar tint (0.2) than other effects
+   (0.3) because particles are denser and need less sidebar opacity to
+   remain readable.
+
+   Previously duplicated 4x with conflicting opacity values (0.2/0.3/0.9)
+   and inconsistent !important usage — consolidated here.
+   ========================================================= */
+
+/* Make view wrappers fully transparent so canvas shows through */
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-main,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-settings,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-profile,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-mods,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-main .main-hero-banner {
+    background: transparent !important;
+}
+
+/* Layer 2 — Main Areas: barely-tinted clear glass, no blur
+   (applies to all non-none effects, including particles) */
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .mods-content-wrapper,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .settings-content-wrapper,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-page-content,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-main-stage {
+    background: rgba(15, 13, 24, 0.05) !important;
+    backdrop-filter: none !important;
+}
+
+/* Layer 1 — Sidebars: heavily frosted glass, strong blur
+   For "particles" effect: lighter tint (0.2) */
+body.ui-advanced[data-bg-effect="particles"] .nav-tabs,
+body.ui-advanced[data-bg-effect="particles"] .top-bar,
+body.ui-advanced[data-bg-effect="particles"] .browser-sidebar,
+body.ui-advanced[data-bg-effect="particles"] .profile-sidebar,
+body.ui-advanced[data-bg-effect="particles"] .friends-sidebar,
+body.ui-advanced[data-bg-effect="particles"] .details-section {
+    background: rgba(15, 13, 24, 0.2) !important;
+    backdrop-filter: blur(20px) !important;
+    transform: translateZ(0); /* Hardware acceleration */
+    will-change: transform, backdrop-filter;
+}
+
+/* Layer 1 — Sidebars: heavily frosted glass, strong blur
+   For other non-none, non-particles effects: slightly stronger tint (0.3) */
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .nav-tabs,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .top-bar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .browser-sidebar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-sidebar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .friends-sidebar,
+body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .details-section {
+    background: rgba(15, 13, 24, 0.3) !important;
+    backdrop-filter: blur(20px) !important;
+    transform: translateZ(0); /* Hardware acceleration */
+    will-change: transform, backdrop-filter;
+}
+
+@media (max-width: 980px) {
+    body.ui-advanced .details-section {
+        display: none;
+    }
+
+    body.ui-advanced .main-hero-banner .bottom-bar {
+        width: min(360px, 72%);
+    }
+}
+

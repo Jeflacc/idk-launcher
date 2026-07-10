@@ -1,0 +1,95 @@
+/* ============================================================================
+   components/performance.css — Eco, balanced, ultra-eco mode overrides
+   ----------------------------------------------------------------------------
+   Contains:
+     - .performance-mode-grid + .performance-mode-card
+     - body[data-launcher-performance="eco"] overrides (disable video, animation)
+     - body[data-launcher-performance="balanced"] overrides (reduce opacity)
+     - body[data-launcher-performance="eco"] * (ultra-eco: kill ALL cosmetics)
+   ============================================================================ */
+
+/* =========================================================
+   ULTRA ECO PERFORMANCE MODE (Overrides all cosmetics)
+   ========================================================= */
+
+body[data-launcher-performance="eco"] * {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+body[data-launcher-performance="eco"] .bg-effects-canvas,
+body[data-launcher-performance="eco"] .bg-video,
+body[data-launcher-performance="eco"] .hero-video,
+body[data-launcher-performance="eco"] .window-glow,
+body[data-launcher-performance="eco"] .section-decoration,
+body[data-launcher-performance="eco"] .ambient-glow,
+body[data-launcher-performance="eco"]::before,
+body[data-launcher-performance="eco"]::after {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+body[data-launcher-performance="eco"] {
+    background: #050505 !important;
+}
+
+body[data-launcher-performance="eco"] .nav-tabs,
+body[data-launcher-performance="eco"] .top-bar,
+body[data-launcher-performance="eco"] .browser-sidebar,
+body[data-launcher-performance="eco"] .profile-sidebar,
+body[data-launcher-performance="eco"] .friends-sidebar,
+body[data-launcher-performance="eco"] .details-section,
+body[data-launcher-performance="eco"] .main-hero-banner .bottom-bar,
+body[data-launcher-performance="eco"] .mod-result-card,
+body[data-launcher-performance="eco"] .trending-mp-card,
+body[data-launcher-performance="eco"] .news-card,
+body[data-launcher-performance="eco"] .modpacks-sidebar,
+body[data-launcher-performance="eco"] .version-item,
+body[data-launcher-performance="eco"] .settings-tab-panel,
+body[data-launcher-performance="eco"] .mod-browser {
+    background: #0a0a0c !important;
+    border: 1px solid #1a1a1c !important;
+    border-radius: 0 !important;
+}
+
+body[data-launcher-performance="eco"] .mods-content-wrapper,
+body[data-launcher-performance="eco"] .settings-content-wrapper,
+body[data-launcher-performance="eco"] .profile-page-content,
+body[data-launcher-performance="eco"] .profile-main-stage,
+body[data-launcher-performance="eco"] .play-btn {
+    background: #050505 !important;
+    border-radius: 0 !important;
+}
+
+body[data-launcher-performance="eco"] .play-btn {
+    background: var(--theme-accent) !important;
+    color: #000 !important;
+    border: none !important;
+}
+
+body[data-launcher-performance="eco"] .btn-primary,
+body[data-launcher-performance="eco"] .btn-secondary {
+    border-radius: 0 !important;
+    border: 1px solid #333 !important;
+    background: #111 !important;
+}
+
+/* Dashboard Banners Grid */
+.dashboard-banners-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    margin-bottom: 24px;
+    width: 100%;
+    align-items: start;
+}
+
+.dashboard-banners-grid .featured-server-banner,
+.dashboard-banners-grid .support-banner {
+    margin-bottom: 0;
+}
+

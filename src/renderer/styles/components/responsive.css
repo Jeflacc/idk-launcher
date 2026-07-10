@@ -1,0 +1,621 @@
+/* ============================================================================
+   components/responsive.css — Media queries (1200/1100/768/480 breakpoints)
+   ----------------------------------------------------------------------------
+   Contains:
+     - @media (max-width: 1200px) — top bar, hero, modpack sidebar adjustments
+     - @media (max-width: 1100px) — top bar height, user-profile collapse
+     - @media (max-width: 768px) — nav tabs scroll, main view collapse
+     - @media (max-width: 480px) — small screen overrides
+     - Download progress responsive overrides
+     - Settings panel responsive overrides
+   ============================================================================ */
+
+/* =========================================================
+    RESPONSIVE DESIGN
+   ========================================================= */
+
+@media (max-width: 1200px) {
+    .top-bar {
+        padding: 0 16px;
+    }
+
+    .main-hero-banner {
+        padding: 24px;
+        height: 480px;
+    }
+
+    .details-content {
+        padding: 40px 24px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .news-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .modpacks-sidebar {
+        width: 250px;
+    }
+
+    .modpack-content-header {
+        gap: 16px;
+    }
+
+    .modpack-header-actions {
+        gap: 8px;
+    }
+
+    .mp-wizard-columns {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .mp-wizard-header {
+        flex-wrap: wrap;
+        gap: 6px 10px;
+    }
+
+    .mp-wizard-header h3 {
+        font-size: 12px;
+        line-height: 1.05;
+    }
+
+    .mp-wizard-note {
+        white-space: normal;
+        text-align: left;
+        max-width: 100%;
+        margin-left: 0;
+        line-height: 1.25;
+    }
+
+    .mp-wizard-buttons .mp-action-btn.browse {
+        flex-basis: 100%;
+    }
+}
+
+
+body[data-window-mode="restored"] .mp-wizard-buttons .mp-action-btn.browse {
+    flex-basis: 100%;
+}
+
+body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
+    min-width: 100%;
+}
+
+@media (max-width: 1100px) {
+    :root {
+        --top-bar-height: 52px;
+    }
+
+    .top-bar {
+        padding: 0 14px;
+    }
+
+    .top-brand {
+        font-size: 20px;
+    }
+
+    .brand-title {
+        font-size: 10px;
+    }
+
+    .nav-tab {
+        padding: 0 10px;
+        font-size: 12px;
+        gap: 5px;
+    }
+
+    .user-details {
+        display: none !important;
+    }
+
+    .user-profile {
+        padding: 0 6px;
+        width: 38px;
+        height: 36px;
+        min-width: 38px;
+        min-height: 36px;
+        border-radius: 6px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .user-profile-avatar {
+        width: 26px;
+        height: 26px;
+        margin-right: 0;
+    }
+
+    .user-profile-avatar canvas {
+        width: 22px;
+        height: 22px;
+    }
+
+    .main-hero-banner {
+        height: 420px;
+        padding: 20px;
+    }
+
+    .modpacks-sidebar {
+        width: 220px;
+    }
+
+    .modpack-content-header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .modpack-content-header > div:first-child {
+        flex: 1 1 100%;
+    }
+
+    .modpack-header-actions {
+        width: 100%;
+        align-items: flex-start;
+    }
+
+    .modpack-header-actions .mp-action-icon-row {
+        justify-content: flex-end;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .modpack-header-actions .mp-action-btn.play {
+        min-width: 100%;
+    }
+
+    .details-content {
+        padding: 32px 16px;
+    }
+
+    .news-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        width: 90vw;
+        max-width: 420px;
+        padding: 36px;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --top-bar-height: 48px;
+    }
+
+    .top-bar {
+        padding: 0 10px;
+    }
+
+    .header-nav {
+        gap: 10px;
+    }
+
+    .brand-title {
+        display: none;
+    }
+
+    .nav-tabs {
+        gap: 2px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .nav-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-tab {
+        padding: 0 8px;
+        font-size: 11px;
+    }
+
+    .top-brand {
+        font-size: 18px;
+    }
+
+    .create-modpack-btn {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .mp-tab {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .mp-action-btn.browse {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .main-hero-banner {
+        height: 380px;
+        padding: 16px;
+    }
+
+    .mc-logo {
+        max-width: 240px;
+    }
+
+    .main-hero-banner .bottom-bar {
+        height: auto;
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+        border-radius: 10px;
+    }
+
+    .controls-left {
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .details-content {
+        padding: 24px 12px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+
+    .news-card {
+        border-radius: 6px;
+    }
+
+    .news-img {
+        height: 140px;
+    }
+
+    .news-content {
+        padding: 16px;
+    }
+
+    .friends-sidebar {
+        width: 280px;
+    }
+
+    .mods-container {
+        flex-direction: column;
+    }
+
+    .modpacks-sidebar {
+        width: 100%;
+        max-height: 280px;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .mp-wizard-header {
+        align-items: flex-start;
+    }
+
+    .mp-wizard-note {
+        max-width: none;
+        text-align: left;
+    }
+
+    .mp-wizard-header h3 {
+        font-size: 11px;
+    }
+
+    .modpack-detail {
+        width: 100%;
+    }
+
+    .modpack-item {
+        padding: 6px 10px;
+        margin: 2px 6px;
+        gap: 8px;
+    }
+
+    .mp-scroll-area {
+        padding: 16px;
+    }
+
+    .browser-sidebar {
+        width: 180px;
+    }
+
+    .mod-browser-header {
+        padding: 8px 12px;
+        gap: 6px;
+    }
+
+    .mod-browser-header-actions {
+        flex: 1;
+        min-width: 0;
+        justify-content: flex-end;
+    }
+
+    .mod-browser-header h3 {
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+
+    .provider-pill-group {
+        overflow-x: auto;
+        scrollbar-width: none;
+        flex-shrink: 1;
+        min-width: 0;
+    }
+
+    .provider-pill {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .mod-browser-close {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+
+    .mod-browser-results {
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .mod-result-card {
+        padding: 8px;
+        gap: 8px;
+        min-height: 0;
+    }
+
+    .mod-result-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .mod-result-info strong {
+        font-size: 12px;
+    }
+
+    .add-mod-btn {
+        padding: 4px 10px;
+        font-size: 10px;
+    }
+
+    .browser-search-bar {
+        padding: 8px 12px;
+        gap: 6px;
+    }
+
+    .browser-pagination-bar {
+        font-size: 10px;
+    }
+
+    .browser-filter-section {
+        padding: 6px 10px;
+    }
+
+    .browser-filter-pill {
+        padding: 3px 7px;
+        font-size: 9px;
+    }
+
+    .browser-filter-options {
+        gap: 4px;
+    }
+
+    .trending-modpacks-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --top-bar-height: 44px;
+    }
+
+    .top-bar {
+        padding: 0 8px;
+    }
+
+    .top-brand {
+        font-size: 16px;
+    }
+
+    .nav-tabs {
+        display: none;
+    }
+
+    .main-hero-banner {
+        height: 320px;
+        padding: 12px;
+    }
+
+    .mc-logo {
+        max-width: 180px;
+    }
+
+    .main-hero-banner .bottom-bar {
+        padding: 10px;
+        gap: 8px;
+        border-radius: 8px;
+    }
+
+    .custom-select-wrapper {
+        width: 100% !important;
+    }
+
+    .play-button-wrapper {
+        width: 100%;
+    }
+
+    .play-button {
+        width: 100%;
+        height: 48px;
+        font-size: 16px;
+    }
+
+    .details-content {
+        padding: 16px 8px;
+    }
+
+    .stats-grid {
+        gap: 12px;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-card {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .stat-info h2 {
+        font-size: 18px;
+    }
+
+    .section-title {
+        font-size: 16px;
+    }
+
+    .modal-content {
+        width: 90vw;
+        padding: 24px;
+    }
+
+    .friends-sidebar {
+        width: 100%;
+        max-width: 100vw;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .mp-scroll-area {
+        padding: 10px;
+    }
+
+    .mods-page-header {
+        flex-wrap: wrap;
+        padding: 8px 6px;
+        gap: 4px;
+    }
+
+    .mods-page-header h2.view-title {
+        font-size: 14px;
+    }
+
+    .mods-header-actions {
+        gap: 3px;
+    }
+
+    .create-modpack-btn {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+
+    .modpack-item {
+        padding: 3px 6px;
+        margin: 1px 3px;
+        gap: 5px;
+    }
+
+    .mp-item-info strong {
+        font-size: 11px;
+    }
+
+    .mod-browser-header {
+        padding: 6px 6px;
+        gap: 4px;
+    }
+
+    .mod-browser-header h3 {
+        font-size: 11px;
+    }
+
+    .mod-browser-header-actions {
+        gap: 4px;
+    }
+
+    .provider-pill {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+
+    .mod-browser-close {
+        width: 22px;
+        height: 22px;
+    }
+
+    .mod-browser-results {
+        padding: 6px;
+        gap: 6px;
+    }
+
+    .mod-result-card {
+        padding: 6px;
+        gap: 6px;
+    }
+
+    .mod-result-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .add-mod-btn {
+        font-size: 9px;
+        padding: 3px 8px;
+    }
+
+    .mod-result-info strong {
+        font-size: 11px;
+    }
+
+    .browser-sidebar {
+        width: 140px;
+    }
+
+    .browser-search-bar {
+        padding: 6px 8px;
+        gap: 4px;
+    }
+
+    .browser-filter-section {
+        padding: 4px 8px;
+    }
+
+    .browser-filter-pill {
+        padding: 2px 6px;
+        font-size: 8px;
+    }
+
+    .browser-filter-options {
+        gap: 3px;
+    }
+
+    .mp-wizard-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .play-dd-setup {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+}
+

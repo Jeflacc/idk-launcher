@@ -1,0 +1,490 @@
+/* ============================================================================
+   advanced/shell.css — body.ui-advanced top bar, nav, view overrides
+   ----------------------------------------------------------------------------
+   Top-level overrides that transform the launcher from the classic Mojang
+   layout into a cyberpunk wireframe shell. Scopes under `body.ui-advanced`.
+   Contains:
+     - body.ui-advanced root + .bg-effects-canvas + view transparency
+     - .top-bar + .top-brand + .nav-tabs (fixed left icon rail)
+     - .nav-tab styling (icon-only, 48x48)
+     - .top-bar-right + .friends-toggle-btn + .user-profile + .window-controls
+     - .view positioning (top + left offsets for icon rail)
+   ============================================================================ */
+
+/* ============================================================================
+   ADVANCED THEME — body.ui-advanced Mode Overrides
+   ----------------------------------------------------------------------------
+   This stylesheet overrides style.css rules when the user activates
+   "Advanced UI" mode (body.ui-advanced). It transforms the launcher from
+   the classic Mojang-style layout into a cyberpunk wireframe shell with:
+     - A fixed left icon rail (80px) instead of a top nav bar
+     - Cyber grid + scanline overlays on the hero banner
+     - Translucent floating play-bar pill
+     - Flat accent-bordered buttons (replaces Mojang 3D buttons)
+     - Two-layer glass system for background effects
+
+   Load order: styles/index.css imports this AFTER style.css so these
+   rules win the cascade for matching selectors. All rules are scoped
+   under `body.ui-advanced` so they have no effect in classic mode.
+
+   Theme-specific moods (emerald/violet/azure/ember) are applied via
+   body.ui-advanced[data-theme="X"] selectors.
+   ============================================================================ */
+
+/* Hidden by default; shown only when body.ui-advanced is active */
+.advanced-settings {
+    display: none;
+}
+
+/* Background effects canvas — full-screen, behind all views */
+.bg-effects-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    display: block;
+}
+
+/* When a background effect is active, make views transparent so the canvas shows through */
+body[data-bg-effect]:not([data-bg-effect="none"]) .view {
+    background: transparent !important;
+}
+
+/* Decorative background areas only ΓÇö let canvas peek behind hero/details.
+   Content wrappers and panels keep their own backgrounds. */
+body[data-bg-effect]:not([data-bg-effect="none"]) .main-hero-banner,
+body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
+    background: transparent !important;
+}
+
+/* Block the panel itself so canvas never shows through the browser area */
+body[data-bg-effect]:not([data-bg-effect="none"]) .mod-browser {
+    background: rgba(15, 13, 24, 0.05) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    isolation: isolate;
+}
+
+/* Make the profile-page wireframe color theme-aware. Green stays green; Profile Blue uses the exact blue grid color. */
+.profile-main-stage::before {
+    background:
+        linear-gradient(
+            165deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.03) 38%,
+            transparent 39%,
+            transparent 100%
+        ),
+        radial-gradient(
+            circle at 50% 68%,
+            rgba(var(--theme-stage-grid-rgb), 0.08),
+            transparent 40%
+        ),
+        radial-gradient(
+            circle at 50% 70%,
+            rgba(var(--theme-accent-rgb), 0.14),
+            transparent 44%
+        ) !important;
+}
+
+.profile-stage-grid {
+    background-image:
+        linear-gradient(
+            rgba(var(--theme-stage-grid-rgb), 0.18) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(var(--theme-stage-grid-rgb), 0.18) 1px,
+            transparent 1px
+        ) !important;
+}
+
+svg[stroke="#4cb837"] {
+    stroke: var(--theme-accent);
+}
+
+/* Settings appearance controls */
+.settings-subgroup {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.settings-subgroup-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.settings-subgroup-heading span {
+    font-family: var(--font-title);
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.settings-subgroup-heading small {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-align: right;
+}
+
+.theme-picker-grid,
+.ui-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.theme-choice-card,
+.ui-mode-card {
+    min-height: 86px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--theme-radius);
+    background: rgba(8, 8, 9, 0.42);
+    color: #fff;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.theme-choice-card:hover,
+.ui-mode-card:hover {
+    transform: translateY(-1px);
+    border-color: rgba(var(--theme-accent-rgb), 0.35);
+    background: rgba(var(--theme-accent-rgb), 0.08);
+}
+
+.theme-choice-card.active,
+.ui-mode-card.active {
+    border-color: var(--theme-accent);
+    background: rgba(var(--theme-accent-rgb), 0.14);
+    box-shadow:
+        0 0 0 1px rgba(var(--theme-accent-rgb), 0.28),
+        0 0 24px rgba(var(--theme-accent-rgb), 0.12);
+}
+
+.theme-choice-card strong,
+.ui-mode-card strong {
+    display: block;
+    margin-top: 8px;
+    font-family: var(--font-title);
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+.theme-choice-card small,
+.ui-mode-card span {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.theme-choice-swatch {
+    display: block;
+    width: 100%;
+    height: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: calc(var(--theme-radius) * 0.3);
+    background:
+        linear-gradient(90deg, var(--swatch-a), var(--swatch-b)),
+        radial-gradient(
+            circle at 20% 50%,
+            rgba(255, 255, 255, 0.35),
+            transparent 35%
+        );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.advanced-home-player {
+    display: none;
+}
+
+/* =========================================================
+   ADVANCED UI/UX MODE - IDK Launcher wireframe shell
+   ========================================================= */
+body.ui-advanced {
+    --top-bar-height: 48px;
+    --advanced-sidebar-width: 80px;
+    background:
+        radial-gradient(
+            circle at 15% 30%,
+            rgba(var(--theme-accent-rgb), 0.16),
+            transparent 34%
+        ),
+        radial-gradient(
+            circle at 78% 18%,
+            rgba(var(--theme-accent-rgb), 0.08),
+            transparent 30%
+        ),
+        var(--theme-bg);
+}
+
+body.ui-advanced #app {
+    background: var(--theme-bg);
+}
+
+body.ui-advanced .background-slider {
+    opacity: 0.04;
+}
+
+body.ui-advanced .bg-overlay {
+    background:
+        radial-gradient(
+            circle at 50% 60%,
+            rgba(var(--theme-accent-rgb), 0.08),
+            transparent 38%
+        ),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.25), #020203 100%);
+}
+
+body.ui-advanced .top-bar {
+    left: 0;
+    height: var(--top-bar-height);
+    padding: 0 18px;
+    background: color-mix(in srgb, var(--theme-bg-panel) 60%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+
+body.ui-advanced .top-bar-left {
+    gap: 12px;
+    flex: 0 0 auto; /* Don't stretch ΓÇö keep brand compact */
+}
+
+body.ui-advanced .top-brand {
+    position: relative;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-title) !important;
+    font-variant: normal !important;
+    text-transform: none !important;
+    white-space: nowrap;
+    text-shadow: none;
+}
+
+body.ui-advanced .top-brand .brand-mark {
+    color: var(--theme-accent-bright);
+    font-size: 16px !important;
+    letter-spacing: 1.2px !important;
+}
+
+body.ui-advanced .top-brand .brand-word {
+    margin-left: 0;
+    color: #687083;
+    font-family: var(--font-main);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+}
+
+body.ui-advanced .top-brand::before {
+    content: none;
+}
+
+body.ui-advanced .top-brand::after {
+    content: "";
+    display: none;
+}
+
+/* Push user controls to the far right */
+body.ui-advanced .top-bar-right {
+    margin-left: auto;
+}
+
+body.ui-advanced .header-nav {
+    display: contents; /* Keep the fixed sidebar nav usable while removing the top-bar spacer. */
+}
+
+body.ui-advanced .brand-title {
+    display: none;
+}
+
+body.ui-advanced .nav-tabs {
+    position: fixed;
+    z-index: 140;
+    top: var(--top-bar-height);
+    left: 0;
+    bottom: 0;
+    width: var(--advanced-sidebar-width);
+    height: calc(100vh - var(--top-bar-height));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 14px 0 14px;
+    background: color-mix(in srgb, var(--theme-bg-panel) 60%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: none;
+    -webkit-app-region: no-drag;
+}
+
+/* Brand logo block at the very top of the sidebar */
+body.ui-advanced .nav-tabs::before {
+    content: none;
+}
+
+body.ui-advanced .nav-tab {
+    width: 48px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    border-left: 2px solid transparent !important;
+    border-radius: 6px !important;
+    font-size: 0 !important;
+    color: rgba(255, 255, 255, 0.56) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transition:
+        color 0.18s ease,
+        background 0.18s ease;
+    cursor: pointer !important;
+    margin: 8px auto !important;
+    box-sizing: border-box !important;
+    gap: 0 !important;
+    font-variant: normal !important;
+    text-transform: none !important;
+    line-height: 1 !important;
+    white-space: normal !important;
+    flex-shrink: 0 !important;
+    letter-spacing: 0 !important;
+}
+
+body.ui-advanced .nav-tab svg {
+    width: 24px !important;
+    height: 24px !important;
+    stroke-width: 2 !important;
+    transition: color 0.18s ease, transform 0.18s ease;
+    color: rgba(255, 255, 255, 0.56) !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+}
+
+body.ui-advanced .nav-tab[data-target="settings"] {
+    margin-top: auto !important;
+    margin-bottom: 14px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 48px;
+    height: 48px;
+    order: 999;
+}
+
+body.ui-advanced .nav-tab:hover {
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    border-left: 2px solid transparent;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.04);
+    transform: scale(1.05);
+}
+
+body.ui-advanced .nav-tab svg {
+    transition: color 0.18s ease, transform 0.18s ease;
+}
+
+body.ui-advanced .nav-tab:hover svg {
+    transform: scale(1.1);
+}
+
+body.ui-advanced:has(#view-main.active) .nav-tab[data-target="main"],
+body.ui-advanced:has(#view-mods.active) .nav-tab[data-target="mods"],
+body.ui-advanced:has(#view-profile.active) .nav-tab[data-target="profile"],
+body.ui-advanced:has(#view-settings.active) .nav-tab[data-target="settings"] {
+    color: var(--theme-accent-bright) !important;
+    background: transparent !important;
+    border: none !important;
+    border-left: 2px solid var(--theme-accent-bright) !important;
+    box-shadow: none !important;
+}
+
+body.ui-advanced .top-bar-right {
+    gap: 10px;
+    height: 100%;
+    align-items: center;
+}
+
+body.ui-advanced .friends-toggle-btn,
+body.ui-advanced .user-profile,
+body.ui-advanced .window-controls .ctrl {
+    border-radius: 0;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(12, 13, 15, 0.82);
+    box-shadow: none;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+body.ui-advanced .user-profile {
+    height: 40px;
+    min-height: 40px;
+    padding: 5px 12px;
+}
+
+body.ui-advanced .friends-toggle-btn {
+    width: 38px;
+    height: 38px;
+}
+
+body.ui-advanced .window-controls {
+    height: 40px;
+    align-items: center;
+}
+
+body.ui-advanced .window-controls .ctrl {
+    width: 40px;
+    height: 40px;
+}
+
+body.ui-advanced .window-controls .ctrl:hover,
+body.ui-advanced .friends-toggle-btn:hover,
+body.ui-advanced .user-profile:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(var(--theme-accent-rgb), 0.35);
+}
+
+body.ui-advanced .user-profile-avatar,
+body.ui-advanced .profile-sidebar-avatar-wrap,
+body.ui-advanced .friends-identity-avatar,
+body.ui-advanced .friend-avatar {
+    border-radius: 0;
+}
+
+body.ui-advanced .view {
+    top: var(--top-bar-height);
+    left: var(--advanced-sidebar-width);
+    background: var(--theme-bg);
+}
+
+body.ui-advanced #view-login {
+    left: 0;
+    top: 0;
+}
+

@@ -1,0 +1,10 @@
+/* ============================================================================
+   components/cards.css — Shared card styles (stat, news, mod, friend)
+   ----------------------------------------------------------------------------
+   Reserved for cross-cutting card styles. Most cards live in their owning
+   component file (e.g., .stat-card / .news-card in main-view.css,
+   .installed-mod-card / .mod-result-card / .trending-mp-card in modpacks.css,
+   .friend-card in friends.css, .connect-profile-card / .connect-widget-card
+   in idk-connect.css) to preserve cascade order.
+   ============================================================================ */
+

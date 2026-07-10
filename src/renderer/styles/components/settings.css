@@ -1,0 +1,965 @@
+/* ============================================================================
+   components/settings.css — Settings view, settings tabs, inputs, theme picker
+   ----------------------------------------------------------------------------
+   Contains:
+     - #view-settings container + .settings-content-wrapper + .view-title
+     - .settings-grid + .settings-section + RAM slider widget
+     - Memory presets (classic) + .mem-preset-btn
+     - Classic Settings UI (.settings-panel, .settings-sidebar,
+       .settings-category-btn, .settings-input, .settings-checkbox,
+       .settings-tooltip, .settings-btn-primary/secondary, etc.)
+     - Glassmorphism settings redesign (.settings-tab-bar, .settings-tab,
+       .settings-page, .settings-section-title, .settings-row, .theme-palette-
+       grid, .theme-choice-card, .color-picker-wrap, .pill-switch, .glass-
+       slider, .blur-choice, .tg-switch, .glass-input, .glass-btn, .window-
+       size-group, .folder-row, .memory-presets compact, .compact-mode)
+     - Global theme animation speed + font scale + border radius + compact mode
+   ============================================================================ */
+
+/* =========================================================
+   SETTINGS VIEW (CLEAN MOJANG CARD GRID)
+   ========================================================= */
+#view-settings {
+    background:
+        radial-gradient(ellipse at 20% 30%, rgba(var(--theme-accent-rgb), 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(var(--theme-accent-rgb), 0.03) 0%, transparent 50%),
+        #0d0d0f;
+    padding: 40px 0 80px;
+    min-height: 100%;
+}
+
+.settings-content-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.view-title {
+    font-family: var(--font-title);
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: white;
+    font-variant: small-caps;
+    text-transform: lowercase;
+}
+
+.settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.settings-section {
+    background: #1b1b1c;
+    border: 1px solid #2d2d2e;
+    padding: 24px;
+    border-radius: 6px;
+}
+
+.settings-section h3 {
+    font-family: var(--font-main);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: white;
+}
+
+.settings-section > p {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+/* RAM Slider widget styled after Mojang options */
+.memory-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.memory-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: #2d2d2e;
+    outline: none;
+    cursor: pointer;
+}
+
+.memory-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 20px;
+    background: #a1a1a2;
+    border: 1px solid #3c3c3d;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s;
+}
+
+.memory-slider::-webkit-slider-thumb:hover {
+    background: white;
+}
+
+.memory-value-label {
+    font-family: var(--font-main);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-green-hover);
+    min-width: 60px;
+    text-align: right;
+}
+
+.memory-presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.mem-preset-btn {
+    background: #313132;
+    border: 1px solid #4a4a4b;
+    color: #d1d1d2;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.mem-preset-btn:hover {
+    background: #3e3e3f;
+    color: white;
+}
+
+.mem-preset-btn.active {
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    border-color: var(--accent-green-hover);
+    color: var(--accent-green-hover);
+}
+
+/* =============================================
+   GLASSMORPHISM SETTINGS REDESIGN
+   ============================================= */
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(var(--theme-accent-rgb), 0.15);
+}
+
+.settings-header-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--theme-radius);
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--theme-accent);
+    flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.settings-header-sub {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+/* Settings Tab Bar */
+.settings-tab-bar {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 0;
+    margin: 6px 0 22px;
+    background: rgba(13, 13, 15, 0.92);
+    border-radius: 10px;
+    padding: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.settings-tab {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: color 0.2s, transform 0.1s;
+    white-space: nowrap;
+}
+
+.settings-tab:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.settings-tab:active {
+    transform: scale(0.97);
+}
+
+.settings-tab.active {
+    color: #fff;
+    font-weight: 700;
+}
+
+.settings-tab svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.settings-tab-indicator {
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    height: calc(100% - 8px);
+    background: rgba(var(--theme-accent-rgb), 0.18);
+    border-radius: 6px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 0;
+    box-shadow: 0 0 12px rgba(var(--theme-accent-rgb), 0.1);
+}
+
+/* Settings Tab Panels */
+.settings-tab-panel {
+    display: none;
+    animation: settingsFadeIn 0.25s ease;
+}
+
+.settings-tab-panel.active {
+    display: block;
+}
+
+@keyframes settingsFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Settings Page: single container per tab */
+.settings-page {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.15);
+    border-radius: 10px;
+    padding: 4px 22px 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+/* Settings section headers: font-only, no icons */
+.settings-section-title {
+    font-family: var(--font-title);
+    font-size: 18px;
+    font-weight: 800;
+    color: white;
+    margin: 22px 0 0;
+    padding-bottom: 6px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(var(--theme-accent-rgb), 0.2);
+}
+
+.settings-section-title:first-child {
+    margin-top: 12px;
+}
+
+.settings-section-desc {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 4px;
+    line-height: 1.45;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-row:last-child {
+    border-bottom: none;
+}
+
+.settings-row-label {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1;
+}
+
+.settings-row-label span {
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+}
+
+.settings-row-label small {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Theme Palette Grid */
+.theme-palette-grid {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.theme-choice-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px 4px;
+    background: transparent;
+    border: none;
+    border-radius: calc(var(--theme-radius) * 0.8);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    color: var(--text-secondary);
+}
+
+.theme-choice-card:hover {
+    transform: translateY(-2px);
+}
+
+.theme-choice-card.active {
+    color: white;
+}
+
+.theme-swatch {
+    width: 34px;
+    height: 34px;
+    border-radius: calc(var(--theme-radius) * 1.1);
+    background: var(--swatch);
+    display: block;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.theme-choice-card:hover .theme-swatch {
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.theme-choice-card.active .theme-swatch {
+    border-color: #fff;
+    box-shadow: 0 0 16px rgba(var(--theme-accent-rgb), 0.45);
+    transform: scale(1.1);
+}
+
+.custom-swatch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--swatch) !important;
+    color: white;
+}
+
+.theme-choice-card.custom:hover .theme-swatch {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.theme-choice-card.custom .theme-swatch {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.theme-name {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+/* Color Picker */
+.color-picker-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-picker-input {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: calc(var(--theme-radius) * 0.6);
+    cursor: pointer;
+    background: none;
+}
+
+.color-picker-input::-webkit-color-swatch-wrapper {
+    padding: 2px;
+}
+
+.color-picker-input::-webkit-color-swatch {
+    border: none;
+    border-radius: calc(var(--theme-radius) * 0.4);
+}
+
+.color-hex-label {
+    font-size: 12px;
+    font-family: monospace;
+    color: var(--text-muted);
+}
+
+.pill-switch-option.active {
+    background: rgba(var(--theme-accent-rgb), 0.2);
+    color: var(--theme-accent-bright);
+    font-weight: 700;
+}
+
+.pill-switch {
+    display: flex;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--theme-radius);
+    overflow: hidden;
+    padding: 2px;
+}
+
+.pill-switch-option {
+    flex: 1;
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    border-radius: 0;
+}
+
+.pill-switch-option:hover {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.pill-switch-option.active {
+    background: rgba(var(--theme-accent-rgb), 0.2);
+    color: var(--theme-accent-bright);
+    font-weight: 700;
+    border-radius: calc(var(--theme-radius) - 2px);
+}
+
+/* Glass Slider */
+.slider-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.glass-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 120px;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--theme-accent) 0%, var(--theme-accent) 50%, rgba(255, 255, 255, 0.1) 50%);
+    outline: none;
+    cursor: pointer;
+    transition: height 0.15s;
+}
+
+.glass-slider:hover {
+    height: 8px;
+}
+
+.glass-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--theme-accent);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 0 10px rgba(var(--theme-accent-rgb), 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.glass-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 16px rgba(var(--theme-accent-rgb), 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.glass-slider:active::-webkit-slider-thumb {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(var(--theme-accent-rgb), 0.6), 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.glass-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--theme-accent);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(var(--theme-accent-rgb), 0.4);
+}
+
+.glass-slider::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.slider-value {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--theme-accent-text);
+    min-width: 44px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Blur Choice */
+.blur-choice-group {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 4px;
+    border-radius: calc(var(--theme-radius) * 0.8);
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.blur-choice-card {
+    padding: 7px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: calc(var(--theme-radius) * 0.6);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: capitalize;
+}
+
+.blur-choice-card:hover {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.blur-choice-card.active {
+    background: rgba(var(--theme-accent-rgb), 0.22);
+    color: var(--theme-accent-bright);
+    font-weight: 700;
+    box-shadow: 0 1px 6px rgba(var(--theme-accent-rgb), 0.15);
+}
+
+/* Toggle Switch (glass version) */
+.tg-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.tg-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.tg-slider {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.tg-slider::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.tg-switch input:checked + .tg-slider {
+    background: var(--theme-accent);
+    box-shadow: 0 0 12px rgba(var(--theme-accent-rgb), 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.tg-switch input:checked + .tg-slider::before {
+    transform: translateX(20px);
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.tg-switch:hover .tg-slider {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.tg-switch:hover input:checked + .tg-slider {
+    background: var(--theme-accent);
+}
+
+.tg-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* Glass Input */
+.glass-input {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: calc(var(--theme-radius) * 0.6);
+    padding: 9px 14px;
+    color: white;
+    font-size: 13px;
+    font-family: var(--font-main);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    min-width: 0;
+    flex: 1;
+}
+
+.glass-input:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.glass-input:focus {
+    border-color: rgba(var(--theme-accent-rgb), 0.5);
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), 0.12), 0 0 12px rgba(var(--theme-accent-rgb), 0.08);
+}
+
+.glass-input.sm {
+    max-width: 80px;
+    text-align: center;
+    flex: none;
+}
+
+.glass-input::placeholder {
+    color: var(--text-dim);
+}
+
+/* Glass Button */
+.glass-btn {
+    padding: 9px 20px;
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
+    border-radius: calc(var(--theme-radius) * 0.6);
+    color: var(--theme-accent-text);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-btn:hover {
+    background: rgba(var(--theme-accent-rgb), 0.2);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 12px rgba(var(--theme-accent-rgb), 0.1);
+}
+
+.glass-btn:active {
+    transform: translateY(0);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.glass-btn.danger {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+}
+
+.glass-btn.danger:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+/* Window Size Group */
+.window-size-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.win-size-x {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* Folder Row */
+.folder-row {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Memory Presets (compact) */
+.memory-presets {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.mem-preset-btn {
+    padding: 5px 14px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: calc(var(--theme-radius) * 0.5);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mem-preset-btn:hover {
+    background: rgba(var(--theme-accent-rgb), 0.1);
+    color: var(--text-secondary);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.mem-preset-btn.active {
+    background: rgba(var(--theme-accent-rgb), 0.2);
+    border-color: rgba(var(--theme-accent-rgb), 0.35);
+    color: var(--theme-accent-bright);
+    font-weight: 700;
+    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.12);
+}
+
+.mem-value {
+    min-width: 52px;
+}
+
+/* Remove old settings styles we're replacing */
+.settings-grid .settings-section,
+.settings-content-wrapper .theme-picker-grid,
+.settings-content-wrapper .ui-mode-grid,
+.settings-content-wrapper .ui-mode-card,
+.settings-content-wrapper .performance-mode-card {
+    display: none;
+}
+
+/* But keep the grid itself */
+.settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Animation speed via CSS custom property */
+.settings-page,
+.settings-row,
+.theme-choice-card,
+.pill-switch-option,
+.blur-choice-card,
+.glass-btn,
+.mem-preset-btn,
+.tg-slider,
+.tg-slider::before {
+    transition-duration: calc(0.2s / var(--theme-animation-speed, 1));
+}
+
+/* Font scale */
+body, .view, .settings-content-wrapper {
+    font-size: calc(14px * var(--theme-font-scale, 1));
+}
+
+input, button, select, textarea, .clean-input, .glass-input {
+    font-size: calc(13px * var(--theme-font-scale, 1));
+}
+
+/* Border Radius applied globally */
+:root {
+    --global-radius: var(--theme-radius, 10px);
+}
+
+/* Compact mode */
+body.compact-mode {
+    --compact-gap: 6px;
+    --compact-pad: 8px;
+}
+
+body.compact-mode .settings-page {
+    padding: 2px 16px 10px;
+}
+
+body.compact-mode .settings-row {
+    padding: 8px 0;
+}
+
+body.compact-mode .settings-section,
+body.compact-mode .adv-section {
+    padding: var(--compact-pad);
+    gap: var(--compact-gap);
+}
+
+body.compact-mode .settings-grid {
+    gap: var(--compact-gap);
+}
+
+body.compact-mode .settings-section h3,
+body.compact-mode .adv-section h3 {
+    margin-bottom: 4px;
+}
+
+body.compact-mode .settings-section-desc,
+body.compact-mode .adv-section p {
+    margin-bottom: var(--compact-pad);
+    font-size: 11px;
+}
+
+body.compact-mode .settings-row-label span {
+    font-size: 12px;
+}
+
+body.compact-mode .settings-row-label small {
+    font-size: 10px;
+}
+
+body.compact-mode .slider-group {
+    gap: 6px;
+}
+
+body.compact-mode .memory-presets {
+    gap: 4px;
+    margin-top: 4px;
+}
+
+body.compact-mode .mem-preset-btn {
+    min-height: 24px;
+    font-size: 10px;
+    padding: 2px 8px;
+}
+
+body.compact-mode .pill-switch {
+    gap: 2px;
+}
+
+body.compact-mode .pill-switch-option {
+    min-height: 26px;
+    font-size: 10px;
+    padding: 2px 10px;
+}
+
+body.compact-mode .top-bar {
+    height: 42px !important;
+    padding: 0 10px !important;
+}
+
+body.compact-mode .nav-tab {
+    width: 40px !important;
+    height: 40px !important;
+    margin: 4px auto !important;
+}
+
+body.compact-mode .settings-content-wrapper {
+    padding: 10px 14px 14px;
+}
+
+body.compact-mode .settings-tab-bar {
+    margin-bottom: 10px;
+}
+
+body.compact-mode .settings-tab {
+    font-size: 10px;
+    padding: 6px 12px;
+}
+
+body.compact-mode .adv-toggle-row {
+    min-height: 28px;
+    padding: 4px 0;
+}
+
+body.compact-mode .adv-slider-field {
+    margin-bottom: 6px;
+}
+
+body.compact-mode .adv-slider-field-header span {
+    font-size: 11px;
+}
+
+body.compact-mode .theme-picker-grid,
+body.compact-mode .ui-mode-grid {
+    gap: 6px;
+}
+
+body.compact-mode .theme-choice-card,
+body.compact-mode .ui-mode-card {
+    min-height: 60px;
+    padding: 8px;
+}
+
+body.compact-mode .theme-choice-card strong,
+body.compact-mode .ui-mode-card strong {
+    margin-top: 4px;
+    font-size: 10px;
+}
+
+body.compact-mode .theme-choice-card small,
+body.compact-mode .ui-mode-card span {
+    font-size: 9px;
+    margin-top: 2px;
+}
+
+/* Override old settings-section styles that are now hidden */
+.settings-section.appearance-settings-section {
+    display: none;
+}
+

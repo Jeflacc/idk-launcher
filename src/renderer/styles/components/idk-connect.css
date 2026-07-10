@@ -1,0 +1,401 @@
+/* ============================================================================
+   components/idk-connect.css — IDK Connect dashboard view styles
+   ----------------------------------------------------------------------------
+   Contains:
+     - .connect-dashboard-wrapper + .connect-header + .connect-title
+     - .connect-header-actions + .btn-connect-action
+     - .connect-dashboard-layout + .connect-sidebar
+     - .connect-profile-card + .profile-avatar-wrapper + .profile-status-dot +
+       .profile-username + .profile-status-text
+     - .connect-widget-card + .widget-header + .widget-input-group +
+       .widget-input + .btn-widget-action + .widget-code-block
+     - .connect-main-content + .connect-section-title + .connect-friends-list +
+       .connect-empty-state
+     - .dashboard-banners-grid (used by both dashboard and main view)
+   ============================================================================ */
+
+/* =========================================================
+   IDK CONNECT DASHBOARD
+   ========================================================= */
+
+.connect-dashboard-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+.connect-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    padding: 30px 40px 15px;
+    margin-bottom: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.connect-title {
+    margin: 0;
+    font-family: var(--font-title);
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.connect-header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-connect-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-connect-action:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-connect-action.danger {
+    color: var(--accent-red);
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.btn-connect-action.danger:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fff;
+}
+
+.connect-dashboard-layout {
+    display: flex;
+    flex: 1;
+    gap: 30px;
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 40px;
+    margin-left: auto;
+    margin-right: auto;
+    overflow: hidden;
+}
+
+.connect-sidebar {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
+
+.connect-profile-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.connect-profile-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(var(--theme-accent-rgb), 0.3), transparent);
+}
+
+.profile-avatar-wrapper {
+    position: relative;
+    width: 86px;
+    height: 86px;
+    margin-bottom: 16px;
+}
+
+.profile-avatar-wrapper canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.1);
+    image-rendering: pixelated;
+    background: rgba(0,0,0,0.5);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.profile-status-dot {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 3px solid #14141a;
+    background: var(--text-muted);
+}
+
+.profile-status-dot.online {
+    background: var(--accent-green);
+    box-shadow: 0 0 10px rgba(var(--accent-green-rgb, 76, 184, 55), 0.5);
+}
+
+.profile-username {
+    margin: 0 0 4px 0;
+    font-family: var(--font-title);
+    font-size: 20px;
+    color: #fff;
+    font-weight: 700;
+}
+
+.profile-status-text {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--theme-accent);
+    letter-spacing: 0.5px;
+}
+
+.connect-widget-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.connect-widget-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(var(--theme-accent-rgb), 0.3), transparent);
+}
+
+.widget-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.widget-header svg {
+    color: var(--theme-accent);
+    flex-shrink: 0;
+}
+
+.widget-header h4 {
+    margin: 0;
+    font-family: var(--font-title);
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.widget-desc {
+    margin: 0 0 14px 0;
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.5;
+}
+
+.widget-input-group {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.25s ease;
+}
+
+.widget-input-group:focus-within {
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+}
+
+.widget-input {
+    flex: 1;
+    min-width: 0;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    outline: none;
+    transition: background 0.2s;
+}
+
+.widget-input::-webkit-inner-spin-button,
+.widget-input::-webkit-outer-spin-button {
+    -webkit-appearance: auto;
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+}
+
+.widget-input::-webkit-inner-spin-button:hover,
+.widget-input::-webkit-outer-spin-button:hover {
+    opacity: 1;
+}
+
+.widget-input::-moz-number-spin-button {
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+}
+
+.widget-input::-moz-number-spin-button:hover {
+    opacity: 1;
+}
+
+.widget-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 11px;
+}
+
+.widget-input:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.widget-input:focus {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.btn-widget-action {
+    flex: 0 0 auto;
+    background: var(--theme-accent);
+    color: #000;
+    border: none;
+    border-radius: 0;
+    padding: 10px 22px;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-widget-action::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.btn-widget-action:hover {
+    background: #fff;
+    transform: none;
+}
+
+.btn-widget-action:hover::after {
+    opacity: 1;
+}
+
+.btn-widget-action:active {
+    transform: scale(0.97);
+}
+
+.btn-widget-action.danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--accent-red);
+    border-left: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.btn-widget-action.danger:hover {
+    background: rgba(239, 68, 68, 0.3);
+    color: #fff;
+}
+
+.widget-code-block {
+    margin-top: 12px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
+    border-radius: 6px;
+    padding: 10px;
+    color: var(--theme-accent);
+    font-family: monospace;
+    font-size: 12px;
+    word-break: break-all;
+}
+
+.connect-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.connect-section-title {
+    margin: 0 0 16px 0;
+    font-family: var(--font-title);
+    font-size: 18px;
+    color: #fff;
+}
+
+.connect-section-title.small {
+    font-size: 15px;
+}
+
+.connect-friends-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 10px;
+}
+
+.connect-empty-state {
+    color: var(--text-muted);
+    font-size: 14px;
+    text-align: center;
+    padding: 40px 20px;
+    background: rgba(255,255,255,0.02);
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 12px;
+}
+

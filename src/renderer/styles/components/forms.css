@@ -1,0 +1,9 @@
+/* ============================================================================
+   components/forms.css — Shared input, select, slider, toggle, checkbox styles
+   ----------------------------------------------------------------------------
+   Reserved for cross-cutting form-control styles. Most form controls live in
+   their owning component file (e.g., .clean-input in login.css,
+   .glass-input / .glass-slider / .pill-switch in settings.css,
+   .skin-3d-field select in modals.css) to preserve cascade order.
+   ============================================================================ */
+

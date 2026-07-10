@@ -52,7 +52,7 @@ export function registerAllIpcHandlers(deps: IpcDeps): void {
   registerAuthHandlers(deps.windows, deps.authMicrosoft, deps.authElyby, deps.elyby, deps.secrets);
   registerLaunchHandlers(deps.windows, deps.launchGame);
   registerModpackHandlers(deps.windows, deps.modpackRepo, deps.modrinth, deps.installModpack, deps.exportModpack, deps.importModpack, deps.launchGame);
-  registerModHandlers(deps.windows, deps.modrinth, deps.curseforge);
+  registerModHandlers(deps.windows, deps.modrinth, deps.curseforge, deps.modpackRepo, deps.http, deps.downloadQueue, deps.paths);
   registerDownloadHandlers(deps.windows, deps.downloadQueue);
   registerSettingsHandlers(deps.windows, deps.settingsStore);
   registerVersionHandlers(deps.windows, deps.mojang, deps.downloadQueue, deps.paths, deps.modrinth);

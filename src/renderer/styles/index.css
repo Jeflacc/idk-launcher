@@ -4,17 +4,21 @@
    This is the single import target for main.js. It establishes the cascade
    order via @import layering:
 
-     1. tokens.css      — Design tokens (CSS custom properties)
-     2. themes.css      — Theme palette overrides ([data-theme])
-     3. base.css        — Reset, body, scrollbars, fonts, a11y primitives
-     4. style.css       — Component & feature styles (the main stylesheet)
-     5. advanced-theme.css — body.ui-advanced mode overrides
-     6. fixes.css       — Late-loaded patches (launch overlay click-through)
+     1. tokens.css             — Design tokens (CSS custom properties)
+     2. themes.css             — Theme palette overrides ([data-theme])
+     3. base.css               — Reset, body, scrollbars, fonts, a11y primitives
+     4. components/*.css       — Component & feature styles (was style.css)
+     5. advanced/*.css         — body.ui-advanced mode overrides
+                                 (was advanced-theme.css)
+     6. fixes.css              — Late-loaded patches (launch overlay click-through)
 
    Layering rules:
      - Tokens/themes/base are foundational and must load first.
-     - style.css contains all component and feature rules.
-     - advanced-theme.css overrides style.css when body.ui-advanced is set.
+     - Component files contain all component and feature rules. They are
+       imported in the order that matches the original monolithic style.css
+       section order, so the cascade is preserved.
+     - Advanced theme files override component files when body.ui-advanced
+       is set.
      - fixes.css applies last to patch GPU/rendering issues.
 
    To add a new stylesheet, import it at the correct layer below. Never use
@@ -24,6 +28,34 @@
 @import "./tokens.css";
 @import "./themes.css";
 @import "./base.css";
-@import "../style.css";
-@import "../advanced-theme.css";
+
+/* Component styles (replaces style.css) */
+@import "./components/layout.css";
+@import "./components/buttons.css";
+@import "./components/forms.css";
+@import "./components/cards.css";
+@import "./components/login.css";
+@import "./components/main-view.css";
+@import "./components/modpacks.css";
+@import "./components/settings.css";
+@import "./components/profile.css";
+@import "./components/friends.css";
+@import "./components/downloads.css";
+@import "./components/modals.css";
+@import "./components/performance.css";
+@import "./components/idk-connect.css";
+@import "./components/utilities.css";
+@import "./components/responsive.css";
+
+/* Advanced theme overrides (replaces advanced-theme.css) */
+@import "./advanced/shell.css";
+@import "./advanced/main-view.css";
+@import "./advanced/modpacks.css";
+@import "./advanced/settings.css";
+@import "./advanced/profile.css";
+@import "./advanced/friends.css";
+@import "./advanced/glass-system.css";
+@import "./advanced/theme-moods.css";
+
+/* Late-loaded fixes */
 @import "./fixes.css";

@@ -1,0 +1,9 @@
+/* ============================================================================
+   components/buttons.css — Shared button styles
+   ----------------------------------------------------------------------------
+   Reserved for cross-cutting button styles. Most buttons live in their owning
+   component file (e.g., .play-button in main-view.css, .mp-action-btn in
+   modpacks.css, .modal-btn in modals.css, .friend-join-btn in friends.css)
+   to preserve cascade order from the original monolithic style.css.
+   ============================================================================ */
+

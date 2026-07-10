@@ -1,20 +1,31 @@
 import { registerInvoke } from '../register';
 import { IpcChannel } from '@shared/ipc-channels';
 import { z } from 'zod';
+import { join } from 'node:path';
+import { rm, readdir } from 'node:fs/promises';
 import type { WindowManager } from '../../windows/window-manager';
 import type { ModrinthClient, ModrinthProject, ModrinthVersion } from '@/infrastructure/net/api/modrinth-client';
 import type { CurseforgeClient } from '@/infrastructure/net/api/curseforge-client';
+import type { ModpackRepository } from '@/infrastructure/fs/modpack-repository';
+import type { HttpClient } from '@/infrastructure/net/http-client';
+import type { DownloadQueue } from '@/infrastructure/download/download-queue';
+import type { PathService } from '@/infrastructure/fs/path-service';
 
 /**
- * Mod IPC handlers — search, get project metadata, get versions, check updates.
+ * Mod IPC handlers — search, install, remove, update, dependency resolution.
  *
  * Replaces v1's 23+ direct renderer-side fetch() calls to api.modrinth.com
- * and 8+ to api.curse.tools.
+ * and 8+ to api.curse.tools. All mod file operations go through the
+ * ModpackRepository + HttpClient + DownloadQueue.
  */
 export function registerModHandlers(
   windows: WindowManager,
   modrinth: ModrinthClient,
   _curseforge: CurseforgeClient,
+  _repo: ModpackRepository,
+  http: HttpClient,
+  queue: DownloadQueue,
+  paths: PathService,
 ): void {
   const senderOk = (event: Electron.IpcMainInvokeEvent) => windows.assertSender(event, 'main');
 
@@ -198,6 +209,10 @@ export function registerModHandlers(
       type: z.enum(['mod', 'resourcepack', 'shader']).default('mod'),
     }),
     async (_e, args) => {
+      const subdir = args.type === 'mod' ? 'mods' : args.type === 'resourcepack' ? 'resourcepacks' : 'shaderpacks';
+      const targetPath = join(paths.modpackDirectory(args.modpackId), subdir, args.fileName);
+      const downloadId = `mod:${args.modpackId}:${args.fileName}`;
+      await queue.start(downloadId, [{ url: args.downloadUrl, targetPath, filename: args.fileName, skipIfPresent: false }], 1);
       return { success: true, fileName: args.fileName };
     },
     { senderCheck: senderOk },
@@ -214,6 +229,9 @@ export function registerModHandlers(
       fileName: z.string(),
     }),
     async (_e, args) => {
+      const targetPath = join(paths.versions, args.versionId, 'mods', args.fileName);
+      const downloadId = `mod-version:${args.versionId}:${args.fileName}`;
+      await queue.start(downloadId, [{ url: args.downloadUrl, targetPath, filename: args.fileName, skipIfPresent: false }], 1);
       return { success: true, fileName: args.fileName };
     },
     { senderCheck: senderOk },
@@ -227,9 +245,18 @@ export function registerModHandlers(
       fileId: z.string(),
       downloadUrl: z.string(),
       fileName: z.string(),
+      oldFileName: z.string().optional(),
     }),
     async (_e, args) => {
-      // Download the new file, remove the old one
+      // Remove the old file if provided
+      if (args.oldFileName) {
+        const oldPath = join(paths.modpackDirectory(args.modpackId), 'mods', args.oldFileName);
+        try { await rm(oldPath, { force: true }); } catch { /* ignore */ }
+      }
+      // Download the new file
+      const targetPath = join(paths.modpackDirectory(args.modpackId), 'mods', args.fileName);
+      const downloadId = `mod-update:${args.modpackId}:${args.fileName}`;
+      await queue.start(downloadId, [{ url: args.downloadUrl, targetPath, filename: args.fileName, skipIfPresent: false }], 1);
       return { success: true, fileName: args.fileName };
     },
     { senderCheck: senderOk },
@@ -244,8 +271,22 @@ export function registerModHandlers(
       dependencyIds: z.array(z.string()),
     }),
     async (_e, args) => {
-      // Install each dependency — delegates to InstallFromBrowser for each
-      return { success: true, installed: args.dependencyIds.length };
+      let installed = 0;
+      for (const depId of args.dependencyIds) {
+        try {
+          const versions = await modrinth.getVersions(depId);
+          if (versions.length === 0) continue;
+          const latest = versions[0];
+          if (!latest) continue;
+          const primaryFile = latest.files?.find((f) => f.primary) ?? latest.files?.[0];
+          if (!primaryFile?.url) continue;
+          const targetPath = join(paths.modpackDirectory(args.modpackId), 'mods', primaryFile.filename);
+          const downloadId = `mod-dep:${args.modpackId}:${primaryFile.filename}`;
+          await queue.start(downloadId, [{ url: primaryFile.url, targetPath, filename: primaryFile.filename, skipIfPresent: false }], 1);
+          installed++;
+        } catch { /* skip failed deps */ }
+      }
+      return { success: true, installed };
     },
     { senderCheck: senderOk },
   );
@@ -253,8 +294,10 @@ export function registerModHandlers(
   // Remove a mod from a modpack
   registerInvoke(
     IpcChannel.Mod.Remove,
-    z.object({ modpackId: z.string(), modId: z.string() }),
-    async (_e, _args) => {
+    z.object({ modpackId: z.string(), modFileName: z.string() }),
+    async (_e, args) => {
+      const modPath = join(paths.modpackDirectory(args.modpackId), 'mods', args.modFileName);
+      await rm(modPath, { force: true });
       return { success: true };
     },
     { senderCheck: senderOk },
@@ -264,14 +307,23 @@ export function registerModHandlers(
   registerInvoke(
     IpcChannel.Mod.InstallResourcepack,
     z.object({ modpackId: z.string(), projectId: z.string(), versionId: z.string(), downloadUrl: z.string(), fileName: z.string() }),
-    async (_e, args) => ({ success: true, fileName: args.fileName }),
+    async (_e, args) => {
+      const targetPath = join(paths.modpackDirectory(args.modpackId), 'resourcepacks', args.fileName);
+      const downloadId = `rp:${args.modpackId}:${args.fileName}`;
+      await queue.start(downloadId, [{ url: args.downloadUrl, targetPath, filename: args.fileName, skipIfPresent: false }], 1);
+      return { success: true, fileName: args.fileName };
+    },
     { senderCheck: senderOk },
   );
 
   registerInvoke(
     IpcChannel.Mod.RemoveResourcepack,
-    z.object({ modpackId: z.string(), resourcepackId: z.string() }),
-    async (_e, _args) => ({ success: true }),
+    z.object({ modpackId: z.string(), resourcepackFileName: z.string() }),
+    async (_e, args) => {
+      const rpPath = join(paths.modpackDirectory(args.modpackId), 'resourcepacks', args.resourcepackFileName);
+      await rm(rpPath, { force: true });
+      return { success: true };
+    },
     { senderCheck: senderOk },
   );
 
@@ -279,14 +331,23 @@ export function registerModHandlers(
   registerInvoke(
     IpcChannel.Mod.InstallShader,
     z.object({ modpackId: z.string(), projectId: z.string(), versionId: z.string(), downloadUrl: z.string(), fileName: z.string() }),
-    async (_e, args) => ({ success: true, fileName: args.fileName }),
+    async (_e, args) => {
+      const targetPath = join(paths.modpackDirectory(args.modpackId), 'shaderpacks', args.fileName);
+      const downloadId = `shader:${args.modpackId}:${args.fileName}`;
+      await queue.start(downloadId, [{ url: args.downloadUrl, targetPath, filename: args.fileName, skipIfPresent: false }], 1);
+      return { success: true, fileName: args.fileName };
+    },
     { senderCheck: senderOk },
   );
 
   registerInvoke(
     IpcChannel.Mod.RemoveShader,
-    z.object({ modpackId: z.string(), shaderId: z.string() }),
-    async (_e, _args) => ({ success: true }),
+    z.object({ modpackId: z.string(), shaderFileName: z.string() }),
+    async (_e, args) => {
+      const shaderPath = join(paths.modpackDirectory(args.modpackId), 'shaderpacks', args.shaderFileName);
+      await rm(shaderPath, { force: true });
+      return { success: true };
+    },
     { senderCheck: senderOk },
   );
 
@@ -294,9 +355,29 @@ export function registerModHandlers(
   registerInvoke(
     IpcChannel.Mod.ExtractIcon,
     z.object({ jarPath: z.string(), outputPath: z.string() }),
-    async (_e, _args) => {
-      // Extracts the mod icon from the JAR's assets — requires jszip or similar
-      return { success: true };
+    async (_e, args) => {
+      try {
+        // Read the JAR as a zip and extract the first matching icon file
+        const buf = await http.getBuffer(`file://${args.jarPath}`);
+        // Use dynamic import to avoid bundling jszip in the main process if not needed
+        const { default: AdmZip } = await import('adm-zip');
+        const zip = new AdmZip(Buffer.from(buf));
+        const iconEntry = zip.getEntries().find(e =>
+          e.entryName === 'pack.png' ||
+          e.entryName === 'logo.png' ||
+          e.entryName.startsWith('assets/') && e.entryName.endsWith('/icon.png')
+        );
+        if (iconEntry) {
+          const { writeFile, mkdir } = await import('node:fs/promises');
+          const { dirname } = await import('node:path');
+          await mkdir(dirname(args.outputPath), { recursive: true });
+          await writeFile(args.outputPath, iconEntry.getData());
+          return { success: true };
+        }
+        return { success: false, error: 'No icon found in JAR' };
+      } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : 'Failed to extract icon' };
+      }
     },
     { senderCheck: senderOk },
   );
@@ -305,8 +386,32 @@ export function registerModHandlers(
   registerInvoke(
     IpcChannel.Mod.ExtractAllIcons,
     z.object({ modpackId: z.string() }),
-    async (_e, _args) => {
-      return { success: true, extracted: 0 };
+    async (_e, args) => {
+      const modsDir = join(paths.modpackDirectory(args.modpackId), 'mods');
+      const iconsDir = join(paths.modpackDirectory(args.modpackId), 'icons');
+      try {
+        const files = await readdir(modsDir);
+        const jars = files.filter(f => f.endsWith('.jar'));
+        const { mkdir, writeFile } = await import('node:fs/promises');
+        await mkdir(iconsDir, { recursive: true });
+        let extracted = 0;
+        for (const jar of jars) {
+          try {
+            const buf = await http.getBuffer(`file://${join(modsDir, jar)}`);
+            const { default: AdmZip } = await import('adm-zip');
+            const zip = new AdmZip(Buffer.from(buf));
+            const iconEntry = zip.getEntries().find(e => e.entryName === 'pack.png' || e.entryName === 'logo.png');
+            if (iconEntry) {
+              const iconPath = join(iconsDir, jar.replace('.jar', '.png'));
+              await writeFile(iconPath, iconEntry.getData());
+              extracted++;
+            }
+          } catch { /* skip */ }
+        }
+        return { success: true, extracted };
+      } catch {
+        return { success: false, error: 'Failed to read mods directory' };
+      }
     },
     { senderCheck: senderOk },
   );
@@ -316,7 +421,19 @@ export function registerModHandlers(
     IpcChannel.Mod.ImportExternalFiles,
     z.object({ modpackId: z.string(), filePaths: z.array(z.string()) }),
     async (_e, args) => {
-      return { success: true, imported: args.filePaths.length };
+      const { copyFile, mkdir } = await import('node:fs/promises');
+      const { basename } = await import('node:path');
+      const modsDir = join(paths.modpackDirectory(args.modpackId), 'mods');
+      await mkdir(modsDir, { recursive: true });
+      let imported = 0;
+      for (const filePath of args.filePaths) {
+        try {
+          const dest = join(modsDir, basename(filePath));
+          await copyFile(filePath, dest);
+          imported++;
+        } catch { /* skip failed */ }
+      }
+      return { success: true, imported };
     },
     { senderCheck: senderOk },
   );
@@ -325,9 +442,19 @@ export function registerModHandlers(
   registerInvoke(
     IpcChannel.Mod.DownloadCurseforgeModpack,
     z.object({ projectId: z.string(), fileId: z.string(), name: z.string() }),
-    async (_e, _args) => {
-      // Delegates to ImportCurseforgeModpack use-case
-      return { success: true };
+    async (_e, args) => {
+      // Fetch the file URL from CurseForge, then download via the queue
+      try {
+        const fileData = await _curseforge.getModpackFiles(parseInt(args.projectId));
+        const file = fileData.data?.find(f => f.id === parseInt(args.fileId));
+        if (!file?.downloadUrl) return { success: false, error: 'File not found' };
+        const targetPath = join(paths.modpacks, `curseforge-${args.projectId}`, `${args.name}.zip`);
+        const downloadId = `cf-modpack:${args.projectId}`;
+        await queue.start(downloadId, [{ url: file.downloadUrl, targetPath, filename: `${args.name}.zip`, skipIfPresent: false }], 1);
+        return { success: true };
+      } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : 'Download failed' };
+      }
     },
     { senderCheck: senderOk },
   );
@@ -336,9 +463,21 @@ export function registerModHandlers(
   registerInvoke(
     IpcChannel.Mod.DownloadModrinthModpack,
     z.object({ projectId: z.string(), minecraftVersion: z.string(), loader: z.string(), name: z.string() }),
-    async (_e, _args) => {
-      // Delegates to InstallModpack use-case
-      return { success: true };
+    async (_e, args) => {
+      try {
+        const versions = await modrinth.getVersions(args.projectId, args.minecraftVersion, args.loader);
+        if (versions.length === 0) return { success: false, error: 'No compatible version found' };
+        const latest = versions[0];
+        if (!latest) return { success: false, error: 'No version available' };
+        const primaryFile = latest.files?.find(f => f.primary) ?? latest.files?.[0];
+        if (!primaryFile?.url) return { success: false, error: 'No download URL' };
+        const targetPath = join(paths.modpacks, `modrinth-${args.projectId}`, primaryFile.filename);
+        const downloadId = `mr-modpack:${args.projectId}`;
+        await queue.start(downloadId, [{ url: primaryFile.url, targetPath, filename: primaryFile.filename, skipIfPresent: false }], 1);
+        return { success: true };
+      } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : 'Download failed' };
+      }
     },
     { senderCheck: senderOk },
   );

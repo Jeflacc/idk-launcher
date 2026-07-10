@@ -1,0 +1,88 @@
+/* ============================================================================
+   advanced/theme-moods.css — Theme-specific mood overrides (body.ui-advanced)
+   ----------------------------------------------------------------------------
+   Each theme has a fully different background palette applied via
+   body.ui-advanced[data-theme="X"] selectors. Moods:
+     - emerald / green
+     - violet / amethyst
+     - azure / ocean
+     - ember / sunset
+     - custom (derives from --theme-accent-rgb)
+   Also: bg-overlay solid backdrop for "none" and "particles" effects.
+   ============================================================================ */
+
+body.ui-advanced[data-theme="green"] #view-main .main-hero-banner,
+body.ui-advanced[data-theme="emerald"] #view-main .main-hero-banner {
+    background:
+        radial-gradient(
+            ellipse at 50% 70%,
+            rgba(76, 184, 55, 0.13),
+            transparent 35%
+        ),
+        linear-gradient(180deg, var(--theme-bg-panel), var(--theme-bg) 100%);
+}
+
+body.ui-advanced[data-theme="violet"] #view-main .main-hero-banner,
+body.ui-advanced[data-theme="amethyst"] #view-main .main-hero-banner,
+body.ui-advanced[data-theme="violet"] #view-mods,
+body.ui-advanced[data-theme="amethyst"] #view-mods,
+body.ui-advanced[data-theme="violet"] #view-settings,
+body.ui-advanced[data-theme="amethyst"] #view-settings,
+body.ui-advanced[data-theme="violet"] #view-profile,
+body.ui-advanced[data-theme="amethyst"] #view-profile {
+    background:
+        radial-gradient(
+            circle at 18% 24%,
+            rgba(139, 92, 246, 0.2),
+            transparent 32%
+        ),
+        linear-gradient(180deg, var(--theme-bg-panel), var(--theme-bg) 100%);
+}
+
+body.ui-advanced[data-theme="azure"] #view-main .main-hero-banner,
+body.ui-advanced[data-theme="ocean"] #view-main .main-hero-banner,
+body.ui-advanced[data-theme="azure"] #view-mods,
+body.ui-advanced[data-theme="ocean"] #view-mods,
+body.ui-advanced[data-theme="azure"] #view-settings,
+body.ui-advanced[data-theme="ocean"] #view-settings,
+body.ui-advanced[data-theme="azure"] #view-profile,
+body.ui-advanced[data-theme="ocean"] #view-profile {
+    background:
+        radial-gradient(
+            circle at 18% 24%,
+            rgba(59, 130, 246, 0.16),
+            transparent 32%
+        ),
+        linear-gradient(180deg, var(--theme-bg-panel), var(--theme-bg) 100%);
+}
+
+body.ui-advanced[data-theme="ember"] #view-main .main-hero-banner,
+body.ui-advanced[data-theme="sunset"] #view-main .main-hero-banner,
+body.ui-advanced[data-theme="ember"] #view-mods,
+body.ui-advanced[data-theme="sunset"] #view-mods,
+body.ui-advanced[data-theme="ember"] #view-settings,
+body.ui-advanced[data-theme="sunset"] #view-settings,
+body.ui-advanced[data-theme="ember"] #view-profile,
+body.ui-advanced[data-theme="sunset"] #view-profile {
+    background:
+        radial-gradient(
+            circle at 18% 24%,
+            rgba(249, 115, 22, 0.18),
+            transparent 32%
+        ),
+        linear-gradient(180deg, var(--theme-bg-panel), var(--theme-bg) 100%);
+}
+
+body.ui-advanced[data-theme="custom"] #view-main .main-hero-banner,
+body.ui-advanced[data-theme="custom"] #view-mods,
+body.ui-advanced[data-theme="custom"] #view-settings,
+body.ui-advanced[data-theme="custom"] #view-profile {
+    background:
+        radial-gradient(
+            circle at 18% 24%,
+            rgba(var(--theme-accent-rgb), 0.12),
+            transparent 32%
+        ),
+        linear-gradient(180deg, var(--theme-bg-panel), var(--theme-bg) 100%);
+}
+
