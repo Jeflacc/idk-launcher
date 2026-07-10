@@ -1,0 +1,79 @@
+/* ============================================================================
+   THEME PALETTES
+   ----------------------------------------------------------------------------
+   Each palette redefines the 12 --theme-* tokens. The default (no
+   [data-theme] attribute) is emerald, defined in tokens.css.
+
+   A 5th "custom" theme is set at runtime via inline styles on :root by
+   settings-feature.js — it overrides these tokens with user-chosen colors.
+
+   Both the new name and the legacy alias are supported so existing user
+   preferences continue to work.
+   ============================================================================ */
+
+:root[data-theme="green"],
+:root[data-theme="emerald"] {
+  --theme-bg: #061008;
+  --theme-bg-panel: #0b1710;
+  --theme-bg-card: #112419;
+  --theme-accent: #4cb837;
+  --theme-accent-hover: #5cc844;
+  --theme-accent-bright: #6ce24f;
+  --theme-accent-shadow: #2d6b1f;
+  --theme-accent-dark: #3c8527;
+  --theme-accent-text: #86efac;
+  --theme-accent-rgb: 76, 184, 55;
+  --theme-accent-glow-rgb: 34, 197, 94;
+  --theme-stage-grid-rgb: 76, 184, 55;
+}
+
+:root[data-theme="violet"],
+:root[data-theme="amethyst"] {
+  --theme-bg: #07030d;
+  --theme-bg-panel: #12091f;
+  --theme-bg-card: #211236;
+  --theme-accent: #8b5cf6;
+  --theme-accent-hover: #a78bfa;
+  --theme-accent-bright: #c4b5fd;
+  --theme-accent-shadow: #4c1d95;
+  --theme-accent-dark: #6d28d9;
+  --theme-accent-text: #ddd6fe;
+  --theme-accent-rgb: 139, 92, 246;
+  --theme-accent-glow-rgb: 168, 85, 247;
+  --theme-stage-grid-rgb: 139, 92, 246;
+}
+
+:root[data-theme="azure"],
+:root[data-theme="ocean"] {
+  --theme-bg: #031018;
+  --theme-bg-panel: #071923;
+  --theme-bg-card: #0b2534;
+  --theme-accent: #3b82f6;
+  --theme-accent-hover: #60a5fa;
+  --theme-accent-bright: #93c5fd;
+  --theme-accent-shadow: #1e40af;
+  --theme-accent-dark: #2563eb;
+  --theme-accent-text: #bfdbfe;
+  --theme-accent-rgb: 59, 130, 246;
+  --theme-accent-glow-rgb: 59, 130, 246;
+  --theme-stage-grid-rgb: 147, 197, 253;
+}
+
+:root[data-theme="ember"],
+:root[data-theme="sunset"] {
+  --theme-bg: #130804;
+  --theme-bg-panel: #1f1008;
+  --theme-bg-card: #32180b;
+  --theme-accent: #f97316;
+  --theme-accent-hover: #fb923c;
+  --theme-accent-bright: #fdba74;
+  --theme-accent-shadow: #7c2d12;
+  --theme-accent-dark: #c2410c;
+  --theme-accent-text: #fed7aa;
+  --theme-accent-rgb: 249, 115, 22;
+  --theme-accent-glow-rgb: 234, 88, 12;
+  --theme-stage-grid-rgb: 249, 115, 22;
+}
+
+/* When custom theme is active, the 12 --theme-* tokens are set via JS
+   inline styles on :root (see settings-feature.js applyCustomAccentColor). */

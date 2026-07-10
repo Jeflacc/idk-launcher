@@ -1,0 +1,299 @@
+/* ============================================================================
+   DESIGN TOKENS
+   ----------------------------------------------------------------------------
+   The single source of truth for all design decisions in the launcher.
+   Every color, spacing, typography, shadow, transition, and layout value
+   should reference a token defined here — never a raw literal.
+
+   Token naming convention:
+     --{category}-{role}[-{variant}]
+
+   Categories:
+     --color-*     Semantic colors (bg, text, border, accent, danger, warning)
+     --space-*     Spacing scale (1 = 2px, 2 = 4px, ... 20 = 40px)
+     --text-*      Typography scale (xs, sm, base, md, lg, xl, 2xl)
+     --font-*      Font family stacks
+     --radius-*    Border radius scale
+     --shadow-*    Box shadow scale
+     --transition-* Transition duration + easing tokens
+     --ease-*      Cubic-bezier easing curves
+     --layout-*    Structural dimensions (sidebar widths, bar heights)
+     --z-*         Z-index scale
+
+   Theme-variant tokens (redefined per [data-theme]):
+     --theme-bg, --theme-bg-panel, --theme-bg-card,
+     --theme-accent, --theme-accent-hover, --theme-accent-bright,
+     --theme-accent-shadow, --theme-accent-dark, --theme-accent-text,
+     --theme-accent-rgb, --theme-accent-glow-rgb, --theme-stage-grid-rgb
+   ============================================================================ */
+
+:root {
+  /* ---------------------------------------------------------------------------
+     THEME TOKENS (default = emerald)
+     These 12 tokens are the ONLY ones redefined by [data-theme] palettes.
+     All other tokens are theme-invariant.
+     --------------------------------------------------------------------------- */
+  --theme-bg: #061008;
+  --theme-bg-panel: #0b1710;
+  --theme-bg-card: #112419;
+  --theme-accent: #4cb837;
+  --theme-accent-hover: #5cc844;
+  --theme-accent-bright: #6ce24f;
+  --theme-accent-shadow: #2d6b1f;
+  --theme-accent-dark: #3c8527;
+  --theme-accent-text: #86efac;
+  --theme-accent-rgb: 76, 184, 55;
+  --theme-accent-glow-rgb: 34, 197, 94;
+  --theme-stage-grid-rgb: 76, 184, 55;
+
+  /* ---------------------------------------------------------------------------
+     DYNAMIC THEME VARIABLES (controlled at runtime by JS)
+     --------------------------------------------------------------------------- */
+  --theme-radius: 10px;
+  --theme-animation-speed: 1;
+  --theme-font-scale: 1;
+  --theme-blur: 12px;
+
+  /* ---------------------------------------------------------------------------
+     SEMANTIC COLOR ALIASES
+     Map theme tokens to semantic roles so components stay theme-agnostic.
+     --------------------------------------------------------------------------- */
+  --color-bg-app: var(--theme-bg);
+  --color-bg-panel: var(--theme-bg-panel);
+  --color-bg-card: var(--theme-bg-card);
+  --color-bg-pill: rgba(0, 0, 0, 0.6);
+  --color-bg-hover: rgba(255, 255, 255, 0.05);
+  --color-bg-hover-strong: rgba(255, 255, 255, 0.08);
+  --color-bg-overlay: rgba(0, 0, 0, 0.7);
+  --color-bg-glass: rgba(10, 10, 12, 0.85);
+  --color-bg-glass-panel: rgba(15, 13, 24, 0.8);
+  --color-bg-glass-card: rgba(22, 22, 24, 0.8);
+
+  --color-text-main: #ffffff;
+  --color-text-secondary: #e0e0e0;
+  --color-text-muted: #a0a0a0;
+  --color-text-dim: #707070;
+
+  --color-accent: var(--theme-accent);
+  --color-accent-hover: var(--theme-accent-hover);
+  --color-accent-bright: var(--theme-accent-bright);
+  --color-accent-shadow: var(--theme-accent-shadow);
+  --color-accent-dark: var(--theme-accent-dark);
+  --color-accent-text: var(--theme-accent-text);
+
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-border-mojang: #2a2a2a;
+  --color-border-accent: var(--theme-accent);
+
+  /* ---------------------------------------------------------------------------
+     BRAND / SECONDARY ACCENTS
+     --------------------------------------------------------------------------- */
+  --color-microsoft: #00a4ef;
+  --color-microsoft-hover: #26b4f5;
+  --color-elyby: #00a6e0;
+  --color-red: #e74c3c;
+  --color-orange: #f39c12;
+
+  /* ---------------------------------------------------------------------------
+     DANGER SCALE (consolidates 23+ ad-hoc red shades into 7 steps)
+     --------------------------------------------------------------------------- */
+  --danger-50: #fef2f2;
+  --danger-100: #fecaca;
+  --danger-200: #fca5a5;
+  --danger-300: #f87171;
+  --danger-400: #ef4444;
+  --danger-500: #dc2626;
+  --danger-600: #b91c1c;
+  --danger-700: #991b1b;
+  --danger-800: #7f1d1d;
+  --danger-text: var(--danger-300);
+  --danger-text-hover: var(--danger-200);
+  --danger-bg: rgba(239, 68, 68, 0.1);
+  --danger-bg-hover: rgba(239, 68, 68, 0.2);
+  --danger-border: rgba(239, 68, 68, 0.3);
+  --danger-border-strong: rgba(239, 68, 68, 0.5);
+
+  /* ---------------------------------------------------------------------------
+     NEUTRAL SURFACE SCALE (Mojang-style dark grays)
+     Consolidates #0a0a0c, #121213, #141416, #181819, #1b1b1c, #2d2d2e,
+     #313132, #3c3c3d, #4a4a4b, #5c5c5d, #686869, #777778 into 12 steps.
+     --------------------------------------------------------------------------- */
+  --surface-0: #0a0a0c;
+  --surface-1: #121213;
+  --surface-2: #141416;
+  --surface-3: #181819;
+  --surface-4: #1b1b1c;
+  --surface-5: #1f1f20;
+  --surface-6: #252526;
+  --surface-7: #2d2d2e;
+  --surface-8: #313132;
+  --surface-9: #3c3c3d;
+  --surface-10: #4a4a4b;
+  --surface-11: #5c5c5d;
+  --surface-12: #686869;
+  --surface-13: #777778;
+  --surface-14: #d1d1d2;
+
+  /* ---------------------------------------------------------------------------
+     STATUS COLORS
+     --------------------------------------------------------------------------- */
+  --status-online: var(--theme-accent);
+  --status-offline: #a0a0a0;
+  --status-warning: #fbbf24;
+  --status-installing: #eab308;
+  --status-error: var(--danger-400);
+
+  /* ---------------------------------------------------------------------------
+     SPACING SCALE
+     Consolidates 40+ ad-hoc padding/margin/gap values into 12 steps.
+     --------------------------------------------------------------------------- */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 14px;
+  --space-8: 16px;
+  --space-10: 20px;
+  --space-12: 24px;
+  --space-14: 28px;
+  --space-16: 32px;
+  --space-20: 40px;
+
+  /* ---------------------------------------------------------------------------
+     TYPOGRAPHY SCALE
+     Consolidates 30+ ad-hoc font-size values into 12 steps.
+     Sizes are multiplied by --theme-font-scale at the body level.
+     --------------------------------------------------------------------------- */
+  --text-2xs: 8px;
+  --text-xs: 9px;
+  --text-sm: 10px;
+  --text-base: 11px;
+  --text-md: 12px;
+  --text-lg: 13px;
+  --text-xl: 14px;
+  --text-2xl: 16px;
+  --text-3xl: 18px;
+  --text-4xl: 20px;
+  --text-5xl: 24px;
+  --text-6xl: 26px;
+  --text-7xl: 32px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.4;
+  --leading-relaxed: 1.5;
+  --leading-loose: 1.6;
+
+  --tracking-tight: 0.2px;
+  --tracking-normal: 0.5px;
+  --tracking-wide: 1px;
+  --tracking-wider: 1.5px;
+  --tracking-widest: 2px;
+
+  /* ---------------------------------------------------------------------------
+     FONT FAMILIES
+     --------------------------------------------------------------------------- */
+  --font-main: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-title: "Mojang", "Outfit", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Courier New", monospace;
+
+  /* Legacy aliases (backward compatibility — do not use in new code) */
+  --bg-main: var(--color-bg-app);
+  --bg-panel: var(--color-bg-panel);
+  --bg-card: var(--color-bg-card);
+  --bg-pill: var(--color-bg-pill);
+  --bg-hover: var(--color-bg-hover);
+  --text-main: var(--color-text-main);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --text-dim: var(--color-text-dim);
+  --border-color: var(--color-border);
+  --border-mojang: var(--color-border-mojang);
+  --border-accent: var(--color-border-accent);
+  --accent-green: var(--theme-accent);
+  --accent-green-hover: var(--theme-accent-hover);
+  --accent-green-shadow: var(--theme-accent-shadow);
+  --accent-green-dark: var(--theme-accent-dark);
+  --accent-blue: var(--color-microsoft);
+  --accent-blue-hover: var(--color-microsoft-hover);
+  --accent-elyby: var(--color-elyby);
+  --accent-red: var(--color-red);
+  --accent-orange: var(--color-orange);
+
+  /* ---------------------------------------------------------------------------
+     BORDER RADIUS SCALE
+     --------------------------------------------------------------------------- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-base: var(--theme-radius);
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  --global-radius: var(--theme-radius);
+
+  /* ---------------------------------------------------------------------------
+     SHADOW SCALE
+     --------------------------------------------------------------------------- */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --shadow-accent-glow: 0 0 20px rgba(var(--theme-accent-glow-rgb), 0.4);
+
+  /* ---------------------------------------------------------------------------
+     EASING CURVES
+     --------------------------------------------------------------------------- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: ease-in-out;
+
+  /* ---------------------------------------------------------------------------
+     TRANSITION DURATIONS
+     Multiplied by --theme-animation-speed for user-controlled animation speed.
+     --------------------------------------------------------------------------- */
+  --transition-instant: calc(0.1s / var(--theme-animation-speed, 1));
+  --transition-fast: calc(0.15s / var(--theme-animation-speed, 1));
+  --transition-base: calc(0.2s / var(--theme-animation-speed, 1));
+  --transition-slow: calc(0.3s / var(--theme-animation-speed, 1));
+  --transition-slower: calc(0.5s / var(--theme-animation-speed, 1));
+
+  /* ---------------------------------------------------------------------------
+     LAYOUT DIMENSIONS
+     --------------------------------------------------------------------------- */
+  --layout-top-bar-height: 56px;
+  --layout-sidebar-modpacks: 280px;
+  --layout-sidebar-browser: 220px;
+  --layout-sidebar-friends: 320px;
+  --layout-sidebar-profile: 320px;
+  --layout-sidebar-connect: 300px;
+  --layout-sidebar-settings: 150px;
+  --layout-sidebar-overlay: 300px;
+  --layout-advanced-sidebar: 80px;
+
+  /* Legacy alias */
+  --top-bar-height: var(--layout-top-bar-height);
+
+  /* ---------------------------------------------------------------------------
+     Z-INDEX SCALE
+     --------------------------------------------------------------------------- */
+  --z-base: 0;
+  --z-background: 0;
+  --z-content: 1;
+  --z-nav: 100;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-modal: 10000;
+  --z-modal-high: 100000;
+  --z-toast: 1000000;
+}

@@ -1,20 +1,43 @@
-﻿@font-face {
-    font-family: "Mojang";
-    src: url("./fonts/Mojang-Regular.ttf") format("truetype");
-    font-weight: normal;
-    font-style: normal;
-}
+/* ============================================================================
+   STYLE.CSS — Component & Feature Styles
+   ----------------------------------------------------------------------------
+   This is the main stylesheet. It contains all component and feature rules.
 
-@font-face {
-    font-family: "Mojang";
-    src: url("./fonts/Mojang-Bold.ttf") format("truetype");
-    font-weight: bold;
-    font-style: normal;
-}
+   Foundation styles (tokens, themes, reset, body, scrollbars, fonts, a11y
+   primitives) are loaded BEFORE this file via styles/index.css. Do not
+   redefine :root variables, @font-face, reset rules, or .sr-only here —
+   they live in styles/tokens.css, styles/themes.css, and styles/base.css.
 
-/* General Glassmorphism Theme */
+   Late-loaded patches (launch overlay click-through, GPU fixes) live in
+   styles/fixes.css and load AFTER this file.
+
+   CSS ARCHITECTURE MAP (search for section headers to navigate):
+     1. GLASSMORPHISM OVERRIDES       — Forced background tints (!important)
+     2. BACKGROUND LAYERS             — Video, overlay, effects canvas
+     3. TOP BAR & NAVIGATION          — Window chrome, brand, nav tabs
+     4. VIEW ROOTS                    — #view-login, #view-main, etc.
+     5. LOGIN VIEW                    — Auth forms, EULA, onboarding
+     6. MAIN VIEW                     — Hero banner, play bar, details
+     7. MODPACK MANAGER               — List, detail, browser, modals
+     8. SETTINGS VIEW                 — Classic + glassmorphism redesign
+     9. PROFILE PAGE                  — Stats, skin viewer, friends
+    10. FRIENDS SYSTEM                — Sidebar, chat, requests, LAN
+    11. DOWNLOAD PROGRESS             — Container, metrics, controls
+    12. ERROR DISPLAY                 — Error queue, actions
+    13. MODALS                        — Confirm, delete, render-engine, etc.
+    14. LAUNCH OVERLAY                — Progress card, spinner
+    15. PERFORMANCE MODES             — Eco, balanced overrides
+    16. RESPONSIVE DESIGN             — Media queries (1200/1100/768/480)
+    ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   1. GLASSMORPHISM OVERRIDES
+   These !important rules force translucent glass backgrounds on core
+   containers. They must load early so component rules below can override
+   other properties (border, padding, etc.) without fighting the background.
+   --------------------------------------------------------------------------- */
 .view {
-    background: rgba(10, 10, 12, 0.85) !important;
+    background: var(--color-bg-glass) !important;
 }
 
 .mods-content-wrapper,
@@ -22,192 +45,27 @@
 .profile-page-content,
 .modpacks-sidebar,
 .browser-sidebar {
-    background: rgba(15, 13, 24, 0.8) !important;
+    background: var(--color-bg-glass-panel) !important;
 }
 
 .installed-mod-card,
 .mod-result-card,
 .trending-mp-card {
-    background: rgba(22, 22, 24, 0.8) !important;
+    background: var(--color-bg-glass-card) !important;
 }
 
-
-:root {
-    /* Theme tokens: emerald is the default launcher theme. */
-    --theme-bg: #061008;
-    --theme-bg-panel: #0b1710;
-    --theme-bg-card: #112419;
-    --theme-accent: #4cb837;
-    --theme-accent-hover: #5cc844;
-    --theme-accent-bright: #6ce24f;
-    --theme-accent-shadow: #2d6b1f;
-    --theme-accent-dark: #3c8527;
-    --theme-accent-text: #86efac;
-    --theme-accent-rgb: 76, 184, 55;
-    --theme-accent-glow-rgb: 34, 197, 94;
-    --theme-stage-grid-rgb: 76, 184, 55;
-
-    /* Dynamic theme variables (controlled by JS) */
-    --theme-radius: 10px;
-    --theme-animation-speed: 1;
-    --theme-font-scale: 1;
-    --theme-blur: 12px;
-
-    /* Minecraft Launcher Official Colors */
-    --bg-main: var(--theme-bg);
-    --bg-panel: var(--theme-bg-panel);
-    --bg-card: var(--theme-bg-card);
-    --bg-pill: rgba(0, 0, 0, 0.6);
-    --bg-hover: rgba(255, 255, 255, 0.05);
-
-    /* Borders */
-    --border-color: rgba(255, 255, 255, 0.1);
-    --border-mojang: #2a2a2a;
-    --border-accent: var(--theme-accent);
-
-    /* Legacy accent aliases */
-    --accent-green: var(--theme-accent);
-    --accent-green-hover: var(--theme-accent-hover);
-    --accent-green-shadow: var(--theme-accent-shadow);
-    --accent-green-dark: var(--theme-accent-dark);
-
-    /* Secondary accents */
-    --accent-blue: #00a4ef;
-    --accent-blue-hover: #26b4f5;
-    --accent-elyby: #00a6e0;
-    --accent-red: #e74c3c;
-    --accent-orange: #f39c12;
-
-    /* Text colors */
-    --text-main: #ffffff;
-    --text-secondary: #e0e0e0;
-    --text-muted: #a0a0a0;
-    --text-dim: #707070;
-
-    /* Fonts */
-    --font-main:
-        "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    --font-title: "Mojang", "Outfit", sans-serif;
-
-    /* Shadows */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-
-    /* Shell */
-    --top-bar-height: 56px;
-}
-
-/* Keep old theme names as aliases for backward compatibility */
-:root[data-theme="green"],
-:root[data-theme="emerald"] {
-    --theme-bg: #061008;
-    --theme-bg-panel: #0b1710;
-    --theme-bg-card: #112419;
-    --theme-accent: #4cb837;
-    --theme-accent-hover: #5cc844;
-    --theme-accent-bright: #6ce24f;
-    --theme-accent-shadow: #2d6b1f;
-    --theme-accent-dark: #3c8527;
-    --theme-accent-text: #86efac;
-    --theme-accent-rgb: 76, 184, 55;
-    --theme-accent-glow-rgb: 34, 197, 94;
-    --theme-stage-grid-rgb: 76, 184, 55;
-}
-
-:root[data-theme="violet"],
-:root[data-theme="amethyst"] {
-    --theme-bg: #07030d;
-    --theme-bg-panel: #12091f;
-    --theme-bg-card: #211236;
-    --theme-accent: #8b5cf6;
-    --theme-accent-hover: #a78bfa;
-    --theme-accent-bright: #c4b5fd;
-    --theme-accent-shadow: #4c1d95;
-    --theme-accent-dark: #6d28d9;
-    --theme-accent-text: #ddd6fe;
-    --theme-accent-rgb: 139, 92, 246;
-    --theme-accent-glow-rgb: 168, 85, 247;
-    --theme-stage-grid-rgb: 139, 92, 246;
-}
-
-:root[data-theme="azure"],
-:root[data-theme="ocean"] {
-    --theme-bg: #031018;
-    --theme-bg-panel: #071923;
-    --theme-bg-card: #0b2534;
-    --theme-accent: #3b82f6;
-    --theme-accent-hover: #60a5fa;
-    --theme-accent-bright: #93c5fd;
-    --theme-accent-shadow: #1e40af;
-    --theme-accent-dark: #2563eb;
-    --theme-accent-text: #bfdbfe;
-    --theme-accent-rgb: 59, 130, 246;
-    --theme-accent-glow-rgb: 59, 130, 246;
-    --theme-stage-grid-rgb: 147, 197, 253;
-}
-
-:root[data-theme="ember"],
-:root[data-theme="sunset"] {
-    --theme-bg: #130804;
-    --theme-bg-panel: #1f1008;
-    --theme-bg-card: #32180b;
-    --theme-accent: #f97316;
-    --theme-accent-hover: #fb923c;
-    --theme-accent-bright: #fdba74;
-    --theme-accent-shadow: #7c2d12;
-    --theme-accent-dark: #c2410c;
-    --theme-accent-text: #fed7aa;
-    --theme-accent-rgb: 249, 115, 22;
-    --theme-accent-glow-rgb: 234, 88, 12;
-    --theme-stage-grid-rgb: 249, 115, 22;
-}
-
-/* When custom theme is active, variables are set via JS inline styles */
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    user-select: none;
-    -webkit-user-drag: none;
-}
-
-input,
-textarea,
-[contenteditable="true"] {
-    user-select: text !important;
-    -webkit-user-select: text !important;
-}
-
-body {
-    font-family: var(--font-main);
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    height: 100vh;
-    overflow: hidden;
-    font-size: 12px;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-#app {
-    height: 100%;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Background layers */
+/* ---------------------------------------------------------------------------
+   2. BACKGROUND LAYERS
+   --------------------------------------------------------------------------- */
 .background-slider {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 0;
+    z-index: var(--z-background);
     opacity: 0.15; /* Subtle background movie */
-    transition: opacity 0.5s ease-out;
+    transition: opacity var(--transition-slower) ease-out;
     pointer-events: none;
 }
 
@@ -226,26 +84,10 @@ body {
     background: radial-gradient(
         circle at center,
         transparent 30%,
-        var(--bg-main) 100%
+        var(--color-bg-app) 100%
     );
-    z-index: 1;
+    z-index: var(--z-content);
     pointer-events: none;
-}
-
-/* Custom scrollbars */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.15);
-}
-::-webkit-scrollbar-thumb {
-    background: #3a3a3b;
-    border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #4e4e4f;
 }
 
 /* =========================================================
@@ -5712,18 +5554,8 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     display: block;
 }
 
-/* Screen reader only text */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-}
+/* Note: .sr-only, focus-visible, prefers-contrast, and prefers-reduced-motion
+   are defined once in styles/base.css. Download-specific a11y rules below. */
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -5755,19 +5587,10 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 }
 
 /* =========================================================
-   ACCESSIBILITY FEATURES
+   ACCESSIBILITY FEATURES — Download-specific
+   (Global a11y primitives: .sr-only, focus-visible, prefers-contrast,
+    prefers-reduced-motion are in styles/base.css)
    ========================================================= */
-
-/* Focus indicators for keyboard navigation */
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-[role="button"]:focus-visible,
-[tabindex]:focus-visible {
-    outline: 3px solid var(--theme-accent);
-    outline-offset: 2px;
-    border-radius: 2px;
-}
 
 /* Download UI specific focus indicators */
 .download-control-btn:focus-visible {
@@ -5781,38 +5604,10 @@ input:focus-visible,
     outline-offset: 2px;
 }
 
-/* Screen reader only text */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-}
-
-/* High contrast mode support */
+/* High contrast mode — download-specific overrides */
 @media (prefers-contrast: more) {
-    button:focus-visible,
-    a:focus-visible,
-    input:focus-visible,
-    [role="button"]:focus-visible,
-    [tabindex]:focus-visible {
-        outline-width: 4px;
-    }
-
     .download-control-btn:focus-visible {
         outline-width: 4px;
-    }
-
-    /* Increase text contrast in high contrast mode */
-    body {
-        --text-main: #ffffff;
-        --text-secondary: #ffffff;
-        --text-muted: #e0e0e0;
     }
 
     .download-progress-container {
@@ -5824,22 +5619,8 @@ input:focus-visible,
     }
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-}
-
-/* Large text support */
+/* Large text support — download-specific */
 @media (prefers-reduced-motion: no-preference) and (min-width: 0px) {
-    /* Ensure text is scalable */
-    body {
-        font-size: 14px;
-    }
-
     .download-status-text {
         font-size: 14px;
     }
@@ -6780,47 +6561,8 @@ input:focus-visible,
     font-size: 13px;
 }
 
-/* ===== ACCESSIBILITY ===== */
-
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-}
-
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-[role="button"]:focus-visible,
-[tabindex]:focus-visible {
-    outline: 3px solid var(--accent-green);
-    outline-offset: 2px;
-    border-radius: 2px;
-}
-
-@media (prefers-contrast: more) {
-    button:focus-visible,
-    a:focus-visible,
-    input:focus-visible,
-    [role="button"]:focus-visible,
-    [tabindex]:focus-visible {
-        outline-width: 4px;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
-}
+/* Note: .sr-only, focus-visible, prefers-contrast, prefers-reduced-motion
+   are defined once in styles/base.css. */
 
 /* ===== RESPONSIVE DESIGN ===== */
 
@@ -8106,6 +7848,199 @@ body[data-launcher-performance="balanced"] .mc-logo {
 
 .confirm-modal-content--neutral .confirm-modal-btn.confirm:hover {
     background: var(--theme-accent);
+}
+
+/* =========================================================
+   LIST DIALOG MODAL (shared with render-engine-modal)
+   (Styles extracted from index.html inline styles)
+   ========================================================= */
+#list-dialog-modal .confirm-modal-content {
+    max-width: 350px;
+}
+
+#list-dialog-message {
+    margin-bottom: 16px;
+}
+
+#list-dialog-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+#list-dialog-modal .confirm-modal-actions {
+    justify-content: flex-end;
+}
+
+#list-dialog-cancel {
+    flex: 0 0 auto;
+}
+
+/* =========================================================
+   RENDER ENGINE SELECTION MODAL
+   (Styles extracted from index.html inline styles)
+   ========================================================= */
+#render-engine-modal .confirm-modal-content {
+    max-width: 400px;
+    padding: 24px;
+}
+
+#render-engine-title {
+    margin-bottom: 6px;
+    font-family: var(--font-title);
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#render-engine-message {
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+}
+
+#render-engine-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+/* Render engine option button — shared base */
+.render-engine-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    border-width: 2px;
+    border-style: solid;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+}
+
+.render-engine-option-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.render-engine-option-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.render-engine-option-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.render-engine-option-name {
+    font-weight: 800;
+    font-family: var(--font-title);
+    font-size: 16px;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+.render-engine-option-tag {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Sodium variant (blue) */
+.render-engine-option--sodium {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.render-engine-option--sodium:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.6);
+    transform: translateY(-2px);
+}
+
+.render-engine-option--sodium .render-engine-option-icon {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.render-engine-option--sodium .render-engine-option-tag {
+    color: #60a5fa;
+}
+
+/* Vulkan variant (red) */
+.render-engine-option--vulkan {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.render-engine-option--vulkan:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.4);
+    transform: translateY(-2px);
+}
+
+.render-engine-option--vulkan .render-engine-option-icon {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
+.render-engine-option--vulkan .render-engine-option-tag {
+    color: rgba(239, 68, 68, 0.8);
+}
+
+/* Footer row */
+.render-engine-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+}
+
+.render-engine-footer .delete-modal-checkbox {
+    margin: 0;
+    padding: 0;
+}
+
+#render-engine-dont-show + label {
+    font-size: 13px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.6);
+    user-select: none;
+}
+
+#render-engine-cancel {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #fff;
+    font-family: var(--font-title);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+#render-engine-cancel:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 /* =========================================================

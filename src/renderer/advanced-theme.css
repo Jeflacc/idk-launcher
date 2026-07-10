@@ -1,4 +1,22 @@
-﻿/* Theme and advanced UI layer. Imported after the base stylesheet. */
+/* ============================================================================
+   ADVANCED THEME — body.ui-advanced Mode Overrides
+   ----------------------------------------------------------------------------
+   This stylesheet overrides style.css rules when the user activates
+   "Advanced UI" mode (body.ui-advanced). It transforms the launcher from
+   the classic Mojang-style layout into a cyberpunk wireframe shell with:
+     - A fixed left icon rail (80px) instead of a top nav bar
+     - Cyber grid + scanline overlays on the hero banner
+     - Translucent floating play-bar pill
+     - Flat accent-bordered buttons (replaces Mojang 3D buttons)
+     - Two-layer glass system for background effects
+
+   Load order: styles/index.css imports this AFTER style.css so these
+   rules win the cascade for matching selectors. All rules are scoped
+   under `body.ui-advanced` so they have no effect in classic mode.
+
+   Theme-specific moods (emerald/violet/azure/ember) are applied via
+   body.ui-advanced[data-theme="X"] selectors.
+   ============================================================================ */
 
 /* Hidden by default; shown only when body.ui-advanced is active */
 .advanced-settings {
@@ -2959,10 +2977,19 @@ body.ui-advanced[data-theme="custom"] #view-profile {
 }
 
 /* =========================================================
-   TWO-LAYER GLASS SYSTEM ΓÇö Background Effect Transparency
-   Layer 1 (Sidebars):      rgba(15,13,24,0.9) + blur(20px)
-   Layer 2 (Main Areas):    rgba(15,13,24,0.05) + no blur
-   Excludes "none" and "particles" ΓÇö those keep solid backgrounds.
+   TWO-LAYER GLASS SYSTEM — Background Effect Transparency
+   ----------------------------------------------------------------------------
+   When a background effect is active (not "none"), view wrappers become
+   transparent so the animated canvas shows through. Two glass layers:
+     Layer 1 (Sidebars):   frosted glass + strong blur
+     Layer 2 (Main Areas): barely-tinted clear glass, no blur
+
+   "particles" effect uses a lighter sidebar tint (0.2) than other effects
+   (0.3) because particles are denser and need less sidebar opacity to
+   remain readable.
+
+   Previously duplicated 4x with conflicting opacity values (0.2/0.3/0.9)
+   and inconsistent !important usage — consolidated here.
    ========================================================= */
 
 /* Make view wrappers fully transparent so canvas shows through */
@@ -2974,7 +3001,8 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) #view-main .main-h
     background: transparent !important;
 }
 
-/* Layer 2 ΓÇö Main Areas: barely-tinted clear glass, no blur */
+/* Layer 2 — Main Areas: barely-tinted clear glass, no blur
+   (applies to all non-none effects, including particles) */
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .mods-content-wrapper,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .settings-content-wrapper,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-page-content,
@@ -2983,59 +3011,30 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-main-stag
     backdrop-filter: none !important;
 }
 
-/* Layer 1 ΓÇö Sidebars: heavily frosted glass, strong blur */
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .nav-tabs,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .top-bar,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .browser-sidebar,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .profile-sidebar,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .friends-sidebar,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
+/* Layer 1 — Sidebars: heavily frosted glass, strong blur
+   For "particles" effect: lighter tint (0.2) */
+body.ui-advanced[data-bg-effect="particles"] .nav-tabs,
+body.ui-advanced[data-bg-effect="particles"] .top-bar,
+body.ui-advanced[data-bg-effect="particles"] .browser-sidebar,
+body.ui-advanced[data-bg-effect="particles"] .profile-sidebar,
+body.ui-advanced[data-bg-effect="particles"] .friends-sidebar,
+body.ui-advanced[data-bg-effect="particles"] .details-section {
     background: rgba(15, 13, 24, 0.2) !important;
     backdrop-filter: blur(20px) !important;
     transform: translateZ(0); /* Hardware acceleration */
     will-change: transform, backdrop-filter;
 }
 
-/* Layer 2 ΓÇö Main Areas: barely-tinted clear glass, no blur */
-html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .mods-content-wrapper,
-html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .settings-content-wrapper,
-html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-page-content,
-html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-main-stage {
-    background: rgba(15, 13, 24, 0.05) !important;
-    backdrop-filter: none !important;
-}
-
-/* Layer 1 ΓÇö Sidebars: heavily frosted glass, strong blur */
-html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .nav-tabs,
-html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .top-bar,
-html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .browser-sidebar,
-html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-sidebar,
-html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .friends-sidebar,
-html body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .details-section {
-    background: rgba(15, 13, 24, 0.3) !important;
-    backdrop-filter: blur(20px) !important;
-    transform: translateZ(0); /* Hardware acceleration */
-    will-change: transform, backdrop-filter;
-}
-
-/* Layer 2 ΓÇö Main Areas: barely-tinted clear glass, no blur */
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .mods-content-wrapper,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .settings-content-wrapper,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-page-content,
-body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-main-stage {
-    background: rgba(15, 13, 24, 0.05) !important;
-    backdrop-filter: none !important;
-}
-
-/* Layer 1 ΓÇö Sidebars: heavily frosted glass, strong blur */
+/* Layer 1 — Sidebars: heavily frosted glass, strong blur
+   For other non-none, non-particles effects: slightly stronger tint (0.3) */
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .nav-tabs,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .top-bar,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .browser-sidebar,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .profile-sidebar,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .friends-sidebar,
 body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effect="particles"]) .details-section {
-    background: rgba(15, 13, 24, 0.9) !important;
-    backdrop-filter: blur(20px);
+    background: rgba(15, 13, 24, 0.3) !important;
+    backdrop-filter: blur(20px) !important;
     transform: translateZ(0); /* Hardware acceleration */
     will-change: transform, backdrop-filter;
 }

@@ -1,0 +1,182 @@
+/* ============================================================================
+   BASE LAYER
+   ----------------------------------------------------------------------------
+   Reset, document defaults, font faces, scrollbars, and accessibility
+   primitives. Everything here is theme-invariant and global.
+
+   Previously scattered across style.css (lines 1-13, 168-249, 5757-5967,
+   6785-6835) with 3x duplicated .sr-only, 2x duplicated prefers-reduced-motion,
+   and 2x duplicated prefers-contrast blocks — now consolidated here.
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   FONT FACES
+   --------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Mojang";
+  src: url("../fonts/Mojang-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Mojang";
+  src: url("../fonts/Mojang-Bold.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+}
+
+/* ---------------------------------------------------------------------------
+   RESET
+   --------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* ---------------------------------------------------------------------------
+   DOCUMENT DEFAULTS
+   --------------------------------------------------------------------------- */
+html {
+  font-size: calc(12px * var(--theme-font-scale, 1));
+}
+
+@media (prefers-reduced-motion: no-preference) and (min-width: 0px) {
+  html {
+    font-size: calc(14px * var(--theme-font-scale, 1));
+  }
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--color-bg-app);
+  color: var(--color-text-main);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------------------------------------------------------------------
+   SCROLLBARS
+   --------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-7);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-10);
+}
+
+/* ---------------------------------------------------------------------------
+   ACCESSIBILITY — Screen-reader-only content (canonical definition)
+   Previously duplicated 3x in style.css (lines 5716, 5785, 6785).
+   --------------------------------------------------------------------------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   ACCESSIBILITY — Focus rings
+   --------------------------------------------------------------------------- */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--theme-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   ACCESSIBILITY — High contrast preference
+   Previously duplicated 2x in style.css (lines 5798, 6807).
+   --------------------------------------------------------------------------- */
+@media (prefers-contrast: more) {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline-width: 4px;
+  }
+
+  /* Increase text contrast in high contrast mode */
+  body {
+    --text-main: #ffffff;
+    --text-secondary: #ffffff;
+    --text-muted: #e0e0e0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   ACCESSIBILITY — Reduced motion preference
+   Previously duplicated 2x in style.css (lines 5828, 6817).
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   ARIA LIVE REGION (announced by accessibility-manager.js)
+   --------------------------------------------------------------------------- */
+#a11y-live-region {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

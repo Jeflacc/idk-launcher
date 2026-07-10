@@ -1,0 +1,231 @@
+/* ============================================================================
+   FIXES LAYER — Late-loaded patches
+   ----------------------------------------------------------------------------
+   These rules load LAST in the cascade (after style.css and advanced-theme.css)
+   to patch rendering or interaction issues that cannot be fixed by editing the
+   base component styles without regressing other consumers.
+
+   Currently contains:
+     - Launch overlay click-through + minimize/restore mini-indicator
+       (previously launch-overlay-fix.css)
+
+   IMPORTANT: The overlay backdrop is ALWAYS click-through (pointer-events: none)
+   so the launcher behind it stays usable. Only the card element has
+   pointer-events: auto so its buttons (minimize, cancel) are interactive.
+   backdrop-filter is explicitly set to none because the base style.css sets
+   blur(32px) which causes GPU stalls and the "Not Responding" appearance.
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   LAUNCH OVERLAY — Non-blocking backdrop
+   --------------------------------------------------------------------------- */
+.launch-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(18, 18, 19, 0.55);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  z-index: var(--z-modal);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  cursor: default;
+  transition: opacity var(--transition-slow) ease,
+              visibility var(--transition-slow) ease,
+              background var(--transition-slow) ease;
+}
+
+.launch-overlay.active {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none; /* backdrop is ALWAYS click-through */
+}
+
+.launch-overlay-card {
+  width: min(560px, calc(100vw - 24px));
+  min-height: min(380px, calc(100vh - 24px));
+  background: rgba(10, 10, 12, 0.94);
+  border: 1px solid rgba(var(--theme-accent-rgb), 0.18);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  padding: var(--space-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+  position: relative;
+  pointer-events: auto;
+  transition: transform var(--transition-slow) ease,
+              opacity var(--transition-slow) ease,
+              width var(--transition-slow) ease,
+              min-height var(--transition-slow) ease,
+              padding var(--transition-slow) ease,
+              border-radius var(--transition-slow) ease;
+}
+
+/* Card header (spinner + status + close) */
+.launch-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-7);
+  margin-bottom: var(--space-3);
+}
+
+.launch-card-header .launch-spinner-gif {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.launch-card-header .launch-status {
+  flex: 1;
+  margin-bottom: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.launch-card-controls {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.launch-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background var(--transition-fast) ease,
+              color var(--transition-fast) ease,
+              border-color var(--transition-fast) ease;
+}
+
+.launch-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-main);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.launch-icon-btn:focus-visible {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 2px;
+}
+
+.launch-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: auto;
+}
+
+.launch-hint {
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+}
+
+/* Minimized state: COMPLETELY hide the overlay (backdrop + card)
+   so the launcher behind it is fully usable. A separate floating
+   restore button (in the HTML) is shown instead. */
+.launch-overlay.active.minimized {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Floating mini-indicator that appears at bottom-right when
+   the launch overlay is minimized. Clicking it re-expands
+   the full overlay card. */
+.launch-mini-indicator {
+  position: fixed;
+  right: var(--space-9);
+  bottom: var(--space-9);
+  z-index: calc(var(--z-modal) + 1);
+  display: none;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-7) var(--space-5) var(--space-6);
+  background: rgba(10, 10, 12, 0.94);
+  border: 1px solid rgba(var(--theme-accent-rgb), 0.45);
+  border-radius: var(--radius-full);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  color: var(--color-text-main);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  user-select: none;
+  transition: transform var(--transition-fast) ease,
+              border-color var(--transition-fast) ease;
+}
+
+.launch-mini-indicator:hover {
+  transform: translateY(-1px);
+  border-color: rgba(var(--theme-accent-rgb), 0.7);
+}
+
+.launch-mini-indicator.visible {
+  display: inline-flex;
+}
+
+.launch-mini-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--theme-accent-rgb), 0.25);
+  border-top-color: var(--theme-accent);
+  animation: launch-mini-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes launch-mini-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.launch-mini-close {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--text-xl);
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background var(--transition-fast) ease,
+              color var(--transition-fast) ease;
+}
+
+.launch-mini-close:hover {
+  background: rgba(255, 80, 80, 0.25);
+  color: #ff8080;
+}
