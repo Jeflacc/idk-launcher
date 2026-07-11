@@ -57,5 +57,8 @@
 @import "./advanced/glass-system.css";
 @import "./advanced/theme-moods.css";
 
+/* Global accessibility & UX fixes (WCAG 2.2 AA + Nielsen + Laws of UX) */
+@import "./global-a11y-fixes.css";
+
 /* Late-loaded fixes */
 @import "./fixes.css";

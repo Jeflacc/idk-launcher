@@ -142,3 +142,97 @@ export function waitForElement(selector, timeout = 10000) {
 export function emit(name, detail) {
   document.dispatchEvent(new CustomEvent(name, { detail }));
 }
+
+/**
+ * Make all div-based interactive elements keyboard-accessible (WCAG 2.1.1).
+ * Runs after the app shell renders. Adds role="button", tabindex="0", and
+ * Enter/Space key handlers to clickable divs that lack them.
+ *
+ * This is a global fixup because the app-shell.js template uses divs with
+ * click handlers instead of <button> elements throughout.
+ */
+export function fixKeyboardAccessibility() {
+  // Selectors for div-based interactive elements that need keyboard support
+  const interactiveSelectors = [
+    ".nav-tab",
+    ".mp-tab",
+    ".custom-select-trigger",
+    ".custom-option",
+    ".modpack-item",
+    ".trending-mp-card",
+    ".mp-action-card",
+    ".theme-choice-card",
+    ".ui-mode-card",
+    ".blur-choice-card",
+    ".bg-effect-card",
+    ".pill-switch-option",
+    ".pose-btn",
+    ".profile-quick-action",
+    ".version-tab",
+    ".settings-tab",
+    ".advanced-tab",
+    ".friend-card",
+    ".friend-request-card",
+    ".login-btn",
+    ".play-dropdown-item",
+    ".play-dd-loader-btn",
+    ".play-dd-version-btn",
+    ".nav-item",
+    ".browser-filter-pill",
+    ".provider-pill",
+    ".mem-preset-btn",
+    ".mp-dl-btn",
+    ".add-mod-btn",
+    "[data-target]",
+    "[onclick]",
+  ];
+
+  const selector = interactiveSelectors.join(", ");
+  const elements = document.querySelectorAll(selector);
+
+  let fixed = 0;
+  elements.forEach((el) => {
+    // Skip if already a button or has role
+    if (el.tagName === "BUTTON" || el.tagName === "A" || el.tagName === "INPUT") return;
+    if (el.getAttribute("role")) return; // Don't override existing roles
+
+    // Add role="button" if not already set
+    el.setAttribute("role", "button");
+
+    // Add tabindex="0" if not already set
+    if (!el.hasAttribute("tabindex")) {
+      el.setAttribute("tabindex", "0");
+    }
+
+    // Add keyboard activation (Enter + Space)
+    if (!el._keyboardFixed) {
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          el.click();
+        }
+      });
+      el._keyboardFixed = true;
+      fixed++;
+    }
+  });
+
+  // Also add aria-labels to icon-only buttons (no text content)
+  const iconButtons = document.querySelectorAll("button:not([aria-label])");
+  iconButtons.forEach((btn) => {
+    const text = btn.textContent?.trim();
+    const title = btn.getAttribute("title");
+    if (!text && title) {
+      btn.setAttribute("aria-label", title);
+    } else if (!text && !title) {
+      // Try to infer from SVG title or nearby text
+      const svgTitle = btn.querySelector("svg title")?.textContent;
+      if (svgTitle) {
+        btn.setAttribute("aria-label", svgTitle);
+      }
+    }
+  });
+
+  console.info(`[a11y] Fixed keyboard accessibility for ${fixed} elements`);
+}

@@ -588,3 +588,10 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
     will-change: transform, backdrop-filter;
 }
 
+
+/* VLM Round 2 Fix: Window controls need more padding (Fitts Law) */
+.window-controls .ctrl {
+    min-width: 46px;
+    min-height: 32px;
+}
+

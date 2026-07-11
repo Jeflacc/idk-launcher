@@ -32,6 +32,7 @@ import { renderAppShell } from "./app/app-shell.js";
 import { state, actions } from "./core/app-state.js";
 import { createViewController, initWindowControls } from "./core/views.js";
 import { loadAndMigrateSettings } from "./core/settings-migration.js";
+import { fixKeyboardAccessibility } from "./core/dom.js";
 import { initBackgroundEffects } from "./features/background/background-effects.js";
 import { initGameFeaturesIntegration } from "./features/game-features/game-features-integration.js";
 
@@ -83,6 +84,9 @@ const { switchView, getReturnView } = createViewController();
 actions.switchView = switchView;
 
 initWindowControls();
+
+// Fix keyboard accessibility on all div-based interactive elements (WCAG 2.1.1)
+fixKeyboardAccessibility();
 
 // 8. Dynamically import + initialize all features.
 //    Promise.all allows the modules to load in parallel.

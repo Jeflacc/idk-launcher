@@ -119,7 +119,7 @@
 /* Offline toggle — subtle dark button with moon icon */
 .login-btn.offline-toggle {
     background: transparent;
-    border: 1px dashed #4a4a4b;
+    border: 1px solid #4a4a4b;
     color: var(--text-muted);
     font-size: 13px;
     padding: 10px 16px;

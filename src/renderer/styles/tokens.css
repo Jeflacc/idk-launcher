@@ -71,8 +71,8 @@
 
   --color-text-main: #ffffff;
   --color-text-secondary: #e0e0e0;
-  --color-text-muted: #a0a0a0;
-  --color-text-dim: #707070;
+  --color-text-muted: #b0b0b0;
+  --color-text-dim: #909090;
 
   --color-accent: var(--theme-accent);
   --color-accent-hover: var(--theme-accent-hover);
