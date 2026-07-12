@@ -369,7 +369,7 @@ if (playDropdownTrigger && playDropdown) {
     forceUpdateCb.checked = state.forceUpdate;
     forceUpdateCb.addEventListener('change', (e) => {
       state.forceUpdate = e.target.checked;
-      localStorage.setItem('craftlaunch_forceUpdate', String(e.target.checked));
+      // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
     });
   }
 }
@@ -726,7 +726,7 @@ playBtn.addEventListener('click', async (e) => {
       }
       
       state.performanceRenderer = selection.renderer;
-      localStorage.setItem('craftlaunch_performanceRenderer', selection.renderer);
+      // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
       
       if (selection.dontShowAgain) {
         localStorage.setItem('craftlaunch_hideRenderPopup', 'true');

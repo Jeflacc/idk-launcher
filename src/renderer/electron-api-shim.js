@@ -125,7 +125,7 @@
     updateModpackProfile: (modpackId, changes) => idk?.modpack.updateProfile(modpackId, changes) ?? Promise.resolve({ success: false }),
     launchModpack: (modpackId, quickConnect) => idk?.modpack.launch(modpackId, quickConnect) ?? Promise.resolve({ success: false }),
     downloadModrinthModpack: (projectId, minecraftVersion, loader, name) =>
-      idk?.modpack.install(projectId, minecraftVersion, loader, name) ?? Promise.resolve({ success: false }),
+      idk?.mod.downloadModrinthModpack(projectId, minecraftVersion, loader, name) ?? Promise.resolve({ success: false }),
     downloadCurseforgeModpack: (projectId, fileId, name) => idk?.mod.downloadCurseforgeModpack(projectId, fileId, name) ?? Promise.resolve({ success: false }),
     exportModpack: (modpackId, targetPath) => idk?.modpack.export(modpackId, targetPath) ?? Promise.resolve({ success: false }),
     unzipCurseforge: (zipPath, name) => idk?.modpack.importZip(zipPath, name) ?? Promise.resolve({ success: false }),

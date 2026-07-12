@@ -34,7 +34,7 @@ const optimizationCheckbox = document.getElementById('auto-optimization');
 optimizationCheckbox.checked = state.autoOptimization;
 optimizationCheckbox.addEventListener('change', (e) => {
   state.autoOptimization = e.target.checked;
-  localStorage.setItem('craftlaunch_autoOptimization', String(state.autoOptimization));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   if (window.electronAPI) {
     window.electronAPI.saveSettings({ autoOptimization: state.autoOptimization }).catch(console.error);
   }
@@ -45,7 +45,7 @@ if (performanceRendererSelect) {
   performanceRendererSelect.value = state.performanceRenderer;
   performanceRendererSelect.addEventListener('change', (e) => {
     state.performanceRenderer = e.target.value;
-    localStorage.setItem('craftlaunch_performanceRenderer', state.performanceRenderer);
+    // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
     if (window.electronAPI) {
       window.electronAPI.saveSettings({ performanceRenderer: state.performanceRenderer }).catch(console.error);
     }

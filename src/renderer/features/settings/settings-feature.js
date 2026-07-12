@@ -152,7 +152,7 @@ function applyLauncherTheme(theme) {
   state.launcherTheme = theme;
   document.documentElement.dataset.theme = theme;
   document.body.dataset.theme = theme;
-  localStorage.setItem("idk_launcher_theme", theme);
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
 
   const preset = THEME_PRESETS[theme];
   if (preset) {
@@ -163,7 +163,7 @@ function applyLauncherTheme(theme) {
       preset.glowRgb, preset.stageRgb
     );
     state.launcherAccentColor = preset.accent;
-    localStorage.setItem("idk_accent_color", preset.accent);
+    // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   } else if (theme === "custom") {
     const customColor = state.launcherAccentColor || "#4cb837";
     const custom = generateCustomTheme(customColor);
@@ -184,7 +184,7 @@ function applyLauncherTheme(theme) {
 
 function applyCustomAccentColor(hex) {
   state.launcherAccentColor = hex;
-  localStorage.setItem("idk_accent_color", hex);
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   if (state.launcherTheme === "custom") {
     applyLauncherTheme("custom");
   }
@@ -193,28 +193,28 @@ function applyCustomAccentColor(hex) {
 
 function applyLauncherBorderRadius(px) {
   state.launcherBorderRadius = px;
-  localStorage.setItem("idk_border_radius", String(px));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   document.documentElement.style.setProperty("--theme-radius", `${px}px`);
   persistVisualSettings();
 }
 
 function applyAnimationSpeed(speed) {
   state.launcherAnimationSpeed = speed;
-  localStorage.setItem("idk_animation_speed", String(speed));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   document.documentElement.style.setProperty("--theme-animation-speed", String(speed));
   persistVisualSettings();
 }
 
 function applyFontScale(scale) {
   state.launcherFontScale = scale;
-  localStorage.setItem("idk_font_scale", String(scale));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   document.documentElement.style.setProperty("--theme-font-scale", String(scale));
   persistVisualSettings();
 }
 
 function applyBlurIntensity(level) {
   state.launcherBlurIntensity = level;
-  localStorage.setItem("idk_blur_intensity", level);
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   const px = BLUR_LEVELS[level] || 12;
   document.documentElement.style.setProperty("--theme-blur", `${px}px`);
   persistVisualSettings();
@@ -222,70 +222,70 @@ function applyBlurIntensity(level) {
 
 function applyCompactMode(enabled) {
   state.launcherCompactMode = enabled;
-  localStorage.setItem("idk_compact_mode", String(enabled));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   document.body.classList.toggle("compact-mode", enabled);
   persistVisualSettings();
 }
 
 function applyLanguage(lang) {
   state.language = lang;
-  localStorage.setItem("idk_language", lang);
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   persistVisualSettings();
 }
 
 function applyBackgroundEffect(effect) {
   state.backgroundEffect = effect;
-  localStorage.setItem("idk_background_effect", effect);
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   document.body.dataset.bgEffect = effect;
   persistVisualSettings();
 }
 
 function applyBackgroundIntensity(val) {
   state.backgroundIntensity = val;
-  localStorage.setItem("idk_background_intensity", String(val));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   document.body.style.setProperty("--bg-intensity", String(val / 100));
   persistVisualSettings();
 }
 
 function applyConcurrentDownloads(val) {
   state.concurrentDownloads = val;
-  localStorage.setItem("idk_concurrent_downloads", String(val));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   persistVisualSettings();
 }
 
 function applyConcurrentIO(val) {
   state.concurrentIO = Math.min(val, 8);
-  localStorage.setItem("idk_concurrent_io", String(state.concurrentIO));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   persistVisualSettings();
 }
 
 function applyAutoUpdates(enabled) {
   state.autoUpdates = enabled;
-  localStorage.setItem("idk_auto_updates", String(enabled));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   persistVisualSettings();
 }
 
 function applyDiscordPresence(enabled) {
   state.discordPresence = enabled;
-  localStorage.setItem("idk_discord_presence", String(enabled));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   persistVisualSettings();
 }
 
 function applyBetaUpdates(enabled) {
   state.betaUpdates = enabled;
-  localStorage.setItem("idk_beta_updates", String(enabled));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   persistVisualSettings();
 }
 
 function applyOpenLogsAfterLaunch(enabled) {
   state.openLogsAfterLaunch = enabled;
-  localStorage.setItem("idk_open_logs", String(enabled));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   persistVisualSettings();
 }
 
 function applyAnalytics(enabled) {
   state.analyticsEnabled = enabled;
-  localStorage.setItem("idk_analytics", String(enabled));
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   persistVisualSettings();
 }
 
@@ -294,7 +294,7 @@ function applyLauncherUiMode(mode) {
   state.launcherUiMode = nextMode;
   document.body.dataset.uiMode = nextMode;
   document.body.classList.toggle("ui-advanced", nextMode === "advanced");
-  localStorage.setItem("idk_launcher_ui_mode", nextMode);
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
 
   document.querySelectorAll("#launcher-ui-modes .pill-switch-option, #adv-launcher-ui-modes .pill-switch-option").forEach((card) => {
     card.classList.toggle("active", card.dataset.uiMode === nextMode);
@@ -309,7 +309,7 @@ function applyLauncherUiMode(mode) {
 function applyLauncherPerformanceMode(mode) {
   state.launcherPerformanceMode = mode;
   document.body.dataset.launcherPerformance = mode;
-  localStorage.setItem("idk_launcher_performance_mode", mode);
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
 
   document.querySelectorAll("#launcher-performance-modes .pill-switch-option, #adv-launcher-performance-modes .pill-switch-option").forEach((card) => {
     card.classList.toggle("active", card.dataset.performanceMode === mode);
@@ -335,7 +335,7 @@ function setMemory(gb) {
   const advMemLabel = document.getElementById("adv-memory-value-label");
   if (advMemSlider) advMemSlider.value = gb;
   if (advMemLabel) advMemLabel.innerText = `${gb} GB`;
-  localStorage.setItem("craftlaunch_maxMemory", gb);
+  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   document.querySelectorAll(".mem-preset-btn").forEach((b) => {
     b.classList.toggle("active", parseInt(b.dataset.gb) === gb);
   });
@@ -595,7 +595,7 @@ export function initSettingsFeature({ switchView }) {
           if (result && result.success && result.filePath) {
             state.customMinecraftPath = result.filePath;
             customMinecraftPathInput.value = state.customMinecraftPath;
-            localStorage.setItem("idk_custom_minecraft_path", state.customMinecraftPath);
+            // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
             await window.electronAPI.saveSettings({ customMinecraftPath: state.customMinecraftPath });
             if (actions.scanDownloadedVersions) await actions.scanDownloadedVersions();
           }
@@ -604,7 +604,7 @@ export function initSettingsFeature({ switchView }) {
       document.getElementById("btn-clear-minecraft-path")?.addEventListener("click", async () => {
         state.customMinecraftPath = "";
         customMinecraftPathInput.value = "";
-        localStorage.setItem("idk_custom_minecraft_path", "");
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         if (window.electronAPI) await window.electronAPI.saveSettings({ customMinecraftPath: "" });
         if (actions.scanDownloadedVersions) await actions.scanDownloadedVersions();
       });
@@ -616,7 +616,7 @@ export function initSettingsFeature({ switchView }) {
       javaPathInput.value = state.javaPath;
       javaPathInput.addEventListener("input", (e) => {
         state.javaPath = e.target.value;
-        localStorage.setItem("craftlaunch_javaPath", state.javaPath);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         persistVisualSettings();
       });
     }
@@ -627,7 +627,7 @@ export function initSettingsFeature({ switchView }) {
       globalJavaArgsInput.value = state.globalJavaArgs || "";
       globalJavaArgsInput.addEventListener("input", (e) => {
         state.globalJavaArgs = e.target.value;
-        localStorage.setItem("idk_global_java_args", state.globalJavaArgs);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         persistVisualSettings();
       });
     }
@@ -642,7 +642,7 @@ export function initSettingsFeature({ switchView }) {
       defaultWidthInput.value = state.defaultWindowWidth || 1024;
       defaultWidthInput.addEventListener("input", (e) => {
         state.defaultWindowWidth = parseInt(e.target.value) || 1024;
-        localStorage.setItem("idk_default_window_width", state.defaultWindowWidth);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         persistVisualSettings();
       });
     }
@@ -650,7 +650,7 @@ export function initSettingsFeature({ switchView }) {
       defaultHeightInput.value = state.defaultWindowHeight || 768;
       defaultHeightInput.addEventListener("input", (e) => {
         state.defaultWindowHeight = parseInt(e.target.value) || 768;
-        localStorage.setItem("idk_default_window_height", state.defaultWindowHeight);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         persistVisualSettings();
       });
     }
@@ -658,7 +658,7 @@ export function initSettingsFeature({ switchView }) {
       fullscreenToggle.checked = state.defaultFullscreen || false;
       fullscreenToggle.addEventListener("change", (e) => {
         state.defaultFullscreen = e.target.checked;
-        localStorage.setItem("idk_default_fullscreen", state.defaultFullscreen);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         persistVisualSettings();
       });
     }
@@ -666,7 +666,7 @@ export function initSettingsFeature({ switchView }) {
       overlayToggle.checked = state.enableOverlay || false;
       overlayToggle.addEventListener("change", (e) => {
         state.enableOverlay = e.target.checked;
-        localStorage.setItem("idk_enable_overlay", state.enableOverlay);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         persistVisualSettings();
       });
     }
@@ -677,7 +677,7 @@ export function initSettingsFeature({ switchView }) {
       hideLauncherToggle.checked = state.hideLauncher;
       hideLauncherToggle.addEventListener("change", (e) => {
         state.hideLauncher = e.target.checked;
-        localStorage.setItem("idk_hide_launcher", String(state.hideLauncher));
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         persistVisualSettings();
       });
     }
@@ -688,7 +688,7 @@ export function initSettingsFeature({ switchView }) {
       autoOptToggle.checked = state.autoOptimization;
       autoOptToggle.addEventListener("change", (e) => {
         state.autoOptimization = e.target.checked;
-        localStorage.setItem("craftlaunch_autoOptimization", String(state.autoOptimization));
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         persistVisualSettings();
       });
     }
@@ -825,7 +825,7 @@ export function initSettingsFeature({ switchView }) {
       "adv-toggle-discord": applyDiscordPresence,
       "adv-toggle-beta": applyBetaUpdates,
       "adv-toggle-logs": applyOpenLogsAfterLaunch,
-      "adv-toggle-hide": (v) => { state.hideLauncher = v; localStorage.setItem("idk_hide_launcher", String(v)); persistVisualSettings(); },
+      // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
       "adv-toggle-analytics": applyAnalytics,
     };
     const toggleStateMap = {
@@ -923,7 +923,7 @@ export function initSettingsFeature({ switchView }) {
       advAutoOpt.checked = state.autoOptimization;
       advAutoOpt.addEventListener("change", (e) => {
         state.autoOptimization = e.target.checked;
-        localStorage.setItem("craftlaunch_autoOptimization", String(state.autoOptimization));
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         persistVisualSettings();
         const classicAutoOpt = document.getElementById("auto-optimization");
         if (classicAutoOpt) classicAutoOpt.checked = e.target.checked;
@@ -936,7 +936,7 @@ export function initSettingsFeature({ switchView }) {
       advRendererSelect.value = state.performanceRenderer;
       advRendererSelect.addEventListener("change", (e) => {
         state.performanceRenderer = e.target.value;
-        localStorage.setItem("craftlaunch_performanceRenderer", state.performanceRenderer);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         persistVisualSettings();
         
         // Sync with classic UI
@@ -1074,7 +1074,7 @@ export function initSettingsFeature({ switchView }) {
       advJavaPath.value = state.javaPath || '';
       advJavaPath.addEventListener('input', (e) => {
         state.javaPath = e.target.value;
-        localStorage.setItem('craftlaunch_javaPath', state.javaPath);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         const classic = document.getElementById('java-path');
         if (classic) classic.value = e.target.value;
         persistVisualSettings();
@@ -1085,7 +1085,7 @@ export function initSettingsFeature({ switchView }) {
       advGlobalArgs.value = state.globalJavaArgs || '';
       advGlobalArgs.addEventListener('input', (e) => {
         state.globalJavaArgs = e.target.value;
-        localStorage.setItem('idk_global_java_args', state.globalJavaArgs);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         const classic = document.getElementById('global-java-args');
         if (classic) classic.value = e.target.value;
         persistVisualSettings();
@@ -1101,7 +1101,7 @@ export function initSettingsFeature({ switchView }) {
       advWidth.value = state.defaultWindowWidth || 1024;
       advWidth.addEventListener('input', (e) => {
         state.defaultWindowWidth = parseInt(e.target.value) || 1024;
-        localStorage.setItem('idk_default_window_width', state.defaultWindowWidth);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         syncAdvSizeLabel();
         const classic = document.getElementById('default-window-width');
         if (classic) classic.value = e.target.value;
@@ -1112,7 +1112,7 @@ export function initSettingsFeature({ switchView }) {
       advHeight.value = state.defaultWindowHeight || 768;
       advHeight.addEventListener('input', (e) => {
         state.defaultWindowHeight = parseInt(e.target.value) || 768;
-        localStorage.setItem('idk_default_window_height', state.defaultWindowHeight);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         syncAdvSizeLabel();
         const classic = document.getElementById('default-window-height');
         if (classic) classic.value = e.target.value;
@@ -1126,7 +1126,7 @@ export function initSettingsFeature({ switchView }) {
       advFullscreen.checked = state.defaultFullscreen || false;
       advFullscreen.addEventListener('change', (e) => {
         state.defaultFullscreen = e.target.checked;
-        localStorage.setItem('idk_default_fullscreen', state.defaultFullscreen);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         const classic = document.getElementById('fullscreen-toggle');
         if (classic) classic.checked = e.target.checked;
         persistVisualSettings();
@@ -1137,7 +1137,7 @@ export function initSettingsFeature({ switchView }) {
       advOverlay.checked = state.enableOverlay || false;
       advOverlay.addEventListener('change', (e) => {
         state.enableOverlay = e.target.checked;
-        localStorage.setItem('idk_enable_overlay', state.enableOverlay);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         const classic = document.getElementById('overlay-toggle');
         if (classic) classic.checked = e.target.checked;
         persistVisualSettings();
@@ -1155,7 +1155,7 @@ export function initSettingsFeature({ switchView }) {
           if (result && result.success && result.filePath) {
             state.customMinecraftPath = result.filePath;
             advCustomPath.value = state.customMinecraftPath;
-            localStorage.setItem('idk_custom_minecraft_path', state.customMinecraftPath);
+            // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
             await window.electronAPI.saveSettings({ customMinecraftPath: state.customMinecraftPath });
             const classic = document.getElementById('custom-minecraft-path');
             if (classic) classic.value = result.filePath;
@@ -1167,7 +1167,7 @@ export function initSettingsFeature({ switchView }) {
       if (advClear) advClear.addEventListener('click', async () => {
         state.customMinecraftPath = '';
         advCustomPath.value = '';
-        localStorage.setItem('idk_custom_minecraft_path', '');
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         if (window.electronAPI) await window.electronAPI.saveSettings({ customMinecraftPath: '' });
         const classic = document.getElementById('custom-minecraft-path');
         if (classic) classic.value = '';

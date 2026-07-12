@@ -44,8 +44,8 @@ export function initAuthFeature({ switchView }) {
         if (res && res.success && res.data && res.data.profile) {
           state.currentUser = res.data.profile.name;
           state.authMode = "microsoft";
-          localStorage.setItem("craftlaunch_username", state.currentUser);
-          localStorage.setItem("craftlaunch_authmode", state.authMode);
+          // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+          // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
           
           window.electronAPI.saveSettings({
             currentUser: state.currentUser,
@@ -76,8 +76,8 @@ export function initAuthFeature({ switchView }) {
     if (!val) return;
     state.currentUser = val;
     state.authMode = "offline";
-    localStorage.setItem("craftlaunch_username", state.currentUser);
-    localStorage.setItem("craftlaunch_authmode", state.authMode);
+    // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+    // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
     if (window.electronAPI) {
       window.electronAPI
         .saveSettings({
@@ -116,8 +116,8 @@ export function initAuthFeature({ switchView }) {
       if (ok && data.accessToken) {
         state.currentUser = data.selectedProfile.name;
         state.authMode = "elyby";
-        localStorage.setItem("craftlaunch_username", state.currentUser);
-        localStorage.setItem("craftlaunch_authmode", state.authMode);
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
         if (window.electronAPI) {
           window.electronAPI
             .saveSettings({

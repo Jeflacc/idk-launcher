@@ -28,6 +28,10 @@ import "./components/download-progress.js";
 import "./components/accessibility-manager.js";
 import "./components/error-display.js";
 
+// NOTE: html-loader.js (loadAppShell) is the future HTML-first approach.
+// Once views/*.html and partials/*.html files are created, replace
+// renderAppShell() with: await loadAppShell();
+// For now, renderAppShell() injects the full DOM via innerHTML template.
 import { renderAppShell } from "./app/app-shell.js";
 import { state, actions } from "./core/app-state.js";
 import { createViewController, initWindowControls } from "./core/views.js";
