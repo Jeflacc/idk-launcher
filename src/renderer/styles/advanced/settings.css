@@ -3,14 +3,21 @@
    ----------------------------------------------------------------------------
    Contains:
      - #view-settings padding + dot-grid background
-     - .settings-content-wrapper (max-width, padding, dark glass bg)
-     - .settings-tab-bar (sticky, scrollable)
+     - .advanced-settings wrapper (migrated from advanced/shell.css)
+     - .settings-content-wrapper (max-width, padding, dark glass bg) — partially
+       migrated from advanced/modpacks.css (split from shared multi-selector rules)
+     - .settings-tab-bar (sticky, scrollable) — migrated from advanced/modpacks.css
+     - .settings-subgroup + .settings-subgroup-heading (migrated from advanced/shell.css)
+     - .theme-picker-grid + .ui-mode-grid + .theme-choice-card + .ui-mode-card
+       + .theme-choice-swatch (migrated from advanced/shell.css — shared base
+       styles for both classic and advanced settings)
+     - .mem-preset-btn:hover + .active (migrated from advanced/modpacks.css)
      - .view-title + .no-modpack-msg overrides
      - .settings-grid + .settings-section
      - .clean-input + .clean-select + .skin-3d-field select + .skin-3d-toggle
      - .memory-slider + thumb
-     - Advanced settings panel (.advanced-settings, .advanced-tab-bar,
-       .advanced-tab, .advanced-tab-indicator, .advanced-tab-panel)
+     - Advanced settings panel (.advanced-tab-bar, .advanced-tab,
+       .advanced-tab-indicator, .advanced-tab-panel)
      - .adv-section + .adv-section-header + .adv-select
      - .accent-swatch-grid + .accent-swatch + .accent-custom-row +
        .accent-picker-input + .accent-hex-label
@@ -21,17 +28,13 @@
      - .adv-input-field + .adv-input + .adv-input--sm + .adv-btn +
        .adv-action-row + .adv-action-label + #adv-toggles-wrap +
        .adv-open-dir-link + #adv-launcher-theme-picker
-     - Mobile responsive overrides (max-width: 720px)
+     - Support banner (.support-banner, .support-donate-btn, .btn-shine,
+       @keyframes shine) — migrated from friends.css (lives in ABOUT tab)
+     - body.ui-advanced .dashboard-banners-grid .support-banner
    ============================================================================ */
 
 /* Advanced settings */
-body.ui-advanced #view-settings {
-    padding: 0;
-}
 
-body.ui-advanced .settings-content-wrapper {
-    overflow-y: auto;
-}
 
 body.ui-advanced .settings-grid {
     gap: 14px;
@@ -86,6 +89,7 @@ body.ui-advanced .advanced-settings {
 }
 
 body.ui-advanced .settings-content-wrapper {
+    overflow-y: auto;
     display: none;
 }
 
@@ -619,38 +623,11 @@ body.ui-advanced .adv-btn:hover {
 
 /* Dot-grid background for settings view */
 body.ui-advanced #view-settings {
+    padding: 0;
     background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
     background-size: 20px 20px;
 }
 
-@media (max-width: 720px) {
-    body.ui-advanced {
-        --advanced-sidebar-width: 80px;
-        --top-bar-height: 64px;
-    }
-
-    body.ui-advanced .nav-tabs {
-        width: var(--advanced-sidebar-width);
-        padding: 16px 8px;
-        gap: 12px;
-    }
-
-    body.ui-advanced .nav-tabs::before,
-    body.ui-advanced .nav-tab {
-        width: 46px;
-        height: 46px;
-    }
-
-    body.ui-advanced .top-brand {
-        min-width: 60px;
-        font-size: 14px !important;
-        letter-spacing: 1px !important;
-    }
-
-    body.ui-advanced .window-controls {
-        display: none;
-    }
-}
 
 /* =========================================================
    Advanced UX - input fields, buttons, action rows
@@ -953,4 +930,353 @@ body.ui-advanced .main-hero-banner .featured-server-banner--compact::before {
     border-bottom: 2px solid #000;
     letter-spacing: 1px;
 }
+/* ===== MIGRATED FROM friends.css: support banner (Ko-Fi widget, lives in advanced ABOUT tab) ===== */
 
+.support-heart-bg {
+    position: absolute;
+    right: -20px;
+    bottom: -30px;
+    color: rgba(255, 94, 91, 0.06);
+    transform: rotate(-15deg) scale(1);
+    transition: color 0.6s ease, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.support-banner:hover .support-heart-bg {
+    color: rgba(255, 94, 91, 0.12);
+    transform: rotate(5deg) scale(1.15);
+}
+.support-banner-glow {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(255, 94, 91, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(20px);
+    opacity: 0.4;
+    transition: opacity 0.5s ease;
+}
+.support-banner:hover .support-banner-glow {
+    opacity: 0.8;
+}
+.support-banner::after {
+    display: none;
+}
+/* Support Banner */
+.support-banner {
+    background: rgba(15, 13, 24, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, background 0.3s ease;
+}
+.support-banner::before {
+    display: none;
+}
+.support-banner:hover {
+    border-color: rgba(255, 94, 91, 0.25);
+    background: rgba(15, 13, 24, 0.5);
+}
+.support-banner:hover .kofi-lid {
+    transform: translateY(-3px) rotate(-10deg);
+}
+.support-banner:hover .kofi-steam {
+    opacity: 1 !important;
+    transform: translateY(-5px) !important;
+}
+.support-banner-bg-decoration {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.support-banner-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 1;
+}
+.support-banner-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 94, 91, 0.1);
+    border: 1px solid rgba(255, 94, 91, 0.15);
+    color: rgba(255, 94, 91, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+}
+.support-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.support-banner-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(255, 94, 91, 0.7);
+    font-weight: 700;
+}
+.support-banner-title {
+    font-family: var(--font-title);
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+}
+.support-banner-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+.support-banner-action {
+    z-index: 1;
+    display: flex;
+}
+.support-donate-btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, rgba(255, 94, 91, 0.15), rgba(255, 94, 91, 0.08));
+    border: 1px solid rgba(255, 94, 91, 0.25);
+    color: #ff5e5b;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.support-donate-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 94, 91, 0.25), rgba(255, 94, 91, 0.15));
+    border-color: rgba(255, 94, 91, 0.5);
+    box-shadow: 0 4px 20px rgba(255, 94, 91, 0.25);
+    transform: translateY(-1px);
+}
+.support-donate-btn:active {
+    transform: translateY(0);
+    background: linear-gradient(135deg, rgba(255, 94, 91, 0.3), rgba(255, 94, 91, 0.2));
+}
+.btn-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transform: skewX(-20deg);
+    animation: shine 3s infinite;
+}
+
+/* ===== MIGRATED FROM friends.css: @keyframes shine (Ko-Fi button shine) ===== */
+
+@keyframes shine {
+    0% { left: -100%; }
+    20% { left: 200%; }
+    100% { left: 200%; }
+}
+/* ===== MIGRATED FROM advanced/shell.css: .advanced-settings wrapper ===== */
+
+/* Hidden by default; shown only when body.ui-advanced is active */
+.advanced-settings {
+    display: none;
+}
+/* ===== MIGRATED FROM advanced/shell.css: settings-subgroup ===== */
+
+/* Settings appearance controls */
+.settings-subgroup {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+.settings-subgroup-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.settings-subgroup-heading span {
+    font-family: var(--font-title);
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.settings-subgroup-heading small {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-align: right;
+}
+/* ===== MIGRATED FROM advanced/shell.css: theme-picker + ui-mode cards (shared base styles) ===== */
+
+.theme-picker-grid,
+.ui-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+.theme-choice-card,
+.ui-mode-card {
+    min-height: 86px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--theme-radius);
+    background: rgba(8, 8, 9, 0.42);
+    color: #fff;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+.theme-choice-card:hover,
+.ui-mode-card:hover {
+    transform: translateY(-1px);
+    border-color: rgba(var(--theme-accent-rgb), 0.35);
+    background: rgba(var(--theme-accent-rgb), 0.08);
+}
+.theme-choice-card.active,
+.ui-mode-card.active {
+    border-color: var(--theme-accent);
+    background: rgba(var(--theme-accent-rgb), 0.14);
+    box-shadow:
+        0 0 0 1px rgba(var(--theme-accent-rgb), 0.28),
+        0 0 24px rgba(var(--theme-accent-rgb), 0.12);
+}
+.theme-choice-card strong,
+.ui-mode-card strong {
+    display: block;
+    margin-top: 8px;
+    font-family: var(--font-title);
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+.theme-choice-card small,
+.ui-mode-card span {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+.theme-choice-swatch {
+    display: block;
+    width: 100%;
+    height: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: calc(var(--theme-radius) * 0.3);
+    background:
+        linear-gradient(90deg, var(--swatch-a), var(--swatch-b)),
+        radial-gradient(
+            circle at 20% 50%,
+            rgba(255, 255, 255, 0.35),
+            transparent 35%
+        );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+/* ===== MIGRATED FROM advanced/modpacks.css: settings-content-wrapper + tab-bar + mem-preset-btn ===== */
+
+body.ui-advanced .settings-content-wrapper {
+    margin: 0;
+    max-width: none;
+    height: 100%;
+}
+body.ui-advanced .settings-content-wrapper {
+    padding: 20px;
+}
+body.ui-advanced .settings-content-wrapper {
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.32);
+    background: rgba(15, 13, 24, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+}
+body.ui-advanced .settings-content-wrapper {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 18px 24px 22px;
+    background: rgba(8, 8, 12, 0.86);
+}
+body.ui-advanced .settings-tab-bar {
+    margin-bottom: 18px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+body.ui-advanced .settings-tab-bar::-webkit-scrollbar {
+    display: none;
+}
+body.ui-advanced .mem-preset-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    box-sizing: border-box;
+    border-radius: calc(var(--theme-radius) * 0.4);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.42);
+    background: rgba(var(--theme-accent-rgb), 0.18);
+    color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    text-shadow: none;
+    font-family: var(--font-title);
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 0;
+}
+body.ui-advanced .mem-preset-btn:hover {
+    background: rgba(var(--theme-accent-rgb), 0.28);
+    border-color: var(--theme-accent);
+    color: #fff;
+}
+body.ui-advanced .mem-preset-btn.active {
+    background: rgba(var(--theme-accent-rgb), 0.35);
+    border-color: var(--theme-accent);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.25);
+}
+body.ui-advanced .ui-mode-card {
+    border-radius: 0;
+}
+body.ui-advanced .settings-content-wrapper {
+    position: relative;
+}
+body.ui-advanced .settings-content-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(var(--theme-accent-rgb), 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--theme-accent-rgb), 0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 0;
+}

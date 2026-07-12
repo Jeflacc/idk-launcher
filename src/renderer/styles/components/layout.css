@@ -15,9 +15,6 @@
    containers. They must load early so component rules below can override
    other properties (border, padding, etc.) without fighting the background.
    --------------------------------------------------------------------------- */
-.view {
-    background: var(--color-bg-glass) !important;
-}
 
 .modpacks-sidebar,
 .browser-sidebar {
@@ -99,76 +96,6 @@
     min-width: 0;
 }
 
-.top-bar-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    height: 100%;
-    min-width: 0;
-    flex: 1;
-}
-
-.top-brand {
-    font-family: var(--font-title);
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    line-height: 1;
-    color: #f4f6f9;
-    -webkit-app-region: no-drag;
-    font-variant: small-caps;
-    text-transform: lowercase;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
-.brand-title {
-    font-size: 10px;
-    font-weight: 700;
-    color: #8d9298;
-    letter-spacing: 1.4px;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-    padding-right: 14px;
-    line-height: 1;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.nav-tabs {
-    display: flex;
-    gap: 2px;
-    height: 100%;
-    align-items: stretch;
-    min-width: 0;
-    flex-shrink: 1;
-    -webkit-app-region: no-drag !important;
-}
-
-.nav-tab {
-    color: #90959b;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 0 12px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition:
-        color 0.2s ease,
-        border-color 0.2s ease,
-        background-color 0.2s ease;
-    height: auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    font-family: var(--font-title);
-    font-variant: small-caps;
-    text-transform: lowercase;
-    line-height: 1;
-    white-space: nowrap;
-    flex-shrink: 0;
-    box-sizing: border-box;
-    letter-spacing: 0.5px;
-}
 
 .top-bar-left {
     display: flex;
@@ -236,6 +163,7 @@
     align-items: stretch;
     min-width: 0;
     flex-shrink: 1;
+    -webkit-app-region: no-drag !important;
 }
 
 .nav-tab {
@@ -253,10 +181,6 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    z-index: 999999;
-    pointer-events: all;
-    -webkit-app-region: no-drag !important;
     gap: 7px;
     font-family: var(--font-title);
     font-variant: small-caps;
@@ -266,6 +190,10 @@
     flex-shrink: 0;
     box-sizing: border-box;
     letter-spacing: 0.6px;
+    position: relative;
+    z-index: 999999;
+    pointer-events: all;
+    -webkit-app-region: no-drag !important;
 }
 
 .nav-tab svg {
@@ -407,17 +335,6 @@ body:has(#view-idk-connect.active) .nav-tab[data-target="idk-connect"] {
 }
 
 /* Wide windows: show full username (MC names are Γëñ16 chars) */
-@media (min-width: 1280px) {
-    .user-profile {
-        max-width: none;
-    }
-
-    .user-details h4,
-    #display-username {
-        overflow: visible;
-        text-overflow: clip;
-    }
-}
 
 /* User Profile Dropdown Menu styling */
 .user-profile-wrapper {
@@ -495,17 +412,6 @@ body:has(#view-idk-connect.active) .nav-tab[data-target="idk-connect"] {
     -webkit-app-region: no-drag;
 }
 
-.window-controls .ctrl {
-    width: 44px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text-muted);
-    font-size: 11px;
-    transition: all 0.2s;
-}
 
 .window-controls .ctrl:hover {
     background-color: rgba(255, 255, 255, 0.08);
@@ -525,6 +431,7 @@ body:has(#view-login.active) .user-profile {
    VIEWS ROOT CONFIGURATION
    ========================================================= */
 .view {
+    background: var(--color-bg-glass) !important;
     position: absolute;
     top: var(--top-bar-height);
     left: 0;
@@ -588,7 +495,28 @@ html body[data-bg-effect]:not([data-bg-effect="none"]) .details-section {
 
 /* VLM Round 2 Fix: Window controls need more padding (Fitts Law) */
 .window-controls .ctrl {
+    width: 44px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 11px;
+    transition: all 0.2s;
     min-width: 46px;
     min-height: 32px;
 }
+/* ===== MIGRATED FROM advanced/shell.css: bg-effects-canvas (full-screen canvas) ===== */
 
+/* Background effects canvas — full-screen, behind all views */
+.bg-effects-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    display: block;
+}

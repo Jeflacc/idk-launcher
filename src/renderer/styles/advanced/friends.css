@@ -181,4 +181,27 @@ body.ui-advanced .friends-sidebar {
 /* Theme-specific advanced moods. Each theme has a fully different background palette. */
 
 /* Custom theme: derive gradient from the accent color via inline style or fallback */
+/* ===== MIGRATED FROM advanced/modpacks.css: friends-share-btn ===== */
 
+body.ui-advanced .friends-share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    box-sizing: border-box;
+    border-radius: calc(var(--theme-radius) * 0.4);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.42);
+    background: rgba(var(--theme-accent-rgb), 0.18);
+    color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    text-shadow: none;
+    font-family: var(--font-title);
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    line-height: 1;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 0;
+}

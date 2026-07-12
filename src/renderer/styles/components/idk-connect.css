@@ -2,6 +2,7 @@
    components/idk-connect.css — IDK Connect dashboard view styles
    ----------------------------------------------------------------------------
    Contains:
+     - #view-idk-connect + #friends-auth-panel (migrated from modpacks.css)
      - .connect-dashboard-wrapper + .connect-header + .connect-title
      - .connect-header-actions + .btn-connect-action
      - .connect-dashboard-layout + .connect-sidebar
@@ -400,7 +401,6 @@
 }
 
 
-
 /* =========================================================
    VLM AUDIT FIXES — Round 1 (IDK Connect page)
    ========================================================= */
@@ -539,4 +539,23 @@
     border: 1px solid rgba(239, 68, 68, 0.3);
     border-radius: 6px;
     margin-top: 8px;
+}
+/* ===== MIGRATED FROM modpacks.css: IDK Connect view + friends-auth-panel ===== */
+
+#view-idk-connect {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#view-idk-connect .mods-content-wrapper {
+    height: auto;
+    max-height: none;
+    flex: none;
+    justify-content: center;
+    align-items: center;
+}
+#friends-auth-panel {
+    height: auto;
+    justify-content: center;
+    align-items: center;
 }

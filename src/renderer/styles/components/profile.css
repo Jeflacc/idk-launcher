@@ -11,11 +11,13 @@
        .profile-stat-mini-list + .profile-actions-section +
        .profile-friends-section + .profile-friend-item + .profile-quick-action
      - #profile-btn-logout + .profile-action-primary/danger
+     - .pose-selector + .pose-btn (migrated from modpacks.css — used by skin viewer)
    ============================================================================ */
 
 /* =========================================================
    PROFILE PAGE - Modern Grid Design
    ========================================================= */
+
 #view-profile {
     background: #060709;
     overflow: hidden;
@@ -44,11 +46,8 @@
         180deg,
         rgba(10, 11, 14, 0.98) 0%,
         rgba(6, 7, 9, 0.99) 100%
-    );
+        );
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.profile-main-stage {
     position: relative;
     overflow: visible;
     border-radius: 0;
@@ -170,18 +169,6 @@
     overflow: hidden;
 }
 
-.profile-skin-loading {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    font-size: 14px;
-    letter-spacing: 0.4px;
-    z-index: 2;
-}
-
 .profile-skin-viewer-wrapper canvas {
     display: block;
     opacity: 0;
@@ -264,6 +251,7 @@
 @keyframes spin-anim {
     to { transform: rotate(360deg); }
 }
+
 .spin-anim {
     animation: spin-anim 1s linear infinite;
 }
@@ -336,16 +324,6 @@
     );
     border-left: 1px solid rgba(255, 255, 255, 0.06);
     padding: 0;
-}
-
-.profile-section-header {
-    padding: 16px 20px 10px;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .profile-sidebar-identity {
@@ -454,36 +432,6 @@
     flex-wrap: wrap;
 }
 
-.profile-stat-mini {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.06) 0%,
-        rgba(255, 255, 255, 0.03) 100%
-    );
-    box-shadow: 
-        inset 0 1px 0 rgba(255, 255, 255, 0.06),
-        0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s ease;
-    flex: 1 1 calc(50% - 3px);
-    min-width: 0;
-}
-
-.profile-stat-mini:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.1) 0%,
-        rgba(255, 255, 255, 0.05) 100%
-    );
-    transform: translateY(-1px);
-}
-
 .profile-stat-mini:last-child {
     border-bottom: none;
     padding-bottom: 5px;
@@ -514,20 +462,6 @@
     gap: 0;
 }
 
-.profile-stat-mini-value {
-    font-family: var(--font-main);
-    font-size: 13px;
-    font-weight: 800;
-    color: #ffffff;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.profile-stat-mini-label {
-    display: none;
-}
-
 .profile-actions-section {
     display: flex;
     flex-direction: column;
@@ -554,13 +488,6 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-}
-
-.profile-friends-empty {
-    text-align: center;
-    font-size: 11px;
-    color: var(--text-muted);
-    padding: 12px 0;
 }
 
 .profile-friend-item {
@@ -634,40 +561,8 @@
     color: #8b8b8b;
 }
 
-.profile-quick-action {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    min-height: 38px;
-    padding: 8px 8px;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    background: transparent;
-    color: #c8cdd4;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    text-align: left;
-    cursor: pointer;
-    transition:
-        color 0.15s ease,
-        background 0.15s ease;
-}
-
 .profile-quick-action:last-child {
     border-bottom: none;
-}
-
-.profile-quick-action:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.04);
-    border-radius: 6px;
-}
-
-.profile-quick-action:active {
-    background: rgba(255, 255, 255, 0.02);
 }
 
 .profile-quick-action svg {
@@ -709,6 +604,7 @@
 }
 
 /* Logout pinned to bottom, full-width */
+
 #profile-btn-logout {
     margin-top: auto;
     min-height: 44px;
@@ -728,140 +624,99 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     border-bottom-color: var(--theme-accent-bright);
 }
 
-@media (max-width: 1180px) {
-    .profile-page-content {
-        grid-template-columns: minmax(0, 1fr) 320px;
-    }
-
-    .profile-stage-bar {
-        width: min(330px, 82%);
-    }
-}
-
-@media (max-width: 980px) {
-    .profile-page-content {
-        grid-template-columns: 1fr;
-        overflow-y: auto;
-    }
-
-    .profile-main-stage {
-        min-height: 700px;
-    }
-
-    .profile-sidebar {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        align-items: start;
-    }
-
-    .profile-actions-section {
-        grid-column: 1 / -1;
-    }
-}
-
-@media (max-width: 720px) {
-    .profile-main-stage {
-        min-height: 620px;
-    }
-
-    .profile-stage-character {
-        padding: 16px 10px 10px;
-    }
-
-    .profile-character-name {
-        font-size: 22px;
-        letter-spacing: 1.6px;
-    }
-
-    .profile-skin-viewer-wrapper {
-        height: min(70vh, 520px);
-    }
-
-    .profile-stage-bar {
-        width: min(300px, 90%);
-    }
-
-    .profile-sidebar {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 520px) {
-    .profile-main-stage {
-        min-height: 560px;
-    }
-
-    .profile-character-name {
-        font-size: 18px;
-        letter-spacing: 1px;
-    }
-
-    .profile-stat-mini-value {
-        font-size: 14px;
-    }
-}
-
-
-
 /* =========================================================
    VLM AUDIT FIXES — Round 1 (Profile page)
    ========================================================= */
 
 /* Fix: Add hover states to stat cards (Issue #7) */
+
 .profile-stat-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.06) 0%,
+        rgba(255, 255, 255, 0.03) 100%
+        );
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 2px 8px rgba(0, 0, 0, 0.2);
     transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+    flex: 1 1 calc(50% - 3px);
+    min-width: 0;
 }
+
 .profile-stat-mini:hover {
-    background: rgba(var(--theme-accent-rgb), 0.06);
     border-color: rgba(var(--theme-accent-rgb), 0.3);
+    background: rgba(var(--theme-accent-rgb), 0.06);
+    transform: translateY(-1px);
 }
 
 /* Fix: Add hover states to quick action buttons (Issue #7) */
+
 .profile-quick-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 8px;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+    color: #c8cdd4;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    text-align: left;
+    cursor: pointer;
     transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
 }
+
 .profile-quick-action:hover {
+    color: #ffffff;
     background: rgba(var(--theme-accent-rgb), 0.08);
+    border-radius: 6px;
     border-color: rgba(var(--theme-accent-rgb), 0.4);
     transform: translateY(-1px);
 }
+
 .profile-quick-action:active {
+    background: rgba(255, 255, 255, 0.02);
     transform: scale(0.98);
 }
+
 .profile-quick-action:focus-visible {
     outline: 2px solid var(--theme-accent);
     outline-offset: 2px;
 }
 
 /* Fix: Add hover states to pose selector buttons (Issue #9) */
-.pose-btn {
-    transition: background 0.18s ease, border-color 0.18s ease;
-}
-.pose-btn:hover {
-    background: rgba(var(--theme-accent-rgb), 0.08);
-    border-color: rgba(var(--theme-accent-rgb), 0.4);
-}
-.pose-btn.active {
-    background: rgba(var(--theme-accent-rgb), 0.15);
-    border-color: var(--theme-accent);
-    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.2);
-}
+
 .pose-btn:focus-visible {
     outline: 2px solid var(--theme-accent);
     outline-offset: 2px;
 }
 
 /* Fix: Add focus-visible to profile action buttons */
+
 .profile-action-primary,
 .profile-action-danger,
 #profile-btn-logout {
     transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
 }
+
 .profile-action-primary:hover,
 .profile-action-danger:hover,
 #profile-btn-logout:hover {
     transform: translateY(-1px);
 }
+
 .profile-action-primary:focus-visible,
 .profile-action-danger:focus-visible,
 #profile-btn-logout:focus-visible {
@@ -870,7 +725,9 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 }
 
 /* Fix: Improve stat label contrast (Issue #10) */
+
 .profile-stat-mini-label {
+    display: none;
     color: rgba(255, 255, 255, 0.6);
     font-size: 11px;
     text-transform: uppercase;
@@ -878,21 +735,43 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 }
 
 /* Fix: Improve stat value contrast (Issue #16) */
+
 .profile-stat-mini-value {
-    color: rgba(255, 255, 255, 0.95);
+    font-family: var(--font-main);
+    font-size: 13px;
     font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Fix: Consistent section dividers (Issue #1) */
+
 .profile-section-header {
+    padding: 16px 20px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     border-left: 3px solid rgba(var(--theme-accent-rgb), 0.4);
     padding-left: 10px;
 }
 
 /* Fix: Skin loading state — add animated spinner */
+
 .profile-skin-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--text-muted);
     font-size: 14px;
+    letter-spacing: 0.4px;
+    z-index: 2;
     text-align: center;
     padding: 40px;
     animation: profile-pulse 1.5s ease-in-out infinite;
@@ -904,10 +783,59 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
 }
 
 /* Fix: Friends empty state styling (Issue #12) */
+
 .profile-friends-empty {
-    color: var(--text-muted);
-    font-size: 13px;
     text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
     padding: 20px;
     opacity: 0.7;
+}
+
+/* ===== MIGRATED FROM modpacks.css: pose-selector + pose-btn (profile skin viewer) ===== */
+
+/* Pose selector for 3D skin viewer */
+
+.pose-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: center;
+    padding: 10px 16px 4px;
+}
+
+.pose-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+    padding: 4px 9px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: var(--font-title);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+.pose-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.pose-btn.active {
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    color: white;
+}
+
+.pose-btn svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
 }

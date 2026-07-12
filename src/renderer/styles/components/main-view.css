@@ -7,19 +7,24 @@
      - Refresh versions button
      - Custom select trigger + version tabs + downloaded badges
      - Toggle switches (classic) + manage mods button + play button
-     - Modpack list section headers + version items
+     - Modpack list section headers + version items (inside play dropdown)
      - Details section (stats grid, news cards, decoration blocks)
      - Pill switch (classic) + play button wrapper
      - Play button dropdown (.play-container, .force-update-container,
        .play-dropdown, .play-dropdown-item, .play-dd-loader-btn, etc.)
-     - mp-dashboard-columns / mp-quick-actions / mp-action-card /
-       mp-versions-section / mp-welcome-hero / mp-trending-section /
-       mp-wizard-section / mp-version-download-grid
+     - Featured server banner (.featured-server-banner, .featured-server-info,
+       .featured-server-icon, .featured-server-text, .featured-join-btn,
+       .featured-server-banner--compact) — lives in #view-main details-section
+   ----------------------------------------------------------------------------
+   NOTE: mp-dashboard-columns / mp-quick-actions / mp-action-card /
+         mp-versions-section / mp-welcome-hero / mp-trending-section /
+         mp-wizard-section / mp-version-download-grid moved to modpacks.css.
    ============================================================================ */
 
 /* =========================================================
    MAIN VIEW (HERO KEY ART & MOJANG PLAY BAR)
    ========================================================= */
+
 .main-hero-banner {
     position: relative;
     width: 100%;
@@ -89,6 +94,7 @@
 }
 
 /* The Mojang Semitransparent Bottom Control Bar */
+
 .main-hero-banner .bottom-bar {
     position: relative;
     z-index: 10;
@@ -118,27 +124,6 @@
 }
 
 /* Refresh versions button */
-.refresh-versions-btn {
-    background: #0e0e10;
-    border: 2px solid #000;
-    padding: 8px;
-    border-radius: 0;
-    cursor: pointer;
-    transition: background 0.08s linear;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow:
-        inset 2px 2px 0 rgba(255, 255, 255, 0.06),
-        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
-        0 3px 0 #000;
-}
-
-.refresh-versions-btn:hover {
-    background: #1a1a1d;
-    border-color: #000;
-}
 
 .refresh-versions-btn:active {
     background: #0a0a0c;
@@ -151,32 +136,10 @@
 }
 
 /* Custom Select Trigger styled like Mojang pill */
+
 .custom-select-wrapper {
     position: relative;
     width: 230px;
-}
-
-.custom-select-trigger {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #0e0e10;
-    border: 2px solid #000;
-    padding: 8px 12px;
-    border-radius: 0;
-    cursor: pointer;
-    transition: background 0.08s linear;
-    font-size: 12px;
-    font-family: 'Mojang', 'Minecraftia', monospace;
-    white-space: nowrap;
-    color: #fff;
-    gap: 8px;
-    min-width: 0;
-    box-shadow:
-        inset 2px 2px 0 rgba(255, 255, 255, 0.06),
-        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
-        0 3px 0 #000;
-    text-shadow: 1px 1px 0 #000;
 }
 
 .custom-select-trigger:hover {
@@ -237,18 +200,22 @@
 .options-list::-webkit-scrollbar {
     width: 6px;
 }
+
 .options-list::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .options-list::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 3px;
 }
+
 .options-list::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
 /* Custom option row */
+
 .custom-option {
     padding: 10px 14px;
     cursor: pointer;
@@ -277,6 +244,7 @@
 }
 
 /* Downloaded version styling */
+
 .custom-option.version-downloaded {
     border-left-color: var(--theme-accent);
 }
@@ -300,6 +268,7 @@
 }
 
 /* Version tabs */
+
 .version-tabs {
     display: flex;
     gap: 4px;
@@ -338,11 +307,13 @@
 }
 
 /* Mojang Grass Block SVG Icon */
+
 .grass-icon {
     flex-shrink: 0;
 }
 
 /* Toggle Switches */
+
 .toggle-switch {
     display: flex;
     align-items: center;
@@ -394,6 +365,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 /* The MANAGE MODS button */
+
 .manage-mods-button {
     padding: 0;
     border-radius: 6px;
@@ -461,33 +433,6 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 /* The PLAY button */
-.play-button {
-    background: var(--theme-accent);
-    color: #fff;
-    border: 2px solid #000;
-    border-radius: 0;
-    width: 320px;
-    height: 68px;
-    font-family: 'Mojang', 'Minecraftia', monospace;
-    font-size: 26px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    cursor: pointer;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1px;
-    line-height: 1.1;
-    box-shadow:
-        inset 2px 2px 0 var(--theme-accent-bright),
-        inset -2px -2px 0 var(--theme-accent-shadow),
-        0 4px 0 #000;
-    text-shadow: 2px 2px 0 #000;
-    text-transform: uppercase;
-    transition: all 0.08s linear;
-}
 
 .play-button:hover:not(:disabled) {
     background: var(--theme-accent-bright);
@@ -540,37 +485,15 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 /* Controls layout */
+
 .controls-right {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-/* Modpack list section headers */
-.mp-empty {
-    padding: 40px 20px;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 13px;
-    line-height: 1.6;
-}
-
-.mp-list-section-header {
-    padding: 12px 16px 8px;
-    font-size: 10px;
-    color: var(--text-muted);
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    margin-top: 8px;
-}
-
-.mp-list-section-header:first-child {
-    margin-top: 0;
-}
-
 /* Version items styling */
+
 .modpack-item.version-item {
     border-left: none;
     padding: 6px 12px;
@@ -601,6 +524,7 @@ input[type="checkbox"]:checked + .switch::after {
 /* =========================================================
    DETAILS SECTION (STATS GRID & LATEST NEWS)
    ========================================================= */
+
 .details-section {
     width: 100%;
     background: linear-gradient(180deg, #0f0f0f 0%, #141416 100%);
@@ -681,13 +605,6 @@ input[type="checkbox"]:checked + .switch::after {
     color: white;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-}
-
-.section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
 }
 
 .news-section {
@@ -800,18 +717,6 @@ input[type="checkbox"]:checked + .switch::after {
     padding-top: 8px;
 }
 
-.news-empty-state {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 48px 24px;
-    color: var(--text-muted);
-    font-size: 13px;
-}
-
 .section-header {
     display: flex;
     align-items: center;
@@ -868,22 +773,33 @@ input[type="checkbox"]:checked + .switch::after {
     overflow: hidden;
 }
 
-.play-button-wrapper {
-    display: flex;
-    border-radius: var(--theme-radius);
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 .play-button {
-    flex: 1;
-    border: none;
     background: var(--theme-accent);
     color: white;
+    border: none;
+    border-radius: 0;
+    width: 320px;
+    height: 68px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
     font-size: 22px;
     font-weight: 700;
+    letter-spacing: 1px;
     cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    line-height: 1.1;
+    box-shadow:
+        inset 2px 2px 0 var(--theme-accent-bright),
+        inset -2px -2px 0 var(--theme-accent-shadow),
+        0 4px 0 #000;
+    text-shadow: 2px 2px 0 #000;
+    text-transform: uppercase;
     transition: background 0.2s;
+    flex: 1;
 }
 
 .play-button:hover {
@@ -909,6 +825,7 @@ input[type="checkbox"]:checked + .switch::after {
 /* =========================================================
    PLAY BUTTON DROPDOWN (split button)
    ========================================================= */
+
 .play-container {
     position: relative;
     display: flex;
@@ -944,13 +861,13 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .play-button-wrapper {
-    position: relative;
     display: flex;
-    align-items: stretch;
-    height: 72px;
     border-radius: 0;
     overflow: visible;
     border: none;
+    position: relative;
+    align-items: stretch;
+    height: 72px;
 }
 
 .play-button-wrapper .play-button {
@@ -958,6 +875,7 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 /* Play button dropdown trigger is hidden by default for classic UX, enabled in advanced-theme.css */
+
 .play-dropdown-trigger {
     display: none;
 }
@@ -1012,11 +930,6 @@ input[type="checkbox"]:checked + .switch::after {
     width: 100%;
     text-align: left;
     text-transform: uppercase;
-}
-
-.play-dropdown-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
 }
 
 .play-dropdown-item svg {
@@ -1167,286 +1080,68 @@ input[type="checkbox"]:checked + .switch::after {
     line-height: 1.2;
 }
 
-.mp-dashboard-columns {
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 20px;
-    flex: 1;
-    min-height: 0;
-}
-
-.mp-quick-actions {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    padding: 0 40px 24px;
-}
-
-.mp-action-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: left;
-    color: white;
-}
-
-.mp-action-card:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(var(--theme-accent-rgb), 0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-}
-
-.mp-ac-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: rgba(var(--theme-accent-rgb), 0.15);
-    border-radius: 12px;
-    color: var(--theme-accent);
-}
-
-.mp-ac-text h3 {
-    font-family: var(--font-title);
-    font-size: 14px;
-    margin: 0 0 4px;
-    font-weight: 700;
-}
-
-.mp-ac-text p {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin: 0;
-    line-height: 1.3;
-}
-
-.mp-versions-section {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-}
-
-.mp-versions-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.mp-versions-header h3 {
-    font-family: var(--font-title);
-    font-size: 13px;
-    margin: 0;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 700;
-}
-
-.mp-welcome-hero {
-    text-align: center;
-    padding: 20px 40px 14px;
-}
-
-.mp-welcome-hero h2 {
-    font-family: var(--font-title);
-    font-size: 16px;
-    color: rgba(255,255,255,0.85);
-    margin: 8px 0 4px;
-    font-weight: 700;
-}
-
-.mp-welcome-hero p {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin: 0;
-}
-
-.mp-trending-section {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-}
-
-.mp-trending-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 18px 12px;
-}
-
-.mp-trending-title {
-    font-size: 13px;
-    margin: 0;
-    color: white;
-    font-weight: 700;
-    font-family: var(--font-main);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.mp-trending-brand {
-    font-size: 11px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.mp-loading-placeholder {
-    padding: 24px;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 12px;
-}
-
-.mp-wizard-section {
-    position: relative;
-}
-
-.mp-wizard-step {
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--theme-accent);
-    background: rgba(var(--theme-accent-rgb), 0.1);
-    padding: 2px 7px;
-    border-radius: 3px;
-}
-
-.mp-version-download-grid {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: 6px 12px;
-    max-height: 320px;
-    min-height: 0;
-    overflow-y: auto;
-}
-
-.mp-version-download-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    align-self: center;
-    width: 100%;
-    max-width: 320px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 11px;
-    transition: background 0.15s;
-    gap: 8px;
-    text-align: center;
-}
-
-.mp-version-download-item:hover {
-    background: rgba(255, 255, 255, 0.04);
-}
-
-.mp-version-download-item .version-name {
-    font-family: var(--font-main);
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 11px;
-}
-
-.mp-version-download-item .version-type {
-    font-size: 8px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-left: 8px;
-}
-
-.mp-dl-btn {
-    font-size: 10px;
-    padding: 3px 10px;
-    border-radius: 5px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: transparent;
-    color: rgba(255, 255, 255, 0.6);
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: var(--font-main);
-}
-
-.mp-dl-btn:hover {
-    background: rgba(var(--theme-accent-rgb), 0.1);
-    border-color: rgba(var(--theme-accent-rgb), 0.3);
-    color: #fff;
-}
-
-.mp-dl-btn.downloaded {
-    border-color: rgba(var(--theme-accent-rgb), 0.3);
-    color: var(--theme-accent);
-    cursor: default;
-}
-
-.mp-dl-btn.downloading {
-    opacity: 0.5;
-    cursor: wait;
-}
-
-.mp-dl-loader-badge {
-    font-size: 7px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: rgba(var(--theme-accent-rgb), 0.15);
-    color: var(--theme-accent-bright);
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
-}
-
-.mp-version-download-item.downloaded {
-    opacity: 1;
-    border-left: 2px solid rgba(var(--theme-accent-rgb), 0.4);
-    background: rgba(var(--theme-accent-rgb), 0.04);
-}
-
-.mp-version-download-item.downloaded:hover {
-    background: rgba(var(--theme-accent-rgb), 0.1);
-}
-
-
-
 /* =========================================================
    VLM AUDIT FIXES — Round 1 (Main/Home view)
    ========================================================= */
 
 /* Fix: Add hover states to custom select triggers (Issue #3) */
+
 .custom-select-trigger {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0e0e10;
+    border: 2px solid #000;
+    padding: 8px 12px;
+    border-radius: 0;
+    cursor: pointer;
     transition: background 0.18s ease, border-color 0.18s ease;
+    font-size: 12px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    white-space: nowrap;
+    color: #fff;
+    gap: 8px;
+    min-width: 0;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.06),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 3px 0 #000;
+    text-shadow: 1px 1px 0 #000;
 }
+
 .custom-select:hover .custom-select-trigger,
 .custom-select-trigger:hover {
     background: rgba(255, 255, 255, 0.06);
 }
 
 /* Fix: Add hover state to refresh button (Issue #12) */
+
 .refresh-versions-btn {
-    transition: color 0.18s ease, transform 0.3s ease, background 0.18s ease;
-    border-radius: 6px;
+    background: #0e0e10;
+    border: 2px solid #000;
     padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.18s ease, transform 0.3s ease, background 0.18s ease;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.06),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 3px 0 #000;
 }
+
 .refresh-versions-btn:hover {
+    background: rgba(var(--theme-accent-rgb), 0.08);
+    border-color: #000;
     color: var(--theme-accent-hover);
     transform: rotate(180deg);
-    background: rgba(var(--theme-accent-rgb), 0.08);
 }
 
 /* Fix: Improve "READY TO PLAY" text contrast (Issue #4) */
+
 .play-button[data-status]::after {
     color: rgba(255, 255, 255, 0.85);
     font-size: 11px;
@@ -1459,24 +1154,34 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 /* Fix: Improve "PLAYING AS" text contrast (Issue #13) */
+
 .advanced-home-username {
     color: rgba(255, 255, 255, 0.95);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 /* Fix: What's New section — add loading placeholder (Issue #5) */
+
 .details-section .section-header {
     margin-bottom: 16px;
 }
+
 .news-empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 20px;
     color: var(--text-muted);
     font-size: 13px;
     text-align: center;
-    padding: 40px 20px;
     opacity: 0.6;
 }
 
 /* Fix: Add aria-label visible focus on nav tabs (Issue #18) */
+
 .nav-tab:focus-visible {
     outline: 2px solid var(--theme-accent);
     outline-offset: -2px;
@@ -1484,20 +1189,235 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 /* Fix: Server card — add border to Join button (Issue #8) */
-.featured-join-btn {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-.featured-join-btn:hover {
-    box-shadow: 0 4px 16px rgba(var(--theme-accent-glow-rgb), 0.3);
-}
 
 /* Fix: Server URL text contrast (Issue #9) */
-.featured-server-desc {
-    color: rgba(255, 255, 255, 0.7);
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
 
 /* Fix: Pagination dots spacing (Issue #10) */
+
 .bg-dots {
     padding-right: 16px;
+}
+
+/* ===== MIGRATED FROM friends.css: featured-server banner (lives in #view-main details-section) ===== */
+
+/* Featured Server Banner */
+
+.featured-server-banner {
+    background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.08), rgba(15, 13, 24, 0.5));
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.18);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 32px rgba(0,0,0,0.25);
+}
+
+.featured-server-banner::before {
+    content: 'AD';
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.featured-server-banner:hover {
+    border-color: rgba(var(--theme-accent-rgb), 0.35);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+
+.featured-server-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    z-index: 1;
+    min-width: 0;
+}
+
+.featured-server-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.featured-server-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.featured-server-label {
+    color: var(--theme-accent);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.featured-server-title {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--font-main);
+}
+
+.featured-server-desc {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.featured-server-action {
+    z-index: 1;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.featured-join-btn {
+    background: var(--theme-accent);
+    color: #000;
+    border: none;
+    padding: 10px 28px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(var(--theme-accent-rgb), 0.35);
+}
+
+.featured-join-btn:hover {
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(var(--theme-accent-rgb), 0.45);
+}
+
+/* Compact featured server banner — Minecraft (Mojang) vibe, inside What's New */
+
+.featured-server-banner--compact {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 18px;
+    width: 100%;
+    margin: 0 0 24px;
+    padding: 20px 24px;
+    border-radius: 0;
+    background: #1b1b1f;
+    border: 2px solid #000;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 4px 0 #000,
+        0 6px 16px rgba(0, 0, 0, 0.6);
+    position: relative;
+    overflow: visible;
+    z-index: 5;
+    -webkit-font-smoothing: none;
+}
+
+.featured-server-banner--compact .featured-server-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 0;
+    padding: 4px;
+    background: #0e0e10;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.06), inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+    image-rendering: pixelated;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.featured-server-banner--compact .featured-server-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+}
+
+.featured-server-banner--compact .featured-server-title {
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+}
+
+.featured-server-banner--compact .featured-server-ip {
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 12px;
+    color: #9b9b9b;
+    text-shadow: 1px 1px 0 #000;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.featured-server-banner--compact .featured-join-btn {
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: #6abe30;
+    padding: 12px 24px;
+    border-radius: 0;
+    border: 2px solid #000;
+    cursor: pointer;
+    flex-shrink: 0;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+    box-shadow: inset 2px 2px 0 #9bd862, inset -2px -2px 0 #4a8a1f;
+    transition: background 0.08s linear;
+}
+
+.featured-server-banner--compact .featured-join-btn:hover {
+    background: #82d63e;
+}
+
+.featured-server-banner--compact .featured-join-btn:active {
+    background: #4a8a1f;
+    box-shadow: inset -2px -2px 0 #9bd862, inset 2px 2px 0 #2d5c12;
+}
+
+.featured-server-banner--compact::before {
+    content: 'AD';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #000;
+    color: #8b8b8b;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 9px;
+    padding: 1px 4px;
+    border-left: 2px solid #000;
+    border-bottom: 2px solid #000;
+    letter-spacing: 1px;
+}
+
+.featured-server-banner--compact:hover {
+    border-color: #000;
 }

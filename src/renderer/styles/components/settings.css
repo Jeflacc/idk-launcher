@@ -5,9 +5,10 @@
      - #view-settings container + .settings-content-wrapper + .view-title
      - .settings-grid + .settings-section + RAM slider widget
      - Memory presets (classic) + .mem-preset-btn
-     - Classic Settings UI (.settings-panel, .settings-sidebar,
-       .settings-category-btn, .settings-input, .settings-checkbox,
-       .settings-tooltip, .settings-btn-primary/secondary, etc.)
+     - Legacy settings-panel UI (migrated from downloads.css): .settings-panel,
+       .settings-sidebar, .settings-category-btn, .settings-input,
+       .settings-checkbox, .settings-tooltip, .settings-btn-primary/secondary,
+       .settings-empty, etc.
      - Glassmorphism settings redesign (.settings-tab-bar, .settings-tab,
        .settings-page, .settings-section-title, .settings-row, .theme-palette-
        grid, .theme-choice-card, .color-picker-wrap, .pill-switch, .glass-
@@ -44,11 +45,6 @@
     text-transform: lowercase;
 }
 
-.settings-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
 
 .settings-section {
     background: #1b1b1c;
@@ -115,34 +111,6 @@
     text-align: right;
 }
 
-.memory-presets {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.mem-preset-btn {
-    background: #313132;
-    border: 1px solid #4a4a4b;
-    color: #d1d1d2;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-
-.mem-preset-btn:hover {
-    background: #3e3e3f;
-    color: white;
-}
-
-.mem-preset-btn.active {
-    background: rgba(var(--theme-accent-rgb), 0.15);
-    border-color: var(--accent-green-hover);
-    color: var(--accent-green-hover);
-}
 
 /* =============================================
    GLASSMORPHISM SETTINGS REDESIGN
@@ -338,27 +306,6 @@
     flex-wrap: wrap;
 }
 
-.theme-choice-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 4px 4px;
-    background: transparent;
-    border: none;
-    border-radius: calc(var(--theme-radius) * 0.8);
-    cursor: pointer;
-    transition: transform 0.15s ease;
-    color: var(--text-secondary);
-}
-
-.theme-choice-card:hover {
-    transform: translateY(-2px);
-}
-
-.theme-choice-card.active {
-    color: white;
-}
 
 .theme-swatch {
     width: 34px;
@@ -440,11 +387,6 @@
     color: var(--text-muted);
 }
 
-.pill-switch-option.active {
-    background: rgba(var(--theme-accent-rgb), 0.2);
-    color: var(--theme-accent-bright);
-    font-weight: 700;
-}
 
 .pill-switch {
     display: flex;
@@ -489,53 +431,17 @@
     flex-shrink: 0;
 }
 
-.glass-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 120px;
-    height: 6px;
-    border-radius: 3px;
-    background: linear-gradient(90deg, var(--theme-accent) 0%, var(--theme-accent) 50%, rgba(255, 255, 255, 0.1) 50%);
-    outline: none;
-    cursor: pointer;
-    transition: height 0.15s;
-}
 
 .glass-slider:hover {
     height: 8px;
 }
 
-.glass-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--theme-accent);
-    border: 3px solid rgba(255, 255, 255, 0.2);
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-    box-shadow: 0 0 10px rgba(var(--theme-accent-rgb), 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.glass-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    box-shadow: 0 0 16px rgba(var(--theme-accent-rgb), 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
-}
 
 .glass-slider:active::-webkit-slider-thumb {
     transform: scale(1.1);
     box-shadow: 0 0 20px rgba(var(--theme-accent-rgb), 0.6), 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.glass-slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--theme-accent);
-    border: 3px solid rgba(255, 255, 255, 0.2);
-    cursor: pointer;
-    box-shadow: 0 0 10px rgba(var(--theme-accent-rgb), 0.4);
-}
 
 .glass-slider::-moz-range-track {
     height: 6px;
@@ -563,23 +469,6 @@
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.blur-choice-card {
-    padding: 7px 16px;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: calc(var(--theme-radius) * 0.6);
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: capitalize;
-}
-
-.blur-choice-card:hover {
-    color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.04);
-}
 
 .blur-choice-card.active {
     background: rgba(var(--theme-accent-rgb), 0.22);
@@ -753,16 +642,16 @@
 .memory-presets {
     display: flex;
     gap: 6px;
-    margin-top: 8px;
     flex-wrap: wrap;
+    margin-top: 8px;
 }
 
 .mem-preset-btn {
-    padding: 5px 14px;
     background: rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: calc(var(--theme-radius) * 0.5);
     color: var(--text-muted);
+    padding: 5px 14px;
+    border-radius: calc(var(--theme-radius) * 0.5);
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
@@ -964,20 +853,28 @@ body.compact-mode .ui-mode-card span {
 }
 
 
-
 /* =========================================================
    VLM AUDIT FIXES — Round 1 (Settings page)
    ========================================================= */
 
 /* Fix: Add hover states to theme preset cards (Issue #6) */
 .theme-choice-card {
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease, box-shadow 0.18s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px 4px;
+    background: transparent;
+    border: none;
+    border-radius: calc(var(--theme-radius) * 0.8);
     cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease, box-shadow 0.18s ease;
+    color: var(--text-secondary);
 }
 .theme-choice-card:hover {
+    transform: translateY(-2px);
     background: rgba(var(--theme-accent-rgb), 0.06);
     border-color: rgba(var(--theme-accent-rgb), 0.4);
-    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 .theme-choice-card:active {
@@ -988,6 +885,7 @@ body.compact-mode .ui-mode-card span {
     outline-offset: 2px;
 }
 .theme-choice-card.active {
+    color: white;
     border-color: var(--theme-accent);
     box-shadow: 0 0 0 1px var(--theme-accent), 0 4px 12px rgba(var(--theme-accent-glow-rgb), 0.15);
 }
@@ -1009,10 +907,19 @@ body.compact-mode .ui-mode-card span {
 
 /* Fix: Add hover states to blur choice cards (Issue #6) */
 .blur-choice-card {
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+    padding: 7px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: calc(var(--theme-radius) * 0.6);
     cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+    text-transform: capitalize;
 }
 .blur-choice-card:hover {
+    color: var(--text-secondary);
     background: rgba(var(--theme-accent-rgb), 0.06);
     border-color: rgba(var(--theme-accent-rgb), 0.4);
 }
@@ -1038,17 +945,19 @@ body.compact-mode .ui-mode-card span {
 
 /* Fix: Improve slider thumb size and visibility (Issue #5, #8) */
 .glass-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
     width: 20px;
     height: 20px;
     border-radius: 50%;
     background: var(--theme-accent);
     border: 2px solid var(--theme-accent-bright);
-    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.3);
     cursor: pointer;
     transition: transform 0.1s ease;
+    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.3);
 }
 .glass-slider::-webkit-slider-thumb:hover {
     transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(var(--theme-accent-rgb), 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 .glass-slider::-moz-range-thumb {
     width: 20px;
@@ -1056,16 +965,21 @@ body.compact-mode .ui-mode-card span {
     border-radius: 50%;
     background: var(--theme-accent);
     border: 2px solid var(--theme-accent-bright);
-    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.3);
     cursor: pointer;
+    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.3);
 }
 
 /* Fix: Improve slider track contrast (Issue #5) */
 .glass-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 120px;
     height: 6px;
-    background: rgba(255, 255, 255, 0.1);
     border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
     outline: none;
+    cursor: pointer;
+    transition: height 0.15s;
 }
 .glass-slider:focus-visible {
     box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), 0.2);
@@ -1122,4 +1036,264 @@ body.compact-mode .ui-mode-card span {
 /* Fix: Improve custom theme card icon visibility (Issue #3) */
 .theme-choice-card .custom-swatch {
     border: 1px solid rgba(255, 255, 255, 0.2);
+}
+/* ===== MIGRATED FROM downloads.css: legacy settings-panel UI ===== */
+
+.settings-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.2s ease-out;
+}
+.settings-panel.hidden {
+    display: none;
+}
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.settings-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    font-family: var(--font-title);
+    margin: 0;
+}
+.settings-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 20px;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+.settings-close-btn:hover {
+    color: var(--text-main);
+}
+.settings-search-container {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.settings-search-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: var(--text-main);
+    font-size: 13px;
+}
+.settings-search-input::placeholder {
+    color: var(--text-muted);
+}
+.settings-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+.settings-sidebar {
+    width: 150px;
+    background: rgba(0, 0, 0, 0.2);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+    padding: 8px;
+}
+.settings-category-btn {
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    text-align: left;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 4px;
+    transition: all 0.2s;
+    margin-bottom: 4px;
+}
+.settings-category-btn:hover {
+    background: rgba(var(--theme-accent-rgb), 0.1);
+    color: var(--accent-green);
+}
+.settings-category-btn.active {
+    background: rgba(var(--theme-accent-rgb), 0.2);
+    color: var(--accent-green);
+    border-left: 3px solid var(--accent-green);
+}
+.settings-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+.settings-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.settings-label-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.settings-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+.settings-tooltip-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--theme-accent-rgb), 0.2);
+    border-radius: 50%;
+    color: var(--accent-green);
+    font-size: 10px;
+    cursor: help;
+    position: relative;
+}
+.settings-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 10000;
+    display: none;
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.3);
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+}
+.settings-input {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: var(--text-main);
+    font-size: 13px;
+}
+.settings-input:focus {
+    outline: none;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.2);
+}
+.settings-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+.settings-number {
+    width: 100%;
+}
+.settings-description {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+}
+.settings-footer {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: flex-end;
+}
+.settings-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-title);
+}
+.settings-btn-primary {
+    background: var(--accent-green);
+    color: #ffffff;
+}
+.settings-btn-primary:hover:not(:disabled) {
+    background: var(--accent-green-hover);
+    box-shadow: 0 0 12px rgba(var(--theme-accent-rgb), 0.3);
+}
+.settings-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.settings-btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.settings-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+.settings-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+
+.browser-filter-section .clean-select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: white;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: var(--font-main);
+    outline: none;
+    cursor: pointer;
+}
+
+.clean-select {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 9px 12px;
+    border-radius: 5px;
+    font-family: var(--font-main);
+    font-size: 13px;
+    outline: none;
+    flex: 1;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+
+.clean-select:focus {
+    border-color: var(--theme-accent);
+}
+
+.clean-select option {
+    background: #1b1b1c;
 }

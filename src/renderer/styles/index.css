@@ -31,9 +31,6 @@
 
 /* Component styles (replaces style.css) */
 @import "./components/layout.css";
-@import "./components/buttons.css";
-@import "./components/forms.css";
-@import "./components/cards.css";
 @import "./components/login.css";
 @import "./components/main-view.css";
 @import "./components/modpacks.css";
@@ -44,7 +41,6 @@
 @import "./components/modals.css";
 @import "./components/performance.css";
 @import "./components/idk-connect.css";
-@import "./components/utilities.css";
 @import "./components/responsive.css";
 
 /* Advanced theme overrides (replaces advanced-theme.css) */

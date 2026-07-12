@@ -1,13 +1,26 @@
 /* ============================================================================
-   components/responsive.css — Media queries (1200/1100/768/480 breakpoints)
+   components/responsive.css — Consolidated media queries
    ----------------------------------------------------------------------------
-   Contains:
+   Contains ALL @media queries for the launcher (size + a11y). Media queries
+   were migrated here from component and advanced files during Phase 3 of the
+   CSS reorganization. Foundational a11y queries (prefers-reduced-motion,
+   prefers-contrast) remain in base.css and global-a11y-fixes.css.
+   ----------------------------------------------------------------------------
+   Breakpoints:
+     - @media (max-width: 1280px) — user-profile wide-window rule
      - @media (max-width: 1200px) — top bar, hero, modpack sidebar adjustments
+     - @media (max-width: 1180px) — profile page responsive
      - @media (max-width: 1100px) — top bar height, user-profile collapse
+     - @media (max-width: 980px) — profile page + glass-system responsive
+     - @media (max-width: 900px) — modpack-content-header responsive
      - @media (max-width: 768px) — nav tabs scroll, main view collapse
+     - @media (max-width: 720px) — profile page + advanced settings responsive
+     - @media (max-width: 640px) — modals responsive
+     - @media (max-width: 520px) — profile page responsive
      - @media (max-width: 480px) — small screen overrides
-     - Download progress responsive overrides
-     - Settings panel responsive overrides
+     - @media (prefers-contrast: more) — high-contrast mode (downloads-specific)
+     - @media (prefers-reduced-motion: no-preference) and (min-width: 0px) —
+       large-text support (downloads-specific)
    ============================================================================ */
 
 /* =========================================================
@@ -618,4 +631,322 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
 }
+/* ===== MIGRATED FROM components/layout.css: media queries ===== */
 
+@media (min-width: 1280px) {
+    .user-profile {
+        max-width: none;
+    }
+
+    .user-details h4,
+    #display-username {
+        overflow: visible;
+        text-overflow: clip;
+    }
+}
+/* ===== MIGRATED FROM components/modpacks.css: media queries ===== */
+
+@media (max-width: 900px) {
+    .modpack-content-header {
+        flex-wrap: wrap;
+    }
+
+    .modpack-header-actions {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .mp-action-btn.play {
+        min-width: 0;
+        flex: 1;
+        max-width: 200px;
+    }
+}
+/* ===== MIGRATED FROM components/downloads.css: media queries ===== */
+
+@media (max-width: 768px) {
+    .download-progress-container {
+        width: calc(100vw - 40px);
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+    }
+
+    .download-metrics {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 480px) {
+    .download-progress-container {
+        width: calc(100vw - 20px);
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        padding: 16px;
+    }
+
+    .download-control-btn {
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+}
+@media (prefers-contrast: more) {
+    .download-control-btn:focus-visible {
+        outline-width: 4px;
+    }
+
+    .download-progress-container {
+        border-color: #ffffff;
+    }
+
+    .progress-bar-fill {
+        background: var(--theme-accent);
+    }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 0px) {
+    .download-status-text {
+        font-size: 14px;
+    }
+
+    .download-metrics {
+        font-size: 13px;
+    }
+
+    .download-current-item-text {
+        font-size: 13px;
+    }
+}
+@media (max-width: 768px) {
+    .download-progress-container {
+        width: calc(100% - 40px);
+        bottom: 20px;
+        right: 20px;
+        left: 20px;
+    }
+}
+@media (max-width: 768px) {
+
+    .download-progress-container {
+        width: calc(100% - 40px);
+        left: 20px;
+        right: 20px;
+    }
+
+    .error-display-container {
+        width: calc(100% - 40px);
+        left: 20px;
+        right: 20px;
+    }
+
+
+}
+@media (max-width: 480px) {
+    .download-progress-container {
+        width: calc(100% - 20px);
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+    }
+
+    .error-display-container {
+        width: calc(100% - 20px);
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+    }
+
+    .download-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .error-display-actions {
+        flex-direction: column;
+    }
+
+    .error-action-btn {
+        width: 100%;
+    }
+}
+/* ===== MIGRATED FROM components/profile.css: media queries ===== */
+
+@media (max-width: 1180px) {
+    .profile-page-content {
+        grid-template-columns: minmax(0, 1fr) 320px;
+    }
+
+    .profile-stage-bar {
+        width: min(330px, 82%);
+    }
+}
+@media (max-width: 980px) {
+    .profile-page-content {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+    }
+
+    .profile-main-stage {
+        min-height: 700px;
+    }
+
+    .profile-sidebar {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+    }
+
+    .profile-actions-section {
+        grid-column: 1 / -1;
+    }
+}
+@media (max-width: 720px) {
+    .profile-main-stage {
+        min-height: 620px;
+    }
+
+    .profile-stage-character {
+        padding: 16px 10px 10px;
+    }
+
+    .profile-character-name {
+        font-size: 22px;
+        letter-spacing: 1.6px;
+    }
+
+    .profile-skin-viewer-wrapper {
+        height: min(70vh, 520px);
+    }
+
+    .profile-stage-bar {
+        width: min(300px, 90%);
+    }
+
+    .profile-sidebar {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 520px) {
+    .profile-main-stage {
+        min-height: 560px;
+    }
+
+    .profile-character-name {
+        font-size: 18px;
+        letter-spacing: 1px;
+    }
+
+    .profile-stat-mini-value {
+        font-size: 14px;
+    }
+}
+/* ===== MIGRATED FROM components/modals.css: media queries ===== */
+
+@media (max-width: 640px) {
+    .updates-summary,
+    .updates-toolbar,
+    .updates-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .updates-card {
+        padding: 14px;
+    }
+
+    .updates-card-main strong,
+    .updates-filename,
+    .updates-version-row span {
+        white-space: normal;
+    }
+
+    .updates-action-btn,
+    .updates-update-all {
+        width: 100%;
+    }
+}
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
+        padding: 16px;
+    }
+
+    .modal-content h3 {
+        font-size: 16px;
+    }
+}
+@media (max-width: 480px) {
+    .skin-3d-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .skin-3d-viewport {
+        height: min(240px, 36vh);
+        min-height: 180px;
+    }
+}
+/* ===== MIGRATED FROM components/settings.css: media queries ===== */
+
+@media (max-width: 768px) {
+    .settings-panel {
+        padding: 20px;
+    }
+    .settings-content {
+        flex-direction: column;
+    }
+    .settings-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        padding: 8px;
+    }
+    .settings-category-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+}
+/* ===== MIGRATED FROM advanced/glass-system.css: media queries ===== */
+
+@media (max-width: 980px) {
+    body.ui-advanced .details-section {
+        display: none;
+    }
+
+    body.ui-advanced .main-hero-banner .bottom-bar {
+        width: min(200px, 60%);
+    }
+}
+/* ===== MIGRATED FROM advanced/settings.css: media queries ===== */
+
+@media (max-width: 720px) {
+    body.ui-advanced {
+        --advanced-sidebar-width: 80px;
+        --top-bar-height: 64px;
+    }
+
+    body.ui-advanced .nav-tabs {
+        width: var(--advanced-sidebar-width);
+        padding: 16px 8px;
+        gap: 12px;
+    }
+
+    body.ui-advanced .nav-tabs::before,
+    body.ui-advanced .nav-tab {
+        width: 46px;
+        height: 46px;
+    }
+
+    body.ui-advanced .top-brand {
+        min-width: 60px;
+        font-size: 14px !important;
+        letter-spacing: 1px !important;
+    }
+
+    body.ui-advanced .window-controls {
+        display: none;
+    }
+}

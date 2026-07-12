@@ -190,9 +190,28 @@ export function registerModHandlers(
   registerInvoke(
     IpcChannel.Mod.CheckIncompatibilities,
     z.object({ modIds: z.array(z.string()) }),
-    async (_e, _args) => {
-      // Delegate to ModResolverService — return empty for now
-      return [];
+    async (_e, args) => {
+      // Check each pair of mods for known incompatibilities
+      const knownIncompatibilities: Array<{ mod1: string; mod2: string; reason: string }> = [];
+      const knownPairs: Record<string, string> = {
+        'optifine+sodium': 'OptiFine is incompatible with Sodium — they both modify rendering',
+        'optifine+rubidium': 'OptiFine is incompatible with Rubidium',
+        'optifine+embeddium': 'OptiFine is incompatible with Embeddium',
+        'sodium+optifabric': 'Sodium is incompatible with OptiFabric',
+        'forge+fabric': 'Forge and Fabric loaders cannot coexist',
+        'forge+quilt': 'Forge and Quilt loaders cannot coexist',
+      };
+      for (let i = 0; i < args.modIds.length; i++) {
+        for (let j = i + 1; j < args.modIds.length; j++) {
+          const pair1 = `${args.modIds[i]}+${args.modIds[j]}`.toLowerCase();
+          const pair2 = `${args.modIds[j]}+${args.modIds[i]}`.toLowerCase();
+          const reason = knownPairs[pair1] || knownPairs[pair2];
+          if (reason) {
+            knownIncompatibilities.push({ mod1: args.modIds[i] || '', mod2: args.modIds[j] || '', reason });
+          }
+        }
+      }
+      return knownIncompatibilities;
     },
     { senderCheck: senderOk },
   );

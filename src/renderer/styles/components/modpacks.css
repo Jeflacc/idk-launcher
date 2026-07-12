@@ -1,5 +1,5 @@
 /* ============================================================================
-   components/modpacks.css — Modpack list, detail, browser, mod cards, modals
+   components/modpacks.css — Modpack list, detail, browser, mod cards
    ----------------------------------------------------------------------------
    Contains:
      - #view-mods, .mods-content-wrapper, .mods-page-header, .mods-container
@@ -11,36 +11,26 @@
      - .mods-grid + .installed-mod-card + .remove-mod-btn
      - .mod-browser + .browser-body + .browser-search-bar + .browser-results
      - .browser-sidebar + .browser-filter-* + .browser-pagination-bar
-     - .mod-result-card + .add-mod-btn + .pose-selector + .pose-btn
+     - .mod-result-card + .add-mod-btn
      - .provider-pill + .trending-modpacks-grid + .trending-mp-card
-     - .mp-create-modal + .mp-settings-modal + .icon-picker + .clean-select
+     - Modpack dashboard selectors (migrated from main-view.css):
+       .mp-dashboard-columns / .mp-quick-actions / .mp-action-card /
+       .mp-versions-section / .mp-welcome-hero / .mp-trending-section /
+       .mp-wizard-section / .mp-version-download-grid / .mp-dl-btn /
+       .mp-dl-loader-badge / .mp-loading-placeholder / .mp-list-section-header /
+       .mp-empty / .mp-stats-row / .mp-stat
+   ----------------------------------------------------------------------------
+   NOTE: #view-idk-connect + #friends-auth-panel moved to idk-connect.css.
+         .mp-create-modal + .mp-settings-modal + .icon-picker moved to modals.css.
+         .pose-selector + .pose-btn moved to profile.css.
    ============================================================================ */
 
 /* =========================================================
    MODPACK MANAGER VIEW
    ========================================================= */
+
 #view-mods {
     background: #121213;
-}
-
-#view-idk-connect {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#view-idk-connect .mods-content-wrapper {
-    height: auto;
-    max-height: none;
-    flex: none;
-    justify-content: center;
-    align-items: center;
-}
-
-#friends-auth-panel {
-    height: auto;
-    justify-content: center;
-    align-items: center;
 }
 
 .mods-content-wrapper {
@@ -66,17 +56,6 @@
     flex-shrink: 0;
 }
 
-.mods-page-header h2.view-title {
-    margin: 0 !important;
-    font-family: var(--font-title), var(--font-main);
-    font-size: 16px;
-    font-weight: 800;
-    color: white;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    font-variant: normal;
-}
-
 .mods-header-actions {
     display: flex;
     align-items: center;
@@ -98,8 +77,9 @@
     font-size: 26px;
     font-weight: 700;
     color: white;
-    font-variant: small-caps;
+    letter-spacing: 2px;
     text-transform: lowercase;
+    font-variant: small-caps;
 }
 
 .create-modpack-btn {
@@ -139,6 +119,7 @@
         inset 0 -2px 0 var(--theme-accent-shadow),
         inset -2px 0 0 var(--theme-accent-shadow);
 }
+
 .create-modpack-btn:active {
     transform: translateY(2px);
     box-shadow:
@@ -161,6 +142,7 @@
 }
 
 /* Sidebar with local modpacks list */
+
 .modpacks-sidebar {
     width: 280px;
     flex-shrink: 0;
@@ -206,41 +188,10 @@
     height: 32px;
 }
 
-.modpack-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
-    margin: 2px 10px;
-    cursor: pointer;
-    border-radius: 6px;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
-}
-
-.modpack-item:hover {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.05);
-}
-
 .modpack-item.active {
     background: rgba(var(--theme-accent-rgb), 0.08);
     border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
     box-shadow: 0 2px 8px rgba(var(--theme-accent-rgb), 0.04);
-}
-
-.mp-item-icon {
-    width: 30px;
-    height: 30px;
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 5px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: var(--text-muted);
-    transition: all 0.2s;
 }
 
 .modpack-item.active .mp-item-icon {
@@ -289,6 +240,7 @@
 }
 
 /* Modpack Detail Panel on Right */
+
 .modpack-detail {
     flex: 1;
     display: flex;
@@ -305,38 +257,15 @@
     overflow: hidden;
 }
 
-.modpack-detail > .modpack-content > .modpack-content-header {
-    flex-shrink: 0;
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
 .modpack-content-header > div:first-child {
     min-width: 0;
     flex: 1;
 }
 
-@media (max-width: 900px) {
-    .modpack-content-header {
-        flex-wrap: wrap;
-    }
-
-    .modpack-header-actions {
-        flex-direction: row;
-        flex-wrap: nowrap;
-        width: 100%;
-        justify-content: flex-end;
-    }
-
-    .mp-action-btn.play {
-        min-width: 0;
-        flex: 1;
-        max-width: 200px;
-    }
-}
-
 .modpack-detail > .modpack-content > .modpack-content-header {
+    flex-shrink: 0;
     padding: 24px 24px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .modpack-detail > .modpack-content > .mp-tabs {
@@ -477,42 +406,6 @@
     margin: 0;
 }
 
-.mp-action-btn {
-    background-color: #4a4a4b;
-    border: 2px solid #000000;
-    border-radius: 4px;
-    padding: 6px 12px;
-    font-size: 12px;
-    line-height: 1;
-    font-weight: 700;
-    font-family: var(--font-title);
-    cursor: pointer;
-    color: white;
-    box-shadow:
-        inset 0 2px 0 #686869,
-        inset 2px 0 0 #686869,
-        inset 0 -2px 0 #2b2b2c,
-        inset -2px 0 0 #2b2b2c;
-    text-shadow: 1px 1px 0px #2b2b2c;
-    transition: none;
-    font-variant: small-caps;
-    text-transform: lowercase;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.mp-action-btn:hover {
-    background-color: #555556;
-    box-shadow:
-        inset 0 2px 0 #777778,
-        inset 2px 0 0 #777778,
-        inset 0 -2px 0 #333334,
-        inset -2px 0 0 #333334;
-}
-
 .mp-action-btn:active {
     transform: translateY(2px);
     box-shadow:
@@ -592,14 +485,8 @@
 .mp-action-btn.export:hover,
 .mp-action-btn.delete:hover,
 .mp-action-btn.settings:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.mp-action-btn.export:hover,
-.mp-action-btn.delete:hover,
-.mp-action-btn.settings:hover {
     background: #454546;
+    color: white;
     box-shadow:
         inset 1px 1px 0 rgba(255, 255, 255, 0.15),
         inset -1px -1px 0 rgba(0, 0, 0, 0.4),
@@ -625,6 +512,7 @@
 }
 
 /* Icon-only button variant */
+
 .mp-action-btn.icon-btn {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -640,12 +528,8 @@
 }
 
 .mp-action-btn.icon-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.mp-action-btn.icon-btn:hover {
     background: linear-gradient(180deg, #555556 0%, #454546 50%, #353536 100%);
+    color: white;
     border-color: rgba(var(--theme-accent-rgb), 0.6);
     box-shadow:
         inset 1px 1px 0 rgba(255, 255, 255, 0.3),
@@ -653,15 +537,8 @@
         0 2px 0 rgba(0, 0, 0, 0.3);
 }
 
-.mp-action-btn.icon-btn:active {
-    box-shadow:
-        inset 1px 1px 0 rgba(0, 0, 0, 0.3),
-        inset -1px -1px 0 rgba(255, 255, 255, 0.1),
-        0 1px 0 rgba(0, 0, 0, 0.3);
-    top: 1px;
-}
-
 /* Browse button variant */
+
 .mp-action-btn.browse {
     background: #3a3a3b;
     border: 2px solid;
@@ -707,6 +584,7 @@
 }
 
 /* Back button - small icon-style button */
+
 .mp-action-btn.back {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -742,13 +620,15 @@
 }
 
 .mp-action-btn.icon-btn:active {
-    transform: translateY(1px);
     box-shadow:
         inset 0 1px 0 rgba(0, 0, 0, 0.2),
         inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    top: 1px;
+    transform: translateY(1px);
 }
 
 /* Tab Pills */
+
 .mp-tabs {
     display: flex;
     gap: 4px;
@@ -987,6 +867,7 @@
 }
 
 /* Mod Store Browser Pane (Sliding Panel) */
+
 .mod-browser {
     position: absolute;
     top: 0;
@@ -1024,21 +905,8 @@
     gap: 12px;
 }
 
-.mod-browser-close {
-    background: #313132;
-    border: 1px solid #4a4a4b;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s;
-    flex-shrink: 0;
-}
 /* Browser body two-column layout */
+
 .browser-body {
     display: flex;
     flex: 1;
@@ -1106,6 +974,7 @@
 }
 
 /* Filter sidebar */
+
 .browser-sidebar {
     width: 220px;
     flex-shrink: 0;
@@ -1165,19 +1034,6 @@
     color: white;
 }
 
-.browser-filter-section .clean-select {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: white;
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-family: var(--font-main);
-    outline: none;
-    cursor: pointer;
-}
-
 .browser-filter-clear {
     margin: 6px 14px;
     padding: 5px 10px;
@@ -1201,18 +1057,9 @@
 }
 
 /* Results grid fallback for mod-browser-results ID */
-.mod-browser-results {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 16px 20px;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    align-content: start;
-}
 
 /* Browser pagination buttons */
+
 .browser-page-btn {
     padding: 4px 10px;
     background: rgba(var(--theme-accent-rgb), 0.4);
@@ -1225,9 +1072,11 @@
     transition: all 0.15s;
     line-height: 1;
 }
+
 .browser-page-btn:hover {
     background: rgba(var(--theme-accent-rgb), 0.7);
 }
+
 .browser-page-info {
     color: #fff;
     font-size: 12px;
@@ -1239,6 +1088,7 @@
     border-radius: 4px;
     border: 1px solid rgba(var(--theme-accent-rgb), 0.5);
 }
+
 .browser-page-btn-lg {
     padding: 8px 16px;
     background: rgba(var(--theme-accent-rgb), 0.3);
@@ -1250,9 +1100,11 @@
     font-weight: 600;
     transition: all 0.15s;
 }
+
 .browser-page-btn-lg:hover {
     background: rgba(var(--theme-accent-rgb), 0.55);
 }
+
 .browser-page-info-lg {
     color: #fff;
     font-size: 13px;
@@ -1264,9 +1116,7 @@
 }
 
 /* Card stagger animation */
-.mod-result-card {
-    animation: cardFadeIn 0.25s ease both;
-}
+
 @keyframes cardFadeIn {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -1284,7 +1134,9 @@
     align-items: center;
     justify-content: center;
     transition: background 0.15s;
+    flex-shrink: 0;
 }
+
 .mod-browser-close:hover {
     background: #3e3e3f;
 }
@@ -1292,17 +1144,19 @@
 .mod-browser-results {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 16px 24px;
     display: grid;
     grid-template-columns: 1fr;
     gap: 14px;
     align-content: start;
     transform: translateZ(0); /* Hardware acceleration */
-    will-change: transform, scroll-position;
+        will-change: transform, scroll-position;
     backface-visibility: hidden;
 }
 
 .mod-result-card {
+    animation: cardFadeIn 0.25s ease both;
     display: flex;
     align-items: center;
     gap: 14px;
@@ -1343,6 +1197,7 @@
     margin-bottom: 3px;
     font-weight: 700;
 }
+
 .mod-result-info > span {
     font-size: 11px;
     color: rgba(255, 255, 255, 0.55);
@@ -1399,52 +1254,8 @@
     cursor: default;
 }
 
-/* Pose selector for 3D skin viewer */
-.pose-selector {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    justify-content: center;
-    padding: 10px 16px 4px;
-}
-
-.pose-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    color: var(--text-muted);
-    padding: 4px 9px;
-    border-radius: 4px;
-    font-size: 9px;
-    font-weight: 700;
-    font-family: var(--font-title);
-    cursor: pointer;
-    transition: all 0.15s;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    line-height: 1;
-}
-
-.pose-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
-}
-
-.pose-btn.active {
-    background: rgba(var(--theme-accent-rgb), 0.15);
-    border-color: rgba(var(--theme-accent-rgb), 0.4);
-    color: white;
-}
-
-.pose-btn svg {
-    width: 12px;
-    height: 12px;
-    flex-shrink: 0;
-}
-
 /* Provider Switch pills */
+
 .provider-pill-group {
     display: flex;
     background: #111112;
@@ -1472,6 +1283,7 @@
 }
 
 /* Trending Modpacks */
+
 .trending-modpacks-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -1479,25 +1291,6 @@
     padding: 0 18px 14px;
     transform: translateZ(0); /* Hardware acceleration */
     will-change: transform;
-}
-
-.trending-mp-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 10px;
-    overflow: hidden;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    min-height: 84px;
-}
-
-.trending-mp-card:hover {
-    border-color: rgba(var(--theme-accent-rgb), 0.25);
-    background: rgba(255, 255, 255, 0.04);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .trending-mp-thumb {
@@ -1528,6 +1321,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 .trending-mp-info p {
     font-size: 10px;
     color: var(--text-muted);
@@ -1566,325 +1360,148 @@
     text-transform: uppercase;
 }
 
-/* Modpack creation modal */
-.mp-create-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-}
-
-.mp-create-modal.active {
-    opacity: 1;
-    pointer-events: all;
-}
-
-.mp-create-box {
-    background: rgba(22, 22, 24, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 28px;
-    width: 380px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
-}
-
-.mp-create-box h3 {
-    font-family: var(--font-title);
-    font-size: 17px;
-    font-weight: 700;
-    color: white;
-    font-variant: small-caps;
-    text-transform: lowercase;
-    letter-spacing: 0.3px;
-}
-
-.icon-picker {
-    width: 64px;
-    height: 64px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    overflow: hidden;
-    transition: all 0.2s;
-    flex-shrink: 0;
-}
-.icon-picker:hover {
-    border-color: var(--theme-accent);
-    background: rgba(var(--theme-accent-rgb), 0.1);
-}
-.icon-picker img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.icon-picker-placeholder {
-    color: var(--text-muted);
-    font-size: 24px;
-}
-.icon-picker-placeholder svg {
-    width: 24px;
-    height: 24px;
-}
-
-.clean-select {
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-    padding: 9px 12px;
-    border-radius: 5px;
-    font-family: var(--font-main);
-    font-size: 13px;
-    outline: none;
-    flex: 1;
-    cursor: pointer;
-    transition: border-color 0.15s;
-}
-
-.clean-select:focus {
-    border-color: var(--theme-accent);
-}
-
-.clean-select option {
-    background: #1b1b1c;
-}
-
-/* Modpack settings modal */
-.mp-settings-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
-}
-
-.mp-settings-modal.active {
-    opacity: 1;
-    pointer-events: all;
-}
-
-.mp-settings-box {
-    background: linear-gradient(135deg, #1b1b1c 0%, #252525 100%);
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
-    border-radius: 8px;
-    width: 420px;
-    display: flex;
-    flex-direction: column;
-    box-shadow:
-        0 24px 64px rgba(0, 0, 0, 0.6),
-        0 0 40px rgba(var(--theme-accent-rgb), 0.1);
-    overflow: hidden;
-}
-
-.mp-settings-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 24px;
-    border-bottom: 1px solid rgba(var(--theme-accent-rgb), 0.15);
-    background: linear-gradient(
-        135deg,
-        rgba(var(--theme-accent-rgb), 0.1) 0%,
-        rgba(var(--theme-accent-rgb), 0.05) 100%
-    );
-}
-
-.mp-settings-header h3 {
-    font-family: var(--font-title);
-    font-size: 18px;
-    font-weight: 700;
-    color: white;
-    margin: 0;
-    font-variant: small-caps;
-    text-transform: lowercase;
-}
-
-.mp-settings-close {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 24px;
-    cursor: pointer;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.mp-settings-close:hover {
-    color: white;
-    background: rgba(var(--theme-accent-rgb), 0.1);
-    border-radius: 4px;
-}
-
-.mp-settings-content {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    max-height: 60vh;
-    overflow-y: auto;
-}
-
-.mp-settings-section {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.mp-settings-section label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.mp-settings-section input,
-.mp-settings-section select {
-    background: #111112;
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
-    color: white;
-    padding: 10px 12px;
-    border-radius: 4px;
-    font-family: var(--font-main);
-    font-size: 13px;
-    outline: none;
-    transition: all 0.2s;
-}
-
-.mp-settings-section input:focus,
-.mp-settings-section select:focus {
-    border-color: rgba(var(--theme-accent-rgb), 0.5);
-    background: #1a1a1b;
-    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.1);
-}
-
-.mp-settings-section select option {
-    background: #1b1b1c;
-}
-
-.mp-settings-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 8px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(var(--theme-accent-rgb), 0.1);
-}
-
-
-
 /* =========================================================
    VLM AUDIT FIXES — Round 1 (Modpack Manager)
    ========================================================= */
 
 /* Fix: Add hover states to modpack cards (Issue #7) */
+
 .modpack-item {
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    margin: 2px 10px;
     cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
 }
+
 .modpack-item:hover {
     background: rgba(255, 255, 255, 0.06);
     border-color: rgba(var(--theme-accent-rgb), 0.3);
 }
+
 .modpack-item:active {
     transform: scale(0.99);
 }
+
 .modpack-item:focus-visible {
     outline: 2px solid var(--theme-accent);
     outline-offset: -2px;
 }
 
 /* Fix: Add hover states to action cards (Create/Browse/Import) */
-.mp-action-card {
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease, box-shadow 0.18s ease;
-    cursor: pointer;
-}
-.mp-action-card:hover {
-    background: rgba(var(--theme-accent-rgb), 0.08);
-    border-color: rgba(var(--theme-accent-rgb), 0.4);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
+
 .mp-action-card:active {
     transform: scale(0.98);
 }
+
 .mp-action-card:focus-visible {
     outline: 2px solid var(--theme-accent);
     outline-offset: 2px;
 }
 
 /* Fix: Improve modpack description contrast (Issue #4) */
+
 .mp-item-info .mp-item-name {
     color: rgba(255, 255, 255, 0.95);
 }
+
 .mp-item-info .mp-item-count {
     color: rgba(255, 255, 255, 0.6);
 }
 
 /* Fix: Trending modpack card hover states */
+
 .trending-mp-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    overflow: hidden;
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 84px;
 }
+
 .trending-mp-card:hover {
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    background: rgba(255, 255, 255, 0.04);
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    border-color: rgba(var(--theme-accent-rgb), 0.4);
 }
+
 .trending-mp-card:focus-visible {
     outline: 2px solid var(--theme-accent);
     outline-offset: 2px;
 }
 
 /* Fix: Standardize modpack icon size (Issue #5) */
+
 .mp-item-icon {
     width: 40px;
     height: 40px;
+    background: rgba(0, 0, 0, 0.25);
     border-radius: 6px;
-    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    object-fit: cover;
 }
 
 /* Fix: Add hover states to sidebar action buttons */
+
 .mp-action-btn {
+    background-color: #4a4a4b;
+    border: 2px solid #000000;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 700;
+    font-family: var(--font-title);
+    cursor: pointer;
+    color: white;
+    box-shadow:
+        inset 0 2px 0 #686869,
+        inset 2px 0 0 #686869,
+        inset 0 -2px 0 #2b2b2c,
+        inset -2px 0 0 #2b2b2c;
+    text-shadow: 1px 1px 0px #2b2b2c;
     transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+    font-variant: small-caps;
+    text-transform: lowercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
+
 .mp-action-btn:hover {
+    background-color: #555556;
+    box-shadow:
+        inset 0 2px 0 #777778,
+        inset 2px 0 0 #777778,
+        inset 0 -2px 0 #333334,
+        inset -2px 0 0 #333334;
     transform: translateY(-1px);
 }
+
 .mp-action-btn:focus-visible {
     outline: 2px solid var(--theme-accent);
     outline-offset: 2px;
 }
 
 /* Fix: Add focus-visible to tabs */
+
 .mp-tab:focus-visible,
 .version-tab:focus-visible {
     outline: 2px solid var(--theme-accent);
@@ -1892,14 +1509,9 @@
 }
 
 /* VLM Round 2 Fix: Add visual separation for Trending Modpacks */
-.mp-trending-section {
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding-top: 24px;
-    margin-top: 24px;
-}
-
 
 /* VLM Round 2 Fix: Increase Show all button size (Fitts Law) */
+
 .mp-versions-header .mp-action-btn,
 #btn-show-all-versions {
     padding: 8px 16px;
@@ -1907,3 +1519,281 @@
     min-height: 36px;
 }
 
+/* ===== MIGRATED FROM main-view.css: modpack-view selectors (mp-dashboard, mp-wizard, mp-version-download, etc.) ===== */
+
+/* Modpack list section headers */
+
+.mp-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.mp-list-section-header {
+    padding: 12px 16px 8px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 8px;
+}
+
+.mp-list-section-header:first-child {
+    margin-top: 0;
+}
+
+.mp-dashboard-columns {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+}
+
+.mp-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding: 0 40px 24px;
+}
+
+.mp-action-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    color: white;
+}
+
+.mp-action-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+.mp-ac-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    border-radius: 12px;
+    color: var(--theme-accent);
+}
+
+.mp-ac-text h3 {
+    font-family: var(--font-title);
+    font-size: 14px;
+    margin: 0 0 4px;
+    font-weight: 700;
+}
+
+.mp-ac-text p {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.mp-versions-section {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.mp-versions-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.mp-versions-header h3 {
+    font-family: var(--font-title);
+    font-size: 13px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 700;
+}
+
+.mp-welcome-hero {
+    text-align: center;
+    padding: 20px 40px 14px;
+}
+
+.mp-welcome-hero h2 {
+    font-family: var(--font-title);
+    font-size: 16px;
+    color: rgba(255,255,255,0.85);
+    margin: 8px 0 4px;
+    font-weight: 700;
+}
+
+.mp-welcome-hero p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.mp-trending-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.mp-trending-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px 12px;
+}
+
+.mp-trending-title {
+    font-size: 13px;
+    margin: 0;
+    color: white;
+    font-weight: 700;
+    font-family: var(--font-main);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mp-trending-brand {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mp-loading-placeholder {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.mp-wizard-section {
+    position: relative;
+}
+
+.mp-wizard-step {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--theme-accent);
+    background: rgba(var(--theme-accent-rgb), 0.1);
+    padding: 2px 7px;
+    border-radius: 3px;
+}
+
+.mp-version-download-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 12px;
+    max-height: 320px;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.mp-version-download-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    align-self: center;
+    width: 100%;
+    max-width: 320px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    transition: background 0.15s;
+    gap: 8px;
+    text-align: center;
+}
+
+.mp-version-download-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.mp-version-download-item .version-name {
+    font-family: var(--font-main);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 11px;
+}
+
+.mp-version-download-item .version-type {
+    font-size: 8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-left: 8px;
+}
+
+.mp-dl-btn {
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-main);
+}
+
+.mp-dl-btn:hover {
+    background: rgba(var(--theme-accent-rgb), 0.1);
+    border-color: rgba(var(--theme-accent-rgb), 0.3);
+    color: #fff;
+}
+
+.mp-dl-btn.downloaded {
+    border-color: rgba(var(--theme-accent-rgb), 0.3);
+    color: var(--theme-accent);
+    cursor: default;
+}
+
+.mp-dl-btn.downloading {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+.mp-dl-loader-badge {
+    font-size: 7px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(var(--theme-accent-rgb), 0.15);
+    color: var(--theme-accent-bright);
+    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
+}
+
+.mp-version-download-item.downloaded {
+    opacity: 1;
+    border-left: 2px solid rgba(var(--theme-accent-rgb), 0.4);
+    background: rgba(var(--theme-accent-rgb), 0.04);
+}
+
+.mp-version-download-item.downloaded:hover {
+    background: rgba(var(--theme-accent-rgb), 0.1);
+}

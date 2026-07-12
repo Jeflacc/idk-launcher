@@ -86,3 +86,8 @@ body.ui-advanced[data-theme="custom"] #view-profile {
         linear-gradient(180deg, var(--theme-bg-panel), var(--theme-bg) 100%);
 }
 
+
+
+svg[stroke="#4cb837"] {
+    stroke: var(--theme-accent);
+}
