@@ -59,7 +59,7 @@ export const state = {
   allVersions: [],
   sodiumSupportedVersions: new Set(),
   downloadedVersions: [],
-  modpacks: safeParse(localStorage.getItem("idk_modpacks"), []),
+  modpacks: [], // Loaded via IPC (Modpack.ScanProfiles) on startup
   versionSettings: safeParse(
     localStorage.getItem("idk_version_settings"),
     {},

@@ -138,71 +138,41 @@ export function initFriendsFeature() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    function renderSkinFaceOnFriendsCanvas(canvas, username, authMode) {
+    async function renderSkinFaceOnFriendsCanvas(canvas, username, authMode) {
+      if (!canvas || !username) return;
       const ctx = canvas.getContext("2d");
-      const img = new Image();
-
-      img.onload = () => {
-        const scale = img.naturalWidth / 64;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.imageSmoothingEnabled = false;
-        // Head face layer
-        ctx.drawImage(
-          img,
-          8 * scale,
-          8 * scale,
-          8 * scale,
-          8 * scale,
-          0,
-          0,
-          canvas.width,
-          canvas.height,
-        );
-        // Outer accessory layer (hats/masks)
-        ctx.drawImage(
-          img,
-          40 * scale,
-          8 * scale,
-          8 * scale,
-          8 * scale,
-          0,
-          0,
-          canvas.width,
-          canvas.height,
-        );
-      };
-
-      let fallbackStage = 0;
-      img.onerror = () => {
-        fallbackStage++;
-        if (fallbackStage === 1) {
-          // Try official Mojang/Minotar skins next
-          img.src = `https://minotar.net/skin/${username}`;
-        } else {
-          // Draw standard letter avatar
-          const accentDark = getComputedStyle(document.documentElement)
-            .getPropertyValue("--theme-accent-dark")
-            .trim();
-          ctx.fillStyle = accentDark || "#16a34a";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.fillStyle = "white";
-          ctx.font = "bold 12px Inter";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(
-            username.substring(0, 2).toUpperCase(),
-            canvas.width / 2,
-            canvas.height / 2,
-          );
+      try {
+        const result = await window.electronAPI.resolveSkinTextureBase64(username, authMode || "offline");
+        if (!result?.base64) {
+          drawLetterAvatar(ctx, canvas, username);
+          return;
         }
-      };
-
-      if (authMode === "offline") {
-        img.src = `https://minotar.net/skin/${username}`;
-      } else {
-        // Ely.by or unknown (e.g. friend) - check Ely.by first, fallback to minotar
-        img.src = `https://skinsystem.ely.by/skins/${username}.png`;
+        const img = new Image();
+        img.onload = () => {
+          const scale = img.naturalWidth / 64;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(img, 8 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 40 * scale, 8 * scale, 8 * scale, 8 * scale, 0, 0, canvas.width, canvas.height);
+        };
+        img.onerror = () => drawLetterAvatar(ctx, canvas, username);
+        img.src = `data:image/png;base64,${result.base64}`;
+      } catch {
+        drawLetterAvatar(ctx, canvas, username);
       }
+    }
+
+    function drawLetterAvatar(ctx, canvas, username) {
+      const accentDark = getComputedStyle(document.documentElement)
+        .getPropertyValue("--theme-accent-dark")
+        .trim();
+      ctx.fillStyle = accentDark || "#16a34a";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "white";
+      ctx.font = "bold 12px Inter";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(username.substring(0, 2).toUpperCase(), canvas.width / 2, canvas.height / 2);
     }
 
     // --- UI CONTROLLERS ---

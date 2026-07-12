@@ -194,7 +194,7 @@ function renderVersions() {
   
   optionsList.innerHTML = '';
   
-  const modpacks = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
+  const modpacks = state.modpacks;
   const favorites = modpacks.filter(mp => mp.favorite && !mp.isTemporary);
   
   if (favorites.length > 0) {

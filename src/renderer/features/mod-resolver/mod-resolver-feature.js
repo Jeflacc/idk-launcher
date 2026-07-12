@@ -124,7 +124,7 @@ export async function resolveDependencies(modpackId, modId) {
     }
 
     // Save modpack
-    localStorage.setItem('idk_modpacks', JSON.stringify(state.modpacks));
+    // Modpack state is managed via IPC (Modpack.UpdateProfile) — no localStorage
 
     return {
       success: true,

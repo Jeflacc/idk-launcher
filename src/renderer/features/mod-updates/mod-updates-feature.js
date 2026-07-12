@@ -174,7 +174,7 @@ export async function installModUpdate(modpackId, update) {
   };
 
   mp[target.listKey] = list;
-  localStorage.setItem('idk_modpacks', JSON.stringify(state.modpacks));
+  // Modpack state is managed via IPC (Modpack.UpdateProfile) — no localStorage
   return list[index];
 }
 
@@ -212,21 +212,6 @@ function buildSearchFacets(item) {
     facets.push(candidates.map(v => `versions:${v}`));
   }
   return facets;
-}
-
-function buildVersionsUrl(projectId, item) {
-  const params = new URLSearchParams();
-  const mcVersion = item.versionFilter || getMinecraftVersion(item);
-  const loader = getLoader(item);
-
-  if (mcVersion && item.type !== 'shader') {
-    const candidates = buildMcVersionCandidates(mcVersion);
-    params.set('game_versions', JSON.stringify(candidates));
-  }
-  if (item.type === 'mod' && loader) params.set('loaders', JSON.stringify([loader]));
-
-  const query = params.toString();
-  return `https://api.modrinth.com/v2/project/${projectId}/version${query ? `?${query}` : ''}`;
 }
 
 async function fetchProjectVersions(projectId, item) {

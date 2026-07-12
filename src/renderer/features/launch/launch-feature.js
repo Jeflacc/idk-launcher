@@ -6,7 +6,7 @@ function updateSetupDisplay() {
   let statusText = `${state.selectedVersion || '—'} · ${state.selectedLoader || 'Vanilla'}`;
   
   if (state.selectedIsModpack) {
-    const mp = (JSON.parse(localStorage.getItem('idk_modpacks') || '[]')).find(m => m.id === state.selectedModpackId);
+    const mp = (state.modpacks).find(m => m.id === state.selectedModpackId);
     if (mp) statusText = mp.name;
   }
   
@@ -66,7 +66,7 @@ function populateVersionList() {
 
   list.innerHTML = '';
   
-  const modpacks = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
+  const modpacks = state.modpacks;
   const favorites = modpacks.filter(mp => mp.favorite && !mp.isTemporary);
   
   if (favorites.length > 0) {
@@ -687,7 +687,7 @@ playBtn.addEventListener('click', async (e) => {
     };
 
     if (state.selectedIsModpack && state.selectedModpackId) {
-      const modpacks = JSON.parse(localStorage.getItem('idk_modpacks') || '[]');
+      const modpacks = state.modpacks;
       const mp = modpacks.find(m => m.id === state.selectedModpackId);
       if (mp) {
         const fallbackVersion = state.downloadedVersions?.[0] || state.selectedVersion || "1.20.1";
