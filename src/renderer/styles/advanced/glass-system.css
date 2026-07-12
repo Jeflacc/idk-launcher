@@ -80,7 +80,7 @@ body.ui-advanced[data-bg-effect]:not([data-bg-effect="none"]):not([data-bg-effec
     }
 
     body.ui-advanced .main-hero-banner .bottom-bar {
-        width: min(360px, 72%);
+        width: min(200px, 60%);
     }
 }
 

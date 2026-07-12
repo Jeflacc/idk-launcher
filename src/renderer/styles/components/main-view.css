@@ -92,20 +92,23 @@
 .main-hero-banner .bottom-bar {
     position: relative;
     z-index: 10;
-    background: rgba(18, 18, 20, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    height: 76px;
+    background: #1b1b1f;
+    border: 2px solid #000;
+    border-radius: 0;
+    height: 78px;
     width: 100%;
     max-width: 1000px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 20px;
+    padding: 0 16px;
     box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 4px 0 #000,
+        0 6px 16px rgba(0, 0, 0, 0.5);
+    -webkit-font-smoothing: none;
 }
 
 .controls-left {
@@ -116,26 +119,31 @@
 
 /* Refresh versions button */
 .refresh-versions-btn {
-    background: rgba(18, 18, 19, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 10px;
-    border-radius: 6px;
+    background: #0e0e10;
+    border: 2px solid #000;
+    padding: 8px;
+    border-radius: 0;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background 0.08s linear;
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.06),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 3px 0 #000;
 }
 
 .refresh-versions-btn:hover {
-    background: rgba(18, 18, 19, 0.85);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    background: #1a1a1d;
+    border-color: #000;
 }
 
 .refresh-versions-btn:active {
-    transform: scale(0.95);
+    background: #0a0a0c;
+    box-shadow: inset -2px -2px 0 rgba(255, 255, 255, 0.06), inset 2px 2px 0 rgba(0, 0, 0, 0.5);
+    transform: translateY(2px);
 }
 
 .refresh-versions-btn.loading svg {
@@ -152,28 +160,34 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(18, 18, 19, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 9px 14px;
-    border-radius: 8px;
+    background: #0e0e10;
+    border: 2px solid #000;
+    padding: 8px 12px;
+    border-radius: 0;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 11px;
+    transition: background 0.08s linear;
+    font-size: 12px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
     white-space: nowrap;
-    color: white;
+    color: #fff;
     gap: 8px;
     min-width: 0;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.06),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 3px 0 #000;
+    text-shadow: 1px 1px 0 #000;
 }
 
 .custom-select-trigger:hover {
-    background: rgba(18, 18, 19, 0.85);
-    border-color: rgba(255, 255, 255, 0.15);
+    background: #1a1a1d;
+    border-color: #000;
 }
 
 .custom-select.open .custom-select-trigger {
-    border-color: var(--theme-accent);
-    background: rgba(18, 18, 19, 0.95);
-    box-shadow: 0 0 0 1px rgba(var(--theme-accent-rgb), 0.2);
+    border-color: #000;
+    background: #1a1a1d;
+    box-shadow: inset -2px -2px 0 rgba(255, 255, 255, 0.06), inset 2px 2px 0 rgba(0, 0, 0, 0.5);
 }
 
 .custom-options {
@@ -182,10 +196,14 @@
     left: 50%;
     transform: translateX(-50%);
     width: 280px;
-    background: rgba(16, 16, 18, 0.97);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    background: #1b1b1f;
+    border: 2px solid #000;
+    border-radius: 0;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 4px 0 #000,
+        0 10px 32px rgba(0, 0, 0, 0.7);
     max-height: 0;
     opacity: 0;
     overflow: hidden;
@@ -205,8 +223,8 @@
     flex-direction: column;
     gap: 8px;
     padding: 12px 14px 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(10, 10, 11, 0.5);
+    border-bottom: 2px solid #000;
+    background: #0e0e10;
 }
 
 .options-list {
@@ -234,26 +252,27 @@
 .custom-option {
     padding: 10px 14px;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.08s linear;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-left: 3px solid transparent;
-    font-size: 10px;
+    font-size: 11px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
     color: #d1d1d2;
     gap: 8px;
 }
 
 .custom-option:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
     color: white;
     border-left-color: var(--theme-accent);
 }
 
 .custom-option.selected {
-    background: rgba(var(--theme-accent-rgb), 0.12);
-    color: var(--theme-accent);
-    font-weight: 600;
+    background: rgba(var(--theme-accent-rgb), 0.16);
+    color: #fff;
+    font-weight: 700;
     border-left-color: var(--theme-accent);
 }
 
@@ -290,28 +309,32 @@
 
 .version-tab {
     padding: 5px 10px;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--text-muted);
-    border-radius: 4px;
+    background: #0e0e10;
+    border: 2px solid #000;
+    color: #9b9b9b;
+    border-radius: 0;
     cursor: pointer;
     font-size: 10px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    transition: all 0.15s;
+    transition: all 0.08s linear;
     white-space: nowrap;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.04), inset -2px -2px 0 rgba(0, 0, 0, 0.5);
 }
 
 .version-tab:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    color: var(--text-secondary);
+    border-color: #000;
+    color: #fff;
+    background: #1a1a1d;
 }
 
 .version-tab.active {
     background: var(--theme-accent);
-    border-color: var(--theme-accent);
-    color: white;
+    border-color: #000;
+    color: #fff;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.15), inset -2px -2px 0 rgba(0, 0, 0, 0.4);
 }
 
 /* Mojang Grass Block SVG Icon */
@@ -439,20 +462,16 @@ input[type="checkbox"]:checked + .switch::after {
 
 /* The PLAY button */
 .play-button {
-    background: linear-gradient(
-        135deg,
-        var(--theme-accent-hover) 0%,
-        var(--theme-accent) 100%
-    );
-    color: white;
-    border: 2px solid var(--theme-accent-shadow);
-    border-radius: 6px;
-    width: 200px;
-    height: 50px;
-    font-family: var(--font-title);
-    font-size: 18px;
+    background: var(--theme-accent);
+    color: #fff;
+    border: 2px solid #000;
+    border-radius: 0;
+    width: 320px;
+    height: 68px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 26px;
     font-weight: bold;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
     cursor: pointer;
     position: relative;
     display: flex;
@@ -462,63 +481,28 @@ input[type="checkbox"]:checked + .switch::after {
     gap: 1px;
     line-height: 1.1;
     box-shadow:
-        inset 0 2px 0 var(--theme-accent-hover),
-        inset 2px 0 0 var(--theme-accent-hover),
-        inset 0 -2px 0 var(--theme-accent-shadow),
-        inset -2px 0 0 var(--theme-accent-shadow),
-        0 4px 16px rgba(0, 0, 0, 0.4);
-    text-shadow: 1px 1px 0px var(--theme-accent-shadow);
-    font-variant: small-caps;
-    text-transform: lowercase;
-    transition: all 0.12s ease;
+        inset 2px 2px 0 var(--theme-accent-bright),
+        inset -2px -2px 0 var(--theme-accent-shadow),
+        0 4px 0 #000;
+    text-shadow: 2px 2px 0 #000;
+    text-transform: uppercase;
+    transition: all 0.08s linear;
 }
 
 .play-button:hover:not(:disabled) {
-    background: linear-gradient(
-        135deg,
-        var(--theme-accent-bright) 0%,
-        var(--theme-accent-hover) 100%
-    );
+    background: var(--theme-accent-bright);
     box-shadow:
-        inset 0 2px 0 var(--theme-accent-bright),
-        inset 2px 0 0 var(--theme-accent-bright),
-        inset 0 -2px 0 var(--theme-accent-dark),
-        inset -2px 0 0 var(--theme-accent-dark),
-        0 6px 20px rgba(0, 0, 0, 0.5);
-    transform: translateY(-1px);
+        inset 2px 2px 0 rgba(255, 255, 255, 0.25),
+        inset -2px -2px 0 var(--theme-accent-shadow),
+        0 4px 0 #000;
 }
 
 .play-button:active:not(:disabled) {
+    background: var(--theme-accent-shadow);
     box-shadow:
-        inset 0 2px 0 var(--theme-accent-shadow),
-        inset 2px 0 0 var(--theme-accent-shadow),
-        inset 0 -2px 0 var(--theme-accent-hover),
-        inset -2px 0 0 var(--theme-accent-hover),
-        0 2px 4px rgba(0, 0, 0, 0.3);
-    transform: translateY(0);
-}
-
-.play-button:hover:not(:disabled) {
-    background: linear-gradient(
-        135deg,
-        var(--theme-accent-hover) 0%,
-        var(--theme-accent) 100%
-    );
-    box-shadow:
-        inset 0 3px 0 var(--theme-accent-bright),
-        inset 3px 0 0 var(--theme-accent-bright),
-        inset 0 -3px 0 var(--theme-accent-dark),
-        inset -3px 0 0 var(--theme-accent-dark),
-        0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-.play-button:active:not(:disabled) {
-    box-shadow:
-        inset 0 3px 0 var(--theme-accent-shadow),
-        inset 3px 0 0 var(--theme-accent-shadow),
-        inset 0 -3px 0 var(--theme-accent-hover),
-        inset -3px 0 0 var(--theme-accent-hover),
-        0 2px 4px rgba(0, 0, 0, 0.3);
+        inset -2px -2px 0 rgba(255, 255, 255, 0.12),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.45);
+    transform: translateY(3px);
 }
 
 .play-button:not(.running):not(:disabled)::after {
@@ -526,11 +510,11 @@ input[type="checkbox"]:checked + .switch::after {
     font-family: var(--font-main);
     font-size: 9px;
     font-weight: 600;
-    color: var(--theme-accent-text);
+    color: rgba(255, 255, 255, 0.85);
     display: flex;
     align-items: center;
     gap: 4px;
-    text-shadow: none;
+    text-shadow: 1px 1px 0 #000;
     text-transform: none;
     margin-top: -2px;
 }
@@ -538,13 +522,13 @@ input[type="checkbox"]:checked + .switch::after {
 .play-button:disabled,
 .play-button.running {
     background: #2a2a2b !important;
-    border-color: #3c3c3d !important;
+    border-color: #000 !important;
     color: #727273 !important;
-    box-shadow: none !important;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.03), inset -2px -2px 0 rgba(0, 0, 0, 0.4) !important;
     text-shadow: none !important;
     cursor: not-allowed;
     transform: none !important;
-    height: 52px;
+    height: 68px;
 }
 
 .play-button.running + .play-dropdown-trigger,
@@ -963,11 +947,14 @@ input[type="checkbox"]:checked + .switch::after {
     position: relative;
     display: flex;
     align-items: stretch;
-    height: 52px;
+    height: 72px;
+    border-radius: 0;
+    overflow: visible;
+    border: none;
 }
 
 .play-button-wrapper .play-button {
-    border-radius: 4px 0 0 4px;
+    border-radius: 0;
 }
 
 /* Play button dropdown trigger is hidden by default for classic UX, enabled in advanced-theme.css */
@@ -983,11 +970,15 @@ input[type="checkbox"]:checked + .switch::after {
     position: absolute;
     bottom: calc(100% + 4px);
     right: 0;
-    min-width: 180px;
-    background: rgba(18, 18, 19, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    min-width: 200px;
+    background: #1b1b1f;
+    border: 2px solid #000;
+    border-radius: 0;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 4px 0 #000,
+        0 12px 32px rgba(0, 0, 0, 0.6);
     padding: 4px;
     display: flex;
     flex-direction: column;
@@ -1009,24 +1000,28 @@ input[type="checkbox"]:checked + .switch::after {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 14px;
-    font-family: var(--font-title);
-    font-size: 13px;
+    padding: 11px 14px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 12px;
+    letter-spacing: 0.5px;
     color: #d1d1d2;
     cursor: pointer;
-    border-radius: 6px;
     border: none;
     background: transparent;
-    transition: all 0.15s;
+    transition: all 0.08s linear;
     width: 100%;
     text-align: left;
-    font-variant: small-caps;
-    text-transform: lowercase;
+    text-transform: uppercase;
+}
+
+.play-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
 }
 
 .play-dropdown-item svg {
     flex-shrink: 0;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .play-dropdown-item:hover {
@@ -1039,13 +1034,14 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .play-dd-setup {
-    padding: 8px 12px 6px;
+    padding: 10px 14px 8px;
     display: flex;
     flex-direction: column;
     gap: 2px;
 }
 
 .play-dd-setup-label {
+    font-family: 'Mojang', 'Minecraftia', monospace;
     font-size: 9px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -1053,27 +1049,28 @@ input[type="checkbox"]:checked + .switch::after {
 }
 
 .play-dd-setup-value {
-    font-family: var(--font-title);
+    font-family: 'Mojang', 'Minecraftia', monospace;
     font-size: 12px;
     color: rgba(255, 255, 255, 0.85);
 }
 
 .play-dropdown-divider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.06);
+    height: 2px;
+    background: #000;
     margin: 2px 0;
 }
 
 .play-dd-section {
-    padding: 4px 8px;
+    padding: 6px 10px;
 }
 
 .play-dd-section-header {
+    font-family: 'Mojang', 'Minecraftia', monospace;
     font-size: 9px;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: rgba(255, 255, 255, 0.3);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
     padding: 0 4px;
 }
 
@@ -1086,27 +1083,30 @@ input[type="checkbox"]:checked + .switch::after {
 
 .play-dd-loader-btn,
 .play-dd-version-btn {
-    font-family: var(--font-main);
+    font-family: 'Mojang', 'Minecraftia', monospace;
     font-size: 10px;
-    padding: 3px 7px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(255, 255, 255, 0.5);
+    padding: 4px 8px;
+    border-radius: 0;
+    border: 2px solid #000;
+    background: #0e0e10;
+    color: #9b9b9b;
     cursor: pointer;
-    transition: all 0.15s;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.04), inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+    transition: all 0.08s linear;
 }
 
 .play-dd-loader-btn:hover,
 .play-dd-version-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.85);
+    background: #1a1a1d;
+    color: #fff;
 }
 
 .play-dd-loader-btn.active,
 .play-dd-version-btn.active {
-    background: rgba(var(--theme-accent-rgb), 0.15);
-    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    background: var(--theme-accent);
+    border-color: #000;
+    color: #fff;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.15), inset -2px -2px 0 rgba(0, 0, 0, 0.4);
     color: #fff;
 }
 

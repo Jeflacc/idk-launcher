@@ -19,9 +19,6 @@
     background: var(--color-bg-glass) !important;
 }
 
-.mods-content-wrapper,
-.settings-content-wrapper,
-.profile-page-content,
 .modpacks-sidebar,
 .browser-sidebar {
     background: var(--color-bg-glass-panel) !important;

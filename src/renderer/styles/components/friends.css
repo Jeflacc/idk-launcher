@@ -1185,3 +1185,113 @@
     box-shadow: 0 6px 20px rgba(var(--theme-accent-rgb), 0.45);
 }
 
+/* Compact featured server banner — Minecraft (Mojang) vibe, inside What's New */
+.featured-server-banner--compact {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 18px;
+    width: 100%;
+    margin: 0 0 24px;
+    padding: 20px 24px;
+    border-radius: 0;
+    background: #1b1b1f;
+    border: 2px solid #000;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 4px 0 #000,
+        0 6px 16px rgba(0, 0, 0, 0.6);
+    position: relative;
+    overflow: visible;
+    z-index: 5;
+    -webkit-font-smoothing: none;
+}
+
+.featured-server-banner--compact .featured-server-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 0;
+    padding: 4px;
+    background: #0e0e10;
+    border: 2px solid #000;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.06), inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+    image-rendering: pixelated;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.featured-server-banner--compact .featured-server-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+}
+
+.featured-server-banner--compact .featured-server-title {
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+}
+
+.featured-server-banner--compact .featured-server-ip {
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 12px;
+    color: #9b9b9b;
+    text-shadow: 1px 1px 0 #000;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.featured-server-banner--compact .featured-join-btn {
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: #6abe30;
+    padding: 12px 24px;
+    border-radius: 0;
+    border: 2px solid #000;
+    cursor: pointer;
+    flex-shrink: 0;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+    box-shadow: inset 2px 2px 0 #9bd862, inset -2px -2px 0 #4a8a1f;
+    transition: background 0.08s linear;
+}
+
+.featured-server-banner--compact .featured-join-btn:hover {
+    background: #82d63e;
+}
+
+.featured-server-banner--compact .featured-join-btn:active {
+    background: #4a8a1f;
+    box-shadow: inset -2px -2px 0 #9bd862, inset 2px 2px 0 #2d5c12;
+}
+
+.featured-server-banner--compact::before {
+    content: 'AD';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #000;
+    color: #8b8b8b;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 9px;
+    padding: 1px 4px;
+    border-left: 2px solid #000;
+    border-bottom: 2px solid #000;
+    letter-spacing: 1px;
+}
+
+.featured-server-banner--compact:hover {
+    border-color: #000;
+}
+
