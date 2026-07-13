@@ -2,13 +2,14 @@ import { defineConfig } from 'vitest/config';
 import { resolve } from 'node:path';
 
 /**
- * Vitest workspace: two projects.
+ * Vitest configuration.
  *
  * - `node` project: domain, shared, infrastructure, application, main, preload.
  *   Runs in the Node environment (Electron modules are mocked per-test).
  *
- * - `jsdom` project: renderer (React components). Runs in jsdom so DOM APIs
- *   are available for @testing-library/react.
+ * - `renderer` project: reserved for future renderer tests. Currently has
+ *   no test files — the renderer is vanilla JS, not React. The setup file
+ *   stubs matchMedia, ResizeObserver, and window.idk for when tests are added.
  *
  * Both projects share the same path aliases for `@/*` imports.
  */
@@ -20,7 +21,6 @@ export default defineConfig({
       '@domain': resolve(__dirname, 'src/domain'),
       '@infrastructure': resolve(__dirname, 'src/infrastructure'),
       '@application': resolve(__dirname, 'src/application'),
-      '@renderer': resolve(__dirname, 'src/renderer'),
     },
   },
   test: {
@@ -28,7 +28,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['src/**/*.ts', 'src/**/*.tsx'],
+      include: ['src/**/*.ts'],
       exclude: ['src/**/*.d.ts', 'src/main/index.ts'],
     },
     projects: [
@@ -53,7 +53,7 @@ export default defineConfig({
           name: 'renderer',
           environment: 'jsdom',
           setupFiles: ['./tests/renderer/setup.ts'],
-          include: ['tests/renderer/**/*.test.tsx', 'tests/renderer/**/*.test.ts'],
+          include: ['tests/renderer/**/*.test.ts'],
         },
       },
     ],
