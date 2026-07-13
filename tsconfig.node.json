@@ -4,7 +4,7 @@
     "lib": ["ES2023", "DOM"],
     "types": ["node", "electron"],
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
     "verbatimModuleSyntax": false,
     "isolatedModules": false,
     "outDir": "dist-main",
@@ -17,7 +17,8 @@
       "@domain/*": ["src/domain/*"],
       "@infrastructure/*": ["src/infrastructure/*"],
       "@application/*": ["src/application/*"]
-    }
+    },
+    "ignoreDeprecations": "5.0"
   },
   "include": ["src/main", "src/preload", "src/shared", "src/domain", "src/infrastructure", "src/application"]
 }

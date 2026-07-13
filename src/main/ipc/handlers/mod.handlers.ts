@@ -381,10 +381,10 @@ export function registerModHandlers(
         // Use dynamic import to avoid bundling jszip in the main process if not needed
         const { default: AdmZip } = await import('adm-zip');
         const zip = new AdmZip(Buffer.from(buf));
-        const iconEntry = zip.getEntries().find(e =>
+        const iconEntry = zip.getEntries().find((e: { entryName: string }) =>
           e.entryName === 'pack.png' ||
           e.entryName === 'logo.png' ||
-          e.entryName.startsWith('assets/') && e.entryName.endsWith('/icon.png')
+          (e.entryName.startsWith('assets/') && e.entryName.endsWith('/icon.png'))
         );
         if (iconEntry) {
           const { writeFile, mkdir } = await import('node:fs/promises');
@@ -419,7 +419,7 @@ export function registerModHandlers(
             const buf = await http.getBuffer(`file://${join(modsDir, jar)}`);
             const { default: AdmZip } = await import('adm-zip');
             const zip = new AdmZip(Buffer.from(buf));
-            const iconEntry = zip.getEntries().find(e => e.entryName === 'pack.png' || e.entryName === 'logo.png');
+            const iconEntry = zip.getEntries().find((e: { entryName: string }) => e.entryName === 'pack.png' || e.entryName === 'logo.png');
             if (iconEntry) {
               const iconPath = join(iconsDir, jar.replace('.jar', '.png'));
               await writeFile(iconPath, iconEntry.getData());
