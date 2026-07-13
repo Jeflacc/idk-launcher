@@ -8,3 +8,19 @@ release/
 .DS_Store
 
 temp
+
+# Development-only screenshots and audit results
+screenshots/
+
+# Development-only scripts (build-main.mjs is needed for production builds)
+scripts/remove-localStorage.js
+scripts/reorganize-css.py
+scripts/run-vlm-audit.py
+scripts/take-all-screenshots.py
+scripts/take-screenshots.py
+scripts/vlm-audit-prompt.txt
+scripts/vlm-single.py
+
+# CSS audit report (development reference)
+CSS_AUDIT_REPORT.md
+AUDIT-renderer-backend-code.md
