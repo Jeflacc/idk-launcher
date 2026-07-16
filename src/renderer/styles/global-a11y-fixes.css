@@ -449,3 +449,263 @@ button, a, [role="button"], .nav-tab, .mp-tab, .custom-select-trigger,
     font-size: 14px;
     line-height: 1.5;
 }
+
+/* =========================================================
+   SCROLL & BUTTON AUDIT FIXES
+   ========================================================= */
+
+/* Fix: Settings page scroll — ensure content is scrollable, not clipped */
+#view-settings {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix: Settings page sections scroll properly */
+.settings-page {
+    max-height: none;
+    overflow: visible;
+}
+
+/* Fix: Advanced settings panel scroll */
+.advanced-settings {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 80px;
+}
+
+/* Fix: Advanced settings tab bar sticky positioning */
+.advanced-tab-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(20, 20, 24, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* Fix: Settings content wrapper scroll */
+.settings-content-wrapper {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix: All views should scroll vertically, never clip */
+.view {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix: Modpacks sidebar scroll */
+.modpacks-sidebar {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix: Mod browser results scroll */
+.mod-browser-results {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix: Friends sidebar scroll */
+.friends-sidebar {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix: Friends chat messages scroll */
+.friends-chat-messages {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix: Profile page scroll */
+.profile-page {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix: IDK Connect panel scroll */
+#view-idk-connect {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix: Details section scroll */
+.details-section {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Fix: Custom theme button text overflow */
+.theme-choice-card {
+    overflow: visible;
+    white-space: nowrap;
+}
+.theme-choice-card .theme-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+/* Fix: UI mode buttons alignment */
+.pill-switch {
+    display: inline-flex;
+    align-items: center;
+}
+.pill-switch-option {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 8px 16px;
+    text-align: center;
+}
+
+/* Fix: Toggle switch hover feedback */
+.tg-switch:hover .tg-slider {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+.toggle-switch:hover .switch {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Fix: Force update text truncation */
+#adv-force-update,
+#force-update-cb {
+    white-space: nowrap;
+    overflow: visible;
+}
+#adv-force-update + label,
+#force-update-cb + label {
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* Fix: Section heading consistency */
+.settings-section-title,
+.advanced-tab-panel h3 {
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 16px;
+}
+
+/* Fix: Modpack sidebar text clipping */
+.modpacks-sidebar-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 4px 16px 4px;
+}
+
+/* Fix: No modpack message wrapping */
+.no-modpack-msg,
+.mp-empty {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    padding: 12px 16px;
+    line-height: 1.5;
+}
+
+/* Fix: Trending modpack grid overflow */
+.mp-trending-section {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+}
+
+/* Fix: "Show all" button alignment */
+.mp-versions-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.mp-versions-header .mp-action-btn,
+#btn-show-all-versions {
+    align-self: center;
+    margin: 0;
+}
+
+/* Fix: Accent color swatches sizing */
+.accent-swatch {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.accent-swatch:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.3);
+}
+.accent-swatch.active {
+    box-shadow: 0 0 0 2px var(--theme-accent), 0 0 12px rgba(var(--theme-accent-glow-rgb), 0.4);
+}
+
+/* Fix: IDK Connect input field alignment */
+.friends-auth-form input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Fix: IDK Connect button text sizing */
+.friends-auth-submit,
+.btn-connect-action {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 20px;
+    text-align: center;
+}
+
+/* Fix: "Playing as" text clipping */
+.user-details {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+/* Fix: Settings rows alignment */
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+}
+.settings-row-label {
+    flex: 1;
+    min-width: 0;
+}
+.settings-row > *:not(.settings-row-label) {
+    flex-shrink: 0;
+}
+
+/* Fix: Advanced settings rows alignment */
+.advanced-tab-panel .settings-row,
+.advanced-tab-panel .adv-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Fix: Slider value text alignment */
+.slider-value {
+    min-width: 40px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
