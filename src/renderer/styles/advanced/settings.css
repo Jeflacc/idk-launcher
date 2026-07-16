@@ -824,14 +824,11 @@ body.ui-advanced .dashboard-banners-grid .support-banner {
     padding: 16px;
 }
 
-/* Compact featured server banner below play button — Minecraft (Mojang) vibe */
-body.ui-advanced .main-hero-banner .featured-server-banner--compact {
-    position: absolute !important;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(380px, 56%);
-    margin: 0;
+/* Compact featured server banner in details section — Minecraft (Mojang) vibe */
+body.ui-advanced .details-content .featured-server-banner--compact {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 16px;
     padding: 14px 18px;
     border-radius: 0;
     background: #1b1b1f;
@@ -846,11 +843,12 @@ body.ui-advanced .main-hero-banner .featured-server-banner--compact {
     align-items: center;
     justify-content: flex-start;
     gap: 14px;
+    position: relative;
     z-index: 3;
-    overflow: visible !important;
+    box-sizing: border-box;
 }
 
-body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-server-icon {
+body.ui-advanced .details-content .featured-server-banner--compact .featured-server-icon {
     width: 48px;
     height: 48px;
     border-radius: 0;
@@ -862,7 +860,7 @@ body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-se
     flex-shrink: 0;
 }
 
-body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-server-text {
+body.ui-advanced .details-content .featured-server-banner--compact .featured-server-text {
     display: flex;
     flex-direction: column;
     gap: 3px;
@@ -870,7 +868,7 @@ body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-se
     flex: 1;
 }
 
-body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-server-title {
+body.ui-advanced .details-content .featured-server-banner--compact .featured-server-title {
     font-family: 'Mojang', 'Minecraftia', monospace;
     font-size: 16px;
     font-weight: bold;
@@ -880,7 +878,7 @@ body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-se
     letter-spacing: 0.5px;
 }
 
-body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-server-ip {
+body.ui-advanced .details-content .featured-server-banner--compact .featured-server-ip {
     font-family: 'Mojang', 'Minecraftia', monospace;
     font-size: 11px;
     color: #8b8b8b;
@@ -890,7 +888,7 @@ body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-se
     gap: 5px;
 }
 
-body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-join-btn {
+body.ui-advanced .details-content .featured-server-banner--compact .featured-join-btn {
     font-family: 'Mojang', 'Minecraftia', monospace;
     font-size: 12px;
     font-weight: bold;
@@ -907,27 +905,25 @@ body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-jo
     transition: background 0.08s linear;
 }
 
-body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-join-btn:hover {
+body.ui-advanced .details-content .featured-server-banner--compact .featured-join-btn:hover {
     background: #82d63e;
 }
 
-body.ui-advanced .main-hero-banner .featured-server-banner--compact .featured-join-btn:active {
+body.ui-advanced .details-content .featured-server-banner--compact .featured-join-btn:active {
     background: #4a8a1f;
     box-shadow: inset -2px -2px 0 #9bd862, inset 2px 2px 0 #2d5c12;
 }
 
-body.ui-advanced .main-hero-banner .featured-server-banner--compact::before {
+body.ui-advanced .details-content .featured-server-banner--compact::before {
     content: 'AD';
     position: absolute;
-    top: -2px;
-    right: -2px;
+    top: 2px;
+    right: 2px;
     background: #000;
     color: #8b8b8b;
     font-family: 'Mojang', 'Minecraftia', monospace;
     font-size: 9px;
     padding: 1px 4px;
-    border-left: 2px solid #000;
-    border-bottom: 2px solid #000;
     letter-spacing: 1px;
 }
 /* ===== MIGRATED FROM friends.css: support banner (Ko-Fi widget, lives in advanced ABOUT tab) ===== */

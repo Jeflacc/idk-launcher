@@ -55,8 +55,7 @@ body.ui-advanced[data-bg-effect="particles"] .bg-overlay {
     background: #020203 !important;
 }
 
-body.ui-advanced .view-title,
-body.ui-advanced .mods-page-header h2.view-title {
+body.ui-advanced #view-settings .view-title {
     font-size: 14px;
     letter-spacing: 1.5px;
     color: #fff;
@@ -444,38 +443,7 @@ body.ui-advanced .browser-page-info-lg {
     white-space: nowrap;
 }
 
-/* Cyberpunk mods manager enhancements */
-
-body.ui-advanced .mods-content-wrapper {
-    position: relative;
-}
-
-body.ui-advanced .mods-content-wrapper::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(var(--theme-accent-rgb), 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(var(--theme-accent-rgb), 0.06) 1px, transparent 1px);
-    background-size: 24px 24px;
-    pointer-events: none;
-    z-index: 0;
-}
-
-body.ui-advanced .mods-page-header {
-    padding: 0 0 14px;
-    border-bottom: 1px solid rgba(var(--theme-accent-rgb), 0.32);
-    position: relative;
-    z-index: 1;
-}
-
-body.ui-advanced .mods-container {
-    margin-top: 14px;
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.22);
-    background: rgba(4, 3, 9, 0.52);
-    position: relative;
-    z-index: 1;
-}
+/* Cyberpunk mods manager enhancements removed — mods view uses classic chrome */
 
 body.ui-advanced .modpacks-sidebar-header .sidebar-label {
     color: var(--theme-accent-bright);
@@ -488,15 +456,6 @@ body.ui-advanced .modpack-item.active {
     box-shadow:
         0 0 18px rgba(var(--theme-accent-rgb), 0.22),
         inset 0 0 12px rgba(var(--theme-accent-rgb), 0.05);
-}
-
-body.ui-advanced .mp-list-section-header {
-    padding: 12px 16px 8px;
-    margin: 0;
-    border-bottom: 0;
-    color: var(--theme-accent-bright);
-    font-family: var(--font-title);
-    letter-spacing: 1.2px;
 }
 
 /* Advanced pagination buttons */

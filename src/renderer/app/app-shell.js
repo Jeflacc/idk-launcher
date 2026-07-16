@@ -276,22 +276,23 @@ export function renderAppShell() {
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
-  <div class="details-section">
+      <div class="details-section">
     <div class="details-content">
 
-      <div class="news-section">
-          <div class="featured-server-banner featured-server-banner--compact">
+      <div class="featured-server-banner featured-server-banner--compact" id="ad-below-play">
             <img class="featured-server-icon" src="./lunasmp.png" alt="Server Logo" />
             <div class="featured-server-text">
               <span class="featured-server-title">LunaSMP</span>
               <span class="featured-server-ip">play.somniac.me</span>
             </div>
             <button class="featured-join-btn" onclick="if(window.IdkApp) { window.IdkApp.state.quickConnectTarget = { host: 'play.somniac.me' }; window.IdkApp.actions.playGame(); } else { alert('Launcher not ready'); }">Join</button>
-          </div>
+      </div>
 
+      <div class="news-section">
           <div class="section-header">
             <h2 class="section-title">What's New</h2>
             <div class="section-decoration">
@@ -309,6 +310,7 @@ export function renderAppShell() {
           </div>
         </div>
       </div>
+
     </div>
   </div>
 

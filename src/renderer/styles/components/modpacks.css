@@ -33,6 +33,11 @@
     background: #121213;
 }
 
+/* Ensure navigation tabs are visible */
+body:has(#view-mods.active) .header-nav {
+    display: flex !important;
+}
+
 .mods-content-wrapper {
     max-width: none;
     margin: 0;

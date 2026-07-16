@@ -429,16 +429,7 @@ button, a, [role="button"], .nav-tab, .mp-tab, .custom-select-trigger,
 
 /* Fix: Subtle separators for nav items */
 .nav-tabs {
-    gap: 2px;
-}
-.nav-tab:not(:last-child)::after {
-    content: "";
-    display: inline-block;
-    width: 1px;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.06);
-    margin-left: 2px;
-    vertical-align: middle;
+    gap: 0;
 }
 
 /* Fix: Group form buttons with inputs */

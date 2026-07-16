@@ -28,8 +28,9 @@ import { InstallModpack } from '@/application/use-cases/install-modpack';
 import { ExportModpack } from '@/application/use-cases/export-modpack';
 import { ImportModpack } from '@/application/use-cases/import-modpack';
 import type { LauncherSettings } from '@shared/types';
+import { env } from './env-config';
 
-const isDev = Boolean(process.env['VITE_DEV_SERVER_URL']);
+const isDev = env.isDev;
 // Preload is bundled by scripts/build-main.mjs to a `.cjs` file so Node/Electron
 // treat it as CommonJS regardless of `package.json#type: "module"`.
 const PRELOAD_PATH = join(__dirname, '..', 'preload', 'index.cjs');
@@ -68,12 +69,10 @@ async function bootstrap(): Promise<void> {
   const modrinth = new ModrinthClient(http);
   const mojang = new MojangClient(http);
   const elyby = new ElybyClient(http);
-  const idkConnect = new IdkConnectClient(http);
+  const idkConnect = new IdkConnectClient(http, env.idkConnectBaseUrl);
   const minotar = new MinotarClient(http);
   const mojangContent = new MojangContentClient(http);
-  // CurseForge API key — in production this should come from env or settings.
-  // For now, use the public proxy at api.curse.tools which doesn't require a key.
-  const curseforge = new CurseforgeClient(http, process.env['CURSEFORGE_API_KEY'] ?? '');
+  const curseforge = new CurseforgeClient(http, env.curseforgeApiKey);
   const modpackRepo = new ModpackRepository(paths);
   const downloadQueue = new DownloadQueue(http, settings.network.concurrentDownloads);
   const integrity = new IntegrityPolicyService(settings);
@@ -81,7 +80,7 @@ async function bootstrap(): Promise<void> {
   const javaService = new JavaService(paths, http, settings.java.customPath || undefined);
   const tunnel = new TunnelService(paths, http);
   const updater = new UpdaterService();
-  const discord = new DiscordRpcService('YOUR_DISCORD_CLIENT_ID');
+  const discord = new DiscordRpcService(env.discordClientId);
 
   // Application use-cases
   const authMicrosoft = new AuthenticateMicrosoft(secrets);

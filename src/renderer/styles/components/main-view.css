@@ -473,7 +473,7 @@ input[type="checkbox"]:checked + .switch::after {
     text-shadow: none !important;
     cursor: not-allowed;
     transform: none !important;
-    height: 68px;
+    height: 46px;
 }
 
 .play-button.running + .play-dropdown-trigger,
@@ -778,10 +778,10 @@ input[type="checkbox"]:checked + .switch::after {
     color: white;
     border: none;
     border-radius: 0;
-    width: 320px;
-    height: 68px;
+    width: 220px;
+    height: 46px;
     font-family: 'Mojang', 'Minecraftia', monospace;
-    font-size: 22px;
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: 1px;
     cursor: pointer;
@@ -867,7 +867,7 @@ input[type="checkbox"]:checked + .switch::after {
     border: none;
     position: relative;
     align-items: stretch;
-    height: 72px;
+    height: 50px;
 }
 
 .play-button-wrapper .play-button {
@@ -1313,6 +1313,13 @@ input[type="checkbox"]:checked + .switch::after {
 
 /* Compact featured server banner — Minecraft (Mojang) vibe, inside What's New */
 
+body:not(.ui-advanced) #ad-below-play {
+    width: 100%;
+    margin: 0 auto 24px;
+    position: relative;
+    z-index: 5;
+}
+
 .featured-server-banner--compact {
     display: flex;
     flex-direction: row;
@@ -1406,15 +1413,13 @@ input[type="checkbox"]:checked + .switch::after {
 .featured-server-banner--compact::before {
     content: 'AD';
     position: absolute;
-    top: -2px;
-    right: -2px;
+    top: 2px;
+    right: 2px;
     background: #000;
     color: #8b8b8b;
     font-family: 'Mojang', 'Minecraftia', monospace;
     font-size: 9px;
     padding: 1px 4px;
-    border-left: 2px solid #000;
-    border-bottom: 2px solid #000;
     letter-spacing: 1px;
 }
 

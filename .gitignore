@@ -24,3 +24,12 @@ scripts/vlm-single.py
 # CSS audit report (development reference)
 CSS_AUDIT_REPORT.md
 AUDIT-renderer-backend-code.md
+
+# IDE
+.kiro
+.codex
+.cursor
+.gemini
+.claude
+templates
+skills

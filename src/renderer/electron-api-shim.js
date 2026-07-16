@@ -108,7 +108,32 @@
     getElybyAuthData: () => idk?.auth.getElybyAuthData() ?? Promise.resolve(null),
 
     // ── Launch ──
-    launchMinecraft: (options) => idk?.launch.minecraft(options) ?? noop(),
+    // v1 calls launchMinecraft with 12 positional args. v2 expects a single options object.
+    launchMinecraft: (...args) => {
+      const [username, versionId, javaPath, loader, autoOpt, perfRenderer, maxMemory, authData, quickConnect, windowSize, javaArgs, forceUpdate] = args;
+      let authProvider = 'microsoft';
+      if (authData?.elyby || authData?.provider === 'elyby') authProvider = 'elyby';
+      else if (!authData) authProvider = 'offline';
+      let memMb = 4096;
+      if (maxMemory && typeof maxMemory === 'string') {
+        const parsed = parseInt(maxMemory.replace(/[Gg]$/, ''), 10);
+        if (!isNaN(parsed)) memMb = parsed * 1024;
+      }
+      const opts = {
+        versionId: versionId || '',
+        loader: (loader || 'vanilla').toLowerCase(),
+        javaPath: javaPath || undefined,
+        maxMemoryMb: memMb,
+        javaArgs: Array.isArray(javaArgs) ? javaArgs : [],
+        windowSize: windowSize ? { width: windowSize.width || 854, height: windowSize.height || 480 } : undefined,
+        autoOptimization: autoOpt !== false,
+        performanceRenderer: perfRenderer === true || perfRenderer === 'true',
+        quickConnect: quickConnect || undefined,
+        forceUpdate: forceUpdate === true,
+        authProvider,
+      };
+      return idk?.launch.minecraft(opts) ?? Promise.resolve({ success: false });
+    },
     cancelLaunch: () => idk?.launch.cancel() ?? noop(),
     resumeGame: () => idk?.overlay.resumeGame() ?? noop(),
     onLaunchProgress: (cb) => idk?.launch.onProgress(cb) ?? noop(),
@@ -123,7 +148,10 @@
     scanProfiles: () => idk?.modpack.scanProfiles() ?? Promise.resolve([]),
     deleteModpackFolder: (modpackId) => idk?.modpack.deleteFolder(modpackId) ?? Promise.resolve({ success: false }),
     updateModpackProfile: (modpackId, changes) => idk?.modpack.updateProfile(modpackId, changes) ?? Promise.resolve({ success: false }),
-    launchModpack: (modpackId, quickConnect) => idk?.modpack.launch(modpackId, quickConnect) ?? Promise.resolve({ success: false }),
+    launchModpack: (modpackId) => {
+      const id = typeof modpackId === 'string' ? modpackId : (modpackId?.modpackId || '');
+      return idk?.modpack.launch(id, typeof modpackId === 'object' ? modpackId?.quickConnect : undefined) ?? Promise.resolve({ success: false });
+    },
     downloadModrinthModpack: (projectId, minecraftVersion, loader, name) =>
       idk?.mod.downloadModrinthModpack(projectId, minecraftVersion, loader, name) ?? Promise.resolve({ success: false }),
     downloadCurseforgeModpack: (projectId, fileId, name) => idk?.mod.downloadCurseforgeModpack(projectId, fileId, name) ?? Promise.resolve({ success: false }),

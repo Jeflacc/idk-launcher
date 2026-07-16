@@ -14,7 +14,7 @@ import { HttpClient } from '../http-client';
  *   - The renderer never sees the token.
  */
 
-const IDK_CONNECT_BASE = 'https://api.somniac.me';
+const DEFAULT_IDK_CONNECT_BASE = 'https://api.somniac.me';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -77,9 +77,14 @@ export interface LoginResult {
 // ── Client ─────────────────────────────────────────────────────────────────
 
 export class IdkConnectClient {
-  private readonly base = IDK_CONNECT_BASE;
+  private readonly base: string;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    baseUrl?: string,
+  ) {
+    this.base = baseUrl ?? DEFAULT_IDK_CONNECT_BASE;
+  }
 
   // ── Auth ────────────────────────────────────────────────────────────────
 
