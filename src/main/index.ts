@@ -36,6 +36,33 @@ const isDev = env.isDev;
 const PRELOAD_PATH = join(__dirname, '..', 'preload', 'index.cjs');
 const RENDERER_DIST = join(__dirname, '..', '..', 'dist-renderer');
 
+// ── Process-level error handlers ──
+// Without these, unhandled rejections and uncaught exceptions crash the main
+// process silently — no logs, no error modal, just a frozen window.
+process.on('uncaughtException', (err) => {
+  console.error('[Main] Uncaught exception:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[Main] Unhandled promise rejection:', reason);
+});
+
+// ── Event-loop watchdog ──
+// Detects when the main process event loop is blocked (e.g. by a synchronous
+// operation or a hung HTTP request in mclc). Logs a warning every 5 seconds
+// while blocked so the issue is visible in dev tools.
+{
+  let lastTick = Date.now();
+  const THRESHOLD_MS = 3_000;
+  const tick = () => {
+    const lag = Date.now() - lastTick;
+    if (lag > THRESHOLD_MS) {
+      console.warn(`[Watchdog] Event loop blocked for ~${lag}ms — possible hung I/O`);
+    }
+    lastTick = Date.now();
+  };
+  setInterval(tick, 1_000).unref();
+}
+
 // Default settings (matches SettingsSchema defaults).
 const DEFAULT_SETTINGS: LauncherSettings = {
   general: {
@@ -52,6 +79,7 @@ const DEFAULT_SETTINGS: LauncherSettings = {
   launch: { closeOnLaunch: false, showOverlay: true, autoOptimize: true, windowWidth: 854, windowHeight: 480, fullscreen: false },
   network: { concurrentDownloads: 4, verifyIntegrity: true, proxyUrl: '' },
   connect: { enabled: false, serverUrl: '', tunnelToken: '', tunnelEnabled: false },
+  session: { currentUser: '', authMode: 'offline' },
 };
 
 async function bootstrap(): Promise<void> {
@@ -84,8 +112,8 @@ async function bootstrap(): Promise<void> {
 
   // Application use-cases
   const authMicrosoft = new AuthenticateMicrosoft(secrets);
-  const authElyby = new AuthenticateElyby(elyby, secrets);
-  const launchGame = new LaunchGame({ launchService, javaService, secrets, modpackRepo });
+  const authElyby = new AuthenticateElyby(elyby, secrets, env.elybyClientId, env.elybyClientSecret, env.elybyRedirectPort);
+  const launchGame = new LaunchGame({ launchService, javaService, secrets, modpackRepo, http, paths, elyby, elybyClientId: env.elybyClientId, elybyClientSecret: env.elybyClientSecret });
   const installModpack = new InstallModpack(modrinth, modpackRepo, downloadQueue);
   const exportModpack = new ExportModpack(modpackRepo);
   const importModpack = new ImportModpack(modpackRepo);

@@ -9,7 +9,8 @@ export type SettingsCategory =
   | 'appearance'
   | 'launch'
   | 'network'
-  | 'connect';
+  | 'connect'
+  | 'session';
 
 export interface SettingsCategoryMeta {
   id: SettingsCategory;

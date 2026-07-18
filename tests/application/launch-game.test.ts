@@ -4,6 +4,8 @@ import type { LaunchService, LaunchContext } from '@/infrastructure/minecraft/la
 import type { JavaService } from '@/infrastructure/java/java-service';
 import type { SecretStore } from '@/infrastructure/crypto/secret-store';
 import type { ModpackRepository } from '@/infrastructure/fs/modpack-repository';
+import type { HttpClient } from '@/infrastructure/net/http-client';
+import type { PathService } from '@/infrastructure/fs/path-service';
 import type { LaunchOptions } from '@shared/types';
 import type { EventEmitter } from 'node:events';
 
@@ -22,7 +24,7 @@ function mockLaunchService(): LaunchService & EventEmitter {
 
 function mockJavaService(): JavaService {
   return {
-    ensure: vi.fn().mockResolvedValue({ path: '/usr/bin/java', version: '17', source: 'system' }),
+    ensure: vi.fn().mockResolvedValue({ path: '/usr/bin/java', version: '17', majorVersion: 17, source: 'system' }),
   } as unknown as JavaService;
 }
 
@@ -40,6 +42,14 @@ function mockModpackRepo(): ModpackRepository & { paths: { modpackDirectory: (id
     readProfile: vi.fn(),
     paths: { modpackDirectory: (id: string) => `/tmp/modpacks/${id}` },
   } as unknown as ModpackRepository & { paths: { modpackDirectory: (id: string) => string } };
+}
+
+function mockHttpClient(): HttpClient {
+  return {} as unknown as HttpClient;
+}
+
+function mockPathService(): PathService {
+  return { versions: '/tmp/mc/versions' } as unknown as PathService;
 }
 
 const baseOptions: LaunchOptions = {
@@ -62,6 +72,8 @@ describe('LaunchGame', () => {
       javaService: mockJavaService(),
       secrets,
       modpackRepo: mockModpackRepo(),
+      http: mockHttpClient(),
+      paths: mockPathService(),
     });
 
     const result = await useCase.execute(baseOptions);
@@ -78,6 +90,8 @@ describe('LaunchGame', () => {
       javaService: mockJavaService(),
       secrets: mockSecretStore(),
       modpackRepo: mockModpackRepo(),
+      http: mockHttpClient(),
+      paths: mockPathService(),
     });
 
     const result = await useCase.execute(baseOptions);
@@ -103,6 +117,8 @@ describe('LaunchGame', () => {
       javaService: mockJavaService(),
       secrets,
       modpackRepo: mockModpackRepo(),
+      http: mockHttpClient(),
+      paths: mockPathService(),
     });
 
     const result = await useCase.execute({ ...baseOptions, authProvider: 'elyby' });
@@ -125,6 +141,8 @@ describe('LaunchGame', () => {
       javaService: mockJavaService(),
       secrets: mockSecretStore(),
       modpackRepo: repo,
+      http: mockHttpClient(),
+      paths: mockPathService(),
     });
 
     await useCase.execute({ ...baseOptions, modpackId: 'mp-1' });
@@ -141,6 +159,8 @@ describe('LaunchGame', () => {
       javaService: mockJavaService(),
       secrets: mockSecretStore(),
       modpackRepo: mockModpackRepo(),
+      http: mockHttpClient(),
+      paths: mockPathService(),
     });
 
     useCase.cancel();

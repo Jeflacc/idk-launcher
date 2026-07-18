@@ -52,8 +52,8 @@ const SETTING_FIELDS = [
   { stateKey: "maxMemoryGB", backendKey: "maxMemoryGB", localKey: "craftlaunch_maxMemory", defaultValue: 4, type: "int" },
   { stateKey: "launcherPerformanceMode", backendKey: "launcherPerformanceMode", localKey: "idk_launcher_performance_mode", defaultValue: "balanced" },
   { stateKey: "autoOptimization", backendKey: "autoOptimization", localKey: "craftlaunch_autoOptimization", defaultValue: false, type: "bool" },
-  { stateKey: "currentUser", backendKey: "currentUser", localKey: "craftlaunch_username", defaultValue: "" },
-  { stateKey: "authMode", backendKey: "authMode", localKey: "craftlaunch_authmode", defaultValue: "offline" },
+  { stateKey: "currentUser", backendKey: "session.currentUser", localKey: "craftlaunch_username", defaultValue: "" },
+  { stateKey: "authMode", backendKey: "session.authMode", localKey: "craftlaunch_authmode", defaultValue: "offline" },
   { stateKey: "launcherTheme", backendKey: "launcherTheme", localKey: "idk_launcher_theme", defaultValue: "emerald" },
   { stateKey: "launcherAccentColor", backendKey: "launcherAccentColor", localKey: "idk_accent_color", defaultValue: "#4cb837" },
   { stateKey: "launcherBorderRadius", backendKey: "launcherBorderRadius", localKey: "idk_border_radius", defaultValue: 10, type: "int" },
@@ -101,7 +101,12 @@ function applyTransform(field, value) {
  * @returns {*}
  */
 function resolveSetting(field, backendSettings, migrateQueue) {
-  const backendVal = backendSettings[field.backendKey];
+  // Support dot-separated nested keys (e.g. "session.currentUser")
+  const parts = field.backendKey.split('.');
+  let backendVal = backendSettings;
+  for (const part of parts) {
+    backendVal = backendVal?.[part];
+  }
   const localRaw = localStorage.getItem(field.localKey);
 
   const isBackendDefault =

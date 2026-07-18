@@ -349,7 +349,7 @@ export function registerIdkConnectHandlers(
     async (_e, args) => {
       const token = await getToken();
       if (!token) return { success: false };
-      await client.sendPresence(token, args.status, args.playingVersion, args.cloudflaredUrl);
+      await client.sendPresence(token, args.status, args.playingVersion ?? undefined, args.cloudflaredUrl ?? undefined);
       return { success: true };
     },
     { senderCheck: senderOk },

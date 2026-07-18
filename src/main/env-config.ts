@@ -33,6 +33,7 @@ export const env = {
   elybyClientId: process.env['ELYBY_CLIENT_ID'] ?? 'idk-launcher',
   elybyClientSecret: process.env['ELYBY_CLIENT_SECRET'] ?? '',
   elybyRedirectPort: Number(process.env['ELYBY_REDIRECT_PORT'] ?? 29487),
+  elybyBaseUrl: process.env['ELYBY_BASE_URL'] ?? 'https://account.ely.by',
   mojangContentBaseUrl: process.env['MOJANG_CONTENT_BASE_URL'] ?? 'https://launchercontent.mojang.com',
   minotarBaseUrl: process.env['MINOTAR_BASE_URL'] ?? 'https://minotar.net',
   elyskinsBaseUrl: process.env['ELYSKINS_BASE_URL'] ?? 'https://skinsystem.ely.by',

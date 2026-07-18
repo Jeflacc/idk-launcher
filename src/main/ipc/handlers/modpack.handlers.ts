@@ -1,4 +1,4 @@
-import { registerInvoke } from '../register';
+import { registerInvoke, registerSend } from '../register';
 import { IpcChannel } from '@shared/ipc-channels';
 import { ModpackSchema } from '@shared/schemas/modpack.schema';
 import { LaunchSchema } from '@shared/schemas/launch.schema';
@@ -46,20 +46,35 @@ export function registerModpackHandlers(
     { senderCheck: senderOk },
   );
 
-  registerInvoke(
+  registerSend(
     IpcChannel.Modpack.Launch,
     ModpackSchema.launchRequest,
     async (_event, args) => {
       const profile = await repo.readProfile(args.modpackId);
-      if (!profile) throw new Error('Modpack not found');
-      const result = await launchGame.execute(LaunchSchema.options.parse({
-        versionId: profile.minecraftVersion,
-        modpackId: args.modpackId,
-        loader: profile.loader,
-        loaderVersion: profile.loaderVersion,
-        authProvider: 'microsoft',
-      }));
-      return result;
+      if (!profile) {
+        windows.send('main', IpcChannel.Launch.Error, { message: 'Modpack not found' });
+        return;
+      }
+      const unsubscribe = launchGame.onProgress((p) => {
+        windows.send('main', IpcChannel.Launch.Progress, p);
+      });
+      try {
+        const result = await launchGame.execute(LaunchSchema.options.parse({
+          versionId: profile.minecraftVersion,
+          modpackId: args.modpackId,
+          loader: profile.loader,
+          loaderVersion: profile.loaderVersion,
+          authProvider: 'microsoft',
+        }));
+        if (!result.success) {
+          windows.send('main', IpcChannel.Launch.Error, { message: result.error ?? 'Launch failed' });
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        windows.send('main', IpcChannel.Launch.Error, { message });
+      } finally {
+        unsubscribe();
+      }
     },
     { senderCheck: senderOk },
   );

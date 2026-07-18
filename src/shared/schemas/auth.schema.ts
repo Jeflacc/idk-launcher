@@ -51,6 +51,8 @@ export const AuthSchema = {
     password: z.string().min(1),
   }),
 
+  elybyOAuthAuthRequest: z.object({}),
+
   fetchElybyProfileRequest: z.object({
     username: z.string().min(3),
   }),

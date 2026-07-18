@@ -127,12 +127,6 @@ export function renderAppShell() {
         <input type="text" class="clean-input" id="login-username" placeholder="Enter username..." />
         <button class="submit-btn" id="btn-submit-login">Enter Launcher</button>
       </div>
-
-      <div class="offline-form" id="elyby-form">
-        <input type="text" class="clean-input" id="elyby-username" placeholder="Ely.by Username or Email" />
-        <input type="password" class="clean-input" id="elyby-password" placeholder="Password" style="margin-top: 10px;" />
-        <button class="submit-btn" id="btn-submit-elyby" style="margin-top: 10px;">Login via Ely.by</button>
-      </div>
     </div>
   </div>
 

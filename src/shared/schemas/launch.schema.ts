@@ -51,6 +51,8 @@ export const LaunchSchema = {
     success: z.boolean(),
     pid: z.number().optional(),
     error: z.string().optional(),
+    code: z.number().optional(),
+    output: z.string().optional(),
   }),
 
   warning: z.object({

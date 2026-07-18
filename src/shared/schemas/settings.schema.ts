@@ -63,6 +63,11 @@ const connectSchema = z.object({
   tunnelEnabled: z.boolean().default(false),
 });
 
+const sessionSchema = z.object({
+  currentUser: z.string().default(''),
+  authMode: z.enum(['offline', 'elyby', 'microsoft']).default('offline'),
+});
+
 export const SettingsSchema = {
   settings: z.object({
     general: deepDefault(generalSchema),
@@ -72,6 +77,7 @@ export const SettingsSchema = {
     launch: deepDefault(launchSchema),
     network: deepDefault(networkSchema),
     connect: deepDefault(connectSchema),
+    session: deepDefault(sessionSchema),
   }),
 
   categoryMeta: z.array(

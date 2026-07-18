@@ -104,6 +104,7 @@
     getMicrosoftAuthData: () => idk?.auth.getMicrosoftAuthData() ?? Promise.resolve(null),
     fetchMicrosoftProfile: () => idk?.auth.fetchMicrosoftProfile() ?? Promise.resolve(null),
     elybyAuthenticate: (username, password) => idk?.auth.elybyAuthenticate(username, password) ?? Promise.resolve(null),
+    elybyOAuthAuthenticate: () => idk?.auth.elybyOAuthAuthenticate() ?? Promise.resolve(null),
     fetchElybyProfile: (username) => idk?.auth.fetchElybyProfile(username) ?? Promise.resolve(null),
     getElybyAuthData: () => idk?.auth.getElybyAuthData() ?? Promise.resolve(null),
 
@@ -141,6 +142,7 @@
     onLaunchClosed: (cb) => idk?.launch.onClosed(cb) ?? noop(),
     onLaunchError: (cb) => idk?.launch.onError(cb) ?? noop(),
     onLaunchWarning: (cb) => idk?.launch.onWarning(cb) ?? noop(),
+    onClearJavaPath: (cb) => idk?.launch.onClearJavaPath(cb) ?? noop(),
     onMissingDependencies: listenerStub('onMissingDependencies'),
     autoInstallDependencies: (missingMods) => idk?.crash.autoInstallDependencies(missingMods) ?? Promise.resolve({ success: false }),
 
@@ -150,7 +152,8 @@
     updateModpackProfile: (modpackId, changes) => idk?.modpack.updateProfile(modpackId, changes) ?? Promise.resolve({ success: false }),
     launchModpack: (modpackId) => {
       const id = typeof modpackId === 'string' ? modpackId : (modpackId?.modpackId || '');
-      return idk?.modpack.launch(id, typeof modpackId === 'object' ? modpackId?.quickConnect : undefined) ?? Promise.resolve({ success: false });
+      idk?.modpack.launch(id, typeof modpackId === 'object' ? modpackId?.quickConnect : undefined);
+      return Promise.resolve({ success: true });
     },
     downloadModrinthModpack: (projectId, minecraftVersion, loader, name) =>
       idk?.mod.downloadModrinthModpack(projectId, minecraftVersion, loader, name) ?? Promise.resolve({ success: false }),

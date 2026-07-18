@@ -21,6 +21,7 @@ export interface PersistedSecrets {
   };
   elyby?: {
     accessToken: string;
+    refreshToken?: string;
     username: string;
     uuid: string;
     expiresAt: number;

@@ -13,6 +13,9 @@ interface AdoptiumAsset {
 /**
  * Cross-platform Java runtime manager. Replaces v1's Windows-only
  * Adoptium x64 download URL.
+ *
+ * Supports any Java version (17, 21, 25, etc.) by detecting installed
+ * versions and downloading from Adoptium if the required version is missing.
  */
 export class JavaService {
   private readonly detector: JavaDetector;
@@ -25,16 +28,51 @@ export class JavaService {
     this.detector = new JavaDetector(customPath);
   }
 
-  async ensure(version: '17' | '21' = '17'): Promise<JavaInstallation> {
+  /**
+   * Ensure a Java installation of the given major version is available.
+   * First checks detected installations for a version that meets the requirement,
+   * then downloads from Adoptium if needed.
+   */
+  async ensure(requiredMajorVersion: number = 17): Promise<JavaInstallation> {
     const detected = await this.detector.detect();
-    if (detected.length > 0) return detected[0]!;
 
-    // No local Java — download from Adoptium for the current platform.
-    const installed = await this.downloadFromAdoptium(version);
-    return installed;
+    // Find an installed Java that meets the version requirement
+    const suitable = detected.find((d) => d.majorVersion !== null && d.majorVersion >= requiredMajorVersion);
+    if (suitable) return suitable;
+
+    // Find any installed Java and verify it actually works
+    if (detected.length > 0) {
+      // Even if version detection failed, try the first candidate
+      // (it might work even if we couldn't parse the version)
+      const first = detected[0]!;
+      if (first.majorVersion === null) return first;
+      // Has a version but too old — need to download
+    }
+
+    // No suitable local Java — download from Adoptium, falling back to
+    // the next lower LTS if the requested version isn't available yet.
+    // Java LTS versions in descending order: 25, 21, 17
+    const ltsFallbacks = [25, 21, 17];
+    const candidates = ltsFallbacks.filter((v) => v <= requiredMajorVersion);
+    // Ensure the requested version is first (even if non-LTS)
+    if (!candidates.includes(requiredMajorVersion)) candidates.unshift(requiredMajorVersion);
+
+    let lastError: unknown;
+    for (const candidate of candidates) {
+      try {
+        const installed = await this.downloadFromAdoptium(candidate);
+        return installed;
+      } catch (err) {
+        lastError = err;
+        // try next fallback
+      }
+    }
+    throw lastError instanceof Error
+      ? lastError
+      : new Error(`Failed to download Java ${requiredMajorVersion} from Adoptium`);
   }
 
-  private async downloadFromAdoptium(version: string): Promise<JavaInstallation> {
+  private async downloadFromAdoptium(version: number): Promise<JavaInstallation> {
     const imageType = 'jre';
     const os = this.adoptiumOs();
     const archName = this.adoptiumArch();
@@ -44,13 +82,13 @@ export class JavaService {
 
     const assets = await this.http.getJson<AdoptiumAsset[]>(url);
     const asset = assets[0];
-    if (!asset) throw new Error(`No Adoptium JRE found for ${os}/${archName}`);
+    if (!asset) throw new Error(`No Adoptium JRE found for Java ${version} on ${os}/${archName}`);
 
     const target = join(this.paths.cache, 'java', asset.binary.package.name);
     await this.http.downloadFile(asset.binary.package.link, target, {
       expectedSize: asset.binary.size,
     });
-    return { path: target, version: asset.version, source: 'adoptium' };
+    return { path: target, version: asset.version, majorVersion: version, source: 'adoptium' };
   }
 
   private adoptiumOs(): string {

@@ -80,7 +80,23 @@ export class ModpackRepository {
     try {
       const dir = this.paths.modpackDirectory(modpackId);
       const raw = await readFile(join(dir, 'profile.json'), 'utf8');
-      return ModpackSchema.profile.parse(JSON.parse(raw));
+      const json = JSON.parse(raw);
+      // Migrate v1 profile format to v2
+      const migrated = {
+        id: json.id ?? modpackId,
+        name: json.name ?? modpackId,
+        description: json.description ?? '',
+        minecraftVersion: json.minecraftVersion ?? json.mcVersion ?? '',
+        loader: (json.loader ?? 'vanilla').toLowerCase(),
+        loaderVersion: json.loaderVersion ?? undefined,
+        iconPath: json.iconPath ?? undefined,
+        createdAt: json.createdAt ?? Date.now(),
+        updatedAt: json.updatedAt ?? Date.now(),
+        lastPlayedAt: json.lastPlayedAt ?? undefined,
+        playtimeSeconds: json.playtimeSeconds ?? 0,
+        mods: json.mods ?? [],
+      };
+      return ModpackSchema.profile.parse(migrated);
     } catch {
       return null;
     }

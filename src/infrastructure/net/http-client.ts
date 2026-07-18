@@ -31,6 +31,7 @@ export const DEFAULT_HOST_ALLOWLIST: ReadonlySet<string> = new Set([
   'media.forgecdn.net',
   // Ely.by
   'authserver.ely.by',
+  'account.ely.by',
   'skins.ely.by',
   'skinsystem.ely.by',
   'api.ely.by',
@@ -143,7 +144,7 @@ export class HttpClient {
     });
 
     if (statusCode !== 200) {
-      throw new HttpClientError(`Download failed: HTTP ${statusCode}`, statusCode, url);
+      throw new HttpClientError(`Download failed: HTTP ${statusCode} [${url}]`, statusCode, url);
     }
 
     const total = this.parseContentLength(headers);
@@ -207,7 +208,7 @@ export class HttpClient {
           signal: opts.signal,
         });
         if (statusCode === undefined || statusCode < 200 || statusCode >= 300) {
-          throw new HttpClientError(`HTTP ${statusCode ?? '???'}`, statusCode ?? null, url);
+          throw new HttpClientError(`HTTP ${statusCode ?? '???'} [${url}]`, statusCode ?? null, url);
         }
         const chunks: Buffer[] = [];
         for await (const chunk of body) chunks.push(chunk as Buffer);

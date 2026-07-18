@@ -51,6 +51,16 @@ export function registerAuthHandlers(
   );
 
   registerInvoke(
+    IpcChannel.Auth.ElybyOAuthAuthenticate,
+    AuthSchema.elybyOAuthAuthRequest,
+    async () => {
+      const account = await authElyby.executeOAuth();
+      return { ok: true, data: { accessToken: 'oauth', selectedProfile: { name: account.username }, uuid: account.uuid } };
+    },
+    { senderCheck: senderOk },
+  );
+
+  registerInvoke(
     IpcChannel.Auth.FetchElybyProfile,
     AuthSchema.fetchElybyProfileRequest,
     async (_event, args) => elyby.fetchProfile(args.username),

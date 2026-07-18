@@ -36,6 +36,7 @@ export const IpcChannel = {
     GetMicrosoftAuthData: 'auth:get-microsoft-auth-data',
     FetchMicrosoftProfile: 'auth:fetch-microsoft-profile',
     ElybyAuthenticate: 'auth:elyby-authenticate',
+    ElybyOAuthAuthenticate: 'auth:elyby-oauth-authenticate',
     GetElybyAuthData: 'auth:get-elyby-auth-data',
     FetchElybyProfile: 'auth:fetch-elyby-profile',
     SignOut: 'auth:sign-out',

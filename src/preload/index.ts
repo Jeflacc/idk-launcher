@@ -54,6 +54,8 @@ export const preloadApi = {
       ipcRenderer.invoke(IpcChannel.Auth.FetchMicrosoftProfile),
     elybyAuthenticate: (username: string, password: string) =>
       ipcRenderer.invoke(IpcChannel.Auth.ElybyAuthenticate, { username, password }) as Promise<AuthSession>,
+    elybyOAuthAuthenticate: () =>
+      ipcRenderer.invoke(IpcChannel.Auth.ElybyOAuthAuthenticate, {}) as Promise<AuthSession>,
     fetchElybyProfile: (username: string) =>
       ipcRenderer.invoke(IpcChannel.Auth.FetchElybyProfile, { username }),
     getElybyAuthData: () =>
@@ -68,12 +70,14 @@ export const preloadApi = {
       ipcRenderer.on(IpcChannel.Launch.Progress, (_e, p) => cb(p)),
     onGameLaunched: (cb: (info: { pid: number }) => void) =>
       ipcRenderer.on(IpcChannel.Launch.GameLaunched, (_e, i) => cb(i)),
-    onClosed: (cb: (info: { duration: number; crashed: boolean }) => void) =>
+    onClosed: (cb: (info: { duration: number; crashed: boolean; code?: number; output?: string }) => void) =>
       ipcRenderer.on(IpcChannel.Launch.Closed, (_e, i) => cb(i)),
     onError: (cb: (err: { message: string }) => void) =>
       ipcRenderer.on(IpcChannel.Launch.Error, (_e, e) => cb(e)),
     onWarning: (cb: (msg: { message: string }) => void) =>
       ipcRenderer.on(IpcChannel.Launch.Warning, (_e, w) => cb(w)),
+    onClearJavaPath: (cb: () => void) =>
+      ipcRenderer.on(IpcChannel.Launch.ClearJavaPath, () => cb()),
   },
 
   modpack: {
@@ -83,7 +87,7 @@ export const preloadApi = {
     updateProfile: (modpackId: string, changes: Record<string, unknown>) =>
       ipcRenderer.invoke(IpcChannel.Modpack.UpdateProfile, { modpackId, changes }),
     launch: (modpackId: string, quickConnect?: string) =>
-      ipcRenderer.invoke(IpcChannel.Modpack.Launch, { modpackId, quickConnect }),
+      ipcRenderer.send(IpcChannel.Modpack.Launch, { modpackId, quickConnect }),
     install: (projectId: string, minecraftVersion: string, loader: Modpack['loader'], name: string) =>
       ipcRenderer.invoke(IpcChannel.Mod.Install, { projectId, minecraftVersion, loader, name }),
     export: (modpackId: string, targetPath: string) =>

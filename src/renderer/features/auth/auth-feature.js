@@ -9,10 +9,6 @@ export function initAuthFeature({ switchView }) {
   const btnSubmitLogin = document.getElementById("btn-submit-login");
 
   const btnElybyLogin = document.getElementById("btn-elyby-login");
-  const elybyForm = document.getElementById("elyby-form");
-  const elybyUserInput = document.getElementById("elyby-username");
-  const elybyPassInput = document.getElementById("elyby-password");
-  const btnSubmitElyby = document.getElementById("btn-submit-elyby");
   const btnMicrosoftLogin = document.getElementById("btn-microsoft-login");
 
   if (state.currentUser) {
@@ -22,21 +18,46 @@ export function initAuthFeature({ switchView }) {
   }
 
   btnOfflineLogin.addEventListener("click", () => {
-    elybyForm.classList.remove("open");
     offlineForm.classList.add("open");
     loginInput.focus();
   });
 
-  btnElybyLogin.addEventListener("click", () => {
+  btnElybyLogin.addEventListener("click", async () => {
     offlineForm.classList.remove("open");
-    elybyForm.classList.add("open");
-    elybyUserInput.focus();
+
+    btnElybyLogin.innerText = "Logging in...";
+    try {
+      if (window.electronAPI && window.electronAPI.elybyOAuthAuthenticate) {
+        const res = await window.electronAPI.elybyOAuthAuthenticate();
+        if (res && res.ok && res.data && res.data.accessToken) {
+          state.currentUser = res.data.selectedProfile.name;
+          state.authMode = "elyby";
+          localStorage.setItem("craftlaunch_username", state.currentUser);
+          localStorage.setItem("craftlaunch_authmode", state.authMode);
+          if (window.electronAPI) {
+            window.electronAPI
+              .saveSettings({
+                session: { currentUser: state.currentUser, authMode: state.authMode },
+                elybyData: res.data,
+              })
+              .catch(console.error);
+          }
+          updateUserDisplay(state.currentUser);
+          handleOnboardingFlow(switchView);
+        } else {
+          alert("Ely.by login failed or was cancelled.");
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error during Ely.by login.");
+    }
+    btnElybyLogin.innerHTML = '<img src="./elyby.jpg" alt="Ely.by Logo" width="22" height="22" style="border-radius: 4px; object-fit: cover;" /> Ely.by Account';
   });
 
   btnMicrosoftLogin.addEventListener("click", async () => {
     offlineForm.classList.remove("open");
-    elybyForm.classList.remove("open");
-    
+
     btnMicrosoftLogin.innerText = "Logging in...";
     try {
       if (window.electronAPI && window.electronAPI.microsoftAuthenticate) {
@@ -44,12 +65,11 @@ export function initAuthFeature({ switchView }) {
         if (res && res.success && res.data && res.data.profile) {
           state.currentUser = res.data.profile.name;
           state.authMode = "microsoft";
-          // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
-          // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+          localStorage.setItem("craftlaunch_username", state.currentUser);
+          localStorage.setItem("craftlaunch_authmode", state.authMode);
           
           window.electronAPI.saveSettings({
-            currentUser: state.currentUser,
-            authMode: state.authMode,
+            session: { currentUser: state.currentUser, authMode: state.authMode },
             microsoftData: res.data
           }).catch(console.error);
 
@@ -76,67 +96,18 @@ export function initAuthFeature({ switchView }) {
     if (!val) return;
     state.currentUser = val;
     state.authMode = "offline";
-    // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
-    // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+    localStorage.setItem("craftlaunch_username", state.currentUser);
+    localStorage.setItem("craftlaunch_authmode", state.authMode);
     if (window.electronAPI) {
       window.electronAPI
         .saveSettings({
-          currentUser: state.currentUser,
-          authMode: state.authMode,
+          session: { currentUser: state.currentUser, authMode: state.authMode },
         })
         .catch(console.error);
     }
     updateUserDisplay(state.currentUser);
     handleOnboardingFlow(switchView);
   }
-
-  btnSubmitElyby.addEventListener("click", async () => {
-    const username = elybyUserInput.value.trim();
-    const password = elybyPassInput.value;
-    if (!username || !password) return;
-
-    btnSubmitElyby.innerText = "Logging in...";
-    try {
-      let ok = false;
-      let data = {};
-      // v2: Always use IPC for Ely.by auth. No direct fetch() — the backend
-      // handles the request via ElybyClient with proper HTTPS + SSRF protection.
-      if (window.electronAPI && window.electronAPI.elybyAuthenticate) {
-        const res = await window.electronAPI.elybyAuthenticate({
-          username,
-          password,
-          clientToken: "idklauncher-token-" + Date.now(),
-        });
-        ok = res.ok;
-        data = res.data;
-      } else {
-        throw new Error("Ely.by authentication requires the desktop launcher (IPC not available).");
-      }
-
-      if (ok && data.accessToken) {
-        state.currentUser = data.selectedProfile.name;
-        state.authMode = "elyby";
-        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
-        // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
-        if (window.electronAPI) {
-          window.electronAPI
-            .saveSettings({
-              currentUser: state.currentUser,
-              authMode: state.authMode,
-              elybyData: data,
-            })
-            .catch(console.error);
-        }
-        updateUserDisplay(state.currentUser);
-        handleOnboardingFlow(switchView);
-      } else {
-        alert(data.errorMessage || "Login failed");
-      }
-    } catch (e) {
-      alert("Network error during login.");
-    }
-    btnSubmitElyby.innerText = "Login via Ely.by";
-  });
 
   async function handleOnboardingFlow(switchViewFn) {
     const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
@@ -160,8 +131,9 @@ Please review and accept these terms to continue.`,
       if (!agreed) {
         state.currentUser = "";
         localStorage.removeItem("craftlaunch_username");
+        localStorage.removeItem("craftlaunch_authmode");
         if (window.electronAPI) {
-          window.electronAPI.saveSettings({ currentUser: "", authMode: "offline", elybyData: null }).catch(console.error);
+          window.electronAPI.saveSettings({ session: { currentUser: "", authMode: "offline" }, elybyData: null }).catch(console.error);
         }
         actions.updateFriendsAuthUI?.();
         switchViewFn("login");
@@ -284,6 +256,7 @@ Please review and accept these terms to continue.`,
     if (!ok) return;
     state.currentUser = "";
     localStorage.removeItem("craftlaunch_username");
+    localStorage.removeItem("craftlaunch_authmode");
     
     // Logout from IDK Connect as well
     document.getElementById("btn-friends-disconnect")?.click();
@@ -291,8 +264,7 @@ Please review and accept these terms to continue.`,
     if (window.electronAPI) {
       window.electronAPI
         .saveSettings({
-          currentUser: "",
-          authMode: "offline",
+          session: { currentUser: "", authMode: "offline" },
           elybyData: null,
         })
         .catch(console.error);

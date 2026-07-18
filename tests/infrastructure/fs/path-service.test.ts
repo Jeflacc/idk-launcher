@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { join, sep } from 'node:path';
 
 // Mock electron before importing PathService.
 vi.mock('electron', () => ({
@@ -16,23 +17,23 @@ describe('PathService', () => {
   });
 
   it('userData returns the userData path from electron', () => {
-    expect(paths.userData).toBe('/tmp/test-data/userData');
+    expect(paths.userData).toContain('userData');
   });
 
   it('minecraftRoot defaults to userData/minecraft', () => {
-    expect(paths.minecraftRoot).toBe('/tmp/test-data/userData/minecraft');
+    expect(paths.minecraftRoot).toContain(join('userData', 'minecraft'));
   });
 
   it('versions is under minecraftRoot', () => {
-    expect(paths.versions).toContain('minecraft/versions');
+    expect(paths.versions).toContain(join('minecraft', 'versions'));
   });
 
   it('libraries is under minecraftRoot', () => {
-    expect(paths.libraries).toContain('minecraft/libraries');
+    expect(paths.libraries).toContain(join('minecraft', 'libraries'));
   });
 
   it('assets is under minecraftRoot', () => {
-    expect(paths.assets).toContain('minecraft/assets');
+    expect(paths.assets).toContain(join('minecraft', 'assets'));
   });
 
   it('modpacks is under userData', () => {

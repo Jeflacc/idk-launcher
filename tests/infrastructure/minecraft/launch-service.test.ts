@@ -1,12 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { LaunchService } from '@/infrastructure/minecraft/launch-service';
 import type { PathService } from '@/infrastructure/fs/path-service';
 import type { HttpClient } from '@/infrastructure/net/http-client';
 import type { IntegrityPolicyService } from '@/domain/services/integrity-policy';
 import type { LaunchOptions } from '@shared/types';
 
 function mockPaths(): PathService {
-  return { minecraftRoot: '/tmp/mc' } as unknown as PathService;
+  return { minecraftRoot: '/tmp/mc', versions: '/tmp/mc/versions' } as unknown as PathService;
 }
 
 function mockHttp(): HttpClient {
@@ -27,71 +26,77 @@ const baseOptions: LaunchOptions = {
   authProvider: 'microsoft',
 };
 
-describe('LaunchService', () => {
-  let service: LaunchService;
+// Use vi.hoisted so these are available inside vi.mock factory
+const { mockLaunchFn } = vi.hoisted(() => ({
+  mockLaunchFn: vi.fn(),
+}));
 
+vi.mock('@/infrastructure/minecraft/mc-launcher', () => ({
+  McLauncher: class {
+    launch = mockLaunchFn;
+    on = vi.fn();
+    emit = vi.fn();
+  },
+}));
+
+function createFakeChild(overrides: Partial<{ pid: number; kill: ReturnType<typeof vi.fn> }> = {}) {
+  const closeCallbacks: Array<(code: number) => void> = [];
+  const child = {
+    pid: overrides.pid ?? 1234,
+    on: vi.fn((event: string, cb: (...args: unknown[]) => void) => {
+      if (event === 'close') closeCallbacks.push(cb as (code: number) => void);
+    }),
+    stdout: { on: vi.fn() },
+    stderr: { on: vi.fn() },
+    kill: overrides.kill ?? vi.fn(),
+    closeCallbacks,
+  };
+  return child;
+}
+
+import { LaunchService } from '@/infrastructure/minecraft/launch-service';
+
+describe('LaunchService', () => {
   beforeEach(() => {
-    vi.resetModules();
-    service = new LaunchService(mockPaths(), mockHttp(), mockIntegrity(true));
+    vi.clearAllMocks();
   });
 
   it('isRunning is false initially', () => {
-    expect(service.isRunning).toBe(false);
+    const svc = new LaunchService(mockPaths(), mockHttp(), mockIntegrity(true));
+    expect(svc.isRunning).toBe(false);
   });
 
   it('rejects a second concurrent launch', async () => {
-    // Mock the launcher module to return a fake child process.
-    const fakeChild = {
-      pid: 1234,
-      on: vi.fn((event: string, cb: () => void) => {
-        if (event === 'close') setTimeout(cb, 10);
-      }),
-      stdout: { on: vi.fn() },
-      stderr: { on: vi.fn() },
-      kill: vi.fn(),
-    };
-    vi.doMock('minecraft-launcher-core', () => ({
-      launcher: vi.fn(() => fakeChild),
-    }));
+    const fakeChild = createFakeChild();
+    mockLaunchFn.mockReturnValue(Promise.resolve(fakeChild));
 
-    const { LaunchService: LS } = await import('@/infrastructure/minecraft/launch-service');
-    const svc = new LS(mockPaths(), mockHttp(), mockIntegrity(true));
+    const svc = new LaunchService(mockPaths(), mockHttp(), mockIntegrity(true));
 
     const first = svc.launch({
       options: baseOptions,
-      java: { path: '/usr/bin/java', version: '17', source: 'system' },
+      java: { path: '/usr/bin/java', version: '17', majorVersion: 17, source: 'system' },
       auth: { username: 'Steve', uuid: 'uuid', accessToken: 'tok' },
     });
 
-    // While the first is pending, start a second.
     const secondResult = await svc.launch({
       options: { ...baseOptions, versionId: '1.19.2' },
-      java: { path: '/usr/bin/java', version: '17', source: 'system' },
+      java: { path: '/usr/bin/java', version: '17', majorVersion: 17, source: 'system' },
       auth: { username: 'Steve', uuid: 'uuid', accessToken: 'tok' },
     });
 
     expect(secondResult.success).toBe(false);
     expect(secondResult.error).toMatch(/already running/);
 
-    await first; // let the first finish
+    fakeChild.closeCallbacks.forEach((cb) => cb(0));
+    await first;
   });
 
   it('emits progress, launched, and closed events on a successful launch', async () => {
-    const fakeChild = {
-      pid: 4321,
-      on: vi.fn((event: string, cb: (code?: number) => void) => {
-        if (event === 'close') setTimeout(() => cb(0), 10);
-      }),
-      stdout: { on: vi.fn() },
-      stderr: { on: vi.fn() },
-      kill: vi.fn(),
-    };
-    vi.doMock('minecraft-launcher-core', () => ({
-      launcher: vi.fn(() => fakeChild),
-    }));
+    const fakeChild = createFakeChild({ pid: 4321 });
+    setTimeout(() => fakeChild.closeCallbacks.forEach((cb) => cb(0)), 10);
+    mockLaunchFn.mockReturnValue(Promise.resolve(fakeChild));
 
-    const { LaunchService: LS } = await import('@/infrastructure/minecraft/launch-service');
-    const svc = new LS(mockPaths(), mockHttp(), mockIntegrity(true));
+    const svc = new LaunchService(mockPaths(), mockHttp(), mockIntegrity(true));
 
     const progressEvents: unknown[] = [];
     const launchedEvents: number[] = [];
@@ -102,7 +107,7 @@ describe('LaunchService', () => {
 
     const result = await svc.launch({
       options: baseOptions,
-      java: { path: '/usr/bin/java', version: '17', source: 'system' },
+      java: { path: '/usr/bin/java', version: '17', majorVersion: 17, source: 'system' },
       auth: { username: 'Steve', uuid: 'uuid', accessToken: 'tok' },
     });
 
@@ -116,27 +121,23 @@ describe('LaunchService', () => {
 
   it('cancel kills the active child process', async () => {
     const killSpy = vi.fn();
-    const fakeChild = {
-      pid: 9999,
-      on: vi.fn(), // never calls close — we cancel manually
-      stdout: { on: vi.fn() },
-      stderr: { on: vi.fn() },
-      kill: killSpy,
-    };
-    vi.doMock('minecraft-launcher-core', () => ({
-      launcher: vi.fn(() => fakeChild),
-    }));
+    const fakeChild = createFakeChild({ pid: 9999, kill: killSpy });
+    mockLaunchFn.mockReturnValue(Promise.resolve(fakeChild));
 
-    const { LaunchService: LS } = await import('@/infrastructure/minecraft/launch-service');
-    const svc = new LS(mockPaths(), mockHttp(), mockIntegrity(true));
+    const svc = new LaunchService(mockPaths(), mockHttp(), mockIntegrity(true));
 
     const launchPromise = svc.launch({
       options: baseOptions,
-      java: { path: '/usr/bin/java', version: '17', source: 'system' },
+      java: { path: '/usr/bin/java', version: '17', majorVersion: 17, source: 'system' },
       auth: { username: 'Steve', uuid: 'uuid', accessToken: 'tok' },
     });
 
+    await new Promise((r) => setTimeout(r, 0));
+
     svc.cancel();
     expect(killSpy).toHaveBeenCalledWith('SIGTERM');
+
+    fakeChild.closeCallbacks.forEach((cb) => cb(0));
+    await launchPromise;
   });
 });

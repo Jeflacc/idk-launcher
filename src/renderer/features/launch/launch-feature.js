@@ -430,19 +430,27 @@ function getFunStatus(status) {
 // regular play AND modpack play without needing to be re-registered each time.
 if (window.electronAPI) {
   window.electronAPI.onLaunchProgress((data) => {
-    if (data.percent !== undefined) launchFill.style.width = `${data.percent}%`;
-    
-    // If it's a download status with percentage, show the REAL text + percentage
+    // Backend sends { type, phase, completed, total, currentFile, message }
+    // Calculate percent from completed/total
+    const percent = data.percent !== undefined
+      ? data.percent
+      : (data.total > 0 ? Math.round((data.completed / data.total) * 100) : undefined);
+
+    if (percent !== undefined) launchFill.style.width = `${percent}%`;
+
+    // Generate status text from type/phase or legacy status field
     let text = "";
-    if (data.status && data.status.toLowerCase().includes('downloading')) {
-      text = data.percent !== undefined ? `${data.status} (${data.percent}%)` : data.status;
-    } else {
-      text = data.status ? getFunStatus(data.status) : '';
-      if (text && data.percent !== undefined) {
-        text = `${text} (${data.percent}%)`;
-      }
+    const status = data.status || (data.type ? `${data.type} ${data.phase || ''}`.trim() : '');
+    if (status && status.toLowerCase().includes('downloading')) {
+      text = percent !== undefined ? `${status} (${percent}%)` : status;
+    } else if (data.message) {
+      text = getFunStatus(data.message);
+      if (percent !== undefined) text = `${text} (${percent}%)`;
+    } else if (status) {
+      text = getFunStatus(status);
+      if (percent !== undefined) text = `${text} (${percent}%)`;
     }
-    
+
     if (text) {
       launchStatus.innerText = text;
       setMiniText(text);
@@ -527,6 +535,40 @@ if (window.electronAPI) {
     updatePlaytime();
     updateAchievementsDisplay();
   });
+  // Store the last launch error so it can be re-shown
+  let lastLaunchError = null;
+
+  function humanizeError(msg) {
+    if (!msg) return 'An unknown error occurred.';
+    // Java / Adoptium errors
+    if (/adoptium|jre|java.*download/i.test(msg)) return 'Failed to download Java runtime. Please check your internet connection and try again.';
+    if (/No.*JRE found/i.test(msg)) return 'No compatible Java runtime found for this Minecraft version. Please install Java manually and set the path in Settings.';
+    // Network errors
+    if (/ENOTFOUND|getaddrinfo|ETIMEDOUT/i.test(msg)) return 'Network error — please check your internet connection.';
+    if (/fetch failed|network/i.test(msg)) return 'Network error — please check your internet connection and try again.';
+    // HTTP errors
+    const httpMatch = msg.match(/HTTP\s*(\d+)/i);
+    if (httpMatch) {
+      const code = parseInt(httpMatch[1], 10);
+      if (code === 404) return 'A required resource was not found. This may be a temporary server issue — please try again later.';
+      if (code === 403) return 'Access denied by server. Please try again later.';
+      if (code >= 500) return 'Server error. Please try again later.';
+      return `HTTP error ${code} — please try again.`;
+    }
+    if (msg.startsWith('HTTP')) return 'Network error — please check your internet connection and try again.';
+    // Already-friendly messages (from our own code) pass through
+    if (msg.length < 120 && !/[{]/.test(msg)) return msg;
+    return 'Launch failed. Please check your internet connection and Java installation, then try again.';
+  }
+
+  function showErrorModal(msg) {
+    const humanMsg = humanizeError(msg);
+    document.getElementById('error-message').innerText = humanMsg;
+    document.getElementById('error-modal').classList.add('active');
+    lastLaunchError = { raw: msg, human: humanMsg };
+    console.error('[Launch Error]', msg);
+  }
+
   window.electronAPI.onLaunchError((error) => {
     const errMsg = typeof error === 'string' ? error : (error?.message || 'An unknown error occurred.');
     const attemptedVersion = error?.version || state.selectedVersion || 'this version';
@@ -560,10 +602,12 @@ if (window.electronAPI) {
       return;
     }
 
-    document.getElementById('error-message').innerText = errMsg;
-    document.getElementById('error-modal').classList.add('active');
+    showErrorModal(errMsg);
   });
-  window.electronAPI.onLaunchWarning((msg) => showWarningToast(msg));
+  window.electronAPI.onLaunchWarning((msg) => {
+    const text = typeof msg === 'string' ? msg : (msg?.message || String(msg));
+    showWarningToast(text);
+  });
 
   // Missing mod dependencies detected from crash report
   if (window.electronAPI.onMissingDependencies) {
@@ -669,9 +713,9 @@ playBtn.addEventListener('click', async (e) => {
   let authData = null;
   try {
     if (state.authMode === 'elyby' && window.electronAPI?.getElybyAuthData) {
-      authData = (await window.electronAPI.getElybyAuthData()).data || null;
+      authData = await window.electronAPI.getElybyAuthData();
     } else if (state.authMode === 'microsoft' && window.electronAPI?.getMicrosoftAuthData) {
-      authData = (await window.electronAPI.getMicrosoftAuthData()).data || null;
+      authData = await window.electronAPI.getMicrosoftAuthData();
     }
   } catch (e) {
     console.warn('[Launch] Auth retrieval failed:', e);

@@ -62,4 +62,44 @@ describe('ElybyClient', () => {
     const url = client.fetchSkinTextureUrl('Steve');
     expect(url).toBe('https://skins.ely.by/skins/Steve.png');
   });
+
+  it('exchangeOAuthCode posts to /api/oauth2/v1/token', async () => {
+    const http = mockHttp();
+    vi.mocked(http.getJson).mockResolvedValue({
+      access_token: 'oauth-tok',
+      refresh_token: 'refresh-tok',
+      token_type: 'Bearer',
+      expires_in: 86400,
+    });
+    const client = new ElybyClient(http);
+
+    const r = await client.exchangeOAuthCode('auth-code', 'client-id', 'client-secret', 'http://localhost:29487/callback');
+
+    expect(r.access_token).toBe('oauth-tok');
+    expect(r.refresh_token).toBe('refresh-tok');
+    const [url, opts] = vi.mocked(http.getJson).mock.calls[0]!;
+    expect(url).toContain('/api/oauth2/v1/token');
+    expect(opts?.method).toBe('POST');
+  });
+
+  it('fetchOAuthUserInfo calls /api/account/v1/info with Bearer token', async () => {
+    const http = mockHttp();
+    vi.mocked(http.getJson).mockResolvedValue({
+      id: 1,
+      uuid: 'ffc8fdc9-5824-509e-8a57-c99b940fb996',
+      username: 'Steve',
+      registeredAt: 1470566470,
+      profileLink: 'http://ely.by/u1',
+      preferredLanguage: 'en',
+    });
+    const client = new ElybyClient(http);
+
+    const r = await client.fetchOAuthUserInfo('my-token');
+
+    expect(r.username).toBe('Steve');
+    expect(r.uuid).toBe('ffc8fdc9-5824-509e-8a57-c99b940fb996');
+    const [url, opts] = vi.mocked(http.getJson).mock.calls[0]!;
+    expect(url).toContain('/api/account/v1/info');
+    expect(opts?.headers?.Authorization).toBe('Bearer my-token');
+  });
 });

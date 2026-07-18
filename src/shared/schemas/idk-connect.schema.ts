@@ -94,8 +94,8 @@ export const IdkConnectSchema = {
   // Presence
   sendPresence: z.object({
     status: z.string(),
-    playingVersion: z.string().optional(),
-    cloudflaredUrl: z.string().optional(),
+    playingVersion: z.string().nullish(),
+    cloudflaredUrl: z.string().nullish(),
   }),
 
   // Token management
