@@ -47,7 +47,7 @@ export interface IpcDeps {
 }
 
 export function registerAllIpcHandlers(deps: IpcDeps): void {
-  registerSystemHandlers(deps.windows, deps.http);
+  registerSystemHandlers(deps.windows, deps.http, deps.paths);
   forwardWindowState(deps.windows);
   registerAuthHandlers(deps.windows, deps.authMicrosoft, deps.authElyby, deps.elyby, deps.secrets);
   registerLaunchHandlers(deps.windows, deps.launchGame);

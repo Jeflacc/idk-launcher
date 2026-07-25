@@ -24,6 +24,7 @@ export const IpcChannel = {
     GetVersionsPath: 'system:get-versions-path',
     OpenExternal: 'system:open-external',
     OpenMinecraftFolder: 'system:open-minecraft-folder',
+    OpenPath: 'system:open-path',
     SelectMinecraftFolder: 'system:select-minecraft-folder',
     SelectImageFile: 'system:select-image-file',
     SelectModpackZip: 'system:select-modpack-zip',

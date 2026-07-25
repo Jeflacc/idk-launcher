@@ -453,15 +453,16 @@ input[type="checkbox"]:checked + .switch::after {
 .play-button:not(.running):not(:disabled)::after {
     content: "\25CF  " attr(data-status);
     font-family: var(--font-main);
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.9);
     display: flex;
     align-items: center;
     gap: 4px;
-    text-shadow: 1px 1px 0 #000;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
     text-transform: none;
-    margin-top: -2px;
+    margin-top: 1px;
+    letter-spacing: 0.3px;
 }
 
 .play-button:disabled,
@@ -872,16 +873,36 @@ input[type="checkbox"]:checked + .switch::after {
 
 .play-button-wrapper .play-button {
     border-radius: 0;
+    flex: 1;
 }
 
-/* Play button dropdown trigger is hidden by default for classic UX, enabled in advanced-theme.css */
+/* Play button dropdown trigger */
 
 .play-dropdown-trigger {
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    background: var(--theme-accent);
+    border: none;
+    border-left: 2px solid rgba(0, 0, 0, 0.3);
+    color: white;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    padding: 0;
+    flex-shrink: 0;
 }
 
 .play-dropdown-trigger:hover {
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--theme-accent-bright);
+}
+
+.play-dropdown-trigger svg {
+    transition: transform 0.2s ease;
+}
+
+.play-dropdown-trigger.active svg {
+    transform: rotate(180deg);
 }
 
 .play-dropdown {
@@ -1318,6 +1339,11 @@ body:not(.ui-advanced) #ad-below-play {
     margin: 0 auto 24px;
     position: relative;
     z-index: 5;
+}
+
+body:not(.ui-advanced) #ad-below-play-classic {
+    width: 100%;
+    margin: 0 0 24px;
 }
 
 .featured-server-banner--compact {

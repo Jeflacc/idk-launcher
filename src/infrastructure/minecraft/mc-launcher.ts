@@ -486,16 +486,48 @@ export class McLauncher extends EventEmitter {
       jvm.push('-Dlog4j2.formatMsgNoLookups=true');
     }
 
-    // Merge custom JVM args from version JSON
+    // Merge custom JVM args from version JSON.
+    // We already set -cp + classPathStr and -Djava.library.path=nativePath manually.
+    // The version JSON also contains these with placeholders — we must either skip
+    // duplicates or substitute the placeholders. We substitute where possible and
+    // skip the -cp duplicate (the last -cp wins in the JVM, so a raw "${classpath}"
+    // would break class resolution).
+    const jvmPlaceholders: Record<string, string> = {
+      '${natives_directory}': nativePath,
+      '${classpath}': classPathStr,
+      '${launcher_name}': 'IDK Launcher',
+      '${launcher_version}': '2.0.0',
+    };
     if (version.arguments?.jvm) {
+      let skipNext = false;
       for (const arg of version.arguments.jvm) {
+        if (skipNext) {
+          skipNext = false;
+          continue;
+        }
         if (typeof arg === 'string') {
-          jvm.push(arg);
+          if (arg === '-cp') {
+            skipNext = true; // skip the next element (the classpath placeholder)
+            continue;
+          }
+          jvm.push(jvmPlaceholders[arg] ?? arg);
         } else if (typeof arg === 'object' && arg !== null) {
           const a = arg as { rules?: { action: string; os?: { name: string } }[]; value?: string | string[] };
           if (a.rules && !this.evaluateRules(a.rules)) continue;
           if (a.value) {
-            jvm.push(...(Array.isArray(a.value) ? a.value : [a.value]));
+            const values = Array.isArray(a.value) ? a.value : [a.value];
+            let skipInArray = false;
+            for (const v of values) {
+              if (skipInArray) {
+                skipInArray = false;
+                continue;
+              }
+              if (v === '-cp') {
+                skipInArray = true;
+                continue;
+              }
+              jvm.push(jvmPlaceholders[v] ?? v);
+            }
           }
         }
       }
@@ -554,15 +586,21 @@ export class McLauncher extends EventEmitter {
     return args;
   }
 
-  private evaluateRules(rules: { action: string; os?: { name: string }; features?: Record<string, boolean> }[]): boolean {
+  private evaluateRules(
+    rules: { action: string; os?: { name: string }; features?: Record<string, boolean> }[],
+    activeFeatures: Record<string, boolean> = {},
+  ): boolean {
     const os = process.platform === 'win32' ? 'windows' : process.platform === 'darwin' ? 'osx' : 'linux';
     let result = false;
     for (const rule of rules) {
       const osMatch = !rule.os || rule.os.name === os;
+      // Per Mojang spec: features must ALL be present in activeFeatures to match
+      const featuresMatch = !rule.features ||
+        Object.entries(rule.features).every(([k, v]) => activeFeatures[k] === v);
       if (rule.action === 'allow') {
-        if (osMatch) result = true;
+        if (osMatch && featuresMatch) result = true;
       } else if (rule.action === 'disallow') {
-        if (osMatch) result = false;
+        if (osMatch && featuresMatch) result = false;
       }
     }
     return result;

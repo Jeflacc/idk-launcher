@@ -1,5 +1,5 @@
 import { safeStorage } from 'electron';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, unlink, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 /**
@@ -40,7 +40,10 @@ export class SecretStore {
 
   async load(): Promise<PersistedSecrets> {
     if (!safeStorage.isEncryptionAvailable()) {
-      throw new Error('safeStorage encryption is unavailable on this platform');
+      // Encryption unavailable (e.g. headless Linux) — return empty secrets
+      // rather than crashing. The app will function without persisted tokens.
+      console.warn('[SecretStore] safeStorage encryption is unavailable — running without persisted secrets');
+      return {};
     }
     let encrypted: Buffer;
     try {
@@ -49,8 +52,23 @@ export class SecretStore {
       return {};
     }
     if (encrypted.length === 0) return {};
-    const decrypted = safeStorage.decryptString(encrypted);
-    return JSON.parse(decrypted) as PersistedSecrets;
+
+    try {
+      const decrypted = safeStorage.decryptString(encrypted);
+      return JSON.parse(decrypted) as PersistedSecrets;
+    } catch (err) {
+      // Decryption failed — the file was encrypted with a different
+      // safeStorage key (different Electron build, OS keychain reset,
+      // or corrupted file). Delete the stale file so the app can
+      // start fresh instead of crashing every time.
+      console.warn('[SecretStore] Failed to decrypt secrets file — clearing stale data:', (err as Error).message);
+      try {
+        await unlink(this.secretsFilePath);
+      } catch {
+        // File may already be gone — ignore
+      }
+      return {};
+    }
   }
 
   async save(secrets: PersistedSecrets): Promise<void> {

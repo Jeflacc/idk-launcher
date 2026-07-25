@@ -4,6 +4,7 @@ import { IpcChannel } from '@shared/ipc-channels';
 import { z } from 'zod';
 import type { WindowManager } from '../../windows/window-manager';
 import type { HttpClient } from '@/infrastructure/net/http-client';
+import type { PathService } from '@/infrastructure/fs/path-service';
 
 /**
  * System / window IPC handlers. Replaces the window-management and
@@ -12,6 +13,7 @@ import type { HttpClient } from '@/infrastructure/net/http-client';
 export function registerSystemHandlers(
   windows: WindowManager,
   _http: HttpClient,
+  paths: PathService,
 ): void {
   registerSend(IpcChannel.Window.Minimize, z.void(), () => {
     windows.get('main')?.minimize();
@@ -43,8 +45,13 @@ export function registerSystemHandlers(
     }
   });
 
-  registerInvoke(IpcChannel.System.OpenMinecraftFolder, z.void(), async () => {
-    // path-service owns the real path; this handler opens whatever shell.openPath receives
+  registerSend(IpcChannel.System.OpenMinecraftFolder, z.void(), () => {
+    void shell.openPath(paths.minecraftRoot);
+  });
+
+  registerInvoke(IpcChannel.System.OpenPath, z.object({ folderPath: z.string() }), async (_event, args) => {
+    await shell.openPath(args.folderPath);
+    return { success: true };
   });
 
   registerInvoke(IpcChannel.System.SelectMinecraftFolder, z.void(), async () => {

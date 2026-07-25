@@ -37,6 +37,7 @@ export const preloadApi = {
     getVersionsPath: () => ipcRenderer.invoke(IpcChannel.System.GetVersionsPath),
     openExternal: (url: string) => ipcRenderer.send(IpcChannel.System.OpenExternal, url),
     openMinecraftFolder: () => ipcRenderer.send(IpcChannel.System.OpenMinecraftFolder),
+    openPath: (folderPath: string) => ipcRenderer.invoke(IpcChannel.System.OpenPath, { folderPath }) as Promise<{ success: boolean }>,
     selectMinecraftFolder: () => ipcRenderer.invoke(IpcChannel.System.SelectMinecraftFolder),
     selectImageFile: () => ipcRenderer.invoke(IpcChannel.System.SelectImageFile),
     selectModpackZip: () => ipcRenderer.invoke(IpcChannel.System.SelectModpackZip),

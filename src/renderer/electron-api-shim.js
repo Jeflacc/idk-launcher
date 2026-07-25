@@ -64,6 +64,8 @@
     // ── System / file pickers ──
     openExternal: (url) => idk?.system.openExternal(url) ?? noop(),
     openMinecraftFolder: () => idk?.system.openMinecraftFolder() ?? noop(),
+    openPath: (folderPath) => idk?.system.openPath(folderPath) ?? noopAsync(),
+    getUserDataPath: () => idk?.system.getUserDataPath() ?? Promise.resolve(''),
     selectMinecraftFolder: () => idk?.system.selectMinecraftFolder() ?? noopAsync(),
     selectImage: () => idk?.system.selectImageFile() ?? noopAsync(),
     selectImageFile: () => idk?.system.selectImageFile() ?? noopAsync(),
@@ -147,7 +149,10 @@
     autoInstallDependencies: (missingMods) => idk?.crash.autoInstallDependencies(missingMods) ?? Promise.resolve({ success: false }),
 
     // ── Modpacks ──
-    scanProfiles: () => idk?.modpack.scanProfiles() ?? Promise.resolve([]),
+    scanProfiles: async () => {
+      const data = await (idk?.modpack.scanProfiles() ?? []);
+      return { success: true, profiles: Array.isArray(data) ? data : [] };
+    },
     deleteModpackFolder: (modpackId) => idk?.modpack.deleteFolder(modpackId) ?? Promise.resolve({ success: false }),
     updateModpackProfile: (modpackId, changes) => idk?.modpack.updateProfile(modpackId, changes) ?? Promise.resolve({ success: false }),
     launchModpack: (modpackId) => {

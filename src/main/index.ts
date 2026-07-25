@@ -1,5 +1,5 @@
 import { app, BrowserWindow } from 'electron';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { WindowManager } from './windows/window-manager';
 import { registerAllIpcHandlers, type IpcDeps } from './ipc';
 import { HttpClient, DEFAULT_HOST_ALLOWLIST } from '@/infrastructure/net/http-client';
@@ -84,6 +84,39 @@ const DEFAULT_SETTINGS: LauncherSettings = {
 
 async function bootstrap(): Promise<void> {
   await app.whenReady();
+
+  // Migrate userData folder to dot-prefixed name (.idk-launcher).
+  // Rename only works on a cold start (folder not locked by Electron).
+  // If it fails (EPERM in dev/hot-reload), we keep the old path so data stays accessible.
+  const currentUserData = app.getPath('userData');
+  const parentDir = dirname(currentUserData);
+  const dirName = currentUserData.split(/[/\\]/).pop() || '';
+  const dotPrefixedName = '.' + dirName;
+  const dotPrefixedPath = join(parentDir, dotPrefixedName);
+  if (currentUserData !== dotPrefixedPath) {
+    const { existsSync, renameSync } = await import('node:fs');
+    const oldExists = existsSync(currentUserData);
+    const newExists = existsSync(dotPrefixedPath);
+    let switched = false;
+    if (newExists) {
+      // New path already exists (previous rename, or fresh install) — switch to it
+      app.setPath('userData', dotPrefixedPath);
+      switched = true;
+    } else if (oldExists) {
+      // Old folder exists but new doesn't — try to rename (works on cold start only)
+      try {
+        renameSync(currentUserData, dotPrefixedPath);
+        app.setPath('userData', dotPrefixedPath);
+        switched = true;
+      } catch (e) {
+        console.warn('[Bootstrap] rename failed (expected in dev mode):', (e as Error).message);
+        // keep currentUserData — don't switch to an empty .idk-launcher
+      }
+    }
+    if (switched) {
+      console.log('[Bootstrap] userData migrated to', dotPrefixedPath);
+    }
+  }
 
   // Infrastructure
   const paths = new PathService(DEFAULT_SETTINGS.general.minecraftRoot || null);

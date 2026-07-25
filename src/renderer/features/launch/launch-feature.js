@@ -333,6 +333,51 @@ if (playDropdownTrigger && playDropdown) {
     actions.switchView('mods');
   });
 
+  // --- FOLDER OPENING ---
+  function closePlayDropdown() {
+    playDropdown.classList.remove('active');
+    playDropdownTrigger.classList.remove('active');
+  }
+
+  async function getMinecraftRoot() {
+    if (window.electronAPI?.getUserDataPath) {
+      const userDataPath = await window.electronAPI.getUserDataPath();
+      return userDataPath + '/minecraft-data';
+    }
+    return null;
+  }
+
+  document.getElementById('play-dd-open-version-folder')?.addEventListener('click', async () => {
+    closePlayDropdown();
+    if (!window.electronAPI?.openPath) return;
+    const root = await getMinecraftRoot();
+    if (!root) return;
+    if (state.selectedIsModpack && state.selectedModpackId) {
+      window.electronAPI.openPath(root + '/profiles/' + state.selectedModpackId);
+    } else if (state.selectedVersion) {
+      window.electronAPI.openPath(root + '/versions/' + state.selectedVersion);
+    }
+  });
+
+  document.getElementById('play-dd-open-mods-folder')?.addEventListener('click', async () => {
+    closePlayDropdown();
+    if (!window.electronAPI?.openPath) return;
+    const root = await getMinecraftRoot();
+    if (!root) return;
+    if (state.selectedIsModpack && state.selectedModpackId) {
+      window.electronAPI.openPath(root + '/profiles/' + state.selectedModpackId + '/mods');
+    } else if (state.selectedVersion) {
+      window.electronAPI.openPath(root + '/versions/' + state.selectedVersion + '/mods');
+    }
+  });
+
+  document.getElementById('play-dd-open-root-folder')?.addEventListener('click', async () => {
+    closePlayDropdown();
+    if (window.electronAPI?.openMinecraftFolder) {
+      window.electronAPI.openMinecraftFolder();
+    }
+  });
+
   // Loader buttons
   document.querySelectorAll('.play-dd-loader-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -758,7 +803,7 @@ playBtn.addEventListener('click', async (e) => {
       }
     }
 
-    const hideRenderPopup = localStorage.getItem('craftlaunch_hideRenderPopup') === 'true';
+    const hideRenderPopup = state.hideRenderPopup === true;
     if (!hideRenderPopup) {
       const selection = await showRenderEngineDialog();
       if (!selection) {
@@ -770,15 +815,19 @@ playBtn.addEventListener('click', async (e) => {
       }
       
       state.performanceRenderer = selection.renderer;
-      // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
       
       if (selection.dontShowAgain) {
+        state.hideRenderPopup = true;
         localStorage.setItem('craftlaunch_hideRenderPopup', 'true');
       }
       
-      // Attempt to sync the saved setting with backend
+      // Persist to backend settings (including hideRenderPopup)
       if (window.electronAPI && window.electronAPI.saveSettings) {
-        window.electronAPI.saveSettings({ performanceRenderer: selection.renderer }).catch(() => {});
+        const settingsToSave = { performanceRenderer: selection.renderer };
+        if (selection.dontShowAgain) {
+          settingsToSave.hideRenderPopup = true;
+        }
+        window.electronAPI.saveSettings(settingsToSave).catch(() => {});
       }
       
       // Update the UI dropdowns if they exist

@@ -62,6 +62,7 @@ const SETTING_FIELDS = [
   { stateKey: "launcherBlurIntensity", backendKey: "launcherBlurIntensity", localKey: "idk_blur_intensity", defaultValue: "medium" },
   { stateKey: "launcherCompactMode", backendKey: "launcherCompactMode", localKey: "idk_compact_mode", defaultValue: false, type: "bool" },
   { stateKey: "launcherUiMode", backendKey: "launcherUiMode", localKey: "idk_launcher_ui_mode", defaultValue: "classic" },
+  { stateKey: "hideRenderPopup", backendKey: "hideRenderPopup", localKey: "craftlaunch_hideRenderPopup", defaultValue: false, type: "bool" },
 ];
 
 /**

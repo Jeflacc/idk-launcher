@@ -1,12 +1,16 @@
 node_modules/
 dist-main/
 dist-renderer/
+dist/
 release/
 *.log
 .env
 .env.local
+.env.production
 .DS_Store
+Thumbs.db
 
+temp/
 temp
 
 # Development-only screenshots and audit results
@@ -33,3 +37,10 @@ AUDIT-renderer-backend-code.md
 .claude
 templates
 skills
+.mimocode
+.agents
+.imppeccable
+.opencode
+
+# OS
+desktop.ini

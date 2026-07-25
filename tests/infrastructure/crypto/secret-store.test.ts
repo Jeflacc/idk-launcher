@@ -73,9 +73,12 @@ describe('SecretStore', () => {
     expect(loaded).toEqual({});
   });
 
-  it('throws when safeStorage is unavailable', async () => {
+  it('returns empty when safeStorage is unavailable (load) or throws (save)', async () => {
     mockIsEncryptionAvailable.mockReturnValue(false);
-    await expect(store.load()).rejects.toThrow(/safeStorage encryption is unavailable/);
+    // load() gracefully returns {} so the app can start without crashing
+    const loaded = await store.load();
+    expect(loaded).toEqual({});
+    // save() still throws because we can't safely write without encryption
     await expect(store.save({})).rejects.toThrow(/safeStorage encryption is unavailable/);
   });
 

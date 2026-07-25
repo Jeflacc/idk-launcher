@@ -126,7 +126,7 @@ export class HttpClient {
 
   /**
    * Download a file to disk with streaming, progress, integrity verification,
-   * and cancellation. This is the ONE download primitive used by every
+   * retries, and cancellation. This is the ONE download primitive used by every
    * subsystem (Java, versions, mods, modpacks).
    */
   async downloadFile(
@@ -137,6 +137,32 @@ export class HttpClient {
     this.assertHostAllowed(url);
     await mkdir(dirname(targetPath), { recursive: true });
 
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        await this.downloadFileOnce(url, targetPath, opts);
+        return; // success
+      } catch (err) {
+        lastError = err;
+        if (opts.signal?.aborted) throw err;
+        // Don't retry HTTP errors (4xx/5xx) or integrity errors — those are deterministic.
+        // Only retry transient network failures (fetch failed, timeout, ECONNRESET, etc.)
+        if (err instanceof HttpClientError) throw err;
+        if (err instanceof IntegrityError) throw err;
+        // Backoff before retry: 500ms, 1500ms, 3000ms
+        if (attempt < this.maxRetries) {
+          await new Promise((r) => setTimeout(r, 500 * (attempt + 1) + 500));
+        }
+      }
+    }
+    throw lastError instanceof Error ? lastError : new HttpClientError('Download failed', null, url);
+  }
+
+  private async downloadFileOnce(
+    url: string,
+    targetPath: string,
+    opts: DownloadFileOptions,
+  ): Promise<void> {
     const { statusCode, headers, body } = await this.fetchWithRedirects(url, {
       method: 'GET',
       timeoutMs: opts.timeoutMs ?? this.defaultTimeoutMs,

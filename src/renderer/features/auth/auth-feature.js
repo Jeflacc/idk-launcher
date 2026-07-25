@@ -19,7 +19,8 @@ export function initAuthFeature({ switchView }) {
 
   btnOfflineLogin.addEventListener("click", () => {
     offlineForm.classList.add("open");
-    loginInput.focus();
+    // Delay focus slightly so the pointer-events transition completes
+    setTimeout(() => loginInput.focus(), 50);
   });
 
   btnElybyLogin.addEventListener("click", async () => {
@@ -49,8 +50,17 @@ export function initAuthFeature({ switchView }) {
         }
       }
     } catch (e) {
-      console.error(e);
-      alert("Error during Ely.by login.");
+      console.error("[Auth] Ely.by login error:", e);
+      const msg = e?.message || String(e);
+      if (msg.includes("decrypt")) {
+        alert("Login failed: the stored credentials are corrupted and have been cleared. Please try logging in again.");
+      } else if (msg.includes("timed out")) {
+        alert("Login timed out. Please try again.");
+      } else if (msg.includes("Failed to start local OAuth server")) {
+        alert("Login failed: the local authentication server could not start. Please close other launcher instances and try again.");
+      } else {
+        alert("Error during Ely.by login: " + msg);
+      }
     }
     btnElybyLogin.innerHTML = '<img src="./elyby.jpg" alt="Ely.by Logo" width="22" height="22" style="border-radius: 4px; object-fit: cover;" /> Ely.by Account';
   });

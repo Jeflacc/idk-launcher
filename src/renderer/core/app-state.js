@@ -34,6 +34,8 @@ export const state = {
     localStorage.getItem("idk_blur_intensity") || "medium",
   launcherCompactMode:
     localStorage.getItem("idk_compact_mode") === "true",
+  hideRenderPopup:
+    localStorage.getItem("craftlaunch_hideRenderPopup") === "true",
   enableOverlay: localStorage.getItem("idk_enable_overlay") === "true",
   language: localStorage.getItem("idk_language") || "en",
   backgroundEffect: localStorage.getItem("idk_background_effect") || "particles",
