@@ -34,6 +34,7 @@ export interface QueuedJob {
  */
 export class DownloadQueue extends EventEmitter {
   private readonly jobs = new Map<string, QueuedJob>();
+  private readonly speedSamples = new WeakMap<QueuedJob, { t: number; b: number }[]>();
 
   constructor(
     private readonly http: HttpClient,
@@ -67,8 +68,20 @@ export class DownloadQueue extends EventEmitter {
       cancelled: false,
     };
     this.jobs.set(downloadId, job);
+    this.speedSamples.set(job, []);
     this.emitProgress(job);
-    this.run(job).catch((err) => this.fail(job, err instanceof Error ? err.message : String(err)));
+    try {
+      await this.run(job);
+      if (job.status === 'downloading') {
+        job.status = 'completed';
+        this.emitProgress(job);
+        this.emit('complete', job.downloadId);
+      }
+    } catch (err) {
+      this.fail(job, err instanceof Error ? err.message : String(err));
+    } finally {
+      this.jobs.delete(downloadId);
+    }
   }
 
   pause(downloadId: string): void {
@@ -101,6 +114,7 @@ export class DownloadQueue extends EventEmitter {
     job.status = 'cancelled';
     this.emitProgress(job);
     this.emit('cancelled', downloadId);
+    this.jobs.delete(downloadId);
   }
 
   cancelAll(): void {
@@ -114,11 +128,6 @@ export class DownloadQueue extends EventEmitter {
       workers.push(this.worker(job, queue));
     }
     await Promise.all(workers);
-    if (job.status === 'downloading' && !job.paused && !job.cancelled) {
-      job.status = 'completed';
-      this.emitProgress(job);
-      this.emit('complete', job.downloadId);
-    }
   }
 
   private async worker(job: QueuedJob, queue: Array<[number, DownloadItem]>): Promise<void> {
@@ -176,7 +185,39 @@ export class DownloadQueue extends EventEmitter {
   }
 
   private emitProgress(job: QueuedJob): void {
-    const progress: DownloadProgress = {
+    const now = Date.now();
+    const samples = this.speedSamples.get(job) ?? [];
+    samples.push({ t: now, b: job.bytesDownloaded });
+    // Keep only the last 5 seconds of samples for speed calculation.
+    const cutoff = now - 5000;
+    const recent = samples.filter((s) => s.t >= cutoff);
+    this.speedSamples.set(job, recent);
+
+    const first = recent[0];
+    const bytesPerSec = recent.length > 1 && first
+      ? (job.bytesDownloaded - first.b) / ((now - first.t) / 1000)
+      : 0;
+
+    const bytesTotal = job.bytesTotal > 0 ? job.bytesTotal : 0;
+    const percentComplete = bytesTotal > 0
+      ? Math.min(100, Math.max(0, (job.bytesDownloaded / bytesTotal) * 100))
+      : job.total > 0 ? Math.min(100, Math.max(0, (job.completed / job.total) * 100)) : 0;
+
+    const bytesRemaining = Math.max(0, bytesTotal - job.bytesDownloaded);
+    const estimatedTimeRemaining = bytesPerSec > 0 ? (bytesRemaining / bytesPerSec) * 1000 : 0;
+
+    const progress: DownloadProgress & {
+      percentComplete?: number;
+      downloadSpeed?: number;
+      currentItem?: string | null;
+      itemsCompleted?: number;
+      totalItems?: number;
+      estimatedTimeRemaining?: number;
+      // Launch-feature panel field names.
+      percent?: number;
+      eta?: number;
+      item?: string | null;
+    } = {
       downloadId: job.downloadId,
       status: job.status,
       completed: job.completed,
@@ -184,8 +225,19 @@ export class DownloadQueue extends EventEmitter {
       bytesDownloaded: job.bytesDownloaded,
       bytesTotal: job.bytesTotal,
       currentFile: job.currentFile,
-      speed: job.speed,
+      speed: bytesPerSec,
       error: job.error,
+      // Renderer DownloadProgressTracker field names.
+      percentComplete,
+      downloadSpeed: bytesPerSec,
+      currentItem: job.currentFile,
+      itemsCompleted: job.completed,
+      totalItems: job.total,
+      estimatedTimeRemaining,
+      // Launch-feature panel field names.
+      percent: percentComplete,
+      eta: estimatedTimeRemaining,
+      item: job.currentFile,
     };
     this.emit('progress', progress);
   }

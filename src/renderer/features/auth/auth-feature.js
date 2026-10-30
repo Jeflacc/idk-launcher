@@ -106,16 +106,27 @@ export function initAuthFeature({ switchView }) {
     if (!val) return;
     state.currentUser = val;
     state.authMode = "offline";
-    localStorage.setItem("craftlaunch_username", state.currentUser);
+    localStorage.setItem("craftlaunch_username", val);
     localStorage.setItem("craftlaunch_authmode", state.authMode);
+
+    // Multi-account: track this offline account in the account list
+    const accounts = Array.isArray(state.offlineAccounts) ? state.offlineAccounts : [];
+    if (!accounts.includes(val)) {
+      accounts.push(val);
+    }
+    state.offlineAccounts = accounts;
+    state.selectedOfflineAccount = val;
+    localStorage.setItem("craftlaunch_offline_accounts", JSON.stringify(accounts));
+    localStorage.setItem("craftlaunch_selected_offline_account", val);
+
     if (window.electronAPI) {
       window.electronAPI
         .saveSettings({
-          session: { currentUser: state.currentUser, authMode: state.authMode },
+          session: { currentUser: val, authMode: "offline" },
         })
         .catch(console.error);
     }
-    updateUserDisplay(state.currentUser);
+    updateUserDisplay(val);
     handleOnboardingFlow(switchView);
   }
 
@@ -179,6 +190,14 @@ Please review and accept these terms to continue.`,
 
   function updateUserDisplay(name) {
     document.getElementById("display-username").innerText = name;
+    const ddName = document.getElementById("profile-dd-username");
+    if (ddName) ddName.innerText = name;
+    const ddAccount = document.getElementById("profile-dropdown")?.querySelector(".profile-dropdown-user-account");
+    if (ddAccount) {
+      if (state.authMode === "elyby") ddAccount.innerText = "Ely.by Account";
+      else if (state.authMode === "microsoft") ddAccount.innerText = "Microsoft Account";
+      else ddAccount.innerText = "Offline Account";
+    }
     const advancedHomeName = document.getElementById("advanced-home-username");
     if (advancedHomeName) advancedHomeName.innerText = name.toUpperCase();
     const accountEl = document.querySelector(".user-details-account");
@@ -203,8 +222,79 @@ Please review and accept these terms to continue.`,
       loadAvatarForUser(avatarCanvas, name, state.authMode);
     }
 
+    const ddAvatarCanvas = document.getElementById("dropdown-avatar-canvas");
+    if (ddAvatarCanvas) {
+      loadAvatarForUser(ddAvatarCanvas, name, state.authMode);
+    }
+
     // Sync IDK Connect UI
     actions.updateFriendsAuthUI?.();
+  }
+
+  // --- Offline account switcher ---
+
+  function renderOfflineAccountList() {
+    const listEl = document.getElementById("profile-dd-account-list");
+    const sectionEl = document.getElementById("profile-dd-account-section");
+    const dividerEl = document.getElementById("profile-dd-divider");
+    if (!listEl || !sectionEl || !dividerEl) return;
+
+    const accounts = Array.isArray(state.offlineAccounts) ? state.offlineAccounts : [];
+    const isOffline = state.authMode === "offline";
+
+    if (!isOffline || accounts.length === 0) {
+      sectionEl.style.display = "none";
+      dividerEl.style.display = "none";
+      return;
+    }
+
+    sectionEl.style.display = "block";
+    dividerEl.style.display = "block";
+    listEl.innerHTML = "";
+
+    accounts.forEach((acct) => {
+      const item = document.createElement("div");
+      item.className = `profile-dropdown-account ${acct === state.selectedOfflineAccount ? "active" : ""}`;
+      item.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18 21L12 17.77L6 21L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        <span>${escHtml(acct)}</span>
+      `;
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        switchOfflineAccount(acct);
+        profileDropdown.classList.remove("active");
+      });
+      listEl.appendChild(item);
+    });
+  }
+
+  function escHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function switchOfflineAccount(username) {
+    const val = username.trim();
+    if (!val || val === state.selectedOfflineAccount) return;
+    const accounts = Array.isArray(state.offlineAccounts) ? state.offlineAccounts : [];
+    if (!accounts.includes(val)) {
+      accounts.push(val);
+    }
+    state.offlineAccounts = accounts;
+    state.selectedOfflineAccount = val;
+    state.currentUser = val;
+    state.authMode = "offline";
+    localStorage.setItem("craftlaunch_username", val);
+    localStorage.setItem("craftlaunch_authmode", "offline");
+    localStorage.setItem("craftlaunch_offline_accounts", JSON.stringify(accounts));
+    localStorage.setItem("craftlaunch_selected_offline_account", val);
+    if (window.electronAPI) {
+      await window.electronAPI
+        .saveSettings({ session: { currentUser: val, authMode: "offline" } })
+        .catch(console.error);
+    }
+    updateUserDisplay(val);
   }
 
   // User Profile Dropdown Triggers
@@ -217,8 +307,27 @@ Please review and accept these terms to continue.`,
   // Toggle dropdown menu on click; double-click opens profile page
   userProfileBtn.addEventListener("click", (e) => {
     e.stopPropagation();
+    const wasActive = profileDropdown.classList.contains("active");
     profileDropdown.classList.toggle("active");
+    if (!wasActive) {
+      renderOfflineAccountList();
+    }
   });
+
+  // Add Account button in the profile dropdown
+  const btnAddAccount = document.getElementById("btn-dd-add-account");
+  if (btnAddAccount) {
+    btnAddAccount.addEventListener("click", (e) => {
+      e.stopPropagation();
+      profileDropdown.classList.remove("active");
+      // Open the login view / offline form so the user can enter a new account
+      const offlineForm = document.getElementById("offline-form");
+      const loginInput = document.getElementById("login-username");
+      if (offlineForm) offlineForm.classList.add("open");
+      if (loginInput) loginInput.focus();
+      switchView("login");
+    });
+  }
 
   userProfileBtn.addEventListener("dblclick", (e) => {
     e.stopPropagation();
@@ -265,8 +374,10 @@ Please review and accept these terms to continue.`,
     });
     if (!ok) return;
     state.currentUser = "";
+    state.selectedOfflineAccount = null;
     localStorage.removeItem("craftlaunch_username");
     localStorage.removeItem("craftlaunch_authmode");
+    localStorage.removeItem("craftlaunch_selected_offline_account");
     
     // Logout from IDK Connect as well
     document.getElementById("btn-friends-disconnect")?.click();

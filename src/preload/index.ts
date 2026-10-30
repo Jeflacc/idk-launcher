@@ -35,6 +35,14 @@ export const preloadApi = {
   system: {
     getUserDataPath: () => ipcRenderer.invoke(IpcChannel.System.GetUserDataPath),
     getVersionsPath: () => ipcRenderer.invoke(IpcChannel.System.GetVersionsPath),
+    getProfilesPath: () => ipcRenderer.invoke(IpcChannel.System.GetProfilesPath),
+    getMinecraftRootPath: () => ipcRenderer.invoke(IpcChannel.System.GetMinecraftRootPath),
+    resolveInstancePath: (instanceId: string, subfolder?: string) =>
+      ipcRenderer.invoke(IpcChannel.System.ResolveInstancePath, { instanceId, subfolder }) as Promise<{ path: string; exists: boolean }>,
+    openInstanceFolder: (instanceId: string, subfolder?: string) =>
+      ipcRenderer.send(IpcChannel.System.OpenInstanceFolder, { instanceId, subfolder }),
+    ensureInstance: (instanceId: string) =>
+      ipcRenderer.invoke(IpcChannel.System.EnsureInstance, { instanceId }) as Promise<{ directory: string; created: boolean }>,
     openExternal: (url: string) => ipcRenderer.send(IpcChannel.System.OpenExternal, url),
     openMinecraftFolder: () => ipcRenderer.send(IpcChannel.System.OpenMinecraftFolder),
     openPath: (folderPath: string) => ipcRenderer.invoke(IpcChannel.System.OpenPath, { folderPath }) as Promise<{ success: boolean }>,
@@ -87,8 +95,18 @@ export const preloadApi = {
       ipcRenderer.invoke(IpcChannel.Modpack.DeleteFolder, { modpackId }),
     updateProfile: (modpackId: string, changes: Record<string, unknown>) =>
       ipcRenderer.invoke(IpcChannel.Modpack.UpdateProfile, { modpackId, changes }),
-    launch: (modpackId: string, quickConnect?: string) =>
-      ipcRenderer.send(IpcChannel.Modpack.Launch, { modpackId, quickConnect }),
+    rename: (modpackId: string, newName: string) =>
+      ipcRenderer.invoke(IpcChannel.Modpack.Rename, { modpackId, newName }) as Promise<string>,
+    launch: (
+      modpackId: string,
+      options?: {
+        quickConnect?: string;
+        authProvider?: 'microsoft' | 'elyby' | 'offline';
+        maxMemoryMb?: number;
+        windowSize?: { width: number; height: number };
+        javaArgs?: string[];
+      },
+    ) => ipcRenderer.send(IpcChannel.Modpack.Launch, { modpackId, ...(options ?? {}) }),
     install: (projectId: string, minecraftVersion: string, loader: Modpack['loader'], name: string) =>
       ipcRenderer.invoke(IpcChannel.Mod.Install, { projectId, minecraftVersion, loader, name }),
     export: (modpackId: string, targetPath: string) =>
@@ -125,7 +143,11 @@ export const preloadApi = {
   },
 
   version: {
-    scanDownloaded: () => ipcRenderer.invoke(IpcChannel.Version.ScanDownloaded) as Promise<string[]>,
+    scanDownloaded: () => ipcRenderer.invoke(IpcChannel.Version.ScanDownloaded) as Promise<{
+      success: boolean;
+      versions: string[];
+      versionDetails: Record<string, { loader: string }>;
+    }>,
     getManifest: () => ipcRenderer.invoke(IpcChannel.Version.GetManifest),
     getSodiumVersions: () => ipcRenderer.invoke(IpcChannel.Version.GetSodiumVersions) as Promise<string[]>,
     download: (versionId: string, loader = 'vanilla', loaderVersion?: string) =>
@@ -175,8 +197,8 @@ export const preloadApi = {
   },
 
   mod: {
-    search: (query: string, loader: string | null, projectType: 'mod' | 'modpack' | 'resourcepack' | 'shader', limit?: number) =>
-      ipcRenderer.invoke(IpcChannel.Mod.Search, { query, loader, projectType, limit }),
+    search: (query: string, loader: string | null, projectType: 'mod' | 'modpack' | 'resourcepack' | 'shader', limit?: number, offset?: number, categories?: string[], gameVersion?: string | null) =>
+      ipcRenderer.invoke(IpcChannel.Mod.Search, { query, loader, projectType, limit, offset, categories, gameVersion }),
     getProject: (projectId: string) =>
       ipcRenderer.invoke(IpcChannel.Mod.GetProject, { projectId }),
     getVersions: (projectId: string, gameVersion?: string, loader?: string) =>
@@ -191,30 +213,30 @@ export const preloadApi = {
       ipcRenderer.invoke(IpcChannel.Mod.ScanMissingDependencies, { mods }),
     checkIncompatibilities: (modIds: string[]) =>
       ipcRenderer.invoke(IpcChannel.Mod.CheckIncompatibilities, { modIds }),
-    installFromBrowser: (modpackId: string, projectId: string, versionId: string, downloadUrl: string, fileName: string, type: 'mod' | 'resourcepack' | 'shader') =>
-      ipcRenderer.invoke(IpcChannel.Mod.InstallFromBrowser, { modpackId, projectId, versionId, downloadUrl, fileName, type }),
-    installToVersion: (versionId: string, projectId: string, versionIdTarget: string, downloadUrl: string, fileName: string) =>
-      ipcRenderer.invoke(IpcChannel.Mod.InstallToVersion, { versionId, projectId, versionIdTarget, downloadUrl, fileName }),
-    installUpdate: (modpackId: string, fileId: string, downloadUrl: string, fileName: string, oldFileName?: string) =>
-      ipcRenderer.invoke(IpcChannel.Mod.InstallUpdate, { modpackId, fileId, downloadUrl, fileName, oldFileName }),
-    resolveDependencies: (modpackId: string, modId: string, dependencyIds: string[]) =>
-      ipcRenderer.invoke(IpcChannel.Mod.ResolveDependencies, { modpackId, modId, dependencyIds }),
-    remove: (modpackId: string, modFileName: string) =>
-      ipcRenderer.invoke(IpcChannel.Mod.Remove, { modpackId, modFileName }),
-    installResourcepack: (modpackId: string, projectId: string, versionId: string, downloadUrl: string, fileName: string) =>
-      ipcRenderer.invoke(IpcChannel.Mod.InstallResourcepack, { modpackId, projectId, versionId, downloadUrl, fileName }),
-    removeResourcepack: (modpackId: string, resourcepackFileName: string) =>
-      ipcRenderer.invoke(IpcChannel.Mod.RemoveResourcepack, { modpackId, resourcepackFileName }),
-    installShader: (modpackId: string, projectId: string, versionId: string, downloadUrl: string, fileName: string) =>
-      ipcRenderer.invoke(IpcChannel.Mod.InstallShader, { modpackId, projectId, versionId, downloadUrl, fileName }),
-    removeShader: (modpackId: string, shaderFileName: string) =>
-      ipcRenderer.invoke(IpcChannel.Mod.RemoveShader, { modpackId, shaderFileName }),
+    installFromBrowser: (args: { modpackId: string; projectId: string; versionId: string; downloadUrl: string; fileName: string; type?: 'mod' | 'resourcepack' | 'shader' }) =>
+      ipcRenderer.invoke(IpcChannel.Mod.InstallFromBrowser, args),
+    installToVersion: (args: { versionId: string; projectId: string; versionIdTarget: string; downloadUrl: string; fileName: string }) =>
+      ipcRenderer.invoke(IpcChannel.Mod.InstallToVersion, args),
+    installUpdate: (args: { modpackId: string; fileId: string; downloadUrl: string; fileName: string; oldFileName?: string }) =>
+      ipcRenderer.invoke(IpcChannel.Mod.InstallUpdate, args),
+    resolveDependencies: (args: { modpackId: string; modId: string; dependencyIds: string[] }) =>
+      ipcRenderer.invoke(IpcChannel.Mod.ResolveDependencies, args),
+    remove: (args: { modpackId: string; modFileName: string }) =>
+      ipcRenderer.invoke(IpcChannel.Mod.Remove, args),
+    installResourcepack: (args: { modpackId: string; projectId: string; versionId: string; downloadUrl: string; fileName: string }) =>
+      ipcRenderer.invoke(IpcChannel.Mod.InstallResourcepack, args),
+    removeResourcepack: (args: { modpackId: string; resourcepackFileName: string }) =>
+      ipcRenderer.invoke(IpcChannel.Mod.RemoveResourcepack, args),
+    installShader: (args: { modpackId: string; projectId: string; versionId: string; downloadUrl: string; fileName: string }) =>
+      ipcRenderer.invoke(IpcChannel.Mod.InstallShader, args),
+    removeShader: (args: { modpackId: string; shaderFileName: string }) =>
+      ipcRenderer.invoke(IpcChannel.Mod.RemoveShader, args),
     extractIcon: (jarPath: string, outputPath: string) =>
       ipcRenderer.invoke(IpcChannel.Mod.ExtractIcon, { jarPath, outputPath }),
     extractAllIcons: (modpackId: string) =>
       ipcRenderer.invoke(IpcChannel.Mod.ExtractAllIcons, { modpackId }),
-    importExternalFiles: (modpackId: string, filePaths: string[]) =>
-      ipcRenderer.invoke(IpcChannel.Mod.ImportExternalFiles, { modpackId, filePaths }),
+    importExternalFiles: (args: { modpackId: string; filePaths: string[] }) =>
+      ipcRenderer.invoke(IpcChannel.Mod.ImportExternalFiles, args),
     downloadCurseforgeModpack: (projectId: string, fileId: string, name: string) =>
       ipcRenderer.invoke(IpcChannel.Mod.DownloadCurseforgeModpack, { projectId, fileId, name }),
     downloadModrinthModpack: (projectId: string, minecraftVersion: string, loader: string, name: string) =>
@@ -224,8 +246,9 @@ export const preloadApi = {
   crash: {
     analyze: (crashLog: string) =>
       ipcRenderer.invoke(IpcChannel.Crash.Analyze, { crashLog }),
-    autoInstallDependencies: (missingMods: string[]) =>
-      ipcRenderer.invoke(IpcChannel.Crash.AutoInstallDependencies, { missingMods }),
+    // v1 renderer sends { modpackId, missing, mcVersion } — accept the same shape.
+    autoInstallDependencies: (args: { modpackId?: string; missingMods: string[]; mcVersion?: string }) =>
+      ipcRenderer.invoke(IpcChannel.Crash.AutoInstallDependencies, args),
   },
 
   achievements: {

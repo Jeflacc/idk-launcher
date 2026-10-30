@@ -30,7 +30,7 @@
    ========================================================= */
 
 #view-mods {
-    background: #121213;
+    background: var(--surface-2);
 }
 
 /* Ensure navigation tabs are visible */
@@ -191,6 +191,10 @@ body:has(#view-mods.active) .header-nav {
     display: flex;
     align-items: center;
     height: 32px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .modpack-item.active {
@@ -343,7 +347,7 @@ body:has(#view-mods.active) .header-nav {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #ffffff;
+    color: var(--color-text-main);
     font-weight: 600;
     line-height: 1;
     white-space: nowrap;
@@ -399,7 +403,7 @@ body:has(#view-mods.active) .header-nav {
     font-family: var(--font-title);
     font-size: 24px;
     font-weight: 700;
-    color: white;
+    color: var(--color-text-main);
     margin: 0;
     font-variant: small-caps;
     text-transform: lowercase;
@@ -900,7 +904,7 @@ body:has(#view-mods.active) .header-nav {
     justify-content: space-between;
     align-items: center;
     padding: 14px 24px;
-    border-bottom: 1px solid #2d2d2e;
+    border-bottom: 1px solid var(--color-border-subtle);
     flex-shrink: 0;
 }
 
@@ -1128,22 +1132,22 @@ body:has(#view-mods.active) .header-nav {
 }
 
 .mod-browser-close {
-    background: #313132;
-    border: 1px solid #4a4a4b;
-    color: white;
+    background: var(--surface-8);
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-text-main);
     width: 28px;
     height: 28px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s;
+    transition: background var(--transition-fast);
     flex-shrink: 0;
 }
 
 .mod-browser-close:hover {
-    background: #3e3e3f;
+    background: var(--surface-10);
 }
 
 .mod-browser-results {
@@ -1165,7 +1169,7 @@ body:has(#view-mods.active) .header-nav {
     display: flex;
     align-items: center;
     gap: 14px;
-    background: #121213;
+    background: var(--surface-2);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 8px;
     padding: 14px;
@@ -1174,7 +1178,7 @@ body:has(#view-mods.active) .header-nav {
 }
 
 .mod-result-card:hover {
-    background: #1a1a1b;
+    background: var(--surface-3);
     border-color: rgba(255, 255, 255, 0.12);
 }
 
@@ -1263,11 +1267,11 @@ body:has(#view-mods.active) .header-nav {
 
 .provider-pill-group {
     display: flex;
-    background: #111112;
-    border: 1px solid #2d2d2e;
-    border-radius: 6px;
-    padding: 3px;
-    gap: 3px;
+    background: var(--surface-1);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-1);
+    gap: var(--space-1);
 }
 
 .provider-pill {
@@ -1301,12 +1305,17 @@ body:has(#view-mods.active) .header-nav {
 .trending-mp-thumb {
     width: 84px;
     min-width: 84px;
-    height: auto;
+    height: 84px;
+    min-height: 84px;
+    align-self: start;
     object-fit: cover;
     background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.24), rgba(0, 0, 0, 0.35));
     background-position: center;
     background-size: cover;
     flex-shrink: 0;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: block;
 }
 
 .trending-mp-info {
@@ -1355,14 +1364,22 @@ body:has(#view-mods.active) .header-nav {
 }
 
 .trending-mp-thumb-fallback {
+    width: 84px;
+    min-width: 84px;
+    height: 84px;
+    min-height: 84px;
+    align-self: start;
     display: flex;
     align-items: center;
     justify-content: center;
     color: rgba(255, 255, 255, 0.75);
     font-family: var(--font-title);
-    font-size: 20px;
+    font-size: 26px;
     font-weight: 700;
     text-transform: uppercase;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.2);
 }
 
 /* =========================================================
@@ -1436,7 +1453,7 @@ body:has(#view-mods.active) .header-nav {
     border-color: rgba(var(--theme-accent-rgb), 0.4);
     background: rgba(255, 255, 255, 0.04);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
 }
 
 .trending-mp-card:focus-visible {
@@ -1480,7 +1497,7 @@ body:has(#view-mods.active) .header-nav {
         inset 0 -2px 0 #2b2b2c,
         inset -2px 0 0 #2b2b2c;
     text-shadow: 1px 1px 0px #2b2b2c;
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease, width 0.18s ease, padding 0.18s ease;
     font-variant: small-caps;
     text-transform: lowercase;
     display: inline-flex;
@@ -1488,6 +1505,33 @@ body:has(#view-mods.active) .header-nav {
     justify-content: center;
     white-space: nowrap;
     flex-shrink: 0;
+}
+
+/* Back button: compact (icon only) until hovered, then expand to show text */
+.mp-action-btn.back {
+    width: 34px;
+    padding: 6px;
+    min-width: 34px;
+    overflow: hidden;
+}
+
+.mp-action-btn.back .back-btn-text {
+    display: none;
+}
+
+.mp-action-btn.back svg {
+    flex-shrink: 0;
+}
+
+.mp-action-btn.back:hover,
+.mp-action-btn.back:focus-visible {
+    width: auto;
+    padding: 6px 12px;
+    min-width: auto;
+}
+
+.mp-action-btn.back:hover .back-btn-text {
+    display: inline;
 }
 
 .mp-action-btn:hover {
@@ -1561,9 +1605,10 @@ body:has(#view-mods.active) .header-nav {
 
 .mp-quick-actions {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
-    padding: 0 40px 24px;
+    padding: 0 24px 24px;
+    min-width: 0;
 }
 
 .mp-action-card {
@@ -1578,24 +1623,40 @@ body:has(#view-mods.active) .header-nav {
     transition: all 0.2s ease;
     text-align: left;
     color: white;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .mp-action-card:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(var(--theme-accent-rgb), 0.4);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
 }
 
 .mp-ac-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     background: rgba(var(--theme-accent-rgb), 0.15);
-    border-radius: 12px;
+    border-radius: 14px;
     color: var(--theme-accent);
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.mp-ac-icon svg {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+}
+
+.mp-ac-text {
+    min-width: 0;
+    overflow: hidden;
+    flex: 1 1 auto;
 }
 
 .mp-ac-text h3 {
@@ -1603,6 +1664,9 @@ body:has(#view-mods.active) .header-nav {
     font-size: 14px;
     margin: 0 0 4px;
     font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .mp-ac-text p {
@@ -1610,6 +1674,9 @@ body:has(#view-mods.active) .header-nav {
     color: var(--text-muted);
     margin: 0;
     line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .mp-versions-section {
@@ -1724,56 +1791,90 @@ body:has(#view-mods.active) .header-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    align-self: center;
     width: 100%;
-    max-width: 320px;
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: 0;
     font-size: 11px;
-    transition: background 0.15s;
-    gap: 8px;
-    text-align: center;
+    transition: background 0.08s linear;
+    gap: 10px;
+    text-align: left;
+    border: 2px solid #000;
+    background: #0e0e10;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.04),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.mp-version-download-item > span:first-child {
+    flex: 1;
+    min-width: 0;
 }
 
 .mp-version-download-item:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: #1a1a1d;
 }
 
 .mp-version-download-item .version-name {
-    font-family: var(--font-main);
-    color: rgba(255, 255, 255, 0.8);
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    color: rgba(255, 255, 255, 0.85);
     font-size: 11px;
+    text-shadow: 1px 1px 0 #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .mp-version-download-item .version-type {
     font-size: 8px;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.35);
     margin-left: 8px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
 }
 
 .mp-dl-btn {
     font-size: 10px;
-    padding: 3px 10px;
-    border-radius: 5px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: transparent;
-    color: rgba(255, 255, 255, 0.6);
+    padding: 4px 12px;
+    border-radius: 0;
+    border: 2px solid #000;
+    background: #1b1b1f;
+    color: rgba(255, 255, 255, 0.75);
     cursor: pointer;
-    transition: all 0.15s;
-    font-family: var(--font-main);
+    transition: all 0.08s linear;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+    text-shadow: 1px 1px 0 #000;
+    flex-shrink: 0;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .mp-dl-btn:hover {
-    background: rgba(var(--theme-accent-rgb), 0.1);
-    border-color: rgba(var(--theme-accent-rgb), 0.3);
+    background: var(--theme-accent);
     color: #fff;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.15),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.4);
 }
 
 .mp-dl-btn.downloaded {
-    border-color: rgba(var(--theme-accent-rgb), 0.3);
-    color: var(--theme-accent);
-    cursor: default;
+    border-color: #000;
+    color: #fff;
+    background: #2a2a2b;
+    cursor: pointer;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.06), inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.mp-dl-btn.downloaded:hover {
+    background: var(--theme-accent);
 }
 
 .mp-dl-btn.downloading {
@@ -1782,23 +1883,26 @@ body:has(#view-mods.active) .header-nav {
 }
 
 .mp-dl-loader-badge {
-    font-size: 7px;
+    font-size: 8px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 1px 5px;
-    border-radius: 3px;
-    background: rgba(var(--theme-accent-rgb), 0.15);
-    color: var(--theme-accent-bright);
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid #000;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .mp-version-download-item.downloaded {
     opacity: 1;
-    border-left: 2px solid rgba(var(--theme-accent-rgb), 0.4);
-    background: rgba(var(--theme-accent-rgb), 0.04);
+    border-left: 2px solid var(--theme-accent);
+    background: rgba(var(--theme-accent-rgb), 0.08);
 }
 
 .mp-version-download-item.downloaded:hover {
-    background: rgba(var(--theme-accent-rgb), 0.1);
+    background: rgba(var(--theme-accent-rgb), 0.14);
 }

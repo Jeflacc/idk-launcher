@@ -1,4 +1,6 @@
 import { app, shell, dialog } from 'electron';
+import { join } from 'node:path';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { registerInvoke, registerSend } from '../register';
 import { IpcChannel } from '@shared/ipc-channels';
 import { z } from 'zod';
@@ -6,15 +8,25 @@ import type { WindowManager } from '../../windows/window-manager';
 import type { HttpClient } from '@/infrastructure/net/http-client';
 import type { PathService } from '@/infrastructure/fs/path-service';
 
+
 /**
- * System / window IPC handlers. Replaces the window-management and
- * open-external handlers in v1 (which had no URL allowlist — SSRF/RCE risk).
+ * System / window IPC handlers. Replaces the v1's window-management and
+ * open-external handlers (which had no URL allowlist — SSRF/RCE risk).
  */
 export function registerSystemHandlers(
   windows: WindowManager,
   _http: HttpClient,
   paths: PathService,
 ): void {
+  const sanitizeInstanceId = (id: string): string => id.replace(/[\\/:*?"<>|]/g, '-');
+
+  const resolveProfileDir = (instanceId: string): string | null => {
+    const direct = join(paths.modpacks, instanceId);
+    if (existsSync(direct)) return direct;
+    const sanitized = join(paths.modpacks, sanitizeInstanceId(instanceId));
+    if (existsSync(sanitized)) return sanitized;
+    return null;
+  };
   registerSend(IpcChannel.Window.Minimize, z.void(), () => {
     windows.get('main')?.minimize();
   });
@@ -30,7 +42,9 @@ export function registerSystemHandlers(
   });
 
   registerInvoke(IpcChannel.System.GetUserDataPath, z.void(), () => app.getPath('userData'));
-  registerInvoke(IpcChannel.System.GetVersionsPath, z.void(), () => app.getPath('userData') + '/minecraft/versions');
+  registerInvoke(IpcChannel.System.GetVersionsPath, z.void(), () => paths.versions);
+  registerInvoke(IpcChannel.System.GetProfilesPath, z.void(), () => paths.modpacks);
+  registerInvoke(IpcChannel.System.GetMinecraftRootPath, z.void(), () => paths.minecraftRoot);
 
   const externalUrlSchema = z.string().url();
   registerSend(IpcChannel.System.OpenExternal, externalUrlSchema, (_event, url) => {
@@ -53,6 +67,33 @@ export function registerSystemHandlers(
     await shell.openPath(args.folderPath);
     return { success: true };
   });
+
+  registerInvoke(
+    IpcChannel.System.ResolveInstancePath,
+    z.object({ instanceId: z.string(), subfolder: z.string().optional() }),
+    (_event, args) => {
+      const base = resolveProfileDir(args.instanceId);
+      if (!base) return { path: '', exists: false };
+      const target = args.subfolder ? join(base, args.subfolder) : base;
+      return { path: target, exists: existsSync(target) };
+    },
+  );
+
+  registerSend(
+    IpcChannel.System.OpenInstanceFolder,
+    z.object({ instanceId: z.string(), subfolder: z.string().optional() }),
+    (_event, args) => {
+      const base = resolveProfileDir(args.instanceId);
+      if (base) {
+        const target = args.subfolder ? join(base, args.subfolder) : base;
+        if (existsSync(target)) {
+          void shell.openPath(target);
+          return;
+        }
+      }
+      void shell.openPath(paths.minecraftRoot);
+    },
+  );
 
   registerInvoke(IpcChannel.System.SelectMinecraftFolder, z.void(), async () => {
     const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
@@ -81,6 +122,35 @@ export function registerSystemHandlers(
     });
     return result.canceled ? null : result.filePath ?? null;
   });
+
+  registerInvoke(
+    IpcChannel.System.EnsureInstance,
+    z.object({ instanceId: z.string() }),
+    async (_event, args) => {
+      const id = args.instanceId.replace(/[\\/:*?"<>|]/g, '-');
+      const dir = join(paths.modpacks, id);
+      if (existsSync(join(dir, 'profile.json'))) {
+        return { directory: dir, created: false };
+      }
+      mkdirSync(dir, { recursive: true });
+      mkdirSync(join(dir, 'mods'), { recursive: true });
+      mkdirSync(join(dir, 'resourcepacks'), { recursive: true });
+      mkdirSync(join(dir, 'shaderpacks'), { recursive: true });
+      const profile = {
+        id,
+        name: id,
+        description: '',
+        minecraftVersion: id,
+        loader: 'vanilla' as const,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        playtimeSeconds: 0,
+        mods: [] as string[],
+      };
+      writeFileSync(join(dir, 'profile.json'), JSON.stringify(profile, null, 2), 'utf8');
+      return { directory: dir, created: true };
+    },
+  );
 
   registerSend(IpcChannel.System.RendererLog, z.string(), (_event, msg) => {
     // eslint-disable-next-line no-console

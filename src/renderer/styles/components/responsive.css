@@ -917,7 +917,7 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
     }
 
     body.ui-advanced .main-hero-banner .bottom-bar {
-        width: min(200px, 60%);
+        width: min(420px, 94%);
     }
 }
 /* ===== MIGRATED FROM advanced/settings.css: media queries ===== */
@@ -936,8 +936,8 @@ body[data-window-mode="restored"] .modpack-header-actions .mp-action-btn.play {
 
     body.ui-advanced .nav-tabs::before,
     body.ui-advanced .nav-tab {
-        width: 46px;
-        height: 46px;
+        width: 38px;
+        height: 38px;
     }
 
     body.ui-advanced .top-brand {

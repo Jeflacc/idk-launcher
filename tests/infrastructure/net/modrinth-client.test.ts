@@ -17,7 +17,7 @@ describe('ModrinthClient', () => {
     vi.mocked(http.getJson).mockResolvedValue({ hits: [], total_hits: 0 });
     const client = new ModrinthClient(http);
 
-    await client.searchModpacks('skyblock', 10);
+    await client.searchModpacks('skyblock', null, 10);
 
     expect(http.getJson).toHaveBeenCalled();
     const url = vi.mocked(http.getJson).mock.calls[0]![0] as string;

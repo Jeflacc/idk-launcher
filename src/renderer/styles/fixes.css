@@ -229,3 +229,38 @@
   background: rgba(255, 80, 80, 0.25);
   color: #ff8080;
 }
+
+/* ---------------------------------------------------------------------------
+   PIXEL SWEEP — Minecraft square-ification (global)
+   ---------------------------------------------------------------------------
+   The pixel design language uses radius 0 everywhere. This late-loaded rule
+   guarantees no rounded corner survives (cards, buttons, modals, inputs,
+   sliders, badges) regardless of base component definitions.
+   --------------------------------------------------------------------------- */
+body * {
+  border-radius: 0 !important;
+}
+
+/* ---------------------------------------------------------------------------
+   MINECRAFT ERROR BOX — clean pixel error panels
+   Replaces raw text error dumps with a styled Mojang-style error box.
+   --------------------------------------------------------------------------- */
+#friends-auth-error {
+  display: block;
+  margin: 8px 0;
+  padding: 8px 10px;
+  background: #2a0f0f;
+  border: 2px solid #000;
+  border-radius: 0 !important;
+  color: #ff6b6b;
+  font-family: 'Mojang', 'Minecraftia', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: 0.3px;
+  text-shadow: 1px 1px 0 #000;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 0, 0, 0.08),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+  white-space: pre-wrap;
+  word-break: break-word;
+}

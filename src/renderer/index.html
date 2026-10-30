@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       http-equiv="Content-Security-Policy"
@@ -14,98 +14,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="app"></div>
-    
-    <!-- Generic confirmation dialog -->
-    <div id="confirm-dialog-modal" class="confirm-modal">
-      <div class="confirm-modal-content confirm-modal-content--danger">
-        <h3 id="confirm-dialog-title">Confirm</h3>
-        <p id="confirm-dialog-message"></p>
-        <div class="confirm-modal-actions">
-          <button type="button" id="confirm-dialog-cancel" class="confirm-modal-btn cancel">Cancel</button>
-          <button type="button" id="confirm-dialog-confirm" class="confirm-modal-btn confirm">Confirm</button>
-        </div>
-      </div>
+    <!--
+      App shell containers. loadAppShell() (core/html-loader.js) appends
+      partials/ views/ modals/ HTML files into these in a fixed order.
+      All visual children are absolute/fixed-positioned against #app
+      (position: relative), so these static wrappers are layout-neutral.
+    -->
+    <div id="app">
+      <div id="background-layer"></div>
+      <div id="top-bar-container"></div>
+      <div id="views-root"></div>
+      <div id="modals-root"></div>
+      <div id="chat-root"></div>
     </div>
 
-    <!-- Generic list dialog -->
-    <div id="list-dialog-modal" class="confirm-modal">
-      <div class="confirm-modal-content confirm-modal-content--neutral">
-        <h3 id="list-dialog-title">Select Option</h3>
-        <p id="list-dialog-message"></p>
-        <div class="list-dialog-items" id="list-dialog-items">
-          <!-- dynamically populated -->
-        </div>
-        <div class="confirm-modal-actions">
-          <button type="button" id="list-dialog-cancel" class="confirm-modal-btn cancel">Cancel</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Delete Modpack Confirmation Modal -->
-    <div id="delete-modpack-modal" class="delete-modal">
-      <div class="delete-modal-content">
-        <h3>Delete Modpack</h3>
-        <p id="delete-modal-message"></p>
-        
-        <div class="delete-modal-checkbox">
-          <input type="checkbox" id="delete-files-checkbox" />
-          <label for="delete-files-checkbox">Also delete files on disk</label>
-        </div>
-        
-        <div class="delete-modal-actions">
-          <button id="delete-modal-cancel" class="delete-modal-btn cancel">Cancel</button>
-          <button id="delete-modal-confirm" class="delete-modal-btn confirm">Yes, Delete</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Render Engine Selection Modal -->
-    <div id="render-engine-modal" class="confirm-modal">
-      <div class="confirm-modal-content confirm-modal-content--neutral">
-        <h3 id="render-engine-title">Select Render Engine</h3>
-        <p id="render-engine-message">Choose a rendering engine. Sodium is highly recommended for maximum FPS and stability.</p>
-
-        <div class="list-dialog-items" id="render-engine-items">
-          <!-- Sodium Option -->
-          <button type="button" id="render-engine-sodium" class="render-engine-option render-engine-option--sodium">
-            <div class="render-engine-option-main">
-              <div class="render-engine-option-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-              </div>
-              <div class="render-engine-option-labels">
-                <span class="render-engine-option-name">SODIUM</span>
-                <span class="render-engine-option-tag">RECOMMENDED</span>
-              </div>
-            </div>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(59, 130, 246, 0.8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-          </button>
-
-          <!-- Vulkan Option -->
-          <button type="button" id="render-engine-vulkan" class="render-engine-option render-engine-option--vulkan">
-            <div class="render-engine-option-main">
-              <div class="render-engine-option-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-              </div>
-              <div class="render-engine-option-labels">
-                <span class="render-engine-option-name">VULKANMOD</span>
-                <span class="render-engine-option-tag">EXPERIMENTAL</span>
-              </div>
-            </div>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(239, 68, 68, 0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-          </button>
-        </div>
-
-        <div class="render-engine-footer">
-          <div class="delete-modal-checkbox">
-            <input type="checkbox" id="render-engine-dont-show" />
-            <label for="render-engine-dont-show">Don't show this again</label>
-          </div>
-
-          <button type="button" id="render-engine-cancel">Cancel</button>
-        </div>
-      </div>
-    </div>
     
     <script type="module" src="/main.js"></script>
   </body>

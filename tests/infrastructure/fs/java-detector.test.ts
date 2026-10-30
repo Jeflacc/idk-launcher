@@ -1,5 +1,26 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { JavaDetector } from '@/infrastructure/fs/java-detector';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { JavaDetector, parseJavaMajorFromOutput } from '@/infrastructure/fs/java-detector';
+
+describe('parseJavaMajorFromOutput', () => {
+  it('parses modern version output', () => {
+    expect(parseJavaMajorFromOutput('openjdk version "25.0.3" 2026-04-21 LTS')).toBe(25);
+    expect(parseJavaMajorFromOutput('openjdk version "21.0.2" 2024-01-16 LTS')).toBe(21);
+    expect(parseJavaMajorFromOutput('java version "17.0.1" 2021-10-19 LTS')).toBe(17);
+  });
+
+  it('parses legacy 1.x version output (1.8.0 → Java 8)', () => {
+    expect(parseJavaMajorFromOutput('java version "1.8.0_432"')).toBe(8);
+    expect(parseJavaMajorFromOutput('openjdk version "1.7.0_80"')).toBe(7);
+  });
+
+  it('returns null for garbage output', () => {
+    expect(parseJavaMajorFromOutput('')).toBeNull();
+    expect(parseJavaMajorFromOutput('not a java at all')).toBeNull();
+  });
+});
 
 describe('JavaDetector', () => {
   describe('with a custom path that exists', () => {
@@ -72,6 +93,46 @@ describe('JavaDetector', () => {
       const javaHomeResult = results.find((r) => r.source === 'system');
       expect(javaHomeResult).toBeDefined();
       delete process.env['JAVA_HOME'];
+    });
+  });
+
+  describe('with a v1 runtimes directory', () => {
+    let runtimesDir: string;
+
+    beforeEach(() => {
+      runtimesDir = mkdtempSync(join(tmpdir(), 'java-runtimes-'));
+      mkdirSync(join(runtimesDir, 'jre-25', 'bin'), { recursive: true });
+      writeFileSync(join(runtimesDir, 'jre-25', 'bin', 'java.exe'), '');
+      mkdirSync(join(runtimesDir, 'jre-8', 'bin'), { recursive: true });
+      writeFileSync(join(runtimesDir, 'jre-8', 'bin', 'java.exe'), '');
+    });
+
+    afterEach(() => {
+      rmSync(runtimesDir, { recursive: true, force: true });
+    });
+
+    it('detects bundled runtimes as temurin candidates and verifies their version', async () => {
+      const detector = new JavaDetector(undefined, runtimesDir);
+      const detectorAny = detector as unknown as {
+        pathExists: (p: string) => Promise<boolean>;
+        systemCandidates: () => Promise<JavaInstallation[]>;
+        getJavaMajorVersion: (p: string) => Promise<number | null>;
+      };
+      vi.spyOn(detectorAny, 'systemCandidates').mockResolvedValue([]);
+      vi.spyOn(detectorAny, 'pathExists').mockResolvedValue(true);
+      vi.spyOn(detectorAny, 'getJavaMajorVersion').mockImplementation(async (p) =>
+        p.includes('jre-25') ? 25 : 8,
+      );
+
+      const results = await detector.detect();
+
+      expect(results).toHaveLength(2);
+      const jre25 = results.find((r) => r.path.includes('jre-25'));
+      expect(jre25).toBeDefined();
+      expect(jre25!.source).toBe('temurin');
+      expect(jre25!.majorVersion).toBe(25);
+      expect(jre25!.version).toBe('25');
+      expect(jre25!.path).toMatch(/jre-25[/\\]bin[/\\]java\.exe$/);
     });
   });
 });

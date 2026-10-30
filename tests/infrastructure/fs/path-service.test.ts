@@ -54,16 +54,36 @@ describe('PathService', () => {
       expect(p).toContain('my-pack-1');
     });
 
-    it('rejects an id with path separators', () => {
-      expect(() => paths.modpackDirectory('../etc/passwd')).toThrow(/Invalid modpack id/);
+    it('rejects path traversal via ..', () => {
+      expect(() => paths.modpackDirectory('../etc/passwd')).toThrow(/Invalid instance folder/);
     });
 
-    it('rejects an id with spaces', () => {
-      expect(() => paths.modpackDirectory('my pack')).toThrow(/Invalid modpack id/);
+    it('rejects windows-style traversal', () => {
+      expect(() => paths.modpackDirectory('..\\..\\etc\\passwd')).toThrow(/Invalid instance folder/);
     });
 
-    it('rejects an id with dots', () => {
-      expect(() => paths.modpackDirectory('my.pack')).toThrow(/Invalid modpack id/);
+    // Folder names are cosmetic — friendly names with spaces/unicode are legal.
+    it('accepts a folder name with spaces', () => {
+      expect(() => paths.modpackDirectory('My Pack')).not.toThrow();
+    });
+
+    it('accepts a folder name with dots', () => {
+      expect(() => paths.modpackDirectory('my.pack')).not.toThrow();
+    });
+
+    it('rejects a bare dot folder', () => {
+      expect(() => paths.modpackDirectory('.')).toThrow(/Invalid instance folder/);
+    });
+
+    it('rejects reserved windows characters', () => {
+      expect(() => paths.modpackDirectory('a:b')).toThrow(/Invalid instance folder/);
+      expect(() => paths.modpackDirectory('a*b')).toThrow(/Invalid instance folder/);
+      expect(() => paths.modpackDirectory('a?b')).toThrow(/Invalid instance folder/);
+    });
+
+    it('trims surrounding whitespace', () => {
+      const p = paths.modpackDirectory('  My Pack  ');
+      expect(p).toContain('My Pack');
     });
 
     it('accepts underscores and hyphens', () => {

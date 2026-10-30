@@ -82,6 +82,8 @@ select:focus-visible,
 .refresh-versions-btn:focus-visible,
 .play-button:focus-visible,
 .play-dropdown-trigger:focus-visible,
+.play-folder-trigger:focus-visible,
+.play-folder-item:focus-visible,
 .modal-btn:focus-visible,
 .confirm-modal-btn:focus-visible,
 .delete-modal-btn:focus-visible,
@@ -417,7 +419,7 @@ button, a, [role="button"], .nav-tab, .mp-tab, .custom-select-trigger,
 .mp-create-modal,
 .mp-settings-modal,
 .mp-all-versions-modal {
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
 }
 
 /* Fix: Modal cancel buttons — more descriptive hover */
@@ -569,14 +571,6 @@ button, a, [role="button"], .nav-tab, .mp-tab, .custom-select-trigger,
     white-space: nowrap;
     padding: 8px 16px;
     text-align: center;
-}
-
-/* Fix: Toggle switch hover feedback */
-.tg-switch:hover .tg-slider {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-.toggle-switch:hover .switch {
-    background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Fix: Force update text truncation */
@@ -823,45 +817,6 @@ select:focus-visible,
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
-}
-
-/* ── FIX: Toggle switch consistency ── */
-/* All toggles should have the same styling */
-.tg-switch,
-.toggle-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-.tg-slider,
-.switch {
-  width: 40px;
-  height: 22px;
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.1);
-  position: relative;
-  transition: background 0.2s ease;
-}
-.tg-slider::before,
-.switch::before {
-  content: "";
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: white;
-  top: 3px;
-  left: 3px;
-  transition: transform 0.2s ease;
-}
-.tg-switch input:checked ~ .tg-slider,
-.toggle-switch input:checked ~ .switch {
-  background: var(--theme-accent);
-}
-.tg-switch input:checked ~ .tg-slider::before,
-.toggle-switch input:checked ~ .switch::before {
-  transform: translateX(18px);
 }
 
 /* ── FIX: Text contrast improvements ── */
@@ -1121,8 +1076,9 @@ select:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border-radius: var(--radius-base);
+  padding: 0 12px;
+  height: 42px;
+  border-radius: 0;
   white-space: nowrap;
   overflow: hidden;
 }

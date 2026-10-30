@@ -13,8 +13,8 @@ export function registerSkinHandlers(
   http: HttpClient,
   idkConnect: IdkConnectClient,
   minotar: MinotarClient,
-  _elyby: ElybyClient,
-  _secrets: SecretStore,
+  elyby: ElybyClient,
+  secrets: SecretStore,
 ): void {
   const senderOk = (event: Electron.IpcMainInvokeEvent) => windows.assertSender(event, 'main');
 
@@ -43,7 +43,7 @@ export function registerSkinHandlers(
     IpcChannel.Skin.EquipMicrosoftCape,
     z.object({ capeId: z.string() }),
     async (_e, _args) => {
-      const s = await _secrets.load();
+      const s = await secrets.load();
       if (!s.microsoft?.accessToken) {
         return { success: false, error: 'Not authenticated with Microsoft' };
       }
@@ -63,7 +63,7 @@ export function registerSkinHandlers(
     IpcChannel.Skin.SelectMicrosoftCape,
     z.void(),
     async () => {
-      const s = await _secrets.load();
+      const s = await secrets.load();
       if (!s.microsoft?.accessToken) {
         return { capes: [] };
       }
@@ -105,8 +105,11 @@ export function registerSkinHandlers(
 
   /**
    * Resolve the best skin texture for a user as base64.
-   * Tries: Ely.by (for microsoft/elyby auth) → Minotar (for offline) → Steve fallback.
-   * The authMode determines which source to try first.
+   * microsoft â†’ Mojang profile API (api.minecraftservices.com) with the stored
+   * access token â†’ active skin texture â†’ Minotar â†’ Steve.
+   * elyby â†’ Ely.by profile API (active skin URL) â†’ IDK Connect Ely.by proxy â†’
+   * Minotar â†’ Steve.
+   * offline â†’ Minotar â†’ Steve.
    */
   registerInvoke(
     IpcChannel.Skin.ResolveSkinTextureBase64,
@@ -115,22 +118,53 @@ export function registerSkinHandlers(
       authMode: z.enum(['offline', 'microsoft', 'elyby']).default('offline'),
     }),
     async (_e, args) => {
-      // For non-offline modes, try Ely.by first (proxied through IDK Connect backend)
-      if (args.authMode !== 'offline') {
+      if (args.authMode === 'microsoft') {
         try {
-          const buf = await idkConnect.fetchElybySkinBuffer(args.username);
+          const s = await secrets.load();
+          if (s.microsoft?.accessToken) {
+            const profile = await http.getJson<{
+              id: string;
+              name: string;
+              skins?: Array<{ id: string; state: string; url: string; variant: string }>;
+            }>('https://api.minecraftservices.com/minecraft/profile', {
+              headers: { authorization: `Bearer ${s.microsoft.accessToken}` },
+            });
+            const skin =
+              profile.skins?.find((sk) => sk.state === 'ACTIVE') ?? profile.skins?.[0];
+            if (skin?.url) {
+              const buf = await http.getBuffer(skin.url);
+              return { base64: buf.toString('base64'), source: 'microsoft' as const };
+            }
+          }
+        } catch {
+          // Fall through to Minotar
+        }
+      } else if (args.authMode === 'elyby') {
+        // Ely.by skins system texture endpoint (skinsystem.ely.by). The old
+        // api.ely.by/users API and skins.ely.by host are both dead (404), so
+        // this is the only reliable way to resolve an Ely.by skin — it also
+        // proxies Mojang skins for premium usernames.
+        try {
+          const url = elyby.fetchSkinTextureUrl(args.username);
+          const buf = await http.getBuffer(url);
           return { base64: buf.toString('base64'), source: 'elyby' as const };
         } catch {
-          // Fall through to minotar
+          try {
+            const buf = await idkConnect.fetchElybySkinBuffer(args.username);
+            return { base64: buf.toString('base64'), source: 'elyby' as const };
+          } catch {
+            // Fall through to Minotar
+          }
         }
       }
-      // For offline mode (or Ely.by failure), use Minotar
+      // Offline mode (or non-offline failure): Minotar
       try {
         const buf = await minotar.fetchSkinBuffer(args.username);
         return { base64: buf.toString('base64'), source: 'minotar' as const };
       } catch {
-        // Ultimate fallback: Steve
-        const buf = await minotar.fetchSteveAvatar(64);
+        // Ultimate fallback: Steve (full skin texture, not a head crop — the
+        // 2D fallback renderer needs the whole atlas to draw all limbs)
+        const buf = await minotar.fetchSkinBuffer('MHF_Steve');
         return { base64: buf.toString('base64'), source: 'steve' as const };
       }
     },

@@ -101,9 +101,14 @@ export function registerIdkConnectHandlers(
     IpcChannel.IdkConnect.LoginWithMinecraft,
     IdkConnectSchema.loginWithMinecraft,
     async (_e, args) => {
-      const result = await client.loginWithMinecraft(args.minecraftUsername, args.authMode);
-      await storeToken(result.token, result.user.username);
-      return { success: true, user: result.user };
+      try {
+        const result = await client.loginWithMinecraft(args.minecraftUsername, args.authMode);
+        await storeToken(result.token, result.user.username);
+        return { success: true, user: result.user };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return { success: false, error: message };
+      }
     },
     { senderCheck: senderOk },
   );

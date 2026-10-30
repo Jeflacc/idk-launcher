@@ -1,0 +1,260 @@
+  <!-- IDK CONNECT VIEW -->
+  <div id="view-idk-connect" class="view">
+    
+    <!-- PORTAL PANEL (LOGIN/REGISTER) -->
+    <div id="friends-auth-panel" class="mods-content-wrapper" style="display:flex; align-items:center; justify-content:center;">
+      <div class="mp-wizard-section" style="width: 400px; padding: 30px;">
+        <h2 style="text-align: center; margin-top: 0; font-family: var(--font-title);">IDK Network</h2>
+        <p style="text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 20px;">
+          Connect to add friends, sync presence, and join multiplayer worlds instantly!
+        </p>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <button class="submit-btn" id="tab-friends-login" style="flex: 1;">LOGIN</button>
+          <button class="modal-btn" id="tab-friends-register" style="flex: 1;">REGISTER</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div id="friends-auth-error" style="display: none; color: var(--accent-red); font-size: 12px; text-align: center;"></div>
+          <input type="text" class="clean-input" id="friends-auth-username" placeholder="Username" />
+          <input type="email" class="clean-input" id="friends-auth-email" placeholder="Email Address" style="display: none;" />
+          <input type="password" class="clean-input" id="friends-auth-password" placeholder="Password" />
+          <input type="text" class="clean-input" id="friends-auth-otp" placeholder="6-digit OTP Code" style="display: none; text-align: center; letter-spacing: 4px;" maxlength="6" />
+          <button class="submit-btn" id="btn-friends-auth-submit" style="padding: 10px; margin-top: 10px;">Connect</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN DASHBOARD PANEL -->
+    <div id="friends-main-panel" class="connect-dashboard-wrapper" style="display:none; height: 100%; flex-direction: column;">
+      <div class="connect-header">
+        <h2 class="connect-title">IDK Connect</h2>
+        <div class="connect-header-actions">
+          <button class="btn-connect-action" id="btn-open-search">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M22 22h-2v-2h2v2Zm-2-2h-2v-2h2v2Zm-6-2H6v-2h8v2Zm4 0h-2v-2h2v2ZM6 16H4v-2h2v2Zm10 0h-2v-2h2v2ZM4 14H2V6h2v8Zm14 0h-2V6h2v8ZM6 6H4V4h2v2Zm10 0h-2V4h2v2Zm-2-2H6V2h8v2Z"/></svg>
+            Find Users
+          </button>
+          <button class="btn-connect-action" id="btn-my-settings">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h2v2h-2zM4 2h2v2H4zm16 20h-2v-2h2zM4 22h2v-2H4zM20 4h2v2h-2zM6 4h4v2H6zm12 16h-4v-2h4zM6 20h4v-2H6zM18 6h2v4h-2zM4 6h2v4H4zm16 12h-2v-4h2zM4 18h2v-4H4zM14 4h4v2h-4zM2 4h2v2H2zm20 16h-2v-2h2zM2 20h2v-2H2z"/><path d="M8 2h2v4H8zm0 20h2v-4H8z"/><path d="M8 2h8v2H8zm0 20h8v-2H8zM2 8h2v8H2zm20 8h-2V8h2z"/><path d="M20 8h2v4h-2zM10 8h4v2h-4zm-2 2h2v4H8zm2 4h4v2h-4zm4-4h2v4h-2z"/></svg>
+            Settings
+          </button>
+          <button class="btn-connect-action danger" id="btn-friends-disconnect">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M8 11h12v2H8zm8-2h2v2h-2z"/><path d="M14 7h2v10h-2zm2 6h2v2h-2zM6 2h12v2H6zm0 18h12v2H6zM4 4h2v16H4zm14 0h2v3h-2zm0 13h2v3h-2z"/></svg>
+            Disconnect
+          </button>
+        </div>
+      </div>
+      
+      <div class="connect-dashboard-layout">
+        <!-- LEFT COLUMN: Profile Info -->
+        <div class="connect-sidebar">
+            
+            <!-- Sleek Profile Card -->
+            <div class="connect-profile-card">
+                <div class="profile-avatar-wrapper">
+                  <canvas id="friends-my-avatar" width="80" height="80"></canvas>
+                  <div class="profile-status-dot online"></div>
+                </div>
+                <h3 id="friends-my-username" class="profile-username">Username</h3>
+                <div class="profile-status-text">CONNECTED</div>
+            </div>
+
+            <!-- Share LAN World Card -->
+            <div class="connect-widget-card" id="friends-share-card">
+              <div class="widget-header">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M6 2h12v2H6zm0 18h12v2H6zM4 4h2v2H4zm5 0h2v2H9zm0 14h2v2H9zm4 0h2v2h-2zM7 6h2v12H7zm8 0h2v12h-2zm-2-2h2v2h-2zm7 0h-2v2h2zM2 6h2v12H2zm20 0h-2v12h2zM4 18h2v2H4zm16 0h-2v2h2z"/><path d="M3 11h18v2H3z"/></svg>
+                <h4>Host LAN World</h4>
+              </div>
+              <p id="friends-share-instructions" class="widget-desc">Open your singleplayer world, click "Open to LAN", enter port below.</p>
+
+              <div class="widget-input-group" id="friends-share-input-row">
+                <input type="number" class="widget-input" id="friends-share-port" placeholder="Port" />
+                <button class="btn-widget-action" id="btn-friends-share">Share</button>
+                <button class="btn-widget-action danger" id="btn-friends-share-cancel" style="display: none;">Cancel</button>
+              </div>
+
+              <div id="friends-share-tunnel-link" class="widget-code-block" style="display:none;">
+                tcp://...
+              </div>
+
+              <!-- FRPC Downloader Progress Panel -->
+              <div id="frpc-progress-panel" class="widget-progress-panel" style="display:none;">
+                <div class="progress-labels">
+                  <span id="frpc-status-text">Downloading FRPC...</span>
+                  <span id="frpc-percent-text">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div id="frpc-progress-fill" class="progress-bar-fill"></div>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Social Tabs -->
+        <div class="connect-main-content">
+            <h3 class="connect-section-title">Friends</h3>
+            <!-- Content Areas -->
+            <div id="friends-list" class="connect-friends-list">
+                <div class="connect-empty-state">Your friends list is empty.</div>
+            </div>
+
+            <div id="friends-requests-section" class="connect-requests-section" style="display:none;">
+                <h4 class="connect-section-title small">Friend Requests</h4>
+                <div id="friends-requests-list" class="connect-friends-list"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH USERS PANEL -->
+    <div id="friends-search-panel" class="mods-content-wrapper" style="display:none;">
+      <div class="mods-page-header">
+        <h2 class="view-title">Find Users</h2>
+        <div class="mods-header-actions">
+          <button class="modal-btn" id="btn-search-back">Back</button>
+        </div>
+      </div>
+      <div class="mods-container" style="padding: 20px; flex-direction: column;">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <input type="text" class="clean-input" id="input-search-users" placeholder="Search by IDK username..." style="flex: 1;" />
+          <button class="submit-btn" id="btn-execute-search">Search</button>
+        </div>
+        <div id="search-results-list" style="flex: 1; overflow-y: auto;">
+          <div style="color: var(--text-muted); text-align: center; margin-top: 40px; font-size: 13px;">Type a name to search</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUBLIC PROFILE PANEL -->
+    <div id="friends-profile-panel" class="mods-content-wrapper" style="display:none;">
+      <div class="mods-page-header">
+        <h2 class="view-title">User Profile</h2>
+        <div class="mods-header-actions">
+          <button class="modal-btn" id="btn-profile-back">Back</button>
+        </div>
+      </div>
+      <div class="mods-container" style="padding: 30px; display: flex; justify-content: center; align-items: flex-start;">
+        <div class="mp-wizard-section" style="width: 400px; padding: 0; text-align: center; overflow: hidden; position: relative;">
+            <!-- BANNER -->
+            <div style="width: 100%; height: 160px; background-image: url('./public/bannerbg.jpg'); background-size: cover; background-position: center; border-bottom: 2px solid var(--border-color); position: relative; overflow: hidden;">
+               <!-- AVATAR LARI (LOCAL RENDERER) -->
+               <canvas id="profile-skin-render-canvas" style="position: absolute; bottom: -230px; left: 50%; transform: translateX(-50%); width: 200px; height: 290px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));"></canvas>
+            </div>
+            
+            <div style="padding: 30px;">
+              <h2 id="profile-username" style="margin: 0 0 5px 0; font-family: var(--font-title); font-size: 26px; color: white; letter-spacing: 1px;">Username</h2>
+              <div id="profile-status" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Offline</div>
+              
+              <div style="text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);">
+                <h4 style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">About Me</h4>
+                <div id="profile-bio" style="color: #ddd; font-size: 13px; min-height: 40px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">No bio yet.</div>
+              </div>
+              
+              <button class="submit-btn" id="btn-profile-add-friend" style="width: 100%; padding: 12px; font-size: 14px;">
+                SEND FRIEND REQUEST
+              </button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PANEL -->
+    <div id="friends-settings-panel" class="connect-dashboard-wrapper" style="display:none;">
+      <div class="connect-header">
+        <h2 class="connect-title">Profile Settings</h2>
+        <div class="connect-header-actions">
+          <button class="btn-connect-action" id="btn-settings-back">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20 11v2H4v-2zM8 13v2H6v-2zm2 2v2H8v-2zm2 2v2h-2v-2zm-4-6V9H6v2z"/><path d="M10 15V7H8v8zm2 2V5h-2v12z"/></svg>
+            Back
+          </button>
+        </div>
+      </div>
+      <div class="connect-dashboard-layout" style="display: block; padding-top: 10px; max-width: 800px; margin: 0 auto; width: 100%; overflow-y: auto;">
+        
+        <div class="connect-widget-card" style="margin-bottom: 24px; padding: 24px;">
+            <div class="widget-header" style="margin-bottom: 16px;">
+              <h4 style="font-size: 16px;">About Me</h4>
+            </div>
+            <p class="widget-desc">Write something about yourself for your public profile.</p>
+
+            <div style="display: flex; gap: 20px; align-items: flex-start; margin-top: 16px;">
+              <div style="flex: 1;">
+                <div style="margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #fff;">Bio</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Visible to everyone</div>
+              </div>
+              <div style="flex: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 12px;">
+                <textarea class="widget-input" id="settings-bio" rows="3" style="resize: none; width: 100%; min-height: 80px;" placeholder="Write something about yourself..."></textarea>
+                <button class="btn-widget-action" id="btn-settings-save-bio">Save Bio</button>
+              </div>
+            </div>
+        </div>
+
+        <div class="connect-widget-card" style="margin-bottom: 24px; padding: 24px;">
+            <div class="widget-header" style="margin-bottom: 16px;">
+              <h4 style="font-size: 16px;">Security & Password</h4>
+            </div>
+            <p class="widget-desc">Protect your IDK Connect account.</p>
+
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div style="flex: 1;">
+                <div style="margin-bottom: 4px; font-weight: 600; font-size: 13px; color: #fff;">Two-Factor Authentication</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Require an email OTP to login</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="settings-2fa" />
+                <div class="switch"></div>
+              </label>
+            </div>
+
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div style="flex: 1;">
+                <div style="margin-bottom: 4px; font-weight: 600; font-size: 13px; color: #fff;">Change Password</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Leave blank to keep current</div>
+              </div>
+              <input type="password" class="widget-input" id="settings-new-password" placeholder="New Password..." style="width: 250px;" />
+            </div>
+
+            <div id="settings-security-otp-container" style="display: none; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; margin-top: 16px; border: 1px solid rgba(255,255,255,0.05);">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div>
+                    <div style="color: var(--theme-accent); font-weight: 600; font-size: 13px; margin-bottom: 4px;">Email Verification</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">OTP sent to your email.</div>
+                  </div>
+                  <input type="text" class="widget-input" id="settings-security-otp" placeholder="6-digit OTP" maxlength="6" style="width: 150px; text-align: center; letter-spacing: 4px; font-weight: bold;" />
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+              <button class="btn-widget-action" id="btn-settings-save-security">Request OTP to Save</button>
+            </div>
+        </div>
+          
+        <div class="connect-widget-card" style="margin-bottom: 24px; padding: 24px;">
+            <div class="widget-header" style="margin-bottom: 16px;">
+              <h4 style="font-size: 16px;">Linked Minecraft Account</h4>
+            </div>
+            <p class="widget-desc">Automatically log into IDK Connect when you launch the game.</p>
+
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div style="flex: 1;">
+                <div style="margin-bottom: 4px; font-weight: 600; font-size: 13px; color: #fff;">Link Status</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Currently connected account</div>
+              </div>
+              <div id="settings-linked-mc-status" style="font-size: 14px; font-weight: 600; color: white;">Loading...</div>
+            </div>
+
+            <div style="display: flex; gap: 20px; align-items: center; margin-top: 16px;">
+              <div style="flex: 1;">
+                <div style="margin-bottom: 4px; font-weight: 600; font-size: 13px; color: #fff;">Link Launcher Account</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Link your active Ely.by/Microsoft account</div>
+              </div>
+              <button class="btn-widget-action" id="btn-settings-link-minecraft">Link Account</button>
+            </div>
+
+            <div id="settings-error" style="color: var(--accent-red); font-size: 13px; margin-top: 20px; display: none; text-align: center; padding: 10px; background: rgba(239,68,68,0.1); border-radius: 6px;"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>

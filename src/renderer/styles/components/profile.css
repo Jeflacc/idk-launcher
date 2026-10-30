@@ -19,7 +19,7 @@
    ========================================================= */
 
 #view-profile {
-    background: #060709;
+    background: var(--surface-2);
     overflow: hidden;
 }
 
@@ -27,7 +27,7 @@
     height: 100%;
     min-height: 0;
     padding: 0;
-    overflow: visible;
+    overflow: hidden;
 }
 
 .profile-page-content {
@@ -36,7 +36,7 @@
     grid-template-columns: minmax(0, 1fr) 320px;
     gap: 0;
     min-height: 0;
-    overflow: visible;
+    overflow: hidden;
     border-left: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -49,7 +49,7 @@
         );
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     position: relative;
-    overflow: visible;
+    overflow: hidden;
     border-radius: 0;
     border-left: none;
     border-top: none;
@@ -126,10 +126,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 40px 24px 20px;
-    overflow: visible;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 16px 24px 12px;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .profile-stage-heading {
@@ -137,6 +138,7 @@
     flex-direction: column;
     align-items: center;
     width: min(100%, 900px);
+    flex-shrink: 0;
 }
 
 .profile-character-name {
@@ -147,7 +149,7 @@
     font-size: clamp(18px, 2.4vw, 32px);
     line-height: 1.05;
     font-weight: 800;
-    color: #fff;
+    color: var(--color-text-main);
     text-transform: uppercase;
     letter-spacing: 4px;
     text-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);
@@ -161,8 +163,8 @@
 .profile-skin-viewer-wrapper {
     position: relative;
     width: 100%;
-    flex: 1 1 auto;
-    min-height: 0;
+    flex: 1 1 0;
+    min-height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -175,6 +177,11 @@
     transition: opacity 0.5s ease;
     cursor: grab;
     filter: drop-shadow(0 22px 40px rgba(0, 0, 0, 0.6));
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
 }
 
 .profile-skin-viewer-wrapper canvas.is-ready {
@@ -196,17 +203,19 @@
     border: none;
     box-shadow: none;
     padding: 0;
+    flex-shrink: 0;
 }
 
 .profile-stage-bar-combined {
     display: flex;
     align-items: stretch;
-    height: 62px;
+    height: 52px;
     width: 100%;
+    flex-shrink: 0;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     background: var(--theme-accent);
-    color: #fff;
+    color: var(--color-text-main);
     font-family: var(--font-main);
     font-size: 13px;
     font-weight: 700;
@@ -220,7 +229,7 @@
         box-shadow 0.18s ease;
     white-space: nowrap;
     box-shadow:
-        0 4px 16px rgba(var(--theme-accent-rgb), 0.35),
+        0 4px 12px rgba(var(--theme-accent-rgb), 0.35),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
     padding: 0;
     gap: 0;
@@ -238,7 +247,7 @@
     padding: 0 10px;
     border: none;
     background: transparent;
-    color: #fff;
+    color: var(--color-text-main);
     font-family: var(--font-title);
     font-size: 13px;
     font-weight: 700;
@@ -279,7 +288,7 @@
     height: 100%;
     border: none;
     background: rgba(0, 0, 0, 0.15);
-    color: #fff;
+    color: var(--color-text-main);
     cursor: pointer;
     transition: background 0.18s ease;
     padding: 0;
@@ -293,7 +302,7 @@
     background: var(--theme-accent-hover);
     border-color: var(--theme-accent-hover);
     box-shadow:
-        0 6px 22px rgba(var(--theme-accent-rgb), 0.5),
+        0 6px 12px rgba(var(--theme-accent-rgb), 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.25);
     transform: translateY(-1px);
 }
@@ -361,7 +370,7 @@
     font-family: var(--font-title);
     font-size: 17px;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--color-text-main);
     letter-spacing: 1px;
     text-transform: uppercase;
     white-space: nowrap;
@@ -536,7 +545,7 @@
 .profile-friend-name {
     font-size: 11px;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--color-text-main);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -668,20 +677,20 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     border: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     background: transparent;
-    color: #c8cdd4;
+    color: var(--color-text-secondary);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 1.2px;
     text-transform: uppercase;
     text-align: left;
     cursor: pointer;
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
+    transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-instant);
 }
 
 .profile-quick-action:hover {
-    color: #ffffff;
+    color: var(--color-text-main);
     background: rgba(var(--theme-accent-rgb), 0.08);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     border-color: rgba(var(--theme-accent-rgb), 0.4);
     transform: translateY(-1px);
 }
@@ -801,7 +810,8 @@ body:has(#view-profile.active) .nav-tab[data-target="profile"] {
     flex-wrap: wrap;
     gap: 5px;
     justify-content: center;
-    padding: 10px 16px 4px;
+    padding: 6px 16px 2px;
+    flex-shrink: 0;
 }
 
 .pose-btn {

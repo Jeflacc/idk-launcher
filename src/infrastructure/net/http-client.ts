@@ -35,6 +35,9 @@ export const DEFAULT_HOST_ALLOWLIST: ReadonlySet<string> = new Set([
   'skins.ely.by',
   'skinsystem.ely.by',
   'api.ely.by',
+  'ely.by',
+  // authlib-injector (official download API + artifact host)
+  'authlib-injector.yushi.moe',
   // IDK Connect backend (HTTPS via Cloudflare Origin Rules)
   'api.somniac.me',
   // Minotar (Minecraft avatar fallback)
@@ -54,6 +57,11 @@ export const DEFAULT_HOST_ALLOWLIST: ReadonlySet<string> = new Set([
   'maven.neoforged.net',
   'files.minecraftforge.net',
   'meta.beta.fabricmc.net',
+  // Fabric loader libraries (maven repo)
+  'maven.fabricmc.net',
+  // Maven fallback repos (used when a library isn't on the default repo)
+  'search.maven.org',
+  'repo1.maven.org',
 ]);
 
 export interface HttpRequestOptions {
@@ -71,11 +79,15 @@ export interface DownloadFileOptions {
   signal?: AbortSignal;
   /** Expected sha1. If provided and mismatched, throws IntegrityError. */
   expectedSha1?: string;
+  /** Expected sha256. If provided and mismatched, throws IntegrityError. */
+  expectedSha256?: string;
   /** Expected size in bytes. If provided and mismatched, throws. */
   expectedSize?: number;
   /** Called with progress: (downloadedBytes, totalBytes). */
   onProgress?: (downloaded: number, total: number) => void;
   timeoutMs?: number;
+  /** Max time (ms) with zero data received before aborting. Default 60_000. */
+  stallTimeoutMs?: number;
 }
 
 export class HttpClientError extends Error {
@@ -112,7 +124,12 @@ export class HttpClient {
 
   async getJson<T>(url: string, opts: HttpRequestOptions = {}): Promise<T> {
     const buf = await this.request(url, opts);
-    return JSON.parse(buf.toString('utf8')) as T;
+    try {
+      return JSON.parse(buf.toString('utf8')) as T;
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      throw new HttpClientError(`Invalid JSON response from ${url}: ${detail}`, null, url);
+    }
   }
 
   async getText(url: string, opts: HttpRequestOptions = {}): Promise<string> {
@@ -155,7 +172,7 @@ export class HttpClient {
         }
       }
     }
-    throw lastError instanceof Error ? lastError : new HttpClientError('Download failed', null, url);
+    throw this.describeError(lastError, url);
   }
 
   private async downloadFileOnce(
@@ -186,24 +203,43 @@ export class HttpClient {
       };
       opts.signal?.addEventListener('abort', onAbort, { once: true });
 
+      // Watchdog: if the body stalls (no data for `stallTimeoutMs`), abort the
+      // download instead of hanging the launcher forever on a dead connection.
+      let stallTimer: NodeJS.Timeout | null = null;
+      const armStallTimer = () => {
+        if (stallTimer) clearTimeout(stallTimer);
+        stallTimer = setTimeout(() => {
+          body.destroy();
+          stream.destroy();
+          reject(new HttpClientError(`Download stalled (no data for ${Math.round((opts.stallTimeoutMs ?? 60_000) / 1000)}s) [${url}]`, null, url));
+        }, opts.stallTimeoutMs ?? 60_000);
+      };
+      armStallTimer();
+
+      const cleanup = () => {
+        if (stallTimer) clearTimeout(stallTimer);
+        opts.signal?.removeEventListener('abort', onAbort);
+      };
+
       body.on('data', (chunk: Buffer) => {
+        armStallTimer(); // reset the watchdog on every chunk
         downloaded += chunk.length;
         chunks.push(chunk);
         opts.onProgress?.(downloaded, total ?? downloaded);
       });
       body.pipe(stream);
       stream.on('finish', () => {
-        opts.signal?.removeEventListener('abort', onAbort);
+        cleanup();
         resolve();
       });
       stream.on('error', (err) => {
-        opts.signal?.removeEventListener('abort', onAbort);
+        cleanup();
         reject(err);
       });
     });
 
     // Integrity verification (NEVER bypassed).
-    if (opts.expectedSha1 || opts.expectedSize != null) {
+    if (opts.expectedSha1 || opts.expectedSha256 || opts.expectedSize != null) {
       const content = Buffer.concat(chunks);
       if (opts.expectedSize != null && content.length !== opts.expectedSize) {
         throw new IntegrityError(
@@ -215,6 +251,14 @@ export class HttpClient {
         if (actual !== opts.expectedSha1) {
           throw new IntegrityError(
             `Integrity check failed: expected ${opts.expectedSha1}, got ${actual}`,
+          );
+        }
+      }
+      if (opts.expectedSha256) {
+        const actual = createHash('sha256').update(content).digest('hex');
+        if (actual !== opts.expectedSha256) {
+          throw new IntegrityError(
+            `Integrity check failed: expected ${opts.expectedSha256}, got ${actual}`,
           );
         }
       }
@@ -251,7 +295,20 @@ export class HttpClient {
         }
       }
     }
-    throw lastError instanceof Error ? lastError : new HttpClientError('Request failed', null, url);
+    throw this.describeError(lastError, url);
+  }
+
+  /**
+   * Surface the final error with the failing URL attached. Native fetch
+   * failures ("fetch failed", DNS, ECONNRESET, etc.) carry no URL, which made
+   * launch errors like `Launch failed: fetch failed` impossible to diagnose.
+   */
+  private describeError(err: unknown, url: string): Error {
+    if (err instanceof HttpClientError || err instanceof IntegrityError) return err;
+    if (err instanceof Error) {
+      return new HttpClientError(`Network error: ${err.message} [${url}]`, null, url);
+    }
+    return new HttpClientError(`Request failed [${url}]`, null, url);
   }
 
   private async fetchWithRedirects(

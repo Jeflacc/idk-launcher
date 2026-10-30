@@ -153,6 +153,7 @@ function applyLauncherTheme(theme) {
   document.documentElement.dataset.theme = theme;
   document.body.dataset.theme = theme;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_launcher_theme", theme);
 
   const preset = THEME_PRESETS[theme];
   if (preset) {
@@ -163,6 +164,7 @@ function applyLauncherTheme(theme) {
       preset.glowRgb, preset.stageRgb
     );
     state.launcherAccentColor = preset.accent;
+    localStorage.setItem("idk_accent_color", preset.accent);
     // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
   } else if (theme === "custom") {
     const customColor = state.launcherAccentColor || "#4cb837";
@@ -185,6 +187,7 @@ function applyLauncherTheme(theme) {
 function applyCustomAccentColor(hex) {
   state.launcherAccentColor = hex;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_accent_color", hex);
   if (state.launcherTheme === "custom") {
     applyLauncherTheme("custom");
   }
@@ -194,6 +197,7 @@ function applyCustomAccentColor(hex) {
 function applyLauncherBorderRadius(px) {
   state.launcherBorderRadius = px;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_border_radius", px);
   document.documentElement.style.setProperty("--theme-radius", `${px}px`);
   persistVisualSettings();
 }
@@ -201,6 +205,7 @@ function applyLauncherBorderRadius(px) {
 function applyAnimationSpeed(speed) {
   state.launcherAnimationSpeed = speed;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_animation_speed", speed);
   document.documentElement.style.setProperty("--theme-animation-speed", String(speed));
   persistVisualSettings();
 }
@@ -208,6 +213,7 @@ function applyAnimationSpeed(speed) {
 function applyFontScale(scale) {
   state.launcherFontScale = scale;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_font_scale", scale);
   document.documentElement.style.setProperty("--theme-font-scale", String(scale));
   persistVisualSettings();
 }
@@ -215,6 +221,7 @@ function applyFontScale(scale) {
 function applyBlurIntensity(level) {
   state.launcherBlurIntensity = level;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_blur_intensity", level);
   const px = BLUR_LEVELS[level] || 12;
   document.documentElement.style.setProperty("--theme-blur", `${px}px`);
   persistVisualSettings();
@@ -223,6 +230,7 @@ function applyBlurIntensity(level) {
 function applyCompactMode(enabled) {
   state.launcherCompactMode = enabled;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_compact_mode", enabled);
   document.body.classList.toggle("compact-mode", enabled);
   persistVisualSettings();
 }
@@ -230,12 +238,14 @@ function applyCompactMode(enabled) {
 function applyLanguage(lang) {
   state.language = lang;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_language", lang);
   persistVisualSettings();
 }
 
 function applyBackgroundEffect(effect) {
   state.backgroundEffect = effect;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_background_effect", effect);
   document.body.dataset.bgEffect = effect;
   persistVisualSettings();
 }
@@ -243,6 +253,7 @@ function applyBackgroundEffect(effect) {
 function applyBackgroundIntensity(val) {
   state.backgroundIntensity = val;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_background_intensity", val);
   document.body.style.setProperty("--bg-intensity", String(val / 100));
   persistVisualSettings();
 }
@@ -250,42 +261,49 @@ function applyBackgroundIntensity(val) {
 function applyConcurrentDownloads(val) {
   state.concurrentDownloads = val;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_concurrent_downloads", val);
   persistVisualSettings();
 }
 
 function applyConcurrentIO(val) {
   state.concurrentIO = Math.min(val, 8);
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_concurrent_io", val);
   persistVisualSettings();
 }
 
 function applyAutoUpdates(enabled) {
   state.autoUpdates = enabled;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_auto_updates", enabled);
   persistVisualSettings();
 }
 
 function applyDiscordPresence(enabled) {
   state.discordPresence = enabled;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_discord_presence", enabled);
   persistVisualSettings();
 }
 
 function applyBetaUpdates(enabled) {
   state.betaUpdates = enabled;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_beta_updates", enabled);
   persistVisualSettings();
 }
 
 function applyOpenLogsAfterLaunch(enabled) {
   state.openLogsAfterLaunch = enabled;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_open_logs", enabled);
   persistVisualSettings();
 }
 
 function applyAnalytics(enabled) {
   state.analyticsEnabled = enabled;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_analytics", enabled);
   persistVisualSettings();
 }
 
@@ -295,6 +313,7 @@ function applyLauncherUiMode(mode) {
   document.body.dataset.uiMode = nextMode;
   document.body.classList.toggle("ui-advanced", nextMode === "advanced");
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_launcher_ui_mode", nextMode);
 
   document.querySelectorAll("#launcher-ui-modes .pill-switch-option, #adv-launcher-ui-modes .pill-switch-option").forEach((card) => {
     card.classList.toggle("active", card.dataset.uiMode === nextMode);
@@ -310,6 +329,7 @@ function applyLauncherPerformanceMode(mode) {
   state.launcherPerformanceMode = mode;
   document.body.dataset.launcherPerformance = mode;
   // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("idk_launcher_performance_mode", mode);
 
   document.querySelectorAll("#launcher-performance-modes .pill-switch-option, #adv-launcher-performance-modes .pill-switch-option").forEach((card) => {
     card.classList.toggle("active", card.dataset.performanceMode === mode);
@@ -335,7 +355,7 @@ function setMemory(gb) {
   const advMemLabel = document.getElementById("adv-memory-value-label");
   if (advMemSlider) advMemSlider.value = gb;
   if (advMemLabel) advMemLabel.innerText = `${gb} GB`;
-  // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
+  localStorage.setItem("craftlaunch_maxMemory", String(gb));
   document.querySelectorAll(".mem-preset-btn").forEach((b) => {
     b.classList.toggle("active", parseInt(b.dataset.gb) === gb);
   });
@@ -517,7 +537,7 @@ export function initSettingsFeature({ switchView }) {
       compactToggle.addEventListener("change", (e) => applyCompactMode(e.target.checked));
     }
 
-    // Accessibility tab – sync sliders
+    // Accessibility tab â€“ sync sliders
     const accessAnimSlider = document.getElementById("access-animation-speed-slider");
     const accessAnimLabel = document.getElementById("access-animation-speed-value");
     if (accessAnimSlider) {
@@ -1050,24 +1070,6 @@ export function initSettingsFeature({ switchView }) {
       });
     }
 
-    // Advanced duplicate border-radius / compact-mode (cross-sync only; primary controls are in the General tab)
-    const advBorder2 = document.getElementById('adv-border-radius-2');
-    const advBorder2Val = document.getElementById('adv-border-radius-value-2');
-    if (advBorder2) {
-      advBorder2.value = state.launcherBorderRadius;
-      if (advBorder2Val) advBorder2Val.textContent = `${state.launcherBorderRadius}px`;
-      advBorder2.addEventListener('input', (e) => {
-        const v = parseInt(e.target.value);
-        applyLauncherBorderRadius(v);
-        if (advBorder2Val) advBorder2Val.textContent = `${v}px`;
-      });
-    }
-    const advCompact2 = document.getElementById('adv-compact-mode-toggle-2');
-    if (advCompact2) {
-      advCompact2.checked = state.launcherCompactMode;
-      advCompact2.addEventListener('change', (e) => applyCompactMode(e.target.checked));
-    }
-
     // Java path / global args / window size / overlay / custom Minecraft path
     const advJavaPath = document.getElementById('adv-java-path');
     if (advJavaPath) {
@@ -1177,10 +1179,6 @@ export function initSettingsFeature({ switchView }) {
 
     // About tab buttons (reuse bindSharedTools but with the new adv- IDs)
     document.getElementById('adv-btn-open-folder')?.addEventListener('click', () => {
-      if (window.electronAPI) window.electronAPI.openMinecraftFolder();
-      else alert('This feature is only available in the desktop app.');
-    });
-    document.getElementById('adv-btn-open-folder-top')?.addEventListener('click', () => {
       if (window.electronAPI) window.electronAPI.openMinecraftFolder();
       else alert('This feature is only available in the desktop app.');
     });

@@ -56,6 +56,10 @@ body[data-launcher-performance="eco"] .mod-browser {
     border-radius: 0 !important;
 }
 
+body[data-launcher-performance="eco"] .version-item:hover {
+    border-color: transparent !important;
+}
+
 body[data-launcher-performance="eco"] .mods-content-wrapper,
 body[data-launcher-performance="eco"] .settings-content-wrapper,
 body[data-launcher-performance="eco"] .profile-page-content,

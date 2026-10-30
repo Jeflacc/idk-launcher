@@ -47,6 +47,10 @@ export class WindowManager extends EventEmitter {
     const window = new BrowserWindow({
       width: opts.width,
       height: opts.height,
+      minWidth: 1024,
+      minHeight: 600,
+      maxWidth: 1920,
+      maxHeight: 1080,
       frame: !opts.frameless,
       transparent: opts.transparent ?? false,
       alwaysOnTop: opts.alwaysOnTop ?? false,
@@ -54,6 +58,7 @@ export class WindowManager extends EventEmitter {
       resizable: opts.id === 'main',
       show: false,
       backgroundColor: opts.transparent ? '#00000000' : '#0b0f1a',
+      icon: this.isDev ? join(__dirname, '..', '..', 'src', 'renderer', 'public', 'assets', 'logo.png') : undefined,
       webPreferences: {
         preload: this.preloadPath,
         contextIsolation: true,

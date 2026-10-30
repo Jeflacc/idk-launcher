@@ -1,6 +1,6 @@
 import { app } from 'electron';
 import { join, resolve, normalize } from 'node:path';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, rename } from 'node:fs/promises';
 import { existsSync, readdirSync } from 'node:fs';
 
 /**
@@ -37,6 +37,11 @@ export class PathService {
 
   get versions(): string {
     return join(this.minecraftRoot, 'versions');
+  }
+
+  /** v1 bundled Java runtimes (`<root>/runtimes/jre-8`, `jre-21`, `jre-25`, ...). */
+  get runtimes(): string {
+    return join(this.minecraftRoot, 'runtimes');
   }
 
   get libraries(): string {
@@ -80,19 +85,64 @@ export class PathService {
     return join(this.userDataRoot, 'secrets.enc');
   }
 
+  /** v1 path of the authlib-injector jar (Ely.by auth). Shared across instances. */
+  get authlibInjectorJar(): string {
+    return join(this.minecraftRoot, 'authlib-injector.jar');
+  }
+
   get frpcBinary(): string {
     return join(this.userDataRoot, 'frp', process.platform === 'win32' ? 'frpc.exe' : 'frpc');
   }
 
   /**
-   * Resolve a modpack directory by id, enforcing that the resolved path stays
-   * inside the modpacks root (path-traversal protection).
+   * Validate an instance folder name. Folder names are cosmetic — the user can
+   * pick anything that's a legal single path segment (spaces, unicode, etc.).
+   * Only separators, drive/windows-reserved chars, and dot-paths are rejected,
+   * which keeps path traversal blocked.
+   */
+  validateInstanceFolder(folder: string): string {
+    const name = folder.trim();
+    if (!name || name === '.' || name === '..') {
+      throw new Error(`Invalid instance folder: ${folder}`);
+    }
+    if (/[\\/:*?"<>|]/.test(name)) {
+      throw new Error(`Invalid instance folder (reserved characters): ${folder}`);
+    }
+    if (name.length > 120) {
+      throw new Error(`Instance folder name too long (max 120 chars): ${folder}`);
+    }
+    return name;
+  }
+
+  /**
+   * Resolve an instance (modpack/version profile) directory by folder name,
+   * enforcing that the resolved path stays inside the instances root
+   * (path-traversal protection).
    */
   modpackDirectory(modpackId: string): string {
-    if (!/^[a-zA-Z0-9_-]+$/.test(modpackId)) {
-      throw new Error(`Invalid modpack id: ${modpackId}`);
+    const folder = this.validateInstanceFolder(modpackId);
+    return join(this.modpacks, folder);
+  }
+
+  /**
+   * Rename an instance folder on disk. Both names are validated; the target
+   * must not already exist. The caller is responsible for making sure no game
+   * is currently running from this instance (see GameSession/running guard).
+   */
+  async renameInstanceFolder(from: string, to: string): Promise<string> {
+    const oldName = this.validateInstanceFolder(from);
+    const newName = this.validateInstanceFolder(to);
+    if (oldName === newName) return oldName;
+    const oldDir = join(this.modpacks, oldName);
+    const newDir = join(this.modpacks, newName);
+    if (!existsSync(oldDir)) {
+      throw new Error(`Instance folder not found: ${oldName}`);
     }
-    return join(this.modpacks, modpackId);
+    if (existsSync(newDir)) {
+      throw new Error(`An instance named "${newName}" already exists`);
+    }
+    await rename(oldDir, newDir);
+    return newName;
   }
 
   async ensureAll(): Promise<void> {

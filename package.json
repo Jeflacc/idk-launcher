@@ -18,6 +18,8 @@
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check:html-contract": "node scripts/check-html-contract.mjs",
+    "verify:html": "node scripts/verify-html-structure.mjs",
     "dist:win": "npm run build && electron-builder --win",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:linux": "npm run build && electron-builder --linux",
@@ -34,10 +36,14 @@
     "lucide-react": "^1.21.0",
     "minecraft-launcher-core": "^3.18.2",
     "msmc": "^5.0.5",
+    "pixelarticons": "^2.2.0",
     "skinview3d": "^3.4.2",
     "sonner": "^2.0.7",
     "three": "^0.185.0",
     "zod": "^4.0.2"
+  },
+  "overrides": {
+    "three": "$three"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.1",

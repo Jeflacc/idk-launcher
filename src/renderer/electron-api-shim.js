@@ -66,7 +66,17 @@
     openMinecraftFolder: () => idk?.system.openMinecraftFolder() ?? noop(),
     openPath: (folderPath) => idk?.system.openPath(folderPath) ?? noopAsync(),
     getUserDataPath: () => idk?.system.getUserDataPath() ?? Promise.resolve(''),
-    selectMinecraftFolder: () => idk?.system.selectMinecraftFolder() ?? noopAsync(),
+    getVersionsPath: () => idk?.system.getVersionsPath() ?? Promise.resolve(''),
+    getProfilesPath: () => idk?.system.getProfilesPath() ?? Promise.resolve(''),
+    getMinecraftRootPath: () => idk?.system.getMinecraftRootPath() ?? Promise.resolve(''),
+    resolveInstancePath: (id, sub) => idk?.system.resolveInstancePath(id, sub) ?? Promise.resolve({ path: '', exists: false }),
+    openInstanceFolder: (id, sub) => idk?.system.openInstanceFolder(id, sub) ?? noop(),
+    ensureInstance: (id) => idk?.system.ensureInstance(id) ?? Promise.resolve({ directory: '', created: false }),
+    selectMinecraftFolder: async () => {
+      // v1 renderer expects { success, filePath }; the backend returns a raw path or null.
+      const p = await (idk?.system.selectMinecraftFolder() ?? Promise.resolve(null));
+      return { success: !!p, filePath: p };
+    },
     selectImage: () => idk?.system.selectImageFile() ?? noopAsync(),
     selectImageFile: () => idk?.system.selectImageFile() ?? noopAsync(),
     selectModpackZip: () => idk?.system.selectModpackZip() ?? noopAsync(),
@@ -75,11 +85,39 @@
     getPathForFile: stub('getPathForFile', ''),
 
     // ── Settings (v1 wraps in {success, settings}) ──
+    // v1 stores FLAT keys (javaPath, customMinecraftPath, maxMemoryGB...);
+    // v2 stores NESTED keys (java.customPath, general.minecraftRoot, memory.maxMb).
+    // zod strips unknown keys, so flat saves would be silently dropped. This
+    // map translates in both directions so v1 callers persist for real.
+    FLAT_TO_NESTED: {
+      javaPath: { key: 'java', prop: 'customPath' },
+      globalJavaArgs: { key: 'java', prop: 'args', toNested: (v) => (Array.isArray(v) ? v : typeof v === 'string' && v.trim() ? v.trim().split(/\s+/) : []), toFlat: (v) => (Array.isArray(v) ? v.join(' ') : String(v ?? '')) },
+      customMinecraftPath: { key: 'general', prop: 'minecraftRoot' },
+      defaultWindowWidth: { key: 'launch', prop: 'windowWidth', toNested: (v) => parseInt(v) || 854, toFlat: (v) => v },
+      defaultWindowHeight: { key: 'launch', prop: 'windowHeight', toNested: (v) => parseInt(v) || 480, toFlat: (v) => v },
+      defaultFullscreen: { key: 'launch', prop: 'fullscreen', toNested: (v) => v === true || v === 'true', toFlat: (v) => !!v },
+      enableOverlay: { key: 'launch', prop: 'showOverlay', toNested: (v) => v === true || v === 'true', toFlat: (v) => !!v },
+      hideLauncher: { key: 'launch', prop: 'closeOnLaunch', toNested: (v) => v === true || v === 'true', toFlat: (v) => !!v },
+      autoOptimization: { key: 'launch', prop: 'autoOptimize', toNested: (v) => v === true || v === 'true', toFlat: (v) => !!v },
+      maxMemoryGB: { key: 'memory', prop: 'maxMb', toNested: (v) => (parseInt(v) || 4) * 1024, toFlat: (v) => Math.round((parseInt(v) || 4096) / 1024) },
+      concurrentDownloads: { key: 'network', prop: 'concurrentDownloads', toNested: (v) => parseInt(v) || 4, toFlat: (v) => v },
+      language: { key: 'general', prop: 'language' },
+      backgroundEffect: { key: 'general', prop: 'backgroundEffect' },
+      autoUpdates: { key: 'general', prop: 'autoUpdate', toNested: (v) => v === true || v === 'true', toFlat: (v) => !!v },
+      discordPresence: { key: 'general', prop: 'discordRpc', toNested: (v) => v === true || v === 'true', toFlat: (v) => !!v },
+    },
     loadSettings: async () => {
       if (idk) {
         try {
           const settings = await idk.settings.load();
-          return { success: true, settings: settings ?? {} };
+          const flat = {};
+          for (const [flatKey, def] of Object.entries(api.FLAT_TO_NESTED)) {
+            const nestedVal = settings?.[def.key]?.[def.prop];
+            if (nestedVal !== undefined && nestedVal !== null) {
+              flat[flatKey] = def.toFlat ? def.toFlat(nestedVal) : nestedVal;
+            }
+          }
+          return { success: true, settings: { ...(settings ?? {}), ...flat } };
         } catch (e) {
           console.error('[electronAPI shim] loadSettings failed:', e);
           return { success: false, settings: {} };
@@ -89,8 +127,33 @@
     },
     saveSettings: async (s) => {
       if (idk) {
-        try { await idk.settings.save(s); return { success: true }; }
-        catch (e) { console.error('[electronAPI shim] saveSettings failed:', e); return { success: false }; }
+        try {
+          const nested = {};
+          for (const [key, value] of Object.entries(s ?? {})) {
+            const def = api.FLAT_TO_NESTED[key];
+            if (def) {
+              if (!nested[def.key]) nested[def.key] = {};
+              nested[def.key][def.prop] = def.toNested ? def.toNested(value) : value;
+            } else if (typeof key === 'string' && key.includes('.')) {
+              // dot-path keys (e.g. session.currentUser)
+              const [group, ...rest] = key.split('.');
+              if (!nested[group]) nested[group] = {};
+              let cur = nested[group];
+              for (let i = 0; i < rest.length - 1; i++) {
+                cur = cur[rest[i]] ??= {};
+              }
+              cur[rest[rest.length - 1]] = value;
+            } else {
+              // nested v2 keys (session, general, ...) pass through untouched
+              nested[key] = value;
+            }
+          }
+          await idk.settings.save(nested);
+          return { success: true };
+        } catch (e) {
+          console.error('[electronAPI shim] saveSettings failed:', e);
+          return { success: false };
+        }
       }
       return { success: false };
     },
@@ -112,28 +175,44 @@
 
     // ── Launch ──
     // v1 calls launchMinecraft with 12 positional args. v2 expects a single options object.
+    // authProvider is derived from window.IdkApp.state.authMode (the renderer's
+    // source of truth) because authData heuristics break: getMicrosoftAuthData()
+    // returns raw AuthSession and modpacks-feature wraps it in `.data` → null.
+    resolveAuthProvider: (authData) => {
+      const mode = window.IdkApp?.state?.authMode;
+      if (mode === 'elyby' || mode === 'microsoft' || mode === 'offline') return mode;
+      if (authData?.elyby || authData?.provider === 'elyby') return 'elyby';
+      if (authData) return 'microsoft';
+      return 'offline';
+    },
     launchMinecraft: (...args) => {
       const [username, versionId, javaPath, loader, autoOpt, perfRenderer, maxMemory, authData, quickConnect, windowSize, javaArgs, forceUpdate] = args;
-      let authProvider = 'microsoft';
-      if (authData?.elyby || authData?.provider === 'elyby') authProvider = 'elyby';
-      else if (!authData) authProvider = 'offline';
+      const authProvider = api.resolveAuthProvider(authData);
       let memMb = 4096;
       if (maxMemory && typeof maxMemory === 'string') {
         const parsed = parseInt(maxMemory.replace(/[Gg]$/, ''), 10);
         if (!isNaN(parsed)) memMb = parsed * 1024;
+      }
+      // v1 quick-connect is either a string or { host, port } — normalize to string
+      let qc = quickConnect;
+      if (qc && typeof qc === 'object' && qc.host) {
+        qc = qc.port ? `${qc.host}:${qc.port}` : qc.host;
       }
       const opts = {
         versionId: versionId || '',
         loader: (loader || 'vanilla').toLowerCase(),
         javaPath: javaPath || undefined,
         maxMemoryMb: memMb,
-        javaArgs: Array.isArray(javaArgs) ? javaArgs : [],
+        javaArgs: Array.isArray(javaArgs)
+          ? javaArgs
+          : (typeof javaArgs === 'string' && javaArgs.trim() ? javaArgs.trim().split(/\s+/) : []),
         windowSize: windowSize ? { width: windowSize.width || 854, height: windowSize.height || 480 } : undefined,
         autoOptimization: autoOpt !== false,
         performanceRenderer: perfRenderer === true || perfRenderer === 'true',
-        quickConnect: quickConnect || undefined,
+        quickConnect: qc || undefined,
         forceUpdate: forceUpdate === true,
         authProvider,
+        username: username || undefined,
       };
       return idk?.launch.minecraft(opts) ?? Promise.resolve({ success: false });
     },
@@ -146,18 +225,65 @@
     onLaunchWarning: (cb) => idk?.launch.onWarning(cb) ?? noop(),
     onClearJavaPath: (cb) => idk?.launch.onClearJavaPath(cb) ?? noop(),
     onMissingDependencies: listenerStub('onMissingDependencies'),
-    autoInstallDependencies: (missingMods) => idk?.crash.autoInstallDependencies(missingMods) ?? Promise.resolve({ success: false }),
+    autoInstallDependencies: ({ modpackId, missing, mcVersion } = {}) =>
+      idk?.crash.autoInstallDependencies({
+        modpackId,
+        missingMods: Array.isArray(missing) ? missing : [],
+        mcVersion,
+      }) ?? Promise.resolve([]),
 
     // ── Modpacks ──
     scanProfiles: async () => {
       const data = await (idk?.modpack.scanProfiles() ?? []);
-      return { success: true, profiles: Array.isArray(data) ? data : [] };
+      const profiles = Array.isArray(data)
+        ? data.map((p) => ({
+            ...p,
+            // v1 renderer reads `mcVersion`; v2 backend returns `minecraftVersion`
+            mcVersion: p.minecraftVersion ?? p.mcVersion ?? '',
+            minecraftVersion: p.minecraftVersion ?? p.mcVersion ?? '',
+          }))
+        : [];
+      return { success: true, profiles };
     },
     deleteModpackFolder: (modpackId) => idk?.modpack.deleteFolder(modpackId) ?? Promise.resolve({ success: false }),
-    updateModpackProfile: (modpackId, changes) => idk?.modpack.updateProfile(modpackId, changes) ?? Promise.resolve({ success: false }),
+    renameInstance: (modpackId, newName) => idk?.modpack.rename(modpackId, newName) ?? Promise.resolve(''),
+    updateModpackProfile: (args) => {
+      // v1 renderer passes a flat object { modpackId, name, mcVersion, ... };
+      // the preload expects (modpackId, changes).
+      const { modpackId, ...changes } = (args && typeof args === 'object') ? args : { modpackId: args };
+      return idk?.modpack.updateProfile(modpackId, changes) ?? Promise.resolve({ success: false });
+    },
     launchModpack: (modpackId) => {
       const id = typeof modpackId === 'string' ? modpackId : (modpackId?.modpackId || '');
-      idk?.modpack.launch(id, typeof modpackId === 'object' ? modpackId?.quickConnect : undefined);
+      const authData = typeof modpackId === 'object' ? modpackId?.authData : undefined;
+      const authProvider = api.resolveAuthProvider(authData);
+      // v1 quick-connect is either a string or { host, port } — normalize to string
+      let qc = typeof modpackId === 'object' ? modpackId?.quickConnect : undefined;
+      if (qc && typeof qc === 'object' && qc.host) {
+        qc = qc.port ? `${qc.host}:${qc.port}` : qc.host;
+      }
+      // v1 maxMemory is "4G" → v2 wants MB
+      let memMb;
+      const maxMem = typeof modpackId === 'object' ? modpackId?.maxMemory : undefined;
+      if (maxMem && typeof maxMem === 'string') {
+        const parsed = parseInt(maxMem.replace(/[Gg]$/, ''), 10);
+        if (!isNaN(parsed)) memMb = parsed * 1024;
+      }
+      let winSize;
+      const ws = typeof modpackId === 'object' ? modpackId?.windowSize : undefined;
+      if (ws && ws.width && ws.height) winSize = { width: ws.width, height: ws.height };
+      // v1 globalJavaArgs is a string
+      const gja = typeof modpackId === 'object' ? modpackId?.globalJavaArgs : undefined;
+      const jArgs = Array.isArray(gja)
+        ? gja
+        : (typeof gja === 'string' && gja.trim() ? gja.trim().split(/\s+/) : undefined);
+      idk?.modpack.launch(id, {
+        quickConnect: qc || undefined,
+        authProvider,
+        maxMemoryMb: memMb,
+        windowSize: winSize,
+        javaArgs: jArgs,
+      });
       return Promise.resolve({ success: true });
     },
     downloadModrinthModpack: (projectId, minecraftVersion, loader, name) =>
@@ -167,9 +293,16 @@
     unzipCurseforge: (zipPath, name) => idk?.modpack.importZip(zipPath, name) ?? Promise.resolve({ success: false }),
 
     // ── Versions ──
-    scanDownloadedVersions: () => idk?.version.scanDownloaded() ?? Promise.resolve([]),
-    downloadVersion: (versionId, loader, loaderVersion) =>
-      idk?.version.download(versionId, loader, loaderVersion) ?? Promise.resolve({ success: false }),
+    scanDownloadedVersions: async () => {
+      // v1 renderer expects { success, versions, versionDetails }; v2 backend now returns exactly that.
+      const data = await (idk?.version.scanDownloaded() ?? { success: false, versions: [], versionDetails: {} });
+      return data;
+    },
+    downloadVersion: (versionId, loader, loaderVersion) => {
+      // v1 renderer passes an object ({ version: id }); preload expects separate args.
+      const args = (versionId && typeof versionId === 'object') ? versionId : { versionId, loader, loaderVersion };
+      return idk?.version.download(args.versionId ?? args.version ?? '', args.loader, args.loaderVersion) ?? Promise.resolve({ success: false });
+    },
     cancelDownload: (versionId) => idk?.version.cancelDownload(versionId) ?? Promise.resolve({ success: false }),
     pauseDownload: (downloadId) => idk?.download.pause(downloadId) ?? Promise.resolve({ success: false }),
     resumeDownload: (downloadId) => idk?.download.resume(downloadId) ?? Promise.resolve({ success: false }),
@@ -189,22 +322,23 @@
     resolveSkinTextureBase64: (username, authMode) => idk?.skin.resolveSkinTextureBase64(username, authMode) ?? Promise.resolve({ base64: '', source: 'steve' }),
 
     // ── Mods / resources ──
-    installMod: (modpackId, projectId, versionId, downloadUrl, fileName, type = 'mod') =>
-      idk?.mod.installFromBrowser(modpackId, projectId, versionId, downloadUrl, fileName, type) ??
-      Promise.resolve({ success: false }),
-    installModToVersion: (versionId, projectId, versionIdTarget, downloadUrl, fileName) =>
-      idk?.mod.installToVersion(versionId, projectId, versionIdTarget, downloadUrl, fileName) ??
-      Promise.resolve({ success: false }),
-    installResourcepack: (modpackId, projectId, versionId, downloadUrl, fileName) =>
-      idk?.mod.installResourcepack(modpackId, projectId, versionId, downloadUrl, fileName) ??
-      Promise.resolve({ success: false }),
-    installShader: (modpackId, projectId, versionId, downloadUrl, fileName) =>
-      idk?.mod.installShader(modpackId, projectId, versionId, downloadUrl, fileName) ??
-      Promise.resolve({ success: false }),
-    importExternalFiles: (modpackId, filePaths) =>
-      idk?.mod.importExternalFiles(modpackId, filePaths) ??
-      Promise.resolve({ success: false }),
-    searchMods: (query, loader, projectType, limit) => idk?.mod.search(query, loader, projectType, limit) ?? Promise.resolve({ hits: [], total_hits: 0 }),
+    installMod: (args) =>
+      idk?.mod.installFromBrowser(args) ?? Promise.resolve({ success: false }),
+    installModToVersion: (args) =>
+      idk?.mod.installToVersion(args) ?? Promise.resolve({ success: false }),
+    installResourcepack: (args) =>
+      idk?.mod.installResourcepack(args) ?? Promise.resolve({ success: false }),
+    installShader: (args) =>
+      idk?.mod.installShader(args) ?? Promise.resolve({ success: false }),
+    importExternalFiles: (args) =>
+      idk?.mod.importExternalFiles(args) ?? Promise.resolve({ success: false }),
+    removeMod: (args) =>
+      idk?.mod.remove(args) ?? Promise.resolve({ success: false }),
+    removeResourcepack: (args) =>
+      idk?.mod.removeResourcepack(args) ?? Promise.resolve({ success: false }),
+    removeShader: (args) =>
+      idk?.mod.removeShader(args) ?? Promise.resolve({ success: false }),
+    searchMods: (query, loader, projectType, limit, offset, categories, gameVersion) => idk?.mod.search(query, loader, projectType, limit, offset, categories, gameVersion) ?? Promise.resolve({ hits: [], total_hits: 0 }),
     getModProject: (projectId) => idk?.mod.getProject(projectId) ?? Promise.resolve(null),
     getModVersions: (projectId, gameVersion, loader) => idk?.mod.getVersions(projectId, gameVersion, loader) ?? Promise.resolve([]),
     getModDependencies: (projectId) => idk?.mod.getDependencies(projectId) ?? Promise.resolve([]),
@@ -265,7 +399,11 @@
 
     // ── Achievements ──
     scanAllAchievements: () => idk?.achievements.scanAll() ?? Promise.resolve([]),
-    scanProfileAchievements: (modpackId) => idk?.achievements.scanProfile(modpackId) ?? Promise.resolve([]),
+    scanProfileAchievements: (args) => {
+      // v1 renderer passes { modpackId, versionId }; preload expects a plain string.
+      const modpackId = (args && typeof args === 'object') ? (args.modpackId ?? '') : (args ?? '');
+      return idk?.achievements.scanProfile(modpackId) ?? Promise.resolve([]);
+    },
 
     // ── Overlay ──
     getOverlayData: () => idk?.overlay.getOverlayData() ?? Promise.resolve(null),
@@ -273,7 +411,23 @@
     onToggleOverlay: listenerStub('onToggleOverlay'),
 
     // ── Updates ──
-    checkForUpdates: () => idk?.update.check() ?? Promise.resolve(null),
+    checkForUpdates: async () => {
+      // electron-updater returns UpdateCheckResult ({ isUpdateAvailable, updateInfo });
+      // v1 renderer expects { updateAvailable, latestVersion }.
+      try {
+        const res = await (idk?.update.check() ?? Promise.resolve(null));
+        if (!res) return { updateAvailable: false };
+        const info = res.updateInfo;
+        return {
+          updateAvailable: !!res.isUpdateAvailable,
+          latestVersion: info?.version,
+          releaseNotes: info?.releaseNotes,
+        };
+      } catch {
+        // Not packed or no updater configured — v1 treated this as "no update".
+        return { updateAvailable: false };
+      }
+    },
 
     // ── Java path (v1 had a dedicated channel) ──
     onClearJavaPath: listenerStub('onClearJavaPath'),

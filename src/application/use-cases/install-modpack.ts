@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { randomUUID } from 'node:crypto';
 import type { ModpackRepository } from '@/infrastructure/fs/modpack-repository';
 import type { ModrinthClient } from '@/infrastructure/net/api/modrinth-client';
 import type { DownloadQueue } from '@/infrastructure/download/download-queue';
@@ -16,6 +15,8 @@ export interface InstallModpackInput {
  * Install a modpack from Modrinth: download the mrpack, create the sandboxed
  * profile directory, and register it. Replaces the 1,202-line `mpAddItem`
  * inside v1's modpacks-feature.js.
+ *
+ * The instance folder is the modpack's name (sanitized + deduped) — not a UUID.
  */
 export class InstallModpack {
   constructor(
@@ -32,9 +33,9 @@ export class InstallModpack {
     const file = version.files.find((f) => f.primary) ?? version.files[0];
     if (!file) throw new Error('No downloadable file found');
 
-    const modpackId = randomUUID();
-    await this.repo.writeProfile(modpackId, {
-      id: modpackId,
+    const folder = await this.repo.uniqueFolderForName(input.name);
+    await this.repo.writeProfile(folder, {
+      id: folder,
       name: input.name,
       description: '',
       minecraftVersion: input.minecraftVersion,
@@ -46,13 +47,13 @@ export class InstallModpack {
       mods: [],
     });
 
-    const downloadId = `modpack:${modpackId}`;
+    const downloadId = `modpack:${folder}`;
     await this.queue.start(
       downloadId,
       [
         {
           url: file.url,
-          targetPath: join(this.repo['paths'].modpackDirectory(modpackId), `${modpackId}.mrpack`),
+          targetPath: join(this.repo['paths'].modpackDirectory(folder), `${folder}.mrpack`),
           filename: file.filename,
           size: file.size,
           sha1: file.hashes.sha1,
@@ -62,6 +63,6 @@ export class InstallModpack {
       1,
     );
 
-    return modpackId;
+    return folder;
   }
 }

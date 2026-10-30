@@ -1,0 +1,26 @@
+<!-- Version Download Modal -->
+<div class="mp-create-modal" id="mp-all-versions-modal">
+  <div class="mp-create-box mp-all-versions-box">
+    <div class="mp-modal-header">
+      <h3>All Minecraft Versions</h3>
+      <button class="mp-modal-close" id="btn-close-all-versions-x" title="Close">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z"/></svg>
+      </button>
+    </div>
+    <div class="pill-switch mp-dl-tabs">
+      <button class="pill-switch-option active" id="mp-dl-tab-release" data-dl-tab="release">Release</button>
+      <button class="pill-switch-option" id="mp-dl-tab-snapshot" data-dl-tab="snapshot">Snapshots</button>
+      <button class="pill-switch-option" id="mp-dl-tab-old" data-dl-tab="old">Historical</button>
+    </div>
+    <div class="mp-dl-search">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M22 22h-2v-2h2v2Zm-2-2h-2v-2h2v2Zm-6-2H6v-2h8v2Zm4 0h-2v-2h2v2ZM6 16H4v-2h2v2Zm10 0h-2v-2h2v2ZM4 14H2V6h2v8Zm14 0h-2V6h2v8ZM6 6H4V4h2v2Zm10 0h-2V4h2v2Zm-2-2H6V2h8v2Z"/></svg>
+      <input type="text" id="mp-dl-search" placeholder="Search versions..." />
+    </div>
+    <div class="mp-all-versions-list" id="mp-all-version-list">
+      <!-- Injected by JS -->
+    </div>
+    <div style="display:flex;gap:10px;margin-top:12px;">
+      <button class="modal-btn" id="btn-close-all-versions" style="flex:1;">Close</button>
+    </div>
+  </div>
+</div>

@@ -36,6 +36,7 @@ export interface IpcDeps {
   modpackRepo: import('@/infrastructure/fs/modpack-repository').ModpackRepository;
   downloadQueue: import('@/infrastructure/download/download-queue').DownloadQueue;
   paths: import('@/infrastructure/fs/path-service').PathService;
+  launchService: import('@/infrastructure/minecraft/launch-service').LaunchService;
   authMicrosoft: import('@/application/use-cases/authenticate-microsoft').AuthenticateMicrosoft;
   authElyby: import('@/application/use-cases/authenticate-elyby').AuthenticateElyby;
   launchGame: import('@/application/use-cases/launch-game').LaunchGame;
@@ -51,16 +52,16 @@ export function registerAllIpcHandlers(deps: IpcDeps): void {
   forwardWindowState(deps.windows);
   registerAuthHandlers(deps.windows, deps.authMicrosoft, deps.authElyby, deps.elyby, deps.secrets);
   registerLaunchHandlers(deps.windows, deps.launchGame);
-  registerModpackHandlers(deps.windows, deps.modpackRepo, deps.modrinth, deps.installModpack, deps.exportModpack, deps.importModpack, deps.launchGame);
+  registerModpackHandlers(deps.windows, deps.modpackRepo, deps.modrinth, deps.installModpack, deps.exportModpack, deps.importModpack, deps.launchGame, deps.launchService);
   registerModHandlers(deps.windows, deps.modrinth, deps.curseforge, deps.modpackRepo, deps.http, deps.downloadQueue, deps.paths);
   registerDownloadHandlers(deps.windows, deps.downloadQueue);
   registerSettingsHandlers(deps.windows, deps.settingsStore);
-  registerVersionHandlers(deps.windows, deps.mojang, deps.downloadQueue, deps.paths, deps.modrinth);
+  registerVersionHandlers(deps.windows, deps.mojang, deps.downloadQueue, deps.paths, deps.modrinth, deps.modpackRepo, deps.http);
   registerUpdateHandlers(deps.windows, deps.updater);
   registerTunnelHandlers(deps.windows, deps.tunnel);
   registerSkinHandlers(deps.windows, deps.http, deps.idkConnect, deps.minotar, deps.elyby, deps.secrets);
-  registerCrashHandlers(deps.windows);
-  registerAchievementsHandlers(deps.windows, deps.modpackRepo);
+  registerCrashHandlers(deps.windows, deps.modrinth, deps.paths, deps.downloadQueue);
+  registerAchievementsHandlers(deps.windows, deps.modpackRepo, deps.paths);
   registerOverlayHandlers(deps.windows);
   registerContentHandlers(deps.windows, deps.mojangContent, deps.curseforge);
   registerIdkConnectHandlers(deps.windows, deps.idkConnect, deps.secrets);

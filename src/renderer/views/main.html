@@ -1,0 +1,227 @@
+<!-- MAIN VIEW -->
+<div id="view-main" class="view">
+  <div class="main-hero-banner">
+    <video autoplay muted loop playsinline class="hero-video">
+      <source src="background.mp4" type="video/mp4">
+    </video>
+    <div class="hero-overlay"></div>
+
+    <!-- Integrated invisible navigation trigger links to keep original JS functional -->
+    <div id="btn-open-mods" style="display:none;"></div>
+    <div id="btn-open-settings" style="display:none;"></div>
+
+    <div class="main-center">
+      <div class="advanced-home-player" aria-hidden="true">
+        <h1 class="advanced-home-username" id="advanced-home-username">PLAYER</h1>
+        <div class="advanced-home-skin-viewer-wrapper" id="advanced-home-skin-stage" style="display:flex; justify-content:center; align-items:center; overflow:hidden;">
+          <div class="advanced-home-skin-loading" id="advanced-home-skin-loading">Loading skin…</div>
+          <canvas id="advanced-home-skin-canvas"></canvas>
+        </div>
+      </div>
+      <img src="java.png" alt="Minecraft Java Edition" class="mc-logo" />
+    </div>
+
+    <div class="bottom-bar">
+      <div class="controls-left">
+        <div class="custom-select-wrapper">
+          <div class="custom-select" id="version-dropdown">
+            <div class="custom-select-trigger">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                <svg class="grass-icon" viewBox="0 0 24 24" width="16" height="16"><path d="M2 2h20v4H2z" fill="#5c8e32"/><path d="M2 6h20v16H2z" fill="#866043"/><path d="M2 6l3 3 3-3 3 3 3-3 3 3 3-3 3 3v2l-3-3-3 3-3-3-3 3-3-3-3 3-3-3z" fill="#4d7729"/></svg>
+                <span id="selected-version-text">Loading versions...</span>
+              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg>
+            </div>
+            <div class="custom-options">
+              <div class="options-filters">
+                <div class="version-tabs">
+                  <button class="version-tab active" data-tab="all">All Versions</button>
+                  <button class="version-tab" data-tab="downloaded">Downloaded</button>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="show-snapshots" />
+                  <div class="switch"></div>
+                  Snapshots
+                </label>
+
+                <label class="toggle-switch">
+                  <input type="checkbox" id="show-historical" />
+                  <div class="switch"></div>
+                  Historical
+                </label>
+              </div>
+              <div class="options-list" id="options-list">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="refresh-versions-btn" id="btn-refresh-versions" title="Refresh downloaded versions">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M16 4h2v6h-2zm-2-2h2v2h-2zm0 2h2v8h-2zM4 8H2v5h2z"/><path d="M4 6h16v2H4zm4 14H6v-6h2zm2 2H8v-2h2zm0-2H8v-8h2zm10-4h2v-5h-2z"/><path d="M20 18H4v-2h16z"/></svg>
+        </button>
+
+        <div class="custom-select-wrapper" style="width: 200px;">
+          <div class="custom-select" id="loader-dropdown">
+            <div class="custom-select-trigger" id="loader-trigger">
+              <span id="selected-loader-text" style="display: flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M14 4h4v2h-4zm-4-2h4v2h-4zM6 8h4v2H6zm0 10h4v2H6zm4-8h4v2h-4zm0 10h4v2h-4zm4-12h4v2h-4zm0 10h4v2h-4zM6 4h4v2H6zM2 6h4v2H2zm0 10h4v2H2zM18 6h4v2h-4zm0 10h4v2h-4z"/><path d="M2 6h2v12H2zm18 0h2v12h-2zm-8 6h2v8h-2z"/></svg>
+                Vanilla
+              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg>
+            </div>
+            <div class="custom-options">
+              <div class="options-list">
+                <div class="custom-option selected" data-loader="Vanilla">
+                  <span style="display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M14 4h4v2h-4zm-4-2h4v2h-4zM6 8h4v2H6zm0 10h4v2H6zm4-8h4v2h-4zm0 10h4v2h-4zm4-12h4v2h-4zm0 10h4v2h-4zM6 4h4v2H6zM2 6h4v2H2zm0 10h4v2H2zM18 6h4v2h-4zm0 10h4v2h-4z"/><path d="M2 6h2v12H2zm18 0h2v12h-2zm-8 6h2v8h-2z"/></svg> Vanilla</span>
+                </div>
+                <div class="custom-option" data-loader="Forge">
+                  <span style="display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M2 11h20v2H2zm0 2h2v8H2zm2 8h16v2H4zm16-8h2v8h-2zM9 15h6v2H9zM4 8h2v3H4zm2-2h6v2H6zm6 2h2v3h-2zM8 4h2v2H8zm10 0h2v7h-2zm-8-2h8v2h-8z"/></svg> Forge</span>
+                </div>
+                <div class="custom-option" data-loader="Fabric">
+                  <span style="display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M1 17h2v4H1zm14 0h2v4h-2zM3 21h4v2H3zm14 0h4v2h-4zM3 15h4v2H3zm14 0h4v2h-4zM7 17h2v4H7zm14 0h2v4h-2zM7 15h2v2H7zm8 0h2v2h-2zm-6-2h2v2H9zm6 0h-2v2h2zm-4-2h2v2h-2z"/><path d="M13 11h-2v2h2zm0-2h2v2h-2zm-2 0H9v2h2zm4-2h2v2h-2zM9 7H7v2h2zm8-2h2v2h-2zM7 5H5v2h2zm12-2h2v2h-2zM5 3H3v2h2z"/></svg> Fabric</span>
+                </div>
+                <div class="custom-option" data-loader="NeoForge">
+                  <span style="display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M2 11h20v2H2zm0 2h2v8H2zm2 8h16v2H4zm16-8h2v8h-2zM9 15h6v2H9zM4 8h2v3H4zm2-2h6v2H6zm6 2h2v3h-2zM8 4h2v2H8zm10 0h2v7h-2zm-8-2h8v2h-8z"/></svg> NeoForge</span>
+                </div>
+                <div class="custom-option" data-loader="Quilt">
+                  <span style="display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zM4 8h16v2H4zm0 6h16v2H4z"/><path d="M8 4h2v16H8zm6 0h2v16h-2z"/></svg> Quilt</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-right">
+        <div class="play-container">
+          <div class="play-button-wrapper" id="play-btn-wrapper" style="position: relative; z-index: 5;">
+            <button class="play-button" id="play-btn" data-status="Ready to play">PLAY</button>
+            <button class="play-dropdown-trigger" id="play-dropdown-trigger" aria-label="More options">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg>
+            </button>
+            <div class="play-dropdown" id="play-dropdown">
+              <div class="play-dd-setup" id="play-dd-setup">
+                <span class="play-dd-setup-label">Current Setup</span>
+                <span class="play-dd-setup-value" id="play-dd-setup-value">—</span>
+              </div>
+
+              <div class="play-dropdown-divider"></div>
+
+              <div class="play-dd-section">
+                <div class="play-dd-section-header">Loader</div>
+                <div class="play-dd-loader-list" id="play-dd-loader-list">
+                  <button class="play-dd-loader-btn" data-loader="Vanilla">Vanilla</button>
+                  <button class="play-dd-loader-btn" data-loader="Forge">Forge</button>
+                  <button class="play-dd-loader-btn" data-loader="Fabric">Fabric</button>
+                  <button class="play-dd-loader-btn" data-loader="NeoForge">NeoForge</button>
+                  <button class="play-dd-loader-btn" data-loader="Quilt">Quilt</button>
+                </div>
+              </div>
+
+              <div class="play-dropdown-divider"></div>
+
+              <div class="play-dd-section">
+                <div class="play-dd-section-header">Version</div>
+                <div class="play-dd-version-list" id="play-dd-version-list">
+                  <!-- Injected by JS -->
+                </div>
+              </div>
+
+              <div class="play-dropdown-divider"></div>
+
+              <div class="play-dd-folder-actions">
+                <button class="play-dropdown-item" id="play-dd-open-version-folder" data-folder-action="version">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h6v2H4zm0 14h16v2H4zM20 8h2v10h-2zM2 6h2v12H2zm8 0h10v2H10z"/></svg>
+                  Version
+                </button>
+                <button class="play-dropdown-item" id="play-dd-open-mods-folder" data-folder-action="mods">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h6v2H4zm0 14h16v2H4zM20 8h2v10h-2zM2 6h2v12H2zm8 0h10v2H10z"/></svg>
+                  Mods
+                </button>
+                <button class="play-dropdown-item" id="play-dd-open-root-folder" data-folder-action="root">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h6v2H4zm0 14h16v2H4zM20 8h2v10h-2zM2 6h2v12H2zm8 0h10v2H10z"/></svg>
+                  Root
+                </button>
+              </div>
+            </div>
+
+            <div class="play-folder-menu" id="play-folder-menu">
+              <button class="play-folder-trigger" id="play-folder-trigger" aria-label="Open folders" aria-haspopup="menu" aria-expanded="false">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg>
+              </button>
+              <div class="play-folder-panel" role="menu" aria-label="Open folders">
+                <button class="play-folder-item" role="menuitem" data-action="root">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h6v2H4zm0 14h16v2H4zM20 8h2v10h-2zM2 6h2v12H2zm8 0h10v2H10z"/></svg>
+                  Open Root Dir
+                </button>
+                <button class="play-folder-item" role="menuitem" data-action="version">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h6v2H4zm0 14h16v2H4zM20 8h2v10h-2zM2 6h2v12H2zm8 0h10v2H10z"/></svg>
+                  Open Version Dir
+                </button>
+                <button class="play-folder-item" role="menuitem" data-action="mods">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h6v2H4zm0 14h16v2H4zM20 8h2v10h-2zM2 6h2v12H2zm8 0h10v2H10z"/></svg>
+                  Open Mods Dir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="advanced-ad-banner" id="ad-below-play-advanced" aria-label="Featured server advertisement">
+        <img class="advanced-ad-icon" src="lunasmp.png" alt="Server Logo" />
+        <div class="advanced-ad-text">
+          <span class="advanced-ad-label">Featured Server</span>
+          <span class="advanced-ad-title">LunaSMP</span>
+          <span class="advanced-ad-ip">play.somniac.me</span>
+        </div>
+        <button class="advanced-ad-join" type="button" onclick="if(window.IdkApp) { window.IdkApp.state.quickConnectTarget = { host: 'play.somniac.me' }; window.IdkApp.actions.playGame(); } else { alert('Launcher not ready'); }">Join</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="details-section">
+    <div class="details-content">
+
+      <div class="featured-server-banner featured-server-banner--compact" id="ad-below-play">
+        <img class="featured-server-icon" src="lunasmp.png" alt="Server Logo" />
+        <div class="featured-server-text">
+          <span class="featured-server-title">LunaSMP</span>
+          <span class="featured-server-ip">play.somniac.me</span>
+        </div>
+        <button class="featured-join-btn" onclick="if(window.IdkApp) { window.IdkApp.state.quickConnectTarget = { host: 'play.somniac.me' }; window.IdkApp.actions.playGame(); } else { alert('Launcher not ready'); }">Join</button>
+      </div>
+
+      <div class="news-section">
+        <div class="section-header">
+          <h2 class="section-title">What's New</h2>
+          <div class="section-decoration">
+            <div class="decoration-block"></div>
+            <div class="decoration-block"></div>
+            <div class="decoration-block"></div>
+          </div>
+        </div>
+
+        <div class="news-grid" id="mojang-news-grid">
+          <div style="padding: 48px 24px; text-align: center; color: var(--text-muted); width: 100%; grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+            <span class="spinner"></span>
+            <span style="font-family: 'Mojang', 'Minecraftia', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.7;">Loading news…</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Empty-state for the play dropdown version list (cloned by launch-feature) -->
+  <template id="play-dd-empty-template">
+    <div style="padding:12px 8px;text-align:center;color:rgba(255,255,255,0.5);font-size:11px;line-height:1.5;">
+      No versions installed yet.<br>
+      <span id="play-dd-go-modpacks" data-ref="goBtn" style="display:inline-block;margin-top:8px;padding:6px 14px;border-radius:4px;background:rgba(var(--theme-accent-rgb),0.15);color:var(--theme-accent-bright);cursor:pointer;font-family:var(--font-title);font-size:11px;letter-spacing:0.5px;">
+        Download a Version
+      </span>
+    </div>
+  </template>
+</div>

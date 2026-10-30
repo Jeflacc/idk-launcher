@@ -6,10 +6,11 @@ This document describes the architecture of the IDK Launcher renderer
 ## Overview
 
 The renderer is a **vanilla JavaScript** application — no React, no framework,
-no build-time transpilation beyond Vite's ES module bundling. All DOM is
-generated at runtime by `app/app-shell.js`, which injects a single large HTML
-template into `#app`. Feature modules then query the DOM by ID/class and bind
-event listeners.
+no build-time transpilation beyond Vite's ES module bundling. All DOM comes from
+**static HTML files** (`partials/`, `views/`, `modals/`) loaded at startup by
+`core/html-loader.js` (`loadAppShell()`), which appends each file's root element
+into the corresponding container in `index.html`. Feature modules then query the
+DOM by ID/class and bind event listeners.
 
 ## Directory Structure
 
@@ -29,16 +30,18 @@ src/renderer/
 ├── style.css               # Main component & feature stylesheet
 ├── advanced-theme.css      # body.ui-advanced mode overrides (cyberpunk shell)
 │
-├── app/
-│   └── app-shell.js        # Renders the entire DOM into #app (single template)
-│
 ├── core/                   # Shared utilities and state
 │   ├── app-state.js        #   Singleton `state` + `actions` objects
+│   ├── html-loader.js      #   loadPartial() + loadAppShell() — loads partials/ views/ modals/
 │   ├── safe-parse.js       #   safeParse() + esc() HTML-escape helpers
 │   ├── dom.js              #   $, $$, byId, on, escapeHtml, fromHtml, waitForElement
 │   ├── settings-migration.js # Migrates v1 localStorage → v2 backend settings
 │   ├── skin-texture.js     #   Minecraft skin URL resolution + canvas rendering
 │   └── views.js            #   View controller (switchView, returnView tracking)
+│
+├── partials/               # Static shell partials (background, top-bar, chat-panel, error/warning/download)
+├── views/                  # Static view HTML (login, main, settings, profile, mods, idk-connect)
+├── modals/                 # Static modal HTML (16 files, incl. launch-overlay, crash-analyzer)
 │
 ├── components/             # Reusable UI components (singleton pattern)
 │   ├── confirm-dialog.js   #   Promise-based confirm modal

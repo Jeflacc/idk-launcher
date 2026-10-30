@@ -1,4 +1,5 @@
 import { state, actions } from "../../core/app-state.js";
+import { esc } from "../../core/safe-parse.js";
 import {
   resolveSkinTextureBase64,
   loadAvatarForUser,
@@ -8,43 +9,10 @@ let skinViewerInstance = null;
 let skinResizeObserver = null;
 let homeSkinViewerInstance = null;
 let homeSkinResizeObserver = null;
+let homeSkinInitSeq = 0;
+let homeSkinCanvasHad2d = false;
+let profileSkinCanvasHad2d = false;
 let profileReturnView = "main";
-
-// Some GPUs (notably older Intel iGPUs) reject WebGL2 3D texture uploads
-// with FLIP_Y or PREMULTIPLY_ALPHA. Detect this once and skip the 3D
-// viewer entirely on affected devices.
-let _3dTextureSupport = null;
-function canUse3DTextures() {
-  if (_3dTextureSupport !== null) return _3dTextureSupport;
-  try {
-    const testCanvas = document.createElement("canvas");
-    const gl = testCanvas.getContext("webgl2");
-    if (!gl) {
-      _3dTextureSupport = false;
-      return false;
-    }
-    const tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_3D, tex);
-    gl.texImage3D(
-      gl.TEXTURE_3D,
-      0,
-      gl.RGBA,
-      2,
-      2,
-      2,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      new Uint8Array(2 * 2 * 2 * 4),
-    );
-    const err = gl.getError();
-    gl.deleteTexture(tex);
-    _3dTextureSupport = err === gl.NO_ERROR;
-  } catch (_) {
-    _3dTextureSupport = false;
-  }
-  return _3dTextureSupport;
-}
 
 function formatPlaytimeHours() {
   const totalMs = parseInt(localStorage.getItem("idk_playtime") || "0", 10);
@@ -214,10 +182,10 @@ function setupPoseSelector(viewer) {
 }
 
 function fitHomeCanvasToStage(canvasEl, stageEl) {
-  const maxW = 400;
-  const maxH = 600;
-  const width = Math.max(200, Math.min(maxW, stageEl.clientWidth));
-  const height = Math.max(300, Math.min(maxH, stageEl.clientHeight));
+  const maxW = 600;
+  const maxH = 800;
+  const width = Math.max(300, Math.min(maxW, stageEl.clientWidth));
+  const height = Math.max(400, Math.min(maxH, stageEl.clientHeight));
   canvasEl.style.width = `${width}px`;
   canvasEl.style.height = `${height}px`;
   canvasEl.style.margin = "0 auto";
@@ -227,7 +195,7 @@ function fitHomeCanvasToStage(canvasEl, stageEl) {
 
 function applyHomeViewerCamera(viewer) {
   viewer.autoRotate = false;
-  viewer.autoRotateSpeed = 0.6;
+  viewer.autoRotateSpeed = 0.8;
 
   if (viewer.controls) {
     viewer.controls.enableRotate = true;
@@ -236,14 +204,15 @@ function applyHomeViewerCamera(viewer) {
   }
 
   if (viewer.camera) {
-    viewer.camera.fov = 24;
-    viewer.camera.position.set(0, 13.5, 20);
-    viewer.camera.lookAt(0, 12.5, 0);
+    viewer.camera.fov = 16;
+    viewer.camera.zoom = 0.92;
+    viewer.camera.position.set(2, 8, 30);
+    viewer.camera.lookAt(0, 0, 0);
     viewer.camera.updateProjectionMatrix();
   }
 
   if (viewer.playerObject) {
-    viewer.playerObject.rotation.y = -0.28;
+    viewer.playerObject.rotation.y = 0.3;
   }
 
   if (typeof viewer.zoom === "number") {
@@ -252,12 +221,13 @@ function applyHomeViewerCamera(viewer) {
 }
 
 async function initHomeSkinViewer() {
+  const seq = ++homeSkinInitSeq;
   const isAdvanced = document.body.dataset.uiMode === "advanced";
   const isMainActive = document
     .getElementById("view-main")
     ?.classList.contains("active");
   const stage = document.getElementById("advanced-home-skin-stage");
-  const canvasEl = document.getElementById("advanced-home-skin-canvas");
+  let canvasEl = document.getElementById("advanced-home-skin-canvas");
   const loaderEl = document.getElementById("advanced-home-skin-loading");
   const nameEl = document.getElementById("advanced-home-username");
 
@@ -271,15 +241,37 @@ async function initHomeSkinViewer() {
 
   disposeHomeSkinViewer();
 
+  // Only swap in a fresh canvas when a previous 2D fallback painted the
+  // current one (a canvas cannot switch from 2d to webgl). Cloning on every
+  // init instead leaks WebGL contexts and exhausts the browser's context
+  // budget, which is what actually forces the 3D viewer into the 2D
+  // fallback on repeated visits to the home view.
+  if (homeSkinCanvasHad2d) {
+    const freshCanvas = canvasEl.cloneNode(false);
+    if (canvasEl.parentNode) {
+      canvasEl.parentNode.replaceChild(freshCanvas, canvasEl);
+      canvasEl = freshCanvas;
+    }
+  }
+
   if (loaderEl) {
     loaderEl.style.display = "flex";
     loaderEl.textContent = "Loading skin…";
   }
   canvasEl.classList.remove("is-ready");
 
-  const username = state.currentUser || "Steve";
-  const skinResult = await resolveSkinTextureBase64(username, state.authMode);
-  const texture = skinResult?.base64 || "";
+  // Texture resolution must never reject the caller — fall back to Steve.
+  let texture = "";
+  try {
+    const username = state.currentUser || "Steve";
+    const skinResult = await resolveSkinTextureBase64(username, state.authMode);
+    texture = skinResult?.base64 || "";
+  } catch (err) {
+    console.warn("[Profile] Skin texture resolve failed:", err);
+  }
+  // A newer init may have superseded this one while we awaited — bail out
+  // so a stale call can't blank the stage or fight over the canvas.
+  if (seq !== homeSkinInitSeq) return;
   // Cape resolution is server-side in v2; no cape support in MVP
   const capeTexture = null;
   const { width, height } = fitHomeCanvasToStage(canvasEl, stage);
@@ -287,26 +279,41 @@ async function initHomeSkinViewer() {
   try {
     const { SkinViewer } = await import("skinview3d");
     const THREE = await import("three");
+    if (seq !== homeSkinInitSeq) return;
 
-    // Detect GPUs/drivers that reject 3D texture uploads with FLIP_Y
-    // (e.g. some Intel iGPUs). In that case skip the 3D viewer and show
-    // a static 2D preview instead.
-    if (!canUse3DTextures()) {
-      throw new Error("3D textures unsupported on this GPU");
-    }
+    // Permissive approach: attempt to create the 3D viewer and let the
+    // try/catch below handle real GPU failures (e.g. Intel iGPUs that
+    // reject 3D texture uploads). If creation or first render crashes,
+    // we fall back to a static 2D full-body preview.
 
     homeSkinViewerInstance = new SkinViewer({
       canvas: canvasEl,
       width,
       height,
-      skin: texture,
       preserveDrawingBuffer: true,
     });
+
+    // Wait for the skin texture to actually finish uploading before checking
+    // pixels. Without this, the very first frame (right after construction)
+    // is often still transparent/blank while the data URL is decoded, which
+    // tripped the empty-frame guard and forced the spurious 2D fallback on
+    // the first visit after login. `loadSkin` with a URL source returns a
+    // promise that resolves once the texture is ready to render.
+    if (texture) {
+      await homeSkinViewerInstance.loadSkin(`data:image/png;base64,${texture}`);
+      if (seq !== homeSkinInitSeq) return;
+    }
 
     canvasEl.width = width;
     canvasEl.height = height;
     canvasEl.style.width = `${width}px`;
     canvasEl.style.height = `${height}px`;
+
+    // A live WebGL context now owns this canvas. Keep it cached across
+    // visits so re-init reuses the same element/context instead of cloning
+    // (cloning every visit leaked contexts and eventually forced the 2D
+    // fallback). Reset the 2D flag so the next init never clones this canvas.
+    homeSkinCanvasHad2d = false;
 
     if (homeSkinViewerInstance.scene) {
       const existingLights = homeSkinViewerInstance.scene.children.filter(
@@ -331,8 +338,52 @@ async function initHomeSkinViewer() {
     applyHomeViewerCamera(homeSkinViewerInstance);
 
     await ensureAnimationsLoaded();
+    if (seq !== homeSkinInitSeq) return;
     const savedPose = getSavedPose();
     applyPose(homeSkinViewerInstance, savedPose);
+
+    // Verify the WebGL canvas actually rendered something (not all-black).
+    // Same guard as the profile viewer: software renderers can "succeed"
+    // while producing only black frames, which would leave the stage blank.
+    try {
+      homeSkinViewerInstance.render();
+      const tmp = document.createElement("canvas");
+      tmp.width = 1;
+      tmp.height = 1;
+      const tctx = tmp.getContext("2d");
+      const samples = [
+        [0.5, 0.42],
+        [0.32, 0.28],
+        [0.68, 0.28],
+        [0.5, 0.72],
+        [0.5, 0.1],
+      ];
+      let colored = 0;
+      for (const [fx, fy] of samples) {
+        tctx.clearRect(0, 0, 1, 1);
+        tctx.drawImage(
+          canvasEl,
+          Math.max(0, Math.floor(canvasEl.width * fx) - 1),
+          Math.max(0, Math.floor(canvasEl.height * fy) - 1),
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+        );
+        const pixel = tctx.getImageData(0, 0, 1, 1).data;
+        if (pixel[3] > 0 && !(pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0)) {
+          colored++;
+        }
+      }
+      if (colored === 0) {
+        throw new Error("WebGL produced all-black frame (likely software renderer)");
+      }
+    } catch (renderErr) {
+      console.warn("[Profile] Home skin viewer rendered empty frame, falling back:", renderErr);
+      throw renderErr;
+    }
 
     if (loaderEl) loaderEl.style.display = "none";
     canvasEl.classList.add("is-ready");
@@ -344,22 +395,63 @@ async function initHomeSkinViewer() {
       applyHomeViewerCamera(homeSkinViewerInstance);
     });
     homeSkinResizeObserver.observe(stage);
-  } catch (err) {
-    console.error("[Profile] Advanced home skin viewer error:", err);
-    if (loaderEl) {
-      loaderEl.style.display = "flex";
-      loaderEl.textContent = "Could not load 3D preview";
+    } catch (err) {
+      console.error("[Profile] Advanced home skin viewer error:", err);
+      // 3D failed (GPU, texture, or chunk load) — never leave a blank stage.
+      // Fall back to a static 2D full-body preview so the user still sees a skin.
+      if (seq !== homeSkinInitSeq) return;
+      if (!texture) {
+      if (loaderEl) {
+        loaderEl.style.display = "flex";
+        loaderEl.textContent = "Could not load 3D preview";
+      }
+      return;
+    }
+    if (loaderEl) loaderEl.style.display = "none";
+    // Replace the canvas with a clone to drop the WebGL context; a canvas
+    // cannot switch from webgl to 2d once a context has been created.
+    const fallbackCanvas = canvasEl.cloneNode(false);
+    if (canvasEl.parentNode) canvasEl.parentNode.replaceChild(fallbackCanvas, canvasEl);
+    homeSkinCanvasHad2d = true;
+    fallbackCanvas.classList.add("is-2d-fallback");
+    try {
+      const { drawSkinBodyFromBase64 } = await import(
+        "../../core/skin-texture.js"
+      );
+      fallbackCanvas.width = width;
+      fallbackCanvas.height = height;
+      fallbackCanvas.style.width = `${width}px`;
+      fallbackCanvas.style.height = `${height}px`;
+      fallbackCanvas.classList.add("is-ready");
+      drawSkinBodyFromBase64(fallbackCanvas, texture);
+    } catch {
+      if (loaderEl) {
+        loaderEl.style.display = "flex";
+        loaderEl.textContent = "Could not load 3D preview";
+      }
     }
   }
 }
 
 async function initProfileSkinViewer() {
   const stage = document.getElementById("profile-skin-stage");
-  const canvasEl = document.getElementById("profile-skin-canvas");
+  let canvasEl = document.getElementById("profile-skin-canvas");
   const loaderEl = document.getElementById("profile-skin-loading");
   if (!stage || !canvasEl) return;
 
   disposeSkinViewer();
+
+  // Only swap in a fresh canvas when a previous 2D fallback painted the
+  // current one (a canvas cannot switch from 2d to webgl). Cloning on every
+  // init instead leaks WebGL contexts and exhausts the browser's context
+  // budget, pushing the viewer into the 2D fallback.
+  if (profileSkinCanvasHad2d) {
+    const freshCanvas = canvasEl.cloneNode(false);
+    if (canvasEl.parentNode) {
+      canvasEl.parentNode.replaceChild(freshCanvas, canvasEl);
+      canvasEl = freshCanvas;
+    }
+  }
 
   if (loaderEl) {
     loaderEl.style.display = "flex";
@@ -367,9 +459,15 @@ async function initProfileSkinViewer() {
   }
   canvasEl.classList.remove("is-ready");
 
-  const username = state.currentUser || "Steve";
-  const skinResult = await resolveSkinTextureBase64(username, state.authMode);
-  const texture = skinResult?.base64 || "";
+  // Texture resolution must never reject the caller — fall back to Steve.
+  let texture = "";
+  try {
+    const username = state.currentUser || "Steve";
+    const skinResult = await resolveSkinTextureBase64(username, state.authMode);
+    texture = skinResult?.base64 || "";
+  } catch (err) {
+    console.warn("[Profile] Skin texture resolve failed:", err);
+  }
 
   // Cape resolution is server-side in v2; no cape support in MVP
   const capeTexture = null;
@@ -383,8 +481,20 @@ async function initProfileSkinViewer() {
       canvas: canvasEl,
       width,
       height,
-      skin: texture,
+      preserveDrawingBuffer: true,
     });
+
+    // Wait for the skin texture to finish uploading before the empty-frame
+    // pixel check (see the home viewer — same first-frame race otherwise).
+    if (texture) {
+      await skinViewerInstance.loadSkin(`data:image/png;base64,${texture}`);
+    }
+
+    // A live WebGL context now owns this canvas. Keep it cached across
+    // visits so re-init reuses the same element/context instead of cloning
+    // (cloning every visit leaked contexts and eventually forced the 2D
+    // fallback). Reset the 2D flag so the next init never clones this canvas.
+    profileSkinCanvasHad2d = false;
 
     if (capeTexture) {
       try {
@@ -433,29 +543,70 @@ async function initProfileSkinViewer() {
 
     // Verify the WebGL canvas actually rendered something (not all-black).
     // In headless or unsupported GPU environments, WebGL "succeeds" but
-    // produces a black frame. Sample the canvas; if all-black, show fallback.
+    // produces a black frame. Sample several pixels; if all are black,
+    // fall back to a 2D full-body preview.
     try {
       skinViewerInstance.render();
-      const ctx = canvasEl.getContext("2d") || canvasEl.getContext("webgl2") || canvasEl.getContext("webgl");
-      // Read a single pixel via a temporary 2D canvas copy
+      // Read pixels via a temporary 2D canvas copy
       const tmp = document.createElement("canvas");
-      tmp.width = 1; tmp.height = 1;
+      tmp.width = 1;
+      tmp.height = 1;
       const tctx = tmp.getContext("2d");
-      tctx.drawImage(canvasEl, 0, 0, 1, 1, 0, 0, 1, 1);
-      const pixel = tctx.getImageData(0, 0, 1, 1).data;
-      const isAllBlack = pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0;
-      if (isAllBlack) {
+      const samples = [
+        [0.5, 0.42],
+        [0.32, 0.28],
+        [0.68, 0.28],
+        [0.5, 0.72],
+        [0.5, 0.1],
+      ];
+      let colored = 0;
+      for (const [fx, fy] of samples) {
+        tctx.clearRect(0, 0, 1, 1);
+        tctx.drawImage(
+          canvasEl,
+          Math.max(0, Math.floor(canvasEl.width * fx) - 1),
+          Math.max(0, Math.floor(canvasEl.height * fy) - 1),
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+        );
+        const pixel = tctx.getImageData(0, 0, 1, 1).data;
+        if (pixel[3] > 0 && !(pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0)) {
+          colored++;
+        }
+      }
+      if (colored === 0) {
         throw new Error("WebGL produced all-black frame (likely software renderer)");
       }
     } catch (renderErr) {
       console.warn("[Profile] Skin viewer rendered empty frame, falling back:", renderErr);
-      try { skinViewerInstance.dispose(); } catch (_) {}
+      try {
+        skinViewerInstance.dispose();
+      } catch (_) {}
       skinViewerInstance = null;
+      if (loaderEl) loaderEl.style.display = "none";
+
+      // Replace the canvas with a clone to drop the WebGL context; a canvas
+      // cannot switch from webgl to 2d once a context has been created.
+      const fallbackCanvas = canvasEl.cloneNode(false);
+      if (canvasEl.parentNode) canvasEl.parentNode.replaceChild(fallbackCanvas, canvasEl);
+      profileSkinCanvasHad2d = true;
+      fallbackCanvas.classList.add("is-ready");
+      if (texture) {
+        const { drawSkinBodyFromBase64 } = await import(
+          "../../core/skin-texture.js"
+        );
+        drawSkinBodyFromBase64(fallbackCanvas, texture);
+        return;
+      }
       if (loaderEl) {
         loaderEl.style.display = "flex";
         loaderEl.textContent = "3D preview unavailable";
       }
-      canvasEl.classList.remove("is-ready");
+      fallbackCanvas.classList.remove("is-ready");
       return;
     }
 
@@ -471,10 +622,32 @@ async function initProfileSkinViewer() {
     skinResizeObserver.observe(stage);
   } catch (err) {
     console.error("[Profile] Skin viewer error:", err);
+    if (loaderEl) loaderEl.style.display = "none";
+    if (texture) {
+      try {
+        // Replace the canvas with a clone to drop any WebGL context; a
+        // canvas cannot switch from webgl to 2d once a context exists.
+        const fallbackCanvas = canvasEl.cloneNode(false);
+        if (canvasEl.parentNode) {
+          canvasEl.parentNode.replaceChild(fallbackCanvas, canvasEl);
+        }
+        profileSkinCanvasHad2d = true;
+        fallbackCanvas.classList.add("is-ready");
+        const { drawSkinBodyFromBase64 } = await import(
+          "../../core/skin-texture.js"
+        );
+        drawSkinBodyFromBase64(fallbackCanvas, texture);
+        return;
+      } catch {
+        /* 2D fallback failed too */
+      }
+    }
+    canvasEl.classList.add("is-ready");
     if (loaderEl) {
       loaderEl.style.display = "flex";
       loaderEl.textContent = "Could not load 3D preview";
     }
+    canvasEl.classList.remove("is-ready");
   }
 }
 
@@ -486,7 +659,6 @@ function refreshProfilePage() {
   const playtimeEl = document.getElementById("profile-stat-playtime");
   const modpacksEl = document.getElementById("profile-stat-modpacks");
   const achievementsEl = document.getElementById("profile-stat-achievements");
-  const changeSkinBtn = document.getElementById("profile-btn-change-skin");
   const changeSkinMainBtn = document.getElementById("profile-stage-change-skin");
   const manageCapesBtn = document.getElementById("profile-stage-manage-capes");
   const sidebarName = document.getElementById("profile-sidebar-name");
@@ -550,7 +722,7 @@ function refreshProfilePage() {
   }
 
   loadProfileFriendsList();
-  initProfileSkinViewer();
+  initProfileSkinViewer().catch(() => {});
 }
 
 async function loadProfileFriendsList() {
@@ -612,13 +784,13 @@ async function loadProfileFriendsList() {
 
     // Render friends in profile sidebar (limit to 8)
     friendsListEl.innerHTML = friends.slice(0, 8).map(friend => `
-      <div class="profile-friend-item" title="${friend.username}" data-friend-id="${friend.id || ""}">
+      <div class="profile-friend-item" title="${esc(friend.username)}" data-friend-id="${esc(friend.id || "")}">
         <div class="profile-friend-avatar">
-          <canvas width="24" height="24" data-friend-username="${friend.username}"></canvas>
+          <canvas width="24" height="24" data-friend-username="${esc(friend.username)}"></canvas>
         </div>
         <div class="profile-friend-info">
-          <span class="profile-friend-name">${friend.username}</span>
-          <span class="profile-friend-status ${friend.status.toLowerCase().includes("playing") || friend.status.toLowerCase().includes("hosting") ? "online" : "offline"}">${friend.status}</span>
+          <span class="profile-friend-name">${esc(friend.username)}</span>
+          <span class="profile-friend-status ${friend.status.toLowerCase().includes("playing") || friend.status.toLowerCase().includes("hosting") ? "online" : "offline"}">${esc(friend.status)}</span>
         </div>
         ${friend.unreadCount > 0 ? `<span class="profile-friend-unread">${friend.unreadCount}</span>` : ""}
       </div>
@@ -682,18 +854,25 @@ export function initProfileFeature({ switchView, getReturnView }) {
 
   actions.openProfile = openProfile;
   actions.closeProfile = closeProfile;
-  actions.refreshHomeSkin = initHomeSkinViewer;
+  actions.refreshHomeSkin = () => initHomeSkinViewer().catch(() => {});
 
   document.addEventListener("idk:view-changed", (event) => {
     if (event.detail?.viewName === "main") {
-      initHomeSkinViewer();
+      initHomeSkinViewer().catch(() => {});
     } else {
       disposeHomeSkinViewer();
     }
   });
 
+  // Boot-order guard: initSettingsFeature runs before this module, so the
+  // advanced-mode hook (actions.refreshHomeSkin) may not exist yet when the
+  // UI mode is applied at startup. Re-check now that we're registered.
+  if (document.body.dataset.uiMode === "advanced") {
+    initHomeSkinViewer().catch(() => {});
+  }
+
   if (document.getElementById("view-main")?.classList.contains("active")) {
-    initHomeSkinViewer();
+    initHomeSkinViewer().catch(() => {});
   }
 
   async function openSkinManager() {
@@ -739,8 +918,8 @@ export function initProfileFeature({ switchView, getReturnView }) {
           if (window.electronAPI?.clearCache) {
              // not implemented yet, just force reload
           }
-          initProfileSkinViewer();
-          initHomeSkinViewer();
+          initProfileSkinViewer().catch(() => {});
+          initHomeSkinViewer().catch(() => {});
         } else {
           alert("Failed to upload skin: " + res.error);
         }
@@ -822,8 +1001,8 @@ export function initProfileFeature({ switchView, getReturnView }) {
         cancelText: "Close",
         variant: "neutral"
       });
-      initProfileSkinViewer();
-      initHomeSkinViewer();
+      initProfileSkinViewer().catch(() => {});
+      initHomeSkinViewer().catch(() => {});
     } else {
       alert("Failed to equip cape: " + equipRes.error);
     }
@@ -832,10 +1011,10 @@ export function initProfileFeature({ switchView, getReturnView }) {
   async function exportCurrentSkin() {
     try {
       const username = state.currentUser || "Steve";
-      const skinUrl = await getSkinTextureUrl(username, state.authMode);
-      const texture = await resolveSkinTextureBase64(skinUrl);
+      const result = await resolveSkinTextureBase64(username, state.authMode);
+      if (!result?.base64) throw new Error("No skin texture resolved");
       const link = document.createElement("a");
-      link.href = texture;
+      link.href = `data:image/png;base64,${result.base64}`;
       link.download = `${username || "skin"}-skin.png`;
       document.body.appendChild(link);
       link.click();
@@ -845,10 +1024,6 @@ export function initProfileFeature({ switchView, getReturnView }) {
       actions.showWarningToast?.("Failed to export skin");
     }
   }
-
-  document
-    .getElementById("profile-btn-change-skin")
-    ?.addEventListener("click", openSkinManager);
 
   document
     .getElementById("profile-stage-change-skin")
@@ -864,18 +1039,6 @@ export function initProfileFeature({ switchView, getReturnView }) {
 
   document
     .getElementById("profile-btn-settings")
-    ?.addEventListener("click", () => {
-      closeProfile("settings");
-    });
-
-  document
-    .getElementById("profile-stage-open-main")
-    ?.addEventListener("click", () => {
-      closeProfile("main");
-    });
-
-  document
-    .getElementById("profile-stage-open-settings")
     ?.addEventListener("click", () => {
       closeProfile("settings");
     });

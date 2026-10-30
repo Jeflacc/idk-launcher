@@ -1,4 +1,5 @@
 import { type ChildProcess } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { EventEmitter } from 'node:events';
 import type { LaunchOptions, LaunchProgress, LaunchResult } from '@shared/types';
 import type { PathService } from '../fs/path-service';
@@ -14,6 +15,8 @@ export interface LaunchContext {
     username: string;
     uuid: string;
     accessToken: string;
+    /** Provider that actually supplied the session — Ely.by requires the authlib-injector javaagent. */
+    provider?: 'elyby' | 'microsoft' | 'offline';
   };
   modpackDirectory?: string;
 }
@@ -44,6 +47,11 @@ export class LaunchService extends EventEmitter {
     return this.active !== null;
   }
 
+  /** Public progress reporter — lets other services (e.g. Java download) surface progress to the renderer. */
+  reportProgress(p: LaunchProgress): void {
+    this.emitProgress(p);
+  }
+
   async launch(ctx: LaunchContext): Promise<LaunchResult> {
     if (this.active || this.launching) {
       return { success: false, error: 'A game is already running' };
@@ -66,7 +74,7 @@ export class LaunchService extends EventEmitter {
       mcLauncher.on('progress', (p: { type: string; phase: string; completed: number; total: number }) => {
         if (p.total > 0) {
           this.emitProgress({
-            type: p.type as 'assets' | 'libraries' | 'starting',
+            type: p.type as 'assets' | 'libraries' | 'loader' | 'starting',
             phase: p.phase as 'downloading' | 'done',
             completed: p.completed,
             total: p.total,
@@ -83,9 +91,30 @@ export class LaunchService extends EventEmitter {
 
       this.emitProgress({ type: 'starting', phase: 'downloading', completed: 0, total: 1 });
 
+      // Ely.by launches need the authlib-injector javaagent (v1 behavior).
+      // Reuse the existing jar if present, otherwise fetch the official build.
+      let authlibInjectorJar: string | undefined;
+      if (ctx.auth.provider === 'elyby') {
+        authlibInjectorJar = this.paths.authlibInjectorJar;
+        if (!existsSync(authlibInjectorJar)) {
+          console.log('[Launch] Downloading authlib-injector for Ely.by auth...');
+          await this.ensureAuthlibInjectorJar(authlibInjectorJar);
+        }
+      }
+
       const child = await mcLauncher.launch({
         root,
+        // Versions/assets/libraries are version-independent — always use the
+        // SHARED roots so instances don't re-download them (they key by
+        // version id / Maven path / sha1 hash and are shared across instances).
+        versionsRoot: this.paths.versions,
+        librariesRoot: this.paths.libraries,
+        assetsRoot: this.paths.assets,
+        authProvider: ctx.auth.provider,
+        authlibInjectorJar,
         versionId: ctx.options.versionId,
+        loader: ctx.options.loader,
+        loaderVersion: ctx.options.loaderVersion,
         javaPath: ctx.java.path,
         memory: {
           max: ctx.options.maxMemoryMb ?? 4096,
@@ -150,6 +179,30 @@ export class LaunchService extends EventEmitter {
       } catch {
         // ignore — process may have already exited
       }
+    }
+  }
+
+  /**
+   * Bootstrap fallback for machines without a cached authlib-injector jar.
+   * Primary source: the official download API (returns a sha256 checksum for
+   * the artifact, which is verified on download). If that host is unreachable,
+   * fall back to the pinned Maven Central mirror (same upstream artifact).
+   */
+  private async ensureAuthlibInjectorJar(targetPath: string): Promise<void> {
+    try {
+      const meta = await this.http.getJson<{
+        download_url: string;
+        checksums?: { sha256?: string };
+      }>('https://authlib-injector.yushi.moe/artifact/latest.json');
+      await this.http.downloadFile(meta.download_url, targetPath, {
+        expectedSha256: meta.checksums?.sha256,
+      });
+    } catch (err) {
+      console.warn('[Launch] Official authlib-injector source failed, falling back to Maven Central:', err);
+      await this.http.downloadFile(
+        'https://repo1.maven.org/maven2/org/glavo/hmcl/authlib-injector/1.2.8/authlib-injector-1.2.8.jar',
+        targetPath,
+      );
     }
   }
 

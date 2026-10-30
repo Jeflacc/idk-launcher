@@ -1,0 +1,110 @@
+<!-- TOP TITLE BAR & NAVIGATION -->
+<div class="top-bar">
+  <div class="top-bar-left">
+    <img class="top-brand-icon" src="logo.png" alt="IDK Launcher" />
+    <div class="top-brand"><span class="brand-mark">IDK.</span><span class="brand-word">Launcher</span></div>
+    <div class="header-nav">
+      <div class="brand-title" style="display:none;"></div>
+      <div class="nav-tabs">
+        <div class="nav-tab" data-target="main">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M15 11h-2V9h2zm0 4h-2v-2h2zm-2 2h-2v-2h2zm0-8h-2V7h2zm-2-2H9V5h2zM9 21H7V3h2zm6-8h2v-2h-2zm-6 4h2v2H9z"/></svg>
+          Play
+        </div>
+        <div class="nav-tab" data-target="mods">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M15 1h6v2h-6zm-2 2h2v6h-2zm2 6h6v2h-6zm6-6h2v6h-2zM3 5h6v2H3zM1 7h2v14H1zm2 14h14v2H3zm14-6h2v6h-2zM3 13h14v2H3z"/><path d="M9 7h2v14H9z"/></svg>
+          Instances
+        </div>
+        <div class="nav-tab" data-target="profile">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M9 2h6v2H9zm0 8h6v2H9zm6-6h2v6h-2zM7 4h2v6H7zM4 18h2v4H4zm14 0h2v4h-2zM8 14h8v2H8zm-2 2h2v2H6zm10 0h2v2h-2z"/></svg>
+          Profile
+        </div>
+        <div class="nav-tab" data-target="settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h2v2h-2zM4 2h2v2H4zm16 20h-2v-2h2zM4 22h2v-2H4zM20 4h2v2h-2zM6 4h4v2H6zm12 16h-4v-2h4zM6 20h4v-2H6zM18 6h2v4h-2zM4 6h2v4H4zm16 12h-2v-4h2zM4 18h2v-4H4zM14 4h4v2h-4zM2 4h2v2H2zm20 16h-2v-2h2zM2 20h2v-2H2z"/><path d="M8 2h2v4H8zm0 20h2v-4H8z"/><path d="M8 2h8v2H8zm0 20h8v-2H8zM2 8h2v8H2zm20 8h-2V8h2z"/><path d="M20 8h2v4h-2zM10 8h4v2h-4zm-2 2h2v4H8zm2 4h4v2h-4zm4-4h2v4h-2z"/></svg>
+          Settings
+        </div>
+        <div class="nav-tab" data-target="idk-connect">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M5 2h6v2H5zm10 0h4v2h-4zM5 10h6v2H5zm10 0h4v2h-4zm4-6h2v6h-2zm-8 0h2v6h-2zM3 4h2v6H3zM0 18h2v4H0zm14 0h2v4h-2zm8 0h2v4h-2zM4 14h8v2H4zm12 0h4v2h-4zM2 16h2v2H2zm10 0h2v2h-2zm8 0h2v2h-2z"/></svg>
+          IDK Connect
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="top-bar-right">
+    <!-- FRIENDS SIDEBAR TOGGLE (restored; styling in components/friends.css) -->
+    <button type="button" class="friends-toggle-btn" id="btn-friends-toggle" title="Friends" aria-label="Open friends">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M5 2h6v2H5zm10 0h4v2h-4zM5 10h6v2H5zm10 0h4v2h-4zm4-6h2v6h-2zm-8 0h2v6h-2zM3 4h2v6H3zM0 18h2v4H0zm14 0h2v4h-2zm8 0h2v4h-2zM4 14h8v2H4zm12 0h4v2h-4zM2 16h2v2H2zm10 0h2v2h-2zm8 0h2v2h-2z"/></svg>
+      <span class="friends-badge" id="friends-pending-badge" style="display:none;">0</span>
+      <span class="friends-unread-dot" id="friends-unread-dot" style="display:none;"></span>
+    </button>
+
+    <!-- DOWNLOAD STATUS BUTTON -->
+    <button class="download-status-btn" id="nav-download-btn" style="display:none;" title="Download Progress">
+      <svg class="ds-ring" width="28" height="28" viewBox="0 0 28 28">
+        <circle class="ds-ring-bg" cx="14" cy="14" r="11" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2.5"/>
+        <circle class="ds-ring-fill" id="nav-dl-ring" cx="14" cy="14" r="11" fill="none" stroke="var(--theme-accent)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="69.12" stroke-dashoffset="69.12" transform="rotate(-90 14 14)"/>
+      </svg>
+      <svg class="ds-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 15v4h-2v-4zm-2 4v2H5v-2zM5 15v4H3v-4zm8-12v14h-2V3z"/><path d="M7 11v2h10v-2zm2 2v2h2v-2zm4 0v2h2v-2z"/><path d="M15 11v2h2v-2z"/></svg>
+    </button>
+
+    <div class="user-profile-wrapper">
+      <div class="user-profile" id="user-profile-btn">
+        <div class="user-profile-avatar" aria-hidden="true">
+          <canvas id="avatar-canvas" width="40" height="40"></canvas>
+        </div>
+        <div class="user-details">
+          <span class="user-details-label">Playing as</span>
+          <h4 id="display-username">PlayerOne</h4>
+          <span class="user-details-account" style="display: none;">Offline Account</span>
+        </div>
+      </div>
+
+      <div class="profile-dropdown" id="profile-dropdown">
+        <div class="profile-dropdown-user">
+          <div class="user-profile-avatar" aria-hidden="true">
+            <canvas id="dropdown-avatar-canvas" width="34" height="34"></canvas>
+          </div>
+          <div class="profile-dropdown-user-info">
+            <span class="profile-dropdown-user-name" id="profile-dd-username">PlayerOne</span>
+            <span class="profile-dropdown-user-account">Offline Account</span>
+          </div>
+        </div>
+        <div class="profile-dropdown-item" id="btn-dropdown-skin" style="display:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M4 3h6v2H4zM2 3h2v8H2zm2 6h4v2H4z"/><path d="M6 9h2v10H6zm2 10h8v2H8zm8-10h2v10h-2z"/><path d="M16 9h4v2h-4zm4-6h2v8h-2zm-6 0h6v2h-6zm-4 2h4v2h-4z"/></svg>
+          Change Skin (Ely.by)
+        </div>
+        <div class="profile-dropdown-item" id="btn-dropdown-profile">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M9 2h6v2H9zm0 8h6v2H9zm6-6h2v6h-2zM7 4h2v6H7zM4 18h2v4H4zm14 0h2v4h-2zM8 14h8v2H8zm-2 2h2v2H6zm10 0h2v2h-2z"/></svg>
+          My profile
+        </div>
+
+        <!-- Offline account switcher -->
+        <div class="profile-dropdown-section" id="profile-dd-account-section" style="display:none;">
+          <div class="profile-dropdown-section-title">Offline Accounts</div>
+          <div class="profile-dropdown-account-list" id="profile-dd-account-list"></div>
+          <div class="profile-dropdown-item" id="btn-dd-add-account">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm-2 6h4v4h-4v-4zm-4 4h4v4h-4v-4z"/></svg>
+            Add Account
+          </div>
+        </div>
+        <div class="profile-dropdown-divider" id="profile-dd-divider" style="display:none;"></div>
+
+        <div class="profile-dropdown-item logout" id="btn-dropdown-logout">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M8 11h12v2H8zm8-2h2v2h-2z"/><path d="M14 7h2v10h-2zm2 6h2v2h-2zM6 2h12v2H6zm0 18h12v2H6zM4 4h2v16H4zm14 0h2v3h-2zm0 13h2v3h-2z"/></svg>
+          Log Out
+        </div>
+      </div>
+    </div>
+    <div class="window-controls">
+      <div class="ctrl minimize">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h16v2H4z"/></svg>
+      </div>
+      <div class="ctrl maximize">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2 4h2v16H2zm2 16h16v2H4zM20 4h2v16h-2zM4 2h16v2H4z"/></svg>
+      </div>
+      <div class="ctrl close">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z"/></svg>
+      </div>
+    </div>
+  </div>
+</div>

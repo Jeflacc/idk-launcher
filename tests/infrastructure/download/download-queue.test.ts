@@ -74,10 +74,15 @@ describe('DownloadQueue', () => {
   });
 
   it('throws when starting a duplicate downloadId', async () => {
-    await queue.start('dl-1', [item('https://api.modrinth.com/v2/x', 'f.jar')], 1);
+    vi.mocked(http.downloadFile).mockImplementation(
+      () => new Promise(() => {}), // never resolves
+    );
+    void queue.start('dl-1', [item('https://api.modrinth.com/v2/x', 'f.jar')], 1);
+    await new Promise((r) => setTimeout(r, 20));
     await expect(queue.start('dl-1', [item('https://api.modrinth.com/v2/y', 'y.jar')], 1)).rejects.toThrow(
       /already in progress/,
     );
+    queue.cancel('dl-1');
   });
 
   it('cancel marks the job as cancelled', async () => {
@@ -89,7 +94,7 @@ describe('DownloadQueue', () => {
       () => new Promise(() => {}), // never resolves
     );
 
-    await queue.start('dl-1', [item('https://api.modrinth.com/v2/x', 'f.jar')], 1);
+    void queue.start('dl-1', [item('https://api.modrinth.com/v2/x', 'f.jar')], 1);
     await new Promise((r) => setTimeout(r, 20));
 
     queue.cancel('dl-1');
@@ -102,8 +107,8 @@ describe('DownloadQueue', () => {
   it('cancelAll cancels every active job', async () => {
     vi.mocked(http.downloadFile).mockImplementation(() => new Promise(() => {}));
 
-    await queue.start('dl-a', [item('https://api.modrinth.com/v2/a', 'a.jar')], 1);
-    await queue.start('dl-b', [item('https://api.modrinth.com/v2/b', 'b.jar')], 1);
+    void queue.start('dl-a', [item('https://api.modrinth.com/v2/a', 'a.jar')], 1);
+    void queue.start('dl-b', [item('https://api.modrinth.com/v2/b', 'b.jar')], 1);
     await new Promise((r) => setTimeout(r, 20));
 
     queue.cancelAll();

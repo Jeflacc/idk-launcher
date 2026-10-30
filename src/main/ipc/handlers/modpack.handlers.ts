@@ -10,6 +10,7 @@ import type { InstallModpack } from '@/application/use-cases/install-modpack';
 import type { ExportModpack } from '@/application/use-cases/export-modpack';
 import type { ImportModpack } from '@/application/use-cases/import-modpack';
 import type { LaunchGame } from '@/application/use-cases/launch-game';
+import type { LaunchService } from '@/infrastructure/minecraft/launch-service';
 
 export function registerModpackHandlers(
   windows: WindowManager,
@@ -19,6 +20,7 @@ export function registerModpackHandlers(
   exportModpack: ExportModpack,
   importModpack: ImportModpack,
   launchGame: LaunchGame,
+  launchService: LaunchService,
 ): void {
   const senderOk = (event: Electron.IpcMainInvokeEvent) => windows.assertSender(event, 'main');
 
@@ -46,35 +48,62 @@ export function registerModpackHandlers(
     { senderCheck: senderOk },
   );
 
+  // Rename an instance: renames the folder on disk + updates profile.json.
+  // Refuses while a game is running — renaming a folder a running game writes
+  // to would corrupt it.
+  registerInvoke(
+    IpcChannel.Modpack.Rename,
+    ModpackSchema.renameRequest,
+    async (_event, args) => {
+      if (launchService.isRunning) {
+        throw new Error('Cannot rename an instance while a game is running. Close the game first.');
+      }
+      return repo.rename(args.modpackId, args.newName);
+    },
+    { senderCheck: senderOk },
+  );
+
   registerSend(
     IpcChannel.Modpack.Launch,
     ModpackSchema.launchRequest,
-    async (_event, args) => {
-      const profile = await repo.readProfile(args.modpackId);
-      if (!profile) {
-        windows.send('main', IpcChannel.Launch.Error, { message: 'Modpack not found' });
-        return;
-      }
-      const unsubscribe = launchGame.onProgress((p) => {
-        windows.send('main', IpcChannel.Launch.Progress, p);
-      });
-      try {
-        const result = await launchGame.execute(LaunchSchema.options.parse({
-          versionId: profile.minecraftVersion,
-          modpackId: args.modpackId,
-          loader: profile.loader,
-          loaderVersion: profile.loaderVersion,
-          authProvider: 'microsoft',
-        }));
-        if (!result.success) {
-          windows.send('main', IpcChannel.Launch.Error, { message: result.error ?? 'Launch failed' });
+    (_event, args) => {
+      // registerSend uses ipcMain.on (fire-and-forget) — wrap in a
+      // self-catching async IIFE so rejections surface instead of vanishing.
+      void (async () => {
+        const profile = await repo.readProfile(args.modpackId);
+        if (!profile) {
+          console.error(`[Launch] Instance not found: ${args.modpackId}`);
+          windows.send('main', IpcChannel.Launch.Error, { message: 'Instance not found' });
+          return;
         }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        windows.send('main', IpcChannel.Launch.Error, { message });
-      } finally {
-        unsubscribe();
-      }
+        console.log(`[Launch] Launching instance "${profile.name}" (MC ${profile.minecraftVersion}, ${profile.loader})`);
+        const unsubscribe = launchGame.onProgress((p) => {
+          windows.send('main', IpcChannel.Launch.Progress, p);
+        });
+        try {
+          const result = await launchGame.execute(LaunchSchema.options.parse({
+            versionId: profile.minecraftVersion,
+            modpackId: args.modpackId,
+            loader: profile.loader,
+            loaderVersion: profile.loaderVersion,
+            quickConnect: args.quickConnect ?? undefined,
+            authProvider: args.authProvider ?? 'microsoft',
+            maxMemoryMb: args.maxMemoryMb,
+            windowSize: args.windowSize,
+            javaArgs: args.javaArgs,
+          }));
+          if (!result.success) {
+            console.error('[Launch] Launch failed:', result.error ?? 'Launch failed');
+            windows.send('main', IpcChannel.Launch.Error, { message: result.error ?? 'Launch failed' });
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error('[Launch] Launch failed:', message);
+          windows.send('main', IpcChannel.Launch.Error, { message });
+        } finally {
+          unsubscribe();
+        }
+      })();
     },
     { senderCheck: senderOk },
   );

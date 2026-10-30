@@ -1,12 +1,53 @@
 import { registerInvoke } from '../register';
 import { IpcChannel } from '@shared/ipc-channels';
 import { z } from 'zod';
+import { join } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
 import type { WindowManager } from '../../windows/window-manager';
 import type { ModpackRepository } from '@/infrastructure/fs/modpack-repository';
+import type { PathService } from '@/infrastructure/fs/path-service';
+
+interface ScannedAchievement {
+  id: string;
+  name: string;
+  completed: boolean;
+  date?: string;
+}
+
+/** Read achievement JSON files from an instance's stats directory. */
+async function scanStatsDir(statsDir: string): Promise<ScannedAchievement[]> {
+  try {
+    const files = await readdir(statsDir);
+    const achievements: ScannedAchievement[] = [];
+    for (const file of files) {
+      if (!file.endsWith('.json')) continue;
+      try {
+        const raw = await readFile(join(statsDir, file), 'utf8');
+        const data = JSON.parse(raw);
+        if (Array.isArray(data)) {
+          for (const ach of data) {
+            if (ach && ach.id) {
+              achievements.push({
+                id: ach.id,
+                name: ach.name || ach.id,
+                completed: ach.completed ?? false,
+                date: ach.date,
+              });
+            }
+          }
+        }
+      } catch { /* skip invalid JSON */ }
+    }
+    return achievements;
+  } catch {
+    return [];
+  }
+}
 
 export function registerAchievementsHandlers(
   windows: WindowManager,
   repo: ModpackRepository,
+  paths: PathService,
 ): void {
   const senderOk = (event: Electron.IpcMainInvokeEvent) => windows.assertSender(event, 'main');
 
@@ -16,38 +57,9 @@ export function registerAchievementsHandlers(
     async (_event, args) => {
       const profile = await repo.readProfile(args.modpackId);
       if (!profile) return [];
-      // Scan the modpack's directory for achievement JSON files
-      const { join } = await import('node:path');
-      const { readdir, readFile, mkdir } = await import('node:fs/promises');
-      const statsDir = join(profile.id, 'stats');
-      try {
-        await mkdir(statsDir, { recursive: true });
-        const files = await readdir(statsDir);
-        const achievements: Array<{ id: string; name: string; completed: boolean; date?: string }> = [];
-        for (const file of files) {
-          if (file.endsWith('.json')) {
-            try {
-              const raw = await readFile(join(statsDir, file), 'utf8');
-              const data = JSON.parse(raw);
-              if (Array.isArray(data)) {
-                for (const ach of data) {
-                  if (ach.id) {
-                    achievements.push({
-                      id: ach.id,
-                      name: ach.name || ach.id,
-                      completed: ach.completed ?? false,
-                      date: ach.date,
-                    });
-                  }
-                }
-              }
-            } catch { /* skip invalid JSON */ }
-          }
-        }
-        return achievements;
-      } catch {
-        return [];
-      }
+      // The stats dir lives inside the instance's game directory.
+      const statsDir = join(paths.modpackDirectory(profile.id), 'stats');
+      return scanStatsDir(statsDir);
     },
     { senderCheck: senderOk },
   );
@@ -57,16 +69,26 @@ export function registerAchievementsHandlers(
     z.void(),
     async () => {
       const modpacks = await repo.list();
-      const allAchievements: Array<{ modpackId: string; modpackName: string; achievementCount: number; completedCount: number }> = [];
+      const achievements: Array<{
+        modpackId: string;
+        modpackName: string;
+        achievementCount: number;
+        completedCount: number;
+      }> = [];
+      let count = 0;
       for (const mp of modpacks) {
-        allAchievements.push({
+        const found = await scanStatsDir(join(paths.modpackDirectory(mp.id), 'stats'));
+        const completed = found.filter((a) => a.completed).length;
+        count += completed;
+        achievements.push({
           modpackId: mp.id,
           modpackName: mp.name,
-          achievementCount: 0,
-          completedCount: 0,
+          achievementCount: found.length,
+          completedCount: completed,
         });
       }
-      return allAchievements;
+      // v1 renderer expects { success, count } — keep the array too.
+      return { success: true, count, achievements };
     },
     { senderCheck: senderOk },
   );

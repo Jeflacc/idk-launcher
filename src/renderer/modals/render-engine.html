@@ -1,0 +1,46 @@
+<!-- Render Engine Selection Modal -->
+<div id="render-engine-modal" class="confirm-modal">
+  <div class="confirm-modal-content confirm-modal-content--neutral">
+    <h3 id="render-engine-title">Select Render Engine</h3>
+    <p id="render-engine-message">Choose a rendering engine. Sodium is highly recommended for maximum FPS and stability.</p>
+
+    <div class="list-dialog-items" id="render-engine-items">
+      <!-- Sodium Option -->
+      <button type="button" id="render-engine-sodium" class="render-engine-option render-engine-option--sodium">
+        <div class="render-engine-option-main">
+          <div class="render-engine-option-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M4 13h8v6h2v2h-2v2h-2v-8H2v-4h2v2Zm12 6h-2v-2h2v2Zm2-2h-2v-2h2v2Zm2-2h-2v-2h2v2Zm-6-6h8v4h-2v-2h-8V5h-2V3h2V1h2v8Zm-8 2H4V9h2v2Zm2-2H6V7h2v2Zm2-2H8V5h2v2Z"/></svg>
+          </div>
+          <div class="render-engine-option-labels">
+            <span class="render-engine-option-name">SODIUM</span>
+            <span class="render-engine-option-tag">RECOMMENDED</span>
+          </div>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(59, 130, 246, 0.8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </button>
+
+      <!-- Vulkan Option -->
+      <button type="button" id="render-engine-vulkan" class="render-engine-option render-engine-option--vulkan">
+        <div class="render-engine-option-main">
+          <div class="render-engine-option-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          </div>
+          <div class="render-engine-option-labels">
+            <span class="render-engine-option-name">VULKANMOD</span>
+            <span class="render-engine-option-tag">EXPERIMENTAL</span>
+          </div>
+        </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(239, 68, 68, 0.6)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </button>
+    </div>
+
+    <div class="render-engine-footer">
+      <div class="delete-modal-checkbox">
+        <input type="checkbox" id="render-engine-dont-show" />
+        <label for="render-engine-dont-show">Don't show this again</label>
+      </div>
+
+      <button type="button" id="render-engine-cancel">Cancel</button>
+    </div>
+  </div>
+</div>

@@ -129,6 +129,105 @@ export function drawSkinFaceFromBase64(canvas, base64) {
 }
 
 /**
+ * Draw the full front-facing Minecraft character (head + torso + arms +
+ * legs, including overlay layers) from a base64 skin PNG onto a canvas.
+ * Used as a pixel-perfect 2D fallback when the WebGL 3D viewer is
+ * unavailable. Left limbs are horizontally mirrored because the skin
+ * atlas stores their front faces flipped.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @param {string} base64 - base64-encoded PNG data
+ */
+export function drawSkinBodyFromBase64(canvas, base64) {
+  if (!canvas || !base64) return;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.onload = () => {
+    const w = canvas.width;
+    const h = canvas.height;
+    const scale = img.naturalWidth / 64;
+
+    // Legacy pre-1.8 skins are 64x32: they have no separate left-limb or
+    // overlay layers (the atlas rows at y>=32 don't exist), so the left arm
+    // and left leg must be mirrored from the right side and all overlay
+    // layers must be skipped. Modern skins are 64x64 with everything.
+    const legacy = img.naturalHeight < 64;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.imageSmoothingEnabled = false;
+
+    // Figure layout in 1-unit blocks: 12 wide (arms 2 + body 8 + arms 2)
+    // x 32 tall (head 8 + torso 12 + legs 12). Unit snaps to a quarter
+    // pixel so scaled pixels stay crisp.
+    const unit = Math.floor((Math.min(w / 12, h / 32)) * 4) / 4;
+    if (unit < 1) return;
+    const ox = Math.round((w - 12 * unit) / 2);
+    const oy = Math.round((h - 32 * unit) / 2) - unit;
+
+    const draw = (sx, sy, sw, sh, dx, dy, mirror) => {
+      // Never sample outside the texture atlas (legacy 64x32 skins only
+      // contain the top half — out-of-range sources render as blank limbs).
+      if (sy + sh > img.naturalHeight || sx + sw > img.naturalWidth) return;
+      const tx = ox + dx * unit;
+      const ty = oy + dy * unit;
+      const tw = sw * unit;
+      const th = sh * unit;
+      ctx.save();
+      if (mirror) {
+        ctx.translate(tx + tw, ty);
+        ctx.scale(-1, 1);
+        ctx.drawImage(img, sx * scale, sy * scale, sw * scale, sh * scale, 0, 0, tw, th);
+      } else {
+        ctx.drawImage(img, sx * scale, sy * scale, sw * scale, sh * scale, tx, ty, tw, th);
+      }
+      ctx.restore();
+    };
+
+    // Subtle ground shadow under the feet (keeps the figure readable on any
+    // background without a big dark rectangle behind the whole body).
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.fillRect(ox + unit * 1.5, oy + unit * 29.5, 9 * unit, 2.5 * unit);
+
+    // Head + hat overlay (8x8 at 8,8 / 40,8)
+    draw(8, 8, 8, 8, 2, 0, false);
+    draw(40, 8, 8, 8, 2, 0, false);
+
+    // Body + jacket overlay (8x12 at 20,20 / 20,36 — overlay is 64x64 only)
+    draw(20, 20, 8, 12, 2, 8, false);
+    draw(20, 36, 8, 12, 2, 8, false);
+
+    // Right arm + sleeve (4x12 at 44,20 / 44,36) — player's right side
+    draw(44, 20, 4, 12, 10, 8, false);
+    draw(44, 36, 4, 12, 10, 8, false);
+
+    // Left arm + sleeve (4x12 at 36,52 / 52,52) — mirrored; legacy skins
+    // fall back to mirroring the right arm (the atlas only has one arm).
+    if (!legacy) {
+      draw(36, 52, 4, 12, 0, 8, true);
+      draw(52, 52, 4, 12, 0, 8, true);
+    } else {
+      draw(44, 20, 4, 12, 0, 8, true);
+      draw(44, 36, 4, 12, 0, 8, true);
+    }
+
+    // Right leg + pants (4x12 at 4,20 / 4,36 — pants are 64x64 only)
+    draw(4, 20, 4, 12, 2, 20, false);
+    draw(4, 36, 4, 12, 2, 20, false);
+
+    // Left leg + pants (4x12 at 20,52 / 4,52) — mirrored; legacy skins
+    // mirror the right leg instead.
+    if (!legacy) {
+      draw(20, 52, 4, 12, 6, 20, true);
+      draw(4, 52, 4, 12, 6, 20, true);
+    } else {
+      draw(4, 20, 4, 12, 6, 20, true);
+      draw(4, 36, 4, 12, 6, 20, true);
+    }
+  };
+  img.src = `data:image/png;base64,${base64}`;
+}
+
+/**
  * Draw a fallback avatar with the user's initials.
  */
 function drawFallbackAvatar(ctx, canvas, name) {

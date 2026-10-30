@@ -1,9 +1,10 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, statSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { HttpClient } from '../net/http-client';
+import { HttpClientError } from '../net/http-client';
 
 /**
  * Resolved version JSON — the fully merged result of resolving `inheritsFrom`
@@ -30,7 +31,7 @@ interface MclcLibrary {
     artifact?: { path: string; url: string; sha1?: string; size?: number };
     classifiers?: Record<string, { path: string; url: string; sha1?: string; size?: number; natives?: string }>;
   };
-  rules?: { action: string; os?: { name: string }; features?: Record<string, boolean> }[];
+  rules?: { action: string; os?: { name: string; arch?: string }; features?: Record<string, boolean> }[];
   natives?: Record<string, string>;
 }
 
@@ -45,6 +46,19 @@ interface LaunchOpts {
   directory?: string;
   gameDirectory?: string;
   window?: { width: number; height: number; fullscreen?: boolean };
+  /** Mod loader (fabric). If set, the loader profile is installed/resolved before launch. */
+  loader?: string;
+  loaderVersion?: string;
+  /** Shared versions dir. Defaults to `<root>/versions` — pass the common root so instances don't re-download. */
+  versionsRoot?: string;
+  /** Shared libraries dir. Defaults to `<root>/libraries` — pass the common root so instances don't re-download. */
+  librariesRoot?: string;
+  /** Shared assets dir. Defaults to `<root>/assets` — pass the common root so instances don't re-download. */
+  assetsRoot?: string;
+  /** Auth provider actually used for this launch. Ely.by needs the authlib-injector javaagent. */
+  authProvider?: 'elyby' | 'microsoft' | 'offline';
+  /** Path to authlib-injector.jar — required when authProvider is 'elyby'. */
+  authlibInjectorJar?: string;
 }
 
 const MOJANG_META = 'https://piston-meta.mojang.com';
@@ -69,32 +83,35 @@ export class McLauncher extends EventEmitter {
   }
 
   async launch(opts: LaunchOpts): Promise<ChildProcess> {
-    const root = opts.root;
+    // Versions (JSONs + jars) are version-independent — share them across
+    // instances when a common root is provided, exactly like assets/libraries.
+    // `versionsRoot` IS the versions directory (defaults to `<root>/versions`).
+    const versionsRoot = opts.versionsRoot ?? join(opts.root, 'versions');
+    const gameDir = opts.gameDirectory || opts.root;
 
     // 1. Resolve version JSON (handles inheritsFrom for Fabric/Forge)
     this.emit('debug', '[MC] Resolving version JSON...');
-    const version = await this.resolveVersion(root, opts.versionId);
+    const version = await this.resolveVersion(versionsRoot, opts.versionId, opts.loader, opts.loaderVersion);
     this.emit('debug', `[MC] Version resolved: ${version.id}`);
 
     // 2. Create directories
-    const directory = opts.directory || join(root, 'versions', version.id);
+    const directory = opts.directory || join(versionsRoot, version.id);
     await this.ensureDir(directory);
-    await this.ensureDir(join(root, 'assets'));
 
     // 3. Download client jar
-    const mcPath = await this.downloadJar(version, directory);
+    const mcPath = await this.downloadJar(version, directory, versionsRoot);
     this.emit('debug', `[MC] Client jar ready: ${mcPath}`);
 
     // 4. Download libraries
     this.emitProgress('libraries', 'downloading', 0, 1);
-    const classpath = await this.downloadLibraries(version, root);
+    const classpath = await this.downloadLibraries(version, opts.librariesRoot ?? join(opts.root, 'libraries'));
     this.emit('debug', `[MC] Libraries ready (${classpath.length} entries)`);
 
     // 5. Download assets
-    await this.downloadAssets(version, root);
+    await this.downloadAssets(version, opts.assetsRoot ?? gameDir);
 
     // 6. Handle natives (pre-1.19)
-    const nativePath = await this.handleNatives(version, root);
+    const nativePath = await this.handleNatives(version, gameDir);
 
     // 7. Build classpath
     const separator = process.platform === 'win32' ? ';' : ':';
@@ -127,7 +144,7 @@ export class McLauncher extends EventEmitter {
     this.emitProgress('starting', 'done', 1, 1);
 
     const child = spawn(opts.javaPath, allArgs, {
-      cwd: opts.gameDirectory || root,
+      cwd: gameDir,
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -142,12 +159,29 @@ export class McLauncher extends EventEmitter {
 
   // ── Version resolution ──
 
-  private async resolveVersion(root: string, versionId: string): Promise<VersionJson> {
-    const directory = join(root, 'versions', versionId);
+  private async resolveVersion(
+    root: string,
+    versionId: string,
+    loader?: string,
+    loaderVersion?: string,
+  ): Promise<VersionJson> {
+    // Fabric: synthesize/refresh a fabric-loader profile that inherits the
+    // vanilla version JSON. Without this step, modpacks launch as VANILLA —
+    // the loader field on the instance would be silently ignored.
+    if (loader === 'fabric') {
+      return this.resolveFabricVersion(root, versionId, loaderVersion);
+    }
+    if (loader && loader !== 'vanilla') {
+      this.emit('warning', { message: `[MC] Loader "${loader}" is not supported yet — launching vanilla ${versionId}. Install ${loader} manually to use mods.` });
+    }
+
+    // `root` is the VERSIONS directory (versionsRoot) — version JSONs and
+    // jars live directly inside it.
+    const directory = join(root, versionId);
     const jsonPath = join(directory, `${versionId}.json`);
 
     if (existsSync(jsonPath)) {
-      const raw = JSON.parse(await readFile(jsonPath, 'utf8'));
+      const raw = await this.readJsonFile<VersionJson>(jsonPath);
       return this.resolveInheritsFrom(root, raw);
     }
 
@@ -164,16 +198,101 @@ export class McLauncher extends EventEmitter {
     return this.resolveInheritsFrom(root, versionJson);
   }
 
+  /**
+   * Fabric loader resolution: fetches the official Fabric profile JSON from
+   * meta.fabricmc.net (libraries + mainClass = KnotClient) and persists it as
+   * `versions/fabric-loader-<v>-<mc>/fabric-loader-<v>-<mc>.json` with
+   * `inheritsFrom: <mc>`, so the standard merge pipeline handles the rest.
+   */
+  private async resolveFabricVersion(
+    root: string,
+    mcVersion: string,
+    requestedLoaderVersion?: string,
+  ): Promise<VersionJson> {
+    if (!mcVersion) {
+      throw new Error('Cannot resolve Fabric loader: Minecraft version is empty. Make sure the modpack was imported with a valid Minecraft version.');
+    }
+    this.emitProgress('loader', 'downloading', 0, 2);
+
+    let loaderVersion = requestedLoaderVersion;
+    if (!loaderVersion) {
+      // Prefer an already-downloaded Fabric profile — the launch must work
+      // offline and instant when everything is cached. Only hit the Fabric
+      // meta endpoint when no profile exists for this MC version yet.
+      // `root` is the VERSIONS directory — profiles live directly inside it.
+      if (existsSync(root)) {
+        const prefix = 'fabric-loader-';
+        const suffix = `-${mcVersion}`;
+        const cached = readdirSync(root, { withFileTypes: true }).find(
+          (e) => e.isDirectory() && e.name.startsWith(prefix) && e.name.endsWith(suffix),
+        );
+        if (cached) {
+          loaderVersion = cached.name.slice(prefix.length, cached.name.length - suffix.length);
+          this.emit('debug', `[MC] Using cached Fabric profile (loader ${loaderVersion})`);
+        }
+      }
+    }
+    if (!loaderVersion) {
+      // /v2/versions/loader/{mc} returns an ARRAY of { loader, intermediary, launcherMeta }
+      this.emit('debug', `[MC] No cached Fabric profile — querying meta.fabricmc.net for MC ${mcVersion}...`);
+      let meta: { loader: { version: string; stable?: boolean } }[];
+      try {
+        meta = await this.http.getJson<{ loader: { version: string; stable?: boolean } }[]>(
+          `https://meta.fabricmc.net/v2/versions/loader/${mcVersion}`,
+        );
+      } catch (err) {
+        if (err instanceof HttpClientError && err.statusCode && err.statusCode >= 400 && err.statusCode < 500) {
+          throw new Error(`No Fabric loader available for Minecraft ${mcVersion}. The version may not be supported by Fabric yet.`);
+        }
+        throw err;
+      }
+      if (!Array.isArray(meta) || meta.length === 0) {
+        throw new Error(`No Fabric loader available for Minecraft ${mcVersion}`);
+      }
+      const stable = meta.find((l) => l.loader?.stable !== false);
+      loaderVersion = (stable ?? meta[0])?.loader?.version;
+      if (!loaderVersion) throw new Error(`No Fabric loader available for Minecraft ${mcVersion}`);
+    }
+
+    const profileId = `fabric-loader-${loaderVersion}-${mcVersion}`;
+    const dir = join(root, profileId);
+    const jsonPath = join(dir, `${profileId}.json`);
+
+    if (!existsSync(jsonPath)) {
+      this.emit('debug', `[MC] Downloading Fabric profile ${loaderVersion} for MC ${mcVersion}...`);
+      let profile: VersionJson & { id?: string };
+      try {
+        profile = await this.http.getJson<VersionJson & { id?: string }>(
+          `https://meta.fabricmc.net/v2/versions/loader/${mcVersion}/${loaderVersion}/profile/json`,
+        );
+      } catch (err) {
+        if (err instanceof HttpClientError && err.statusCode && err.statusCode >= 400 && err.statusCode < 500) {
+          throw new Error(`Fabric loader ${loaderVersion} is not available for Minecraft ${mcVersion}. Check that the modpack's Minecraft version and loader version are compatible.`);
+        }
+        throw err;
+      }
+      profile.id = profileId;
+      await this.ensureDir(dir);
+      await writeFile(jsonPath, JSON.stringify(profile, null, 4));
+    }
+
+    this.emitProgress('loader', 'downloading', 1, 2);
+    const raw = await this.readJsonFile<VersionJson>(jsonPath);
+    const resolved = await this.resolveInheritsFrom(root, raw);
+    this.emitProgress('loader', 'downloading', 2, 2);
+    return resolved;
+  }
+
   /** Recursively resolve `inheritsFrom` chains (Fabric, Forge, etc.) */
   private async resolveInheritsFrom(root: string, json: VersionJson): Promise<VersionJson> {
     if (!json.inheritsFrom) return json;
 
-    const parentDir = join(root, 'versions', json.inheritsFrom);
+    const parentDir = join(root, json.inheritsFrom);
     const parentPath = join(parentDir, `${json.inheritsFrom}.json`);
 
     let parent: VersionJson;
     if (existsSync(parentPath)) {
-      parent = JSON.parse(await readFile(parentPath, 'utf8'));
+      parent = await this.readJsonFile<VersionJson>(parentPath);
     } else {
       // Download parent from manifest
       const manifest = await this.http.getJson<{ versions: { id: string; url: string }[] }>(
@@ -206,14 +325,17 @@ export class McLauncher extends EventEmitter {
   }
 
   private mergeLibraries(parentLibs: MclcLibrary[], childLibs: MclcLibrary[]): MclcLibrary[] {
+    // Key by the FULL artifact coordinate (group:artifact:version:classifier) —
+    // NOT group:artifact. LWJGL ships a core jar plus per-arch natives jars
+    // sharing one group:artifact; collapsing them by group:artifact leaves only
+    // the LAST variant (e.g. natives-windows-x86) and drops the core jar,
+    // causing NoClassDefFoundError (org.lwjgl.system.MathUtil) at game start.
     const byName = new Map<string, MclcLibrary>();
     for (const lib of parentLibs) {
-      const key = lib.name.split(':').slice(0, 2).join(':');
-      byName.set(key, lib);
+      byName.set(lib.name, lib);
     }
     for (const lib of childLibs) {
-      const key = lib.name.split(':').slice(0, 2).join(':');
-      byName.set(key, lib); // child overrides parent
+      byName.set(lib.name, lib); // child overrides identical coordinates
     }
     return Array.from(byName.values());
   }
@@ -231,7 +353,28 @@ export class McLauncher extends EventEmitter {
 
   // ── Jar download ──
 
-  private async downloadJar(version: VersionJson, directory: string): Promise<string> {
+  private async downloadJar(version: VersionJson, directory: string, versionsRoot: string): Promise<string> {
+    // Fabric/Forge profiles download the VANILLA client jar. If the parent
+    // version's jar is already present, reuse it instead of copying the same
+    // ~25 MB jar under the profile id on every loader change.
+    if (version.inheritsFrom) {
+      const parentJar = join(versionsRoot, version.inheritsFrom, `${version.inheritsFrom}.jar`);
+      if (existsSync(parentJar)) {
+        const expectedSize = version.downloads?.client?.size;
+        if (expectedSize) {
+          try {
+            if (statSync(parentJar).size === expectedSize) {
+              this.emit('debug', `[MC] Reusing client jar from parent version ${version.inheritsFrom}`);
+              return parentJar;
+            }
+            this.emit('debug', `[MC] Parent jar size mismatch (${statSync(parentJar).size} vs ${expectedSize}), re-downloading`);
+          } catch { /* stat failed, re-download */ }
+        } else {
+          return parentJar;
+        }
+      }
+    }
+
     const jarName = `${version.id}.jar`;
     const jarPath = join(directory, jarName);
 
@@ -263,7 +406,9 @@ export class McLauncher extends EventEmitter {
   // ── Library download ──
 
   private async downloadLibraries(version: VersionJson, root: string): Promise<string[]> {
-    const libDir = join(root, 'libraries');
+    // `root` IS the libraries directory — artifacts live directly inside it
+    // (the caller passes the shared librariesRoot).
+    const libDir = root;
     const libs = version.libraries.filter((lib) => this.isValidLibrary(lib));
 
     this.emitProgress('libraries', 'downloading', 0, libs.length);
@@ -318,9 +463,9 @@ export class McLauncher extends EventEmitter {
 
     if (existsSync(jarPath)) return jarPath;
 
-    // Try default repo, then fallback
-    const repos = [MAVEN_DEFAULT, FORGE_MAVEN, FALLBACK_MAVEN];
-    url = lib.url || repos[0];
+    // Try the library's own URL first (e.g. maven.fabricmc.net for Fabric),
+    // then fall back to default repositories.
+    const repos = [lib.url, MAVEN_DEFAULT, FORGE_MAVEN, FALLBACK_MAVEN].filter(Boolean);
 
     for (const repo of repos) {
       try {
@@ -339,19 +484,29 @@ export class McLauncher extends EventEmitter {
   }
 
   private isValidLibrary(lib: MclcLibrary): boolean {
-    if (!lib.rules) return true;
+    if (!lib.rules || lib.rules.length === 0) return true;
     const os = process.platform === 'win32' ? 'windows' : process.platform === 'darwin' ? 'osx' : 'linux';
+    const arch = process.arch === 'x64' ? 'x86_64' : process.arch;
+    // Mojang rule semantics: rules are evaluated IN ORDER and the LAST
+    // matching rule decides; if none match, the library is excluded.
+    // (The previous first-rule-return broke multi-rule entries like
+    //  lwjgl-platform's [{allow}, {disallow:osx}] — always allowed on osx.)
+    let result = false;
     for (const rule of lib.rules) {
+      const osMatch =
+        !rule.os ||
+        (rule.os.name === os && (!rule.os.arch || rule.os.arch === arch));
+      const featuresMatch =
+        !rule.features ||
+        Object.values(rule.features).every((v) => v === false);
+      if (!osMatch || !featuresMatch) continue;
       if (rule.action === 'allow') {
-        if (rule.os) return rule.os.name === os;
-        return true;
-      }
-      if (rule.action === 'disallow') {
-        if (rule.os) return rule.os.name !== os;
-        return false;
+        result = true;
+      } else if (rule.action === 'disallow') {
+        result = false;
       }
     }
-    return true;
+    return result;
   }
 
   // ── Asset download ──
@@ -359,7 +514,9 @@ export class McLauncher extends EventEmitter {
   private async downloadAssets(version: VersionJson, root: string): Promise<void> {
     if (!version.assetIndex) return;
 
-    const assetDir = join(root, 'assets');
+    // `root` IS the assets directory — indexes/ and objects/ live directly
+    // inside it (the caller passes the shared assetsRoot).
+    const assetDir = root;
     const indexDir = join(assetDir, 'indexes');
     const objectsDir = join(assetDir, 'objects');
     await this.ensureDir(indexDir);
@@ -369,6 +526,7 @@ export class McLauncher extends EventEmitter {
     const indexPath = join(indexDir, `${assetId}.json`);
 
     if (!existsSync(indexPath)) {
+      this.emit('debug', `[MC] Downloading asset index ${assetId}...`);
       await this.http.downloadFile(version.assetIndex.url, indexPath, {
         expectedSha1: version.assetIndex.sha1,
         expectedSize: version.assetIndex.size,
@@ -377,35 +535,50 @@ export class McLauncher extends EventEmitter {
 
     const index = JSON.parse(await readFile(indexPath, 'utf8'));
     const entries = Object.entries(index.objects) as [string, { hash: string; size: number }][];
+    this.emit('debug', `[MC] Assets: index ${assetId} lists ${entries.length} objects`);
 
-    this.emitProgress('assets', 'downloading', 0, entries.length);
+    // Verify first, download only what's actually missing. Emitting
+    // "downloading" progress while merely checking would make the UI lie
+    // about network activity for instances that are already complete.
+    const missing: { hash: string; size: number }[] = [];
+    for (const [, obj] of entries) {
+      if (!existsSync(join(objectsDir, obj.hash.substring(0, 2), obj.hash))) {
+        missing.push(obj);
+      }
+    }
+
+    if (missing.length === 0) {
+      this.emit('debug', `[MC] Assets up to date (${entries.length} objects present)`);
+      this.emitProgress('assets', 'done', entries.length, entries.length);
+      return;
+    }
+
+    this.emit('debug', `[MC] Downloading ${missing.length} missing assets (${entries.length} total)...`);
+    this.emitProgress('assets', 'downloading', 0, missing.length);
     let done = 0;
 
     const BATCH = 16;
-    for (let i = 0; i < entries.length; i += BATCH) {
-      const batch = entries.slice(i, i + BATCH);
+    for (let i = 0; i < missing.length; i += BATCH) {
+      const batch = missing.slice(i, i + BATCH);
       await Promise.all(
-        batch.map(async ([, obj]) => {
+        batch.map(async (obj) => {
           const hash = obj.hash;
           const sub = hash.substring(0, 2);
           const objDir = join(objectsDir, sub);
-          const objPath = join(objDir, hash);
-          if (!existsSync(objPath)) {
-            await this.ensureDir(objDir);
-            await this.http.downloadFile(`${MOJANG_RESOURCES}/${sub}/${hash}`, objPath);
-          }
+          await this.ensureDir(objDir);
+          await this.http.downloadFile(`${MOJANG_RESOURCES}/${sub}/${hash}`, join(objDir, hash));
           done++;
-          this.emitProgress('assets', 'downloading', done, entries.length);
+          this.emitProgress('assets', 'downloading', done, missing.length);
         }),
       );
     }
+    this.emit('debug', `[MC] Assets ready (${entries.length} objects)`);
   }
 
   // ── Natives (pre-1.19) ──
 
   private async handleNatives(version: VersionJson, root: string): Promise<string> {
-    const mcVersion = parseInt(version.id.split('.')[1] || '0', 10);
-    if (mcVersion >= 19) return root; // post-1.19 doesn't use separate natives
+    if (this.mcMajor(version) >= 19) return root; // post-1.19 doesn't use separate natives
 
     const nativeDir = join(root, 'natives', version.id);
     if (existsSync(nativeDir) && (await readdir(nativeDir)).length > 0) {
@@ -460,7 +633,7 @@ export class McLauncher extends EventEmitter {
     classPathStr: string,
   ): string[] {
     const os = process.platform === 'win32' ? 'windows' : process.platform === 'darwin' ? 'osx' : 'linux';
-    const mcVersion = parseInt(version.id.split('.')[1] || '0', 10);
+    const mcVersion = this.mcMajor(version);
 
     const jvm: string[] = [
       `-Xmx${opts.memory.max}M`,
@@ -469,6 +642,12 @@ export class McLauncher extends EventEmitter {
       '-cp',
       classPathStr,
     ];
+
+    // Ely.by accounts authenticate through authlib-injector (v1 behavior).
+    // Without the javaagent, Ely.by sessions are rejected by Ely.by servers.
+    if (opts.authProvider === 'elyby' && opts.authlibInjectorJar) {
+      jvm.push(`-javaagent:${opts.authlibInjectorJar}=https://authserver.ely.by/api/authlib-injector`);
+    }
 
     // Version-specific JVM flags
     if (os === 'windows') {
@@ -555,8 +734,8 @@ export class McLauncher extends EventEmitter {
       '${version_name}': version.id,
       '${assets_index_name}': version.assets || version.id,
       '${game_directory}': opts.gameDirectory || opts.root,
-      '${assets_root}': join(opts.root, 'assets'),
-      '${game_assets}': join(opts.root, 'assets'),
+      '${assets_root}': opts.assetsRoot ?? join(opts.root, 'assets'),
+      '${game_assets}': opts.assetsRoot ?? join(opts.root, 'assets'),
       '${version_type}': 'release',
       '${clientid}': opts.auth.client_token,
     };
@@ -587,13 +766,16 @@ export class McLauncher extends EventEmitter {
   }
 
   private evaluateRules(
-    rules: { action: string; os?: { name: string }; features?: Record<string, boolean> }[],
+    rules: { action: string; os?: { name: string; arch?: string }; features?: Record<string, boolean> }[],
     activeFeatures: Record<string, boolean> = {},
   ): boolean {
     const os = process.platform === 'win32' ? 'windows' : process.platform === 'darwin' ? 'osx' : 'linux';
+    const arch = process.arch === 'x64' ? 'x86_64' : process.arch;
     let result = false;
     for (const rule of rules) {
-      const osMatch = !rule.os || rule.os.name === os;
+      const osMatch =
+        !rule.os ||
+        (rule.os.name === os && (!rule.os.arch || rule.os.arch === arch));
       // Per Mojang spec: features must ALL be present in activeFeatures to match
       const featuresMatch = !rule.features ||
         Object.entries(rule.features).every(([k, v]) => activeFeatures[k] === v);
@@ -612,7 +794,31 @@ export class McLauncher extends EventEmitter {
     await mkdir(dir, { recursive: true });
   }
 
+  /** Read + parse a JSON file with the path attached to any error. */
+  private async readJsonFile<T = unknown>(path: string): Promise<T> {
+    const raw = await readFile(path, 'utf8');
+    try {
+      return JSON.parse(raw) as T;
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      throw new Error(`Corrupted JSON in ${path}: ${detail}`);
+    }
+  }
+
   private emitProgress(type: string, phase: string, completed: number, total: number): void {
     this.emit('progress', { type, phase, completed, total });
+  }
+
+  /**
+   * Extract the "major" MC version from a version id, handling BOTH versioning
+   * schemes: classic `1.8.9` → 8, `1.20.1` → 20, and new-style `26.1.2` → 26.
+   * For loader profiles (id = `fabric-loader-x-y-z`), uses the inherited
+   * vanilla version instead — parsing the profile id would give garbage.
+   */
+  private mcMajor(version: VersionJson): number {
+    const id = version.inheritsFrom ?? version.id;
+    const parts = id.split('.');
+    if (parts[0] === '1' && parts[1]) return parseInt(parts[1], 10) || 0;
+    return parseInt(parts[0] ?? '0', 10) || 0;
   }
 }

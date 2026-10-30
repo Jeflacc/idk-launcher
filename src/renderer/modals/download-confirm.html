@@ -1,0 +1,18 @@
+<!-- DOWNLOAD CONFIRMATION MODAL -->
+<div class="custom-modal" id="dl-confirm-modal">
+  <div class="modal-content" style="max-width: 400px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+      <div id="dl-confirm-icon-wrap" style="width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,0.04);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        <svg width="22" height="22" fill="currentColor" style="color:var(--theme-accent);" viewBox="0 0 24 24"><path d="M14 4h4v2h-4zm-4-2h4v2h-4zM6 8h4v2H6zm0 10h4v2H6zm4-8h4v2h-4zm0 10h4v2h-4zm4-12h4v2h-4zm0 10h4v2h-4zM6 4h4v2H6zM2 6h4v2H2zm0 10h4v2H2zM18 6h4v2h-4zm0 10h4v2h-4z"/><path d="M2 6h2v12H2zm18 0h2v12h-2zm-8 6h2v8h-2z"/></svg>
+      </div>
+      <div style="min-width:0;">
+        <h3 id="dl-confirm-name" style="margin:0 0 3px;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Download Modpack?</h3>
+        <p style="margin:0;font-size:11px;color:var(--text-muted);">Import this modpack into your collection.</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="modal-btn" id="btn-dl-confirm-cancel" style="flex:1;">Cancel</button>
+      <button class="submit-btn" id="btn-dl-confirm-start" style="flex:2;">Download</button>
+    </div>
+  </div>
+</div>

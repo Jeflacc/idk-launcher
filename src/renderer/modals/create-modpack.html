@@ -1,0 +1,34 @@
+<!-- New Modpack Creation Modal -->
+<div class="mp-create-modal" id="mp-create-modal">
+  <div class="mp-create-box">
+    <div class="mp-modal-header">
+      <h3>New Modpack</h3>
+      <button class="mp-modal-close" id="btn-close-create-mp-x" title="Close">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z"/></svg>
+      </button>
+    </div>
+    <div class="mp-create-body">
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div class="icon-picker" id="new-mp-icon-picker" title="Select custom icon">
+          <div class="icon-picker-placeholder"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zm-4 8h2v2h-2zm-2 2h2v2h-2zm4 0h2v2h-2zm-8 0h2v2h-2zm2 2h2v2h-2zm2 2h2v2h-2z"/><path d="M20 16h2v2h-2zM8 16h2v2H8zm-2 2h2v2H6zM8 6h2v2H8zM6 8h2v2H6zm2 2h2v2H8zm2-2h2v2h-2z"/></svg></div>
+        </div>
+        <input type="hidden" id="new-mp-icon" value="" />
+        <div style="flex:1;display:flex;flex-direction:column;gap:12px;">
+          <input class="clean-input" id="new-mp-name" placeholder="Modpack name..." style="text-align:left;" />
+          <div style="display:flex;gap:12px;">
+            <select class="clean-select" id="new-mp-version"></select>
+            <select class="clean-select" id="new-mp-loader"><option value="Fabric">Fabric</option><option value="Forge">Forge</option><option value="NeoForge">NeoForge</option><option value="Quilt">Quilt</option><option value="Vanilla">Vanilla</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="mp-create-field">
+        <label for="new-mp-description">Description</label>
+        <textarea class="clean-input" id="new-mp-description" placeholder="Add a description for this modpack..." style="text-align:left; min-height:70px; resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="submit-btn" id="btn-confirm-create-mp" style="flex:1;">Create</button>
+      <button class="modal-btn" id="btn-cancel-create-mp" style="flex:1;">Cancel</button>
+    </div>
+  </div>
+</div>

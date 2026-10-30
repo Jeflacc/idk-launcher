@@ -59,12 +59,12 @@
     min-height: min(380px, calc(100vh - 24px));
     background: rgba(10, 10, 12, 0.94);
     border: 1px solid rgba(var(--theme-accent-rgb), 0.18);
-    border-radius: 12px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
-    padding: 18px;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+    padding: var(--space-6);
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--space-6);
 }
 
 .launch-spinner-gif {
@@ -143,11 +143,12 @@
 .sodium-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    background: rgba(var(--theme-accent-rgb), 0.12);
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
-    border-radius: 4px;
-    padding: 1px 4px;
+    gap: 3px;
+    background: #0e0e10;
+    border: 1px solid #000;
+    border-radius: 0;
+    padding: 1px 5px;
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.06), inset -1px -1px 0 rgba(0, 0, 0, 0.5);
 }
 
 .sodium-badge img {
@@ -156,9 +157,12 @@
 }
 
 .sodium-label {
-    color: #c4b5fd;
-    font-size: 9px;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 8px;
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* =========================================================
@@ -191,7 +195,7 @@
 }
 
 .update-box h3 {
-    color: #60a5fa !important;
+    color: var(--theme-accent) !important;
 }
 
 .update-notes-container::-webkit-scrollbar {
@@ -238,19 +242,19 @@
 }
 
 .modal-content {
-    background: #1b1b1c;
-    border: 1px solid #2d2d2e;
-    padding: 24px;
-    border-radius: 8px;
+    background: var(--surface-4);
+    border: 1px solid var(--color-border-subtle);
+    padding: var(--space-8);
+    border-radius: var(--radius-md);
     width: 90%;
     max-width: 500px;
     text-align: center;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
     transform: translateY(16px);
-    transition: transform 0.25s ease;
+    transition: transform var(--transition-base);
     max-height: 80vh;
     overflow-y: auto;
-    animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: modalSlideIn var(--transition-base);
 }
 
 @keyframes modalSlideIn {
@@ -266,22 +270,22 @@
 
 .modal-content h3 {
     font-family: var(--font-title);
-    font-size: 18px;
+    font-size: var(--text-xl);
     font-weight: 700;
-    margin-bottom: 12px;
-    color: white;
-    letter-spacing: 0.5px;
+    margin-bottom: var(--space-4);
+    color: var(--color-text-main);
+    letter-spacing: var(--tracking-tight);
     font-variant: small-caps;
     text-transform: lowercase;
-    margin: 0 0 16px 0;
+    margin: 0 0 var(--space-4) 0;
 }
 
 .modal-content p {
-    color: var(--text-muted);
-    font-size: 13px;
+    color: var(--color-text-secondary);
+    font-size: var(--text-md);
     line-height: 1.5;
-    margin-bottom: 32px;
-    margin: 0 0 12px 0;
+    margin-bottom: var(--space-6);
+    margin: 0 0 var(--space-4) 0;
 }
 
 .modal-content::-webkit-scrollbar {
@@ -302,60 +306,59 @@
 }
 
 .modal-btn {
-    background-color: var(--theme-accent);
-    border: 1px solid #4a4a4b;
-    color: #d1d1d2;
-    padding: 10px 16px;
-    border-radius: 4px;
-    font-family: var(--font-main);
-    font-weight: 600;
+    background-color: var(--surface-4);
+    border: 2px solid #000;
+    color: var(--color-text-secondary);
+    padding: var(--space-4) var(--space-6);
+    border-radius: 0;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-weight: 700;
     cursor: pointer;
     box-shadow:
         inset 0 2px 0 var(--theme-accent-hover),
         inset 2px 0 0 var(--theme-accent-hover),
         inset 0 -2px 0 var(--theme-accent-shadow),
-        inset -2px 0 0 #2b2b2c;
-    text-shadow: 1px 1px 0px #2b2b2c;
-    transition: all 0.2s;
+        inset -2px 0 0 var(--theme-accent-shadow);
+    text-shadow: 1px 1px 0px var(--theme-accent-shadow);
+    transition: all var(--transition-fast);
     font-variant: small-caps;
     text-transform: lowercase;
-    background: #313132;
-    font-size: 13px;
+    font-size: var(--text-sm);
+    letter-spacing: var(--tracking-normal);
 }
 
 .modal-btn:hover {
-    background-color: #555556;
+    background-color: rgba(var(--theme-accent-rgb), 0.22);
     box-shadow:
-        inset 0 2px 0 #777778,
-        inset 2px 0 0 #777778,
-        inset 0 -2px 0 #333334,
-        inset -2px 0 0 #333334;
-    background: #3e3e3f;
-    color: white;
-    border-color: #5c5c5d;
+        inset 0 2px 0 rgba(var(--theme-accent-rgb), 0.5),
+        inset 2px 0 0 rgba(var(--theme-accent-rgb), 0.5),
+        inset 0 -2px 0 rgba(var(--theme-accent-rgb), 0.3),
+        inset -2px 0 0 rgba(var(--theme-accent-rgb), 0.3);
+    color: var(--color-text-main);
+    border-color: #000;
 }
 
 .modal-btn:active {
-    transform: translateY(1px);
+    transform: translateY(var(--space-1));
     box-shadow:
-        inset 0 2px 0 #2b2b2c,
-        inset 2px 0 0 #2b2b2c,
-        inset 0 -2px 0 #686869,
-        inset -2px 0 0 #686869;
+        inset 0 2px 0 var(--theme-accent-shadow),
+        inset 2px 0 0 var(--theme-accent-shadow),
+        inset 0 -2px 0 var(--theme-accent-hover),
+        inset -2px 0 0 var(--theme-accent-hover);
 }
 
 /* Update box styling */
 
 .update-box {
-    background: rgba(26, 26, 27, 0.95) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px !important;
-    padding: 32px !important;
+    background: var(--surface-4) !important;
+    border: 1px solid var(--color-border-strong) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: var(--space-8) !important;
     width: 440px !important;
     text-align: center;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5) !important;
     transform: translateY(16px);
-    transition: transform 0.25s;
+    transition: transform var(--transition-base);
 }
 
 .update-icon {
@@ -372,16 +375,16 @@
 }
 
 .update-notes-container {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    padding: 12px;
-    margin: 16px 0;
+    background: var(--surface-2);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
     max-height: 200px;
     overflow-y: auto;
     text-align: left;
-    font-size: 12px;
-    color: #d1d1d2;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
     line-height: 1.5;
     border-left: 3px solid var(--theme-accent);
 }
@@ -836,13 +839,13 @@
     max-height: min(640px, calc(100vh - 32px));
     display: flex;
     flex-direction: column;
-    background: #1b1b1c;
-    border: 2px solid #2d2d2e;
-    border-radius: 6px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
+    background: var(--surface-4);
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
     overflow: hidden;
     transform: translateY(8px);
-    transition: transform 0.25s ease;
+    transition: transform var(--transition-base);
 }
 
 .skin-3d-modal-overlay.is-open .skin-3d-modal-card {
@@ -853,10 +856,10 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
-    padding: 16px 18px;
-    border-bottom: 2px solid #2d2d2e;
-    background: #1f1f20;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 2px solid var(--color-border-strong);
+    background: var(--surface-3);
     flex-shrink: 0;
 }
 
@@ -868,9 +871,9 @@
 .skin-3d-modal-header h3 {
     margin: 0;
     font-family: var(--font-title);
-    font-size: 17px;
+    font-size: var(--text-lg);
     font-weight: 700;
-    color: #fff;
+    color: var(--color-text-main);
     line-height: 1.2;
     letter-spacing: 0;
     font-variant: small-caps;
@@ -881,10 +884,10 @@
 }
 
 .skin-3d-modal-header p {
-    margin: 4px 0 0;
-    font-size: 12px;
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-sm);
     line-height: 1.4;
-    color: var(--text-muted);
+    color: var(--color-text-muted);
 }
 
 .skin-3d-modal-close {
@@ -892,26 +895,26 @@
     width: 32px;
     height: 32px;
     padding: 0;
-    border: 2px solid #3c3c3d;
-    border-radius: 4px;
-    background: #2a2a2b;
-    color: var(--text-muted);
-    font-size: 18px;
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
     line-height: 1;
     cursor: pointer;
+    transition:
+        background var(--transition-fast),
+        color var(--transition-fast),
+        border-color var(--transition-fast);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition:
-        background 0.15s ease,
-        color 0.15s ease,
-        border-color 0.15s ease;
 }
 
 .skin-3d-modal-close:hover {
-    color: #fff;
-    border-color: #4a4a4b;
-    background: #333334;
+    color: var(--color-text-main);
+    border-color: var(--color-border-accent);
+    background: var(--surface-5);
 }
 
 .skin-3d-modal-body {
@@ -1069,14 +1072,14 @@
 
 .confirm-modal-content {
     width: min(400px, 100%);
-    padding: 24px;
-    background: #1b1b1c;
-    border: 2px solid #2d2d2e;
-    border-radius: 6px;
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65);
+    padding: var(--space-8);
+    background: var(--surface-4);
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-6);
 }
 
 .confirm-modal-content--danger {
@@ -1090,9 +1093,9 @@
 .confirm-modal-content h3 {
     margin: 0;
     font-family: var(--font-title);
-    font-size: 18px;
+    font-size: var(--text-lg);
     font-weight: 700;
-    color: #fff;
+    color: var(--color-text-main);
     font-variant: small-caps;
     text-transform: lowercase;
     line-height: 1.2;
@@ -1100,9 +1103,9 @@
 
 .confirm-modal-content p {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--text-md);
     line-height: 1.55;
-    color: #c8c8c9;
+    color: var(--color-text-secondary);
     white-space: pre-wrap;
 }
 
@@ -1398,32 +1401,32 @@
 }
 
 .delete-modal-content {
-    background: linear-gradient(135deg, #1b1b1c 0%, #252525 100%);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    border-radius: 8px;
-    padding: 32px;
+    background: linear-gradient(135deg, var(--surface-4) 0%, var(--surface-5) 100%);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--space-8);
     width: 420px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: var(--space-6);
     box-shadow:
-        0 24px 64px rgba(0, 0, 0, 0.6),
-        0 0 40px rgba(239, 68, 68, 0.1);
+        0 12px 24px rgba(0, 0, 0, 0.5),
+        0 0 16px rgba(var(--color-danger-rgb, 239, 68, 68), 0.1);
 }
 
 .delete-modal-content h3 {
     font-family: var(--font-title);
-    font-size: 20px;
+    font-size: var(--text-xl);
     font-weight: 700;
-    color: white;
+    color: var(--color-text-main);
     margin: 0;
     font-variant: small-caps;
     text-transform: lowercase;
 }
 
 .delete-modal-content p {
-    font-size: 14px;
-    color: #d1d1d2;
+    font-size: var(--text-md);
+    color: var(--color-text-secondary);
     margin: 0;
     line-height: 1.5;
 }
@@ -1434,15 +1437,15 @@
     gap: 12px;
     padding: 16px;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
+    border: 2px solid #000;
+    border-radius: 0;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.08s linear;
 }
 
 .delete-modal-checkbox:hover {
-    background: rgba(255, 255, 255, 0.02);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: #1a1a1d;
+    border-color: #000;
 }
 
 .delete-modal-checkbox input[type="checkbox"] {
@@ -1451,6 +1454,7 @@
     cursor: pointer;
     accent-color: #ef4444;
     flex-shrink: 0;
+    border-radius: 0;
 }
 
 .delete-modal-checkbox label {
@@ -1474,65 +1478,72 @@
 
 .delete-modal-btn {
     flex: 1;
-    padding: 12px 16px;
-    border-radius: 4px;
-    font-family: var(--font-title);
-    font-size: 14px;
+    padding: 11px 16px;
+    border-radius: 0;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    border: 1px solid;
-    transition: all 0.2s ease;
+    border: 2px solid #000;
+    transition: all 0.08s linear;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-shadow: 1px 1px 0 #000;
 }
 
 .delete-modal-btn.cancel {
     background: #313132;
-    border-color: #4a4a4b;
+    border-color: #000;
     color: #d1d1d2;
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.1),
-        inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+        inset 0 2px 0 #4a4a4b,
+        inset 2px 0 0 #4a4a4b,
+        inset 0 -2px 0 #1f1f20,
+        inset -2px 0 0 #1f1f20;
 }
 
 .delete-modal-btn.cancel:hover {
     background: #3e3e3f;
-    border-color: #5c5c5d;
     color: white;
 }
 
 .delete-modal-btn.cancel:active {
     transform: translateY(1px);
     box-shadow:
-        inset 0 1px 0 rgba(0, 0, 0, 0.3),
-        inset -1px -1px 0 rgba(255, 255, 255, 0.1);
+        inset 0 2px 0 #1f1f20,
+        inset 2px 0 0 #1f1f20,
+        inset 0 -2px 0 #4a4a4b,
+        inset -2px 0 0 #4a4a4b;
 }
 
 .delete-modal-btn.confirm {
     background: #7f1d1d;
-    border-color: #991b1b;
+    border-color: #000;
     color: #fecaca;
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.1),
-        inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+        inset 0 2px 0 #991b1b,
+        inset 2px 0 0 #991b1b,
+        inset 0 -2px 0 #5c1212,
+        inset -2px 0 0 #5c1212;
 }
 
 .delete-modal-btn.confirm:hover {
     background: #991b1b;
-    border-color: #b91c1c;
     color: white;
 }
 
 .delete-modal-btn.confirm:active {
     transform: translateY(1px);
     box-shadow:
-        inset 0 1px 0 rgba(0, 0, 0, 0.3),
-        inset -1px -1px 0 rgba(255, 255, 255, 0.1);
+        inset 0 2px 0 #5c1212,
+        inset 2px 0 0 #5c1212,
+        inset 0 -2px 0 #991b1b,
+        inset -2px 0 0 #991b1b;
 }
 
 .delete-modal-btn.confirm:disabled {
     background: #4a4a4b;
-    border-color: #3c3c3d;
+    border-color: #000;
     color: #727273;
     cursor: not-allowed;
     opacity: 0.6;
@@ -1565,25 +1576,236 @@
 }
 
 .mp-create-box {
-    background: rgba(22, 22, 24, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 28px;
+    background: var(--surface-4);
+    border: 2px solid #000;
+    border-radius: var(--radius-md);
+    padding: var(--space-6) var(--space-8);
     width: 380px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    gap: var(--space-4);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 6px 0 #000,
+        0 12px 24px rgba(0, 0, 0, 0.65);
 }
 
-.mp-create-box h3 {
-    font-family: var(--font-title);
-    font-size: 17px;
+.mp-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 2px;
+}
+
+.mp-modal-header h3 {
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: var(--text-lg);
     font-weight: 700;
-    color: white;
-    font-variant: small-caps;
-    text-transform: lowercase;
-    letter-spacing: 0.3px;
+    color: var(--color-text-main);
+    letter-spacing: var(--tracking-normal);
+    text-transform: uppercase;
+    margin: 0;
+    text-shadow: 2px 2px 0 #000;
+}
+
+.mp-modal-close {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-1);
+    border: 2px solid #000;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+    padding: 0;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.05),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.mp-modal-close:hover {
+    background: var(--surface-2);
+    color: var(--color-text-main);
+}
+
+.mp-create-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.mp-create-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mp-create-field label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.mp-all-versions-box {
+    width: 540px;
+    max-height: 80vh;
+}
+
+.mp-dl-tabs {
+    flex-shrink: 0;
+    background: #0e0e10;
+    border: 2px solid #000;
+    border-radius: 0;
+    padding: 2px;
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.5),
+        inset -2px -2px 0 rgba(255, 255, 255, 0.05);
+}
+
+.mp-dl-tabs .pill-switch-option {
+    border-radius: 0;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 10px;
+    padding: 6px 8px;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 0 #000;
+    white-space: nowrap;
+}
+
+.mp-dl-tabs .pill-switch-option:hover:not(.active) {
+    color: #fff;
+    background: #1a1a1d;
+}
+
+.mp-dl-tabs .pill-switch-option.active {
+    background: #fff;
+    color: #0e0e10;
+    text-shadow: none;
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.22);
+}
+
+.mp-dl-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #0e0e10;
+    border: 2px solid #000;
+    border-radius: 0;
+    padding: 0 10px;
+    transition: background 0.18s ease;
+    flex-shrink: 0;
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.5),
+        inset -2px -2px 0 rgba(255, 255, 255, 0.05);
+}
+
+.mp-dl-search:focus-within {
+    background: #161618;
+}
+
+.mp-dl-search svg {
+    color: rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+}
+
+.mp-dl-search input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 6px 0;
+    font-size: 11px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    color: rgba(255, 255, 255, 0.85);
+    min-width: 0;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.mp-dl-search input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.mp-all-versions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 340px;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.mp-all-versions-box .mp-version-download-item {
+    max-width: none;
+    padding: 6px 10px;
+    border-radius: 0;
+    font-size: 10px;
+    text-align: left;
+    border: 2px solid #000;
+    background: #0e0e10;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.04),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.mp-all-versions-box .mp-version-download-item > span:first-child {
+    flex: 1;
+    min-width: 0;
+}
+
+.mp-all-versions-box .mp-version-download-item:hover {
+    background: #1a1a1d;
+}
+
+.mp-all-versions-box .mp-version-download-item .version-name {
+    font-size: 10px;
+    font-weight: 400;
+    text-shadow: 1px 1px 0 #000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mp-all-versions-box .mp-version-download-item .version-type {
+    font-size: 8px;
+    flex-shrink: 0;
+}
+
+.mp-all-versions-box .mp-dl-btn {
+    font-size: 9px;
+    padding: 5px 12px;
+    border-radius: 0;
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-width: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mp-all-versions-box .mp-dl-loader-badge {
+    font-size: 8px;
+    padding: 1px 5px;
+}
+
+.mp-all-versions-box .mp-version-download-item.selected,
+.mp-all-versions-box .mp-version-download-item.selected:hover {
+    background: #3c3c3c;
+    border-color: #000;
+    box-shadow:
+        inset 0 0 0 2px #fff,
+        inset 3px 3px 0 rgba(0, 0, 0, 0.35);
 }
 
 /* Modpack settings modal */
@@ -1611,15 +1833,17 @@
 }
 
 .mp-settings-box {
-    background: linear-gradient(135deg, #1b1b1c 0%, #252525 100%);
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.2);
-    border-radius: 8px;
+    background: var(--surface-4);
+    border: 2px solid #000;
+    border-radius: var(--radius-md);
     width: 420px;
     display: flex;
     flex-direction: column;
     box-shadow:
-        0 24px 64px rgba(0, 0, 0, 0.6),
-        0 0 40px rgba(var(--theme-accent-rgb), 0.1);
+        inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 6px 0 #000,
+        0 12px 24px rgba(0, 0, 0, 0.65);
     overflow: hidden;
 }
 
@@ -1627,44 +1851,44 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px;
-    border-bottom: 1px solid rgba(var(--theme-accent-rgb), 0.15);
-    background: linear-gradient(
-        135deg,
-        rgba(var(--theme-accent-rgb), 0.1) 0%,
-        rgba(var(--theme-accent-rgb), 0.05) 100%
-    );
+    padding: var(--space-5) var(--space-6);
+    border-bottom: 2px solid #000;
+    background: var(--surface-1);
 }
 
 .mp-settings-header h3 {
-    font-family: var(--font-title);
-    font-size: 18px;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: var(--text-lg);
     font-weight: 700;
-    color: white;
+    color: var(--color-text-main);
     margin: 0;
-    font-variant: small-caps;
-    text-transform: lowercase;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-normal);
+    text-shadow: 2px 2px 0 #000;
 }
 
 .mp-settings-close {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 24px;
+    background: var(--surface-1);
+    border: 2px solid #000;
+    color: var(--color-text-muted);
+    font-size: var(--text-xl);
     cursor: pointer;
     padding: 0;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.05),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5);
 }
 
 .mp-settings-close:hover {
-    color: white;
-    background: rgba(var(--theme-accent-rgb), 0.1);
-    border-radius: 4px;
+    color: var(--color-text-main);
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
 }
 
 .mp-settings-content {

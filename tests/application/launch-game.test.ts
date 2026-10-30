@@ -63,12 +63,14 @@ const baseOptions: LaunchOptions = {
 };
 
 describe('LaunchGame', () => {
-  it('fails when no session exists for the provider', async () => {
+  it('launches in offline mode when no session exists (TLauncher-style)', async () => {
+    const launchService = mockLaunchService();
+    vi.mocked(launchService.launch).mockResolvedValue({ success: true, pid: 1 });
     const secrets = {
       load: vi.fn().mockResolvedValue({}),
     } as unknown as SecretStore;
     const useCase = new LaunchGame({
-      launchService: mockLaunchService(),
+      launchService,
       javaService: mockJavaService(),
       secrets,
       modpackRepo: mockModpackRepo(),
@@ -76,10 +78,35 @@ describe('LaunchGame', () => {
       paths: mockPathService(),
     });
 
-    const result = await useCase.execute(baseOptions);
+    const result = await useCase.execute({ ...baseOptions, authProvider: 'offline', username: 'Muzlik_Gamer' });
 
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/No microsoft session/);
+    expect(result.success).toBe(true);
+    const ctx = vi.mocked(launchService.launch).mock.calls[0]![0] as LaunchContext;
+    expect(ctx.auth.username).toBe('Muzlik_Gamer');
+    expect(ctx.auth.provider).toBe('offline');
+  });
+
+  it('defaults to Player username in offline mode when no username is provided', async () => {
+    const launchService = mockLaunchService();
+    vi.mocked(launchService.launch).mockResolvedValue({ success: true, pid: 1 });
+    const secrets = {
+      load: vi.fn().mockResolvedValue({}),
+    } as unknown as SecretStore;
+    const useCase = new LaunchGame({
+      launchService,
+      javaService: mockJavaService(),
+      secrets,
+      modpackRepo: mockModpackRepo(),
+      http: mockHttpClient(),
+      paths: mockPathService(),
+    });
+
+    const result = await useCase.execute({ ...baseOptions, authProvider: 'offline' });
+
+    expect(result.success).toBe(true);
+    const ctx = vi.mocked(launchService.launch).mock.calls[0]![0] as LaunchContext;
+    expect(ctx.auth.username).toBe('Player');
+    expect(ctx.auth.provider).toBe('offline');
   });
 
   it('launches with a microsoft session', async () => {
@@ -102,6 +129,7 @@ describe('LaunchGame', () => {
     const ctx = vi.mocked(launchService.launch).mock.calls[0]![0] as LaunchContext;
     expect(ctx.auth.username).toBe('Steve');
     expect(ctx.auth.accessToken).toBe('tok');
+    expect(ctx.auth.provider).toBe('microsoft');
   });
 
   it('uses elyby session when authProvider is elyby', async () => {
@@ -126,6 +154,107 @@ describe('LaunchGame', () => {
     expect(result.success).toBe(true);
     const ctx = vi.mocked(launchService.launch).mock.calls[0]![0] as LaunchContext;
     expect(ctx.auth.username).toBe('ElybyUser');
+    expect(ctx.auth.provider).toBe('elyby');
+  });
+
+  it('falls back to any available session when the requested provider has none', async () => {
+    // v1 renderer sends authProvider='offline' (broken .data chain) while the
+    // user actually has a Microsoft session — the launch must still work.
+    const launchService = mockLaunchService();
+    vi.mocked(launchService.launch).mockResolvedValue({ success: true, pid: 77 });
+    const secrets = {
+      load: vi.fn().mockResolvedValue({
+        microsoft: { accessToken: 'ms-tok', username: 'Muzlik', uuid: 'mu', expiresAt: 999 },
+      }),
+    } as unknown as SecretStore;
+    const useCase = new LaunchGame({
+      launchService,
+      javaService: mockJavaService(),
+      secrets,
+      modpackRepo: mockModpackRepo(),
+      http: mockHttpClient(),
+      paths: mockPathService(),
+    });
+
+    const result = await useCase.execute({ ...baseOptions, authProvider: 'offline' });
+
+    expect(result.success).toBe(true);
+    const ctx = vi.mocked(launchService.launch).mock.calls[0]![0] as LaunchContext;
+    expect(ctx.auth.username).toBe('Muzlik');
+    expect(ctx.auth.provider).toBe('microsoft');
+  });
+
+  it('falls back to elyby when microsoft is requested but only elyby exists', async () => {
+    const launchService = mockLaunchService();
+    vi.mocked(launchService.launch).mockResolvedValue({ success: true, pid: 78 });
+    const secrets = {
+      load: vi.fn().mockResolvedValue({
+        elyby: { accessToken: 'elyby-tok', username: 'ElybyUser', uuid: 'eu', expiresAt: 999 },
+      }),
+    } as unknown as SecretStore;
+    const useCase = new LaunchGame({
+      launchService,
+      javaService: mockJavaService(),
+      secrets,
+      modpackRepo: mockModpackRepo(),
+      http: mockHttpClient(),
+      paths: mockPathService(),
+    });
+
+    const result = await useCase.execute(baseOptions);
+
+    expect(result.success).toBe(true);
+    const ctx = vi.mocked(launchService.launch).mock.calls[0]![0] as LaunchContext;
+    expect(ctx.auth.username).toBe('ElybyUser');
+    expect(ctx.auth.provider).toBe('elyby');
+  });
+
+  it('detectRequiredJavaVersion handles classic and new versioning schemes', async () => {
+    const useCase = new LaunchGame({
+      launchService: mockLaunchService(),
+      javaService: mockJavaService(),
+      secrets: mockSecretStore(),
+      modpackRepo: mockModpackRepo(),
+      http: mockHttpClient(),
+      paths: mockPathService(),
+    });
+    const detect = (useCase as unknown as { detectRequiredJavaVersion(v: string): Promise<number> })
+      .detectRequiredJavaVersion.bind(useCase);
+
+    expect(await detect('26.1.2')).toBe(25); // new-style versioning → major 26
+    expect(await detect('26.2')).toBe(25);
+    expect(await detect('1.20.1')).toBe(21);
+    expect(await detect('1.18.2')).toBe(17);
+    expect(await detect('1.17.1')).toBe(16);
+    expect(await detect('1.8.9')).toBe(8);
+  });
+
+  it('detectRequiredJavaVersion prefers the authoritative javaVersion from the cached JSON', async () => {
+    const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const root = mkdtempSync(join(tmpdir(), 'launch-game-java-'));
+    mkdirSync(join(root, '26.1.2'), { recursive: true });
+    writeFileSync(
+      join(root, '26.1.2', '26.1.2.json'),
+      JSON.stringify({ id: '26.1.2', mainClass: 'x', libraries: [], javaVersion: { majorVersion: 25 } }),
+    );
+    const paths = { versions: root } as unknown as PathService;
+    try {
+      const useCase = new LaunchGame({
+        launchService: mockLaunchService(),
+        javaService: mockJavaService(),
+        secrets: mockSecretStore(),
+        modpackRepo: mockModpackRepo(),
+        http: mockHttpClient(),
+        paths,
+      });
+      const detect = (useCase as unknown as { detectRequiredJavaVersion(v: string): Promise<number> })
+        .detectRequiredJavaVersion.bind(useCase);
+      expect(await detect('26.1.2')).toBe(25);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it('records playtime for modpack launches on close', async () => {

@@ -1,4 +1,5 @@
 import { state, actions } from '../../core/app-state.js';
+import { loadTemplate } from '../../core/html-loader.js';
 import { showRenderEngineDialog } from "../../components/render-dialog.js";
 
 function updateSetupDisplay() {
@@ -29,24 +30,19 @@ function populateVersionList() {
   );
 
   if (downloadedList.length === 0) {
-    list.innerHTML = `
-      <div style="padding:12px 8px;text-align:center;color:rgba(255,255,255,0.5);font-size:11px;line-height:1.5;">
-        No versions installed yet.<br>
-        <span style="display:inline-block;margin-top:8px;padding:6px 14px;border-radius:4px;background:rgba(var(--theme-accent-rgb),0.15);color:var(--theme-accent-bright);cursor:pointer;font-family:var(--font-title);font-size:11px;letter-spacing:0.5px;" id="play-dd-go-modpacks">
-          Download a Version
-        </span>
-      </div>
-    `;
-    const goBtn = document.getElementById('play-dd-go-modpacks');
-    if (goBtn) {
-      goBtn.addEventListener('click', (e) => {
+    const tpl = loadTemplate("play-dd-empty-template");
+    if (tpl) {
+      const node = tpl.clone();
+      const goBtn = node.goBtn;
+      goBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        const pd = document.getElementById('play-dropdown');
-        const pdt = document.getElementById('play-dropdown-trigger');
-        if (pd) pd.classList.remove('active');
-        if (pdt) pdt.classList.remove('active');
-        if (actions.switchView) actions.switchView('mods');
+        const pd = document.getElementById("play-dropdown");
+        const pdt = document.getElementById("play-dropdown-trigger");
+        if (pd) pd.classList.remove("active");
+        if (pdt) pdt.classList.remove("active");
+        if (actions.switchView) actions.switchView("mods");
       });
+      list.replaceChildren(node.root);
     }
     return;
   }
@@ -65,50 +61,6 @@ function populateVersionList() {
   }
 
   list.innerHTML = '';
-  
-  const modpacks = state.modpacks;
-  const favorites = modpacks.filter(mp => mp.favorite && !mp.isTemporary);
-  
-  if (favorites.length > 0) {
-    const header = document.createElement('div');
-    header.style.cssText = 'padding:8px 12px 4px;font-size:10px;font-weight:700;color:var(--theme-accent);letter-spacing:0.5px;text-transform:uppercase;';
-    header.textContent = 'Favorite Modpacks';
-    list.appendChild(header);
-
-    favorites.forEach(mp => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'play-dd-version-wrapper';
-      wrapper.innerHTML = `
-        <button class="play-dd-version-btn${mp.id === state.selectedModpackId ? ' active' : ''}" data-modpack="${mp.id}">
-          <span class="play-dd-version-id" style="color:var(--theme-accent-bright);"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="margin-right:4px;vertical-align:-1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>${mp.name}</span>
-          <span class="play-dd-version-loader">${mp.mcVersion} · ${mp.loader}</span>
-        </button>
-      `;
-      const btn = wrapper.querySelector('.play-dd-version-btn');
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        state.selectedIsModpack = true;
-        state.selectedModpackId = mp.id;
-        state.selectedVersion = mp.mcVersion;
-        state.selectedLoader = mp.loader;
-        const txt = document.getElementById('selected-version-text');
-        if (txt) txt.textContent = `Modpack: ${mp.name}`;
-        
-        localStorage.setItem('idk_last_played_is_modpack', 'true');
-        localStorage.setItem('idk_last_played_modpack_id', mp.id);
-        
-        updateSetupDisplay();
-        populateVersionList();
-        document.getElementById('version-dropdown')?.classList.remove('open');
-      });
-      list.appendChild(wrapper);
-    });
-
-    const vHeader = document.createElement('div');
-    vHeader.style.cssText = 'padding:8px 12px 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.5px;text-transform:uppercase;margin-top:4px;border-top:1px solid rgba(255,255,255,0.05);';
-    vHeader.textContent = 'Versions';
-    list.appendChild(vHeader);
-  }
 
   sorted.forEach(v => {
     const loader = getLoaderForVersion(v.id);
@@ -175,19 +127,21 @@ function populateVersionList() {
 function renderForLaunchVersionsModal(tab) {
   const list = document.getElementById('mp-all-version-list');
   if (!list) return;
+  const query = (document.getElementById('mp-dl-search')?.value || '').trim().toLowerCase();
   const filtered = (state.allVersions || []).filter(v => {
     if (tab === 'release') return v.type === 'release';
     if (tab === 'snapshot') return v.type === 'snapshot';
     if (tab === 'old') return v.type === 'old_beta' || v.type === 'old_alpha';
     return true;
-  });
+  }).filter(v => !query || v.id.toLowerCase().includes(query));
   list.innerHTML = '';
   filtered.forEach(v => {
     const isDownloaded = state.downloadedVersions.includes(v.id);
     const installedLoader = (window.__installedLoaders && window.__installedLoaders[v.id]) || null;
+    const isSelected = !state.selectedIsModpack && v.id === state.selectedVersion;
     const label = v.type === 'release' ? 'Release' : v.type === 'snapshot' ? 'Snapshot' : 'Old';
     const item = document.createElement('div');
-    item.className = 'mp-version-download-item' + (isDownloaded ? ' downloaded' : '');
+    item.className = 'mp-version-download-item' + (isDownloaded ? ' downloaded' : '') + (isSelected ? ' selected' : '');
     if (isDownloaded) {
       item.style.cursor = 'pointer';
       item.title = 'Click to select this version for launch';
@@ -256,11 +210,12 @@ function renderForLaunchVersionsModal(tab) {
         };
 
         try {
-          const result = await window.electronAPI.downloadVersion({ version: v.id });
+          const loader = (state.selectedLoader || 'Vanilla').toLowerCase();
+          const result = await window.electronAPI.downloadVersion({ version: v.id, loader });
           if (cancelled || (result && result.error && result.error.includes('cancelled'))) {
              throw new Error('Download cancelled');
           }
-          if (!result?.success) throw new Error(result?.error || `Failed to download Minecraft ${v.id}`);
+          if (!result) throw new Error(`Failed to download Minecraft ${v.id}`);
           if (!state.downloadedVersions.includes(v.id)) {
             state.downloadedVersions.push(v.id);
             localStorage.setItem('idk_downloaded_versions', JSON.stringify(state.downloadedVersions));
@@ -290,6 +245,8 @@ function renderForLaunchVersionsModal(tab) {
 }
 let currentLaunchTab = 'release';
 window.showLaunchVersionPicker = () => {
+  window.__dlModalOwner = 'launch';
+  currentLaunchTab = 'release';
   document.getElementById('mp-all-versions-modal')?.classList.add('active');
   // Clone-replace tab buttons to strip modpacks-feature's event listeners
   document.querySelectorAll('#mp-all-versions-modal [data-dl-tab]').forEach(oldBtn => {
@@ -298,7 +255,8 @@ window.showLaunchVersionPicker = () => {
     clone.addEventListener('click', () => {
       document.querySelectorAll('[data-dl-tab]').forEach(b => b.classList.remove('active'));
       clone.classList.add('active');
-      renderForLaunchVersionsModal(clone.getAttribute('id').replace('mp-dl-tab-', ''));
+      currentLaunchTab = clone.getAttribute('id').replace('mp-dl-tab-', '');
+      renderForLaunchVersionsModal(currentLaunchTab);
     });
   });
   renderForLaunchVersionsModal('release');
@@ -310,7 +268,17 @@ function updateLoaderUIFromDropdown(loaderName) {
   });
 }
 
+function initLaunchVersionPickerSearch() {
+  const dlSearchInput = document.getElementById('mp-dl-search');
+  if (!dlSearchInput) return;
+  dlSearchInput.addEventListener('input', () => {
+    if (window.__dlModalOwner !== 'launch') return;
+    renderForLaunchVersionsModal(currentLaunchTab);
+  });
+}
+
 export function initLaunchFeature() {
+initLaunchVersionPickerSearch();
 // --- PLAY BUTTON DROPDOWN ---
 const playDropdown = document.getElementById('play-dropdown');
 const playDropdownTrigger = document.getElementById('play-dropdown-trigger');
@@ -327,56 +295,108 @@ if (playDropdownTrigger && playDropdown) {
     }
   });
 
-  document.getElementById('play-dd-modpacks').addEventListener('click', () => {
-    playDropdown.classList.remove('active');
-    playDropdownTrigger.classList.remove('active');
-    actions.switchView('mods');
-  });
-
   // --- FOLDER OPENING ---
   function closePlayDropdown() {
     playDropdown.classList.remove('active');
     playDropdownTrigger.classList.remove('active');
   }
 
-  async function getMinecraftRoot() {
-    if (window.electronAPI?.getUserDataPath) {
-      const userDataPath = await window.electronAPI.getUserDataPath();
-      return userDataPath + '/minecraft-data';
+  async function openFolderFor(action) {
+    const api = window.electronAPI;
+    if (!api) return;
+
+    if (action === 'root') {
+      api.openMinecraftFolder();
+      return;
     }
-    return null;
+
+    let dir = null;
+
+    if (state.selectedIsModpack && state.selectedModpackId) {
+      const mp = state.modpacks.find((m) => m.id === state.selectedModpackId);
+      if (mp?.directory) {
+        dir = mp.directory;
+      }
+    } else if (state.selectedVersion) {
+      const prof = state.modpacks.find((mp) => mp.id === state.selectedVersion);
+      if (prof?.directory) {
+        dir = prof.directory;
+      } else {
+        const result = await api.ensureInstance(state.selectedVersion);
+        if (result.directory) dir = result.directory;
+      }
+    }
+
+    if (!dir) {
+      api.openMinecraftFolder();
+      return;
+    }
+
+    if (action === 'version') {
+      await api.openPath(dir);
+    } else if (action === 'mods') {
+      await api.openPath(dir + '\\mods');
+    }
   }
 
-  document.getElementById('play-dd-open-version-folder')?.addEventListener('click', async () => {
-    closePlayDropdown();
-    if (!window.electronAPI?.openPath) return;
-    const root = await getMinecraftRoot();
-    if (!root) return;
-    if (state.selectedIsModpack && state.selectedModpackId) {
-      window.electronAPI.openPath(root + '/profiles/' + state.selectedModpackId);
-    } else if (state.selectedVersion) {
-      window.electronAPI.openPath(root + '/versions/' + state.selectedVersion);
-    }
+  // Advanced-UI dropdown folder items (v1 layout never added the buttons —
+  // they now live in the advanced dropdown panel).
+  document.querySelectorAll('#play-dropdown [data-folder-action]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      closePlayDropdown();
+      await openFolderFor(btn.getAttribute('data-folder-action'));
+    });
   });
 
-  document.getElementById('play-dd-open-mods-folder')?.addEventListener('click', async () => {
-    closePlayDropdown();
-    if (!window.electronAPI?.openPath) return;
-    const root = await getMinecraftRoot();
-    if (!root) return;
-    if (state.selectedIsModpack && state.selectedModpackId) {
-      window.electronAPI.openPath(root + '/profiles/' + state.selectedModpackId + '/mods');
-    } else if (state.selectedVersion) {
-      window.electronAPI.openPath(root + '/versions/' + state.selectedVersion + '/mods');
-    }
-  });
+  // Normal-UX hover folder menu: hidden by default, revealed when hovering the
+  // play-button cluster (.play-container) or the menu itself. Scoped to the
+  // container — no listeners on the document-level hover.
+  const folderMenu = document.getElementById('play-folder-menu');
+  const folderTrigger = document.getElementById('play-folder-trigger');
+  if (folderMenu && folderTrigger) {
+    let hoverTimer = null;
 
-  document.getElementById('play-dd-open-root-folder')?.addEventListener('click', async () => {
-    closePlayDropdown();
-    if (window.electronAPI?.openMinecraftFolder) {
-      window.electronAPI.openMinecraftFolder();
-    }
-  });
+    const openFolderMenu = () => {
+      if (hoverTimer) clearTimeout(hoverTimer);
+      folderMenu.classList.add('open');
+      folderTrigger.setAttribute('aria-expanded', 'true');
+    };
+    const closeFolderMenu = () => {
+      if (hoverTimer) clearTimeout(hoverTimer);
+      folderMenu.classList.remove('open');
+      folderTrigger.setAttribute('aria-expanded', 'false');
+    };
+
+    folderTrigger.addEventListener('mouseenter', openFolderMenu);
+    folderMenu.addEventListener('mouseleave', () => {
+      hoverTimer = setTimeout(closeFolderMenu, 120);
+    });
+    // Keep the menu open while moving from trigger into the panel.
+    folderMenu.addEventListener('mouseenter', () => {
+      if (hoverTimer) clearTimeout(hoverTimer);
+    });
+
+    folderTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      folderMenu.classList.contains('open') ? closeFolderMenu() : openFolderMenu();
+    });
+
+    folderMenu.addEventListener('click', (e) => {
+      const item = e.target.closest('.play-folder-item');
+      if (!item) return;
+      e.stopPropagation();
+      closeFolderMenu();
+      openFolderFor(item.getAttribute('data-action'));
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeFolderMenu();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!folderMenu.contains(e.target)) closeFolderMenu();
+    });
+  }
 
   // Loader buttons
   document.querySelectorAll('.play-dd-loader-btn').forEach(btn => {
@@ -408,15 +428,6 @@ if (playDropdownTrigger && playDropdown) {
       playDropdownTrigger.classList.remove('active');
     }
   });
-
-  const forceUpdateCb = document.getElementById('force-update-cb');
-  if (forceUpdateCb) {
-    forceUpdateCb.checked = state.forceUpdate;
-    forceUpdateCb.addEventListener('change', (e) => {
-      state.forceUpdate = e.target.checked;
-      // REMOVED: localStorage.setItem — backend SettingsStore is authoritative
-    });
-  }
 }
 
 // --- PLAY LOGIC ---
@@ -766,6 +777,14 @@ playBtn.addEventListener('click', async (e) => {
     console.warn('[Launch] Auth retrieval failed:', e);
   }
 
+  if (!state.selectedIsModpack && state.selectedVersion && window.electronAPI?.ensureInstance) {
+    try {
+      await window.electronAPI.ensureInstance(state.selectedVersion);
+    } catch (e) {
+      console.warn('[Launch] Failed to ensure instance:', e);
+    }
+  }
+
   if (window.electronAPI) {
     const windowSize = {
       width: state.defaultWindowWidth,
@@ -830,10 +849,7 @@ playBtn.addEventListener('click', async (e) => {
         window.electronAPI.saveSettings(settingsToSave).catch(() => {});
       }
       
-      // Update the UI dropdowns if they exist
-      const advSelect = document.getElementById('advanced-performance-renderer');
-      if (advSelect) advSelect.value = selection.renderer;
-      
+      // Update the UI dropdown if it exists
       const classicRenderer = document.getElementById('performance-renderer');
       if (classicRenderer) classicRenderer.value = selection.renderer;
     }
@@ -883,51 +899,38 @@ document.getElementById('btn-close-modal').addEventListener('click', () => {
 
 // Missing Dependencies Modal
 function showMissingDepsModal(missing, mcVersion) {
-  // Remove existing modal if any
-  const existing = document.getElementById('missing-deps-modal');
-  if (existing) existing.remove();
+  const modal = document.getElementById('missing-deps-modal');
+  const listEl = document.getElementById('missing-deps-list');
+  if (!modal || !listEl) {
+    console.warn('[launch] missing-deps-modal markup missing');
+    return;
+  }
 
   const mp = actions.modpacks?.mpGet?.();
   const modpackId = mp ? mp.id : null;
 
-  const modal = document.createElement('div');
-  modal.id = 'missing-deps-modal';
-  modal.style.cssText = `
-    position:fixed;top:0;left:0;right:0;bottom:0;
-    background:rgba(0,0,0,0.75);z-index:9999;
-    display:flex;align-items:center;justify-content:center;
-  `;
+  listEl.replaceChildren();
+  for (const d of missing) {
+    const li = document.createElement('li');
+    li.style.cssText =
+      'padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;';
+    const strong = document.createElement('strong');
+    strong.style.color = 'var(--theme-accent)';
+    strong.textContent = d.modId;
+    const span = document.createElement('span');
+    span.style.cssText = 'color:#888;font-size:11px;margin-left:8px;';
+    span.textContent = `required by ${d.requiredBy}`;
+    li.append(strong, span);
+    listEl.append(li);
+  }
 
-  const list = missing.map(d =>
-    `<li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;">
-      <strong style="color:var(--theme-accent);">${d.modId}</strong>
-      <span style="color:#888;font-size:11px;margin-left:8px;">required by ${d.requiredBy}</span>
-    </li>`
-  ).join('');
+  const status = document.getElementById('deps-install-status');
+  if (status) status.innerText = '';
+  modal.style.display = 'flex';
 
-  modal.innerHTML = `
-    <div style="background:#1a1a1b;border:2px solid var(--theme-accent);border-radius:8px;padding:32px;max-width:480px;width:90%;font-family:var(--font-title);">
-      <div style="text-align:center;margin-bottom:20px;">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" style="margin-bottom:12px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        <h2 style="font-size:20px;color:white;margin:0 0 8px;">Missing Dependencies</h2>
-        <p style="color:#888;font-size:13px;margin:0;">The game crashed because these required mods are missing:</p>
-      </div>
-      <ul style="list-style:none;padding:0;margin:0 0 24px;max-height:200px;overflow-y:auto;">${list}</ul>
-      <div style="display:flex;gap:10px;">
-        <button id="btn-auto-install-deps" style="flex:1;background:var(--theme-accent);border:none;border-radius:4px;padding:12px;color:white;font-family:var(--font-title);font-size:13px;font-weight:700;cursor:pointer;">
-          Auto-Install All
-        </button>
-        <button id="btn-dismiss-deps" style="flex:1;background:#3a3a3b;border:none;border-radius:4px;padding:12px;color:white;font-family:var(--font-title);font-size:13px;font-weight:700;cursor:pointer;">
-          Dismiss
-        </button>
-      </div>
-      <div id="deps-install-status" style="margin-top:12px;font-size:12px;color:#888;text-align:center;"></div>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  document.getElementById('btn-dismiss-deps').onclick = () => modal.remove();
+  document.getElementById('btn-dismiss-deps').onclick = () => {
+    modal.style.display = 'none';
+  };
 
   document.getElementById('btn-auto-install-deps').onclick = async () => {
     if (!modpackId || !window.electronAPI) {
@@ -994,12 +997,12 @@ let gameStartTime = 0;
 function updatePlaytimeDisplay() {
   const totalMs = parseInt(localStorage.getItem('idk_playtime') || '0');
   const hours = (totalMs / (1000 * 60 * 60)).toFixed(1);
-  const el = document.getElementById('stat-playtime');
+  const el = document.getElementById('profile-stat-playtime');
   if (el) el.innerText = `${hours}h`;
 }
 
 async function updateAchievementsDisplay() {
-  const el = document.getElementById('stat-achievements');
+  const el = document.getElementById('profile-stat-achievements');
   if (!el) return;
   if (window.electronAPI && window.electronAPI.scanAllAchievements) {
     try {

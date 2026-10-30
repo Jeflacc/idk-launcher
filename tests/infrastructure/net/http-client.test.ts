@@ -104,6 +104,38 @@ describe('HttpClient', () => {
     });
   });
 
+  describe('error context', () => {
+    it('wraps native fetch failures with the failing URL', async () => {
+      // Native fetch throws TypeError("fetch failed") — must surface as a
+      // diagnosable HttpClientError with the URL attached (was: "fetch failed").
+      vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('fetch failed'));
+      await expect(http.getJson('https://meta.fabricmc.net/v2/versions/loader/26.1.2')).rejects.toThrow(
+        HttpClientError,
+      );
+      await expect(http.getJson('https://meta.fabricmc.net/v2/versions/loader/26.1.2')).rejects.toThrow(
+        /Network error: fetch failed \[https:\/\/meta\.fabricmc\.net\/v2\/versions\/loader\/26\.1\.2\]/,
+      );
+    });
+
+    it('retries transient network failures before surfacing the URL error', async () => {
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockRejectedValueOnce(new TypeError('fetch failed'))
+        .mockResolvedValueOnce(mockResponse('{"ok":true}'));
+
+      const r = await http.getJson('https://api.modrinth.com/v2/x');
+      expect(r).toEqual({ ok: true });
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('reports invalid JSON responses with the URL', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockResponse('<html>not json</html>'));
+      await expect(http.getJson('https://api.modrinth.com/v2/x')).rejects.toThrow(
+        /Invalid JSON response from https:\/\/api\.modrinth\.com\/v2\/x/,
+      );
+    });
+  });
+
   describe('downloadFile', () => {
     it('throws when status is not 200', async () => {
       vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockResponse('error', 500));

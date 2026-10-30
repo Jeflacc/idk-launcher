@@ -103,8 +103,8 @@ export function fromHtml(html) {
  * Uses MutationObserver (not polling) for efficiency.
  * Resolves with the element, or null if timeout elapses.
  *
- * Useful for features that need to wait for app-shell.js to render
- * a specific element before binding to it.
+ * Useful for features that need to wait for the HTML shell
+ * (partials/ views/ modals/) to render an element before binding to it.
  *
  * @param {string} selector
  * @param {number} [timeout=10000]
@@ -148,7 +148,7 @@ export function emit(name, detail) {
  * Runs after the app shell renders. Adds role="button", tabindex="0", and
  * Enter/Space key handlers to clickable divs that lack them.
  *
- * This is a global fixup because the app-shell.js template uses divs with
+ * This is a global fixup because the static HTML shell uses divs with
  * click handlers instead of <button> elements throughout.
  */
 export function fixKeyboardAccessibility() {

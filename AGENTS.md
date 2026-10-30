@@ -79,13 +79,13 @@ The renderer expects `window.electronAPI` (v1 flat API). The shim at
 - Unmapped methods get no-op stubs with console warnings
 - **When adding a new IPC channel, also add a shim mapping** so the renderer can call it
 
-### 5. HTML-First (In Progress)
+### 5. HTML-First (Complete)
 
-The renderer is migrating from JS-generated HTML (`innerHTML = \`…\``) to real HTML files:
+The renderer uses real HTML files instead of JS-generated HTML (`innerHTML = \`…\``). The legacy `src/renderer/app/app-shell.js` innerHTML template was **deleted** (2026-08-04):
 
-- `src/renderer/core/html-loader.js` — loads HTML partials via `fetch()` + `DOMParser`
-- `src/renderer/core/dom.js` — `loadTemplate()` for `<template>` elements with `data-ref`
-- Goal: delete `src/renderer/app/app-shell.js` (2,206-line innerHTML template)
+- `src/renderer/core/html-loader.js` — `loadPartial()` + `loadAppShell()` loads static HTML via `fetch()` + `DOMParser`; `loadTemplate()` for `<template>` elements with `data-ref`
+- `src/renderer/partials/*.html` — shell partials; `src/renderer/views/*.html` — views; `src/renderer/modals/*.html` — modals
+- `scripts/check-html-contract.mjs` (`npm run check:html-contract`) — verifies every JS-referenced ID exists in static HTML; `scripts/verify-html-structure.mjs` (`npm run verify:html`) — structure/duplicate-ID/tag-balance checks
 - New views go in `src/renderer/views/*.html`, modals in `src/renderer/modals/*.html`
 
 **Do not add new `innerHTML = \`…\`` assignments.** Use `loadTemplate()` or `loadPartial()` instead.

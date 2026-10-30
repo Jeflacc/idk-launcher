@@ -1,0 +1,27 @@
+<!-- UPDATE MODAL -->
+<div class="custom-modal" id="update-modal">
+  <div class="modal-content update-box">
+    <div class="modal-icon update-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 24 24"><path d="M16 4h2v6h-2zm-2-2h2v2h-2zm0 2h2v8h-2zM4 8H2v5h2z"/><path d="M4 6h16v2H4zm4 14H6v-6h2zm2 2H8v-2h2zm0-2H8v-8h2zm10-4h2v-5h-2z"/><path d="M20 18H4v-2h16z"/></svg>
+    </div>
+    <h3 id="update-modal-title">New Update Available!</h3>
+    <p id="update-version-info">A new update is available.</p>
+    <div class="update-notes-container" id="update-notes">
+      <!-- Injected release notes -->
+    </div>
+    <div id="update-progress-container" style="display:none;width:100%;margin-top:15px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:var(--text-muted);">
+        <span id="update-progress-text">Downloading...</span>
+        <span id="update-progress-percent">0%</span>
+      </div>
+      <div style="width:100%;height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;">
+        <div id="update-progress-bar" style="height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width 0.3s;"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;width:100%;">
+      <button class="submit-btn" id="btn-download-update" style="flex:1;">Download & Install</button>
+      <button class="submit-btn" id="btn-install-update" style="flex:1;display:none;">Install & Restart</button>
+      <button class="modal-btn" id="btn-ignore-update" style="flex:1;">Later</button>
+    </div>
+  </div>
+</div>

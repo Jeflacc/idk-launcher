@@ -25,9 +25,15 @@ export const LaunchSchema = {
       .optional(),
     autoOptimization: z.boolean().default(true),
     performanceRenderer: z.boolean().default(false),
-    quickConnect: z.string().optional(),
+    quickConnect: z.string().nullable().optional(),
     forceUpdate: z.boolean().default(false),
     authProvider: z.enum(['microsoft', 'elyby', 'offline']).default('microsoft'),
+    /**
+     * Offline (cracked) account username. Only used when no Microsoft/Ely.by
+     * session exists and authProvider resolves to 'offline'. Defaults to
+     * 'Player' when omitted.
+     */
+    username: z.string().optional(),
   }),
 
   progress: z.object({

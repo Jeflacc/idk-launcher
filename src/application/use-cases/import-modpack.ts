@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
-import { randomUUID } from 'node:crypto';
 import type { ModpackRepository } from '@/infrastructure/fs/modpack-repository';
 
 /**
  * Import a modpack from a .zip/.mrpack file. Replaces v1's unzip-curseforge IPC.
+ *
+ * The instance folder is the pack's name (sanitized + deduped) — not a UUID.
  */
 export class ImportModpack {
   constructor(private readonly repo: ModpackRepository) {}
@@ -14,8 +15,8 @@ export class ImportModpack {
     const JSZip = require('jszip') as typeof import('jszip');
     const buf = await readFile(zipPath);
     const zip = await JSZip.loadAsync(buf);
-    const modpackId = randomUUID();
-    const dir = this.repo['paths'].modpackDirectory(modpackId);
+    const folder = await this.repo.uniqueFolderForName(name);
+    const dir = this.repo['paths'].modpackDirectory(folder);
     await mkdir(join(dir, 'mods'), { recursive: true });
 
     const profileJson = zip.file('profile.json');
@@ -27,8 +28,8 @@ export class ImportModpack {
       minecraftVersion = parsed.minecraftVersion ?? '';
       loader = parsed.loader ?? 'vanilla';
     }
-    await this.repo.writeProfile(modpackId, {
-      id: modpackId,
+    await this.repo.writeProfile(folder, {
+      id: folder,
       name,
       description: 'Imported modpack',
       minecraftVersion,
@@ -48,6 +49,6 @@ export class ImportModpack {
         await writeFile(join(dir, 'mods', entry.name.split('/').pop()!), data);
       }
     }
-    return modpackId;
+    return folder;
   }
 }

@@ -14,75 +14,73 @@
     top: 0; /* Cover full window during login */
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #161618 0%, #0a0a0b 100%);
+    background: var(--color-bg-app);
     z-index: 105;
 }
 
 .login-box {
-    background: linear-gradient(145deg, #1e1e20 0%, #181819 100%);
-    border: 1px solid #3c3c3d;
-    border-radius: 8px;
-    padding: 40px;
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: var(--space-16);
     width: 440px;
     max-width: 90vw;
     box-shadow:
-        0 16px 48px rgba(0, 0, 0, 0.6),
+        0 8px 24px rgba(0, 0, 0, 0.5),
         0 0 0 1px rgba(255, 255, 255, 0.03),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-12);
 }
 
 .login-box h2 {
     font-family: var(--font-title);
     font-size: 28px;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--color-text-main);
     text-align: center;
-    font-variant: small-caps;
-    text-transform: lowercase;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
+    letter-spacing: var(--tracking-display);
+    margin-bottom: var(--space-3);
 }
 
 .login-subtitle {
-    color: var(--text-secondary);
-    font-size: 14px;
+    color: var(--color-text-secondary);
+    font-size: var(--text-lg);
     text-align: center;
-    margin-bottom: 8px;
-    margin-top: -4px;
+    margin-bottom: var(--space-6);
+    margin-top: calc(var(--space-2) * -1);
 }
 
 /* =========================================================
    LOGIN BUTTONS
    ========================================================= */
 .login-btn {
-    background: #313132;
-    border: 1px solid #4a4a4b;
-    color: white;
-    padding: 14px 16px;
-    border-radius: 6px;
-    font-size: 14px;
+    background: var(--surface-8);
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-text-main);
+    padding: var(--space-6) var(--space-8);
+    border-radius: var(--radius-md);
+    font-size: var(--text-lg);
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.1s ease;
+    transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-instant);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: var(--space-5);
     user-select: none;
 }
 
 .login-btn:hover {
-    background: #3e3e3f;
-    border-color: #6a6a6b;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: var(--surface-10);
+    border-color: var(--color-border-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .login-btn:active {
     transform: scale(0.98);
-    background: #2a2a2b;
+    background: var(--surface-7);
 }
 
 .login-btn:focus-visible {
@@ -92,43 +90,42 @@
 
 /* Microsoft login — blue accent */
 .login-btn.microsoft {
-    background: #2a2a2b;
-    border-color: rgba(0, 164, 239, 0.3);
-    font-size: 15px;
-    padding: 16px 20px;
+    background: var(--surface-7);
+    border-color: rgba(var(--color-microsoft-rgb, 0, 164, 239), 0.3);
+    font-size: var(--text-xl);
+    padding: var(--space-7) var(--space-10);
 }
 .login-btn.microsoft:hover {
-    background: #333335;
-    border-color: #00a4ef;
-    box-shadow: 0 0 20px rgba(0, 164, 239, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: var(--surface-9);
+    border-color: var(--color-microsoft);
+    box-shadow: 0 0 12px rgba(var(--color-microsoft-rgb, 0, 164, 239), 0.25), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* Ely.by login — cyan accent */
 .login-btn.elyby {
-    background: #2a2a2b;
-    border-color: rgba(0, 166, 224, 0.3);
-    font-size: 15px;
-    padding: 16px 20px;
+    background: var(--surface-7);
+    border-color: rgba(var(--color-elyby-rgb, 0, 166, 224), 0.3);
+    font-size: var(--text-xl);
+    padding: var(--space-7) var(--space-10);
 }
 .login-btn.elyby:hover {
-    background: #333335;
-    border-color: #00a6e0;
-    box-shadow: 0 0 20px rgba(0, 166, 224, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: var(--surface-9);
+    border-color: var(--color-elyby);
+    box-shadow: 0 0 12px rgba(var(--color-elyby-rgb, 0, 166, 224), 0.25), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* Offline toggle — subtle dark button with moon icon */
 .login-btn.offline-toggle {
     background: transparent;
-    border: 1px solid #4a4a4b;
-    color: var(--text-muted);
-    font-size: 13px;
-    padding: 10px 16px;
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-text-muted);
+    font-size: var(--text-md);
+    padding: var(--space-5) var(--space-8);
 }
 .login-btn.offline-toggle:hover {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: #6a6a6b;
-    border-style: solid;
-    color: var(--text-secondary);
+    background: var(--color-bg-hover);
+    border-color: var(--color-border-accent);
+    color: var(--color-text-secondary);
 }
 
 .secondary-login-row {
@@ -179,30 +176,33 @@
    FORM INPUTS
    ========================================================= */
 .clean-input {
-    background: #111112;
-    border: 1px solid #3c3c3d;
-    color: white;
-    padding: 12px 14px;
-    border-radius: 6px;
-    font-family: var(--font-main);
-    font-size: 14px;
+    background: var(--surface-1);
+    border: 2px solid var(--color-border-subtle);
+    color: var(--color-text-main);
+    padding: var(--space-5) var(--space-6);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-title);
+    font-size: var(--text-md);
     outline: none;
     width: 100%;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+    box-shadow:
+        inset 1px 1px 0 rgba(0, 0, 0, 0.4),
+        inset -1px -1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .clean-input::placeholder {
-    color: #707070;
+    color: var(--color-text-muted);
 }
 
 .clean-input:focus {
-    border-color: var(--theme-accent-hover);
-    background: #141415;
-    box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), 0.12);
+    border-color: var(--theme-accent);
+    background: var(--surface-2);
 }
 
 .clean-input:focus-visible {
-    outline: none; /* Use box-shadow ring instead */
+    outline: 2px solid var(--theme-accent);
+    outline-offset: 2px;
 }
 
 /* =========================================================
@@ -210,24 +210,22 @@
    ========================================================= */
 .submit-btn {
     background-color: var(--theme-accent);
-    color: white;
-    border: 2px solid #000000;
+    color: var(--color-text-main);
+    border: 2px solid rgba(0, 0, 0, 0.5);
     box-shadow:
         inset 0 3px 0 var(--theme-accent-hover),
         inset 3px 0 0 var(--theme-accent-hover),
         inset 0 -3px 0 var(--theme-accent-shadow),
         inset -3px 0 0 var(--theme-accent-shadow);
-    padding: 12px;
-    border-radius: 6px;
+    padding: var(--space-5);
+    border-radius: var(--radius-sm);
     font-family: var(--font-title);
     font-weight: 700;
-    font-size: 14px;
+    font-size: var(--text-md);
     cursor: pointer;
     text-shadow: 1px 1px 0px var(--theme-accent-shadow);
-    transition: transform 0.1s ease;
-    font-variant: small-caps;
-    text-transform: lowercase;
-    letter-spacing: 0.5px;
+    transition: transform var(--transition-instant);
+    letter-spacing: var(--tracking-normal);
 }
 
 .submit-btn:hover {
@@ -240,7 +238,7 @@
 }
 
 .submit-btn:active {
-    transform: translateY(2px);
+    transform: translateY(var(--space-1));
     box-shadow:
         inset 0 3px 0 var(--theme-accent-shadow),
         inset 3px 0 0 var(--theme-accent-shadow),

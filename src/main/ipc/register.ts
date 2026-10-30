@@ -43,6 +43,10 @@ export function registerSend<T>(
     }
     const parsed = schema.safeParse(raw);
     if (!parsed.success) {
+      // Silent drops make the renderer appear "stuck" with no terminal output —
+      // always surface the rejection so bugs are visible during dev.
+      const msg = parsed.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`).join('; ');
+      console.error(`[IPC] Invalid payload on "${channel}": ${msg}`);
       return;
     }
     handler(event, parsed.data);

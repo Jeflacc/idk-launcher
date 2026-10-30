@@ -22,6 +22,11 @@ export const IpcChannel = {
   System: {
     GetUserDataPath: 'system:get-user-data-path',
     GetVersionsPath: 'system:get-versions-path',
+    GetProfilesPath: 'system:get-profiles-path',
+    GetMinecraftRootPath: 'system:get-minecraft-root-path',
+    ResolveInstancePath: 'system:resolve-instance-path',
+    OpenInstanceFolder: 'system:open-instance-folder',
+    EnsureInstance: 'system:ensure-instance',
     OpenExternal: 'system:open-external',
     OpenMinecraftFolder: 'system:open-minecraft-folder',
     OpenPath: 'system:open-path',
@@ -73,11 +78,12 @@ export const IpcChannel = {
     Warning: 'launch:warning',
     ClearJavaPath: 'launch:clear-java-path',
   },
-  // Modpacks
+  // Instances (formerly modpacks)
   Modpack: {
     ScanProfiles: 'modpack:scan-profiles',
     DeleteFolder: 'modpack:delete-folder',
     UpdateProfile: 'modpack:update-profile',
+    Rename: 'modpack:rename',
     Launch: 'modpack:launch',
   },
   // Mods / resources

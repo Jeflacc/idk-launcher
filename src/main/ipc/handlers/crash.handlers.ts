@@ -1,7 +1,11 @@
 import { registerInvoke } from '../register';
 import { IpcChannel } from '@shared/ipc-channels';
 import { z } from 'zod';
+import { join } from 'node:path';
 import type { WindowManager } from '../../windows/window-manager';
+import type { ModrinthClient } from '@/infrastructure/net/api/modrinth-client';
+import type { DownloadQueue } from '@/infrastructure/download/download-queue';
+import type { PathService } from '@/infrastructure/fs/path-service';
 import { CrashAnalyzerService } from '@/domain/services/crash-analyzer';
 
 /**
@@ -13,6 +17,9 @@ import { CrashAnalyzerService } from '@/domain/services/crash-analyzer';
  */
 export function registerCrashHandlers(
   windows: WindowManager,
+  modrinth: ModrinthClient,
+  paths: PathService,
+  queue: DownloadQueue,
   _crashAnalyzer?: CrashAnalyzerService,
 ): void {
   const senderOk = (event: Electron.IpcMainInvokeEvent) => windows.assertSender(event, 'main');
@@ -28,11 +35,60 @@ export function registerCrashHandlers(
     { senderCheck: senderOk },
   );
 
+  // Auto-install missing dependencies by searching Modrinth and downloading
+  // the primary file into the modpack's mods folder.
   registerInvoke(
     IpcChannel.Crash.AutoInstallDependencies,
-    z.object({ missingMods: z.array(z.string()) }),
+    z.object({
+      modpackId: z.string().optional(),
+      missingMods: z.array(z.string()),
+      mcVersion: z.string().optional(),
+    }),
     async (_event, args) => {
-      return { requested: args.missingMods, status: 'queued' as const };
+      const results: Array<{
+        success: boolean;
+        filename?: string;
+        name?: string;
+        modId?: string;
+        reason?: string;
+      }> = [];
+      const loaderHints = ['fabric', 'forge', 'neoforge', 'quilt'];
+
+      for (const modName of args.missingMods) {
+        try {
+          const search = await modrinth.searchMods(modName, null, 1);
+          const hit = search.hits[0];
+          if (!hit) {
+            results.push({ success: false, modId: modName, reason: 'Not found on Modrinth' });
+            continue;
+          }
+          const versions = await modrinth.getVersions(hit.project_id, args.mcVersion || undefined);
+          const version =
+            versions.find((v) => v.loaders.some((l) => loaderHints.includes(l))) ?? versions[0];
+          const file = version?.files.find((f) => f.primary) ?? version?.files[0];
+          if (!version || !file?.url) {
+            results.push({ success: false, modId: hit.title || modName, reason: 'No compatible version found' });
+            continue;
+          }
+          if (args.modpackId) {
+            const targetPath = join(paths.modpackDirectory(args.modpackId), 'mods', file.filename);
+            const downloadId = `crash-dep:${args.modpackId}:${file.filename}`;
+            await queue.start(
+              downloadId,
+              [{ url: file.url, targetPath, filename: file.filename, skipIfPresent: false }],
+              1,
+            );
+          }
+          results.push({ success: true, filename: file.filename, name: hit.title, modId: hit.project_id });
+        } catch (err) {
+          results.push({
+            success: false,
+            modId: modName,
+            reason: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+      return results;
     },
     { senderCheck: senderOk },
   );

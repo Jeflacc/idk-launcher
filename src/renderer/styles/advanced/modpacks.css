@@ -569,7 +569,8 @@ body.ui-advanced .trending-mp-card {
 body.ui-advanced .trending-mp-thumb {
     width: 84px;
     min-width: 84px;
-    height: 84px;
+    height: 100%;
+    align-self: stretch;
     object-fit: cover;
     flex-shrink: 0;
 }
@@ -577,7 +578,8 @@ body.ui-advanced .trending-mp-thumb {
 body.ui-advanced .trending-mp-thumb-fallback {
     width: 84px;
     min-width: 84px;
-    height: 84px;
+    height: 100%;
+    align-self: stretch;
     display: flex;
     align-items: center;
     justify-content: center;

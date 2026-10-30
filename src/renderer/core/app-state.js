@@ -5,10 +5,25 @@ const lastPlayed = safeParse(
   { version: null, loader: "Vanilla" },
 );
 
+const offlineAccounts = safeParse(
+  localStorage.getItem("craftlaunch_offline_accounts"),
+  [],
+);
+
+const selectedOfflineAccount =
+  localStorage.getItem("craftlaunch_selected_offline_account") || null;
+
 export const state = {
   quickConnectTarget: null,
-  currentUser: localStorage.getItem("craftlaunch_username") || "",
+  currentUser:
+    localStorage.getItem("craftlaunch_username") ||
+    selectedOfflineAccount ||
+    ((localStorage.getItem("craftlaunch_authmode") || "offline") === "offline"
+      ? "Player"
+      : ""),
   authMode: localStorage.getItem("craftlaunch_authmode") || "offline",
+  offlineAccounts: Array.isArray(offlineAccounts) ? offlineAccounts : [],
+  selectedOfflineAccount,
   selectedVersion: lastPlayed.version,
   selectedLoader: lastPlayed.loader,
   selectedIsModpack: localStorage.getItem('idk_last_played_is_modpack') === 'true',

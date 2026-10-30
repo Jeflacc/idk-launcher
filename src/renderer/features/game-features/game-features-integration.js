@@ -402,53 +402,83 @@ export async function checkDependenciesForMod(modpackId, modId) {
     
     modal.classList.add('active');
 
-    let html = `
-      <div style="margin-bottom: 16px;">
-        <p style="color: #a0a0a0; margin: 0 0 12px 0;">The following dependencies are missing:</p>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-    `;
+    const wrap = document.createElement('div');
+    wrap.style.marginBottom = '16px';
 
+    const intro = document.createElement('p');
+    intro.style.cssText = 'color: #a0a0a0; margin: 0 0 12px 0;';
+    intro.textContent = 'The following dependencies are missing:';
+    wrap.appendChild(intro);
+
+    const list = document.createElement('div');
+    list.style.cssText = 'display: flex; flex-direction: column; gap: 8px;';
     for (const dep of missing) {
-      html += `
-        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; border-left: 3px solid #f97316;">
-          <div style="font-size: 12px; color: white;">
-            <strong>${dep.dependencyName}</strong> (required by ${dep.dependentMod})
-          </div>
-          <div style="font-size: 11px; color: #a0a0a0; margin-top: 2px;">Version: ${dep.version}</div>
-        </div>
-      `;
+      const row = document.createElement('div');
+      row.style.cssText = 'background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; border-left: 3px solid #f97316;';
+      const rowName = document.createElement('div');
+      rowName.style.cssText = 'font-size: 12px; color: white;';
+      const strong = document.createElement('strong');
+      strong.textContent = dep.dependencyName;
+      rowName.appendChild(strong);
+      rowName.appendChild(document.createTextNode(` (required by ${dep.dependentMod})`));
+      const rowVer = document.createElement('div');
+      rowVer.style.cssText = 'font-size: 11px; color: #a0a0a0; margin-top: 2px;';
+      rowVer.textContent = `Version: ${dep.version}`;
+      row.appendChild(rowName);
+      row.appendChild(rowVer);
+      list.appendChild(row);
     }
+    wrap.appendChild(list);
 
-    html += `
-        </div>
-      </div>
-      <button class="submit-btn" id="btn-install-dependencies" style="width: 100%; margin-bottom: 8px;">Install Dependencies</button>
-      <button class="modal-btn" id="btn-skip-dependencies" style="width: 100%;">Skip</button>
-    `;
+    const btnInstall = document.createElement('button');
+    btnInstall.className = 'submit-btn';
+    btnInstall.id = 'btn-install-dependencies';
+    btnInstall.style.cssText = 'width: 100%; margin-bottom: 8px;';
+    btnInstall.textContent = 'Install Dependencies';
 
-    content.innerHTML = html;
+    const btnSkip = document.createElement('button');
+    btnSkip.className = 'modal-btn';
+    btnSkip.id = 'btn-skip-dependencies';
+    btnSkip.style.width = '100%';
+    btnSkip.textContent = 'Skip';
 
-    document.getElementById('btn-install-dependencies')?.addEventListener('click', async () => {
-      content.innerHTML = '<div style="text-align: center; padding: 20px; color: #a0a0a0;">Installing dependencies...</div>';
+    content.replaceChildren(wrap, btnInstall, btnSkip);
+
+    btnInstall.addEventListener('click', async () => {
+      const installing = document.createElement('div');
+      installing.style.cssText = 'text-align: center; padding: 20px; color: #a0a0a0;';
+      installing.textContent = 'Installing dependencies...';
+      content.replaceChildren(installing);
       
       try {
         const result = await resolveDependencies(modpackId, modId);
         if (result.success) {
-          content.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-              <div style="font-size: 14px; color: var(--theme-accent); margin-bottom: 8px;">&#x2713; Dependencies installed</div>
-              <div style="font-size: 12px; color: #a0a0a0;">${result.message}</div>
-            </div>
-          `;
+          const done = document.createElement('div');
+          done.style.cssText = 'text-align: center; padding: 20px;';
+          const mark = document.createElement('div');
+          mark.style.cssText = 'font-size: 14px; color: var(--theme-accent); margin-bottom: 8px;';
+          mark.textContent = '✓ Dependencies installed';
+          const msg = document.createElement('div');
+          msg.style.cssText = 'font-size: 12px; color: #a0a0a0;';
+          msg.textContent = result.message;
+          done.appendChild(mark);
+          done.appendChild(msg);
+          content.replaceChildren(done);
         } else {
-          content.innerHTML = `<div style="color: #ef4444; padding: 20px; text-align: center;">Failed: ${result.error}</div>`;
+          const err = document.createElement('div');
+          err.style.cssText = 'color: #ef4444; padding: 20px; text-align: center;';
+          err.textContent = `Failed: ${result.error}`;
+          content.replaceChildren(err);
         }
       } catch (e) {
-        content.innerHTML = `<div style="color: #ef4444; padding: 20px; text-align: center;">Error: ${e.message}</div>`;
+        const err = document.createElement('div');
+        err.style.cssText = 'color: #ef4444; padding: 20px; text-align: center;';
+        err.textContent = `Error: ${e.message}`;
+        content.replaceChildren(err);
       }
     });
 
-    document.getElementById('btn-skip-dependencies')?.addEventListener('click', () => {
+    btnSkip.addEventListener('click', () => {
       modal.classList.remove('active');
     });
   } catch (e) {
@@ -467,42 +497,67 @@ export async function showChangelog(modrinthId, modName) {
     
     title.innerText = `${modName} - Changelog`;
     modal.classList.add('active');
-    content.innerHTML = '<div style="text-align: center; padding: 20px; color: #a0a0a0;">Loading changelog...</div>';
+    const loading = document.createElement('div');
+    loading.style.cssText = 'text-align: center; padding: 20px; color: #a0a0a0;';
+    loading.textContent = 'Loading changelog...';
+    content.replaceChildren(loading);
 
     const changelog = await getModChangelog(modrinthId);
     
     if (!changelog) {
-      content.innerHTML = '<div style="color: #a0a0a0; padding: 20px; text-align: center;">No changelog available</div>';
+      const none = document.createElement('div');
+      none.style.cssText = 'color: #a0a0a0; padding: 20px; text-align: center;';
+      none.textContent = 'No changelog available';
+      content.replaceChildren(none);
       return;
     }
 
-    let html = `
-      <div style="color: white;">
-        <div style="margin-bottom: 16px;">
-          <p style="margin: 0 0 8px 0; color: #a0a0a0; font-size: 12px;">${changelog.description}</p>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
-            <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
-              <div style="font-size: 10px; color: #707070; text-transform: uppercase;">Downloads</div>
-              <div style="font-size: 16px; font-weight: 700; color: var(--theme-accent);">${changelog.downloads.toLocaleString()}</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;">
-              <div style="font-size: 10px; color: #707070; text-transform: uppercase;">Followers</div>
-              <div style="font-size: 16px; font-weight: 700; color: var(--theme-accent);">${changelog.followers.toLocaleString()}</div>
-            </div>
-          </div>
-        </div>
-        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-          <h4 style="margin: 0 0 8px 0; font-size: 13px; color: var(--theme-accent); text-transform: uppercase;">Changelog</h4>
-          <div style="font-size: 12px; color: #d1d1d2; line-height: 1.6; white-space: pre-wrap; word-break: break-word;">
-            ${changelog.body || 'No detailed changelog available'}
-          </div>
-        </div>
-      </div>
-    `;
+    const root = document.createElement('div');
+    root.style.color = 'white';
 
-    content.innerHTML = html;
+    const head = document.createElement('div');
+    head.style.cssText = 'margin-bottom: 16px;';
+    const desc = document.createElement('p');
+    desc.style.cssText = 'margin: 0 0 8px 0; color: #a0a0a0; font-size: 12px;';
+    desc.textContent = changelog.description;
+    head.appendChild(desc);
+
+    const stats = document.createElement('div');
+    stats.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;';
+    for (const [label, value] of [['Downloads', changelog.downloads], ['Followers', changelog.followers]]) {
+      const box = document.createElement('div');
+      box.style.cssText = 'background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px;';
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'font-size: 10px; color: #707070; text-transform: uppercase;';
+      lbl.textContent = label;
+      const val = document.createElement('div');
+      val.style.cssText = 'font-size: 16px; font-weight: 700; color: var(--theme-accent);';
+      val.textContent = typeof value === 'number' ? value.toLocaleString() : String(value ?? '0');
+      box.appendChild(lbl);
+      box.appendChild(val);
+      stats.appendChild(box);
+    }
+    head.appendChild(stats);
+    root.appendChild(head);
+
+    const divider = document.createElement('div');
+    divider.style.cssText = 'border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;';
+    const bodyTitle = document.createElement('h4');
+    bodyTitle.style.cssText = 'margin: 0 0 8px 0; font-size: 13px; color: var(--theme-accent); text-transform: uppercase;';
+    bodyTitle.textContent = 'Changelog';
+    const body = document.createElement('div');
+    body.style.cssText = 'font-size: 12px; color: #d1d1d2; line-height: 1.6; white-space: pre-wrap; word-break: break-word;';
+    body.textContent = changelog.body || 'No detailed changelog available';
+    divider.appendChild(bodyTitle);
+    divider.appendChild(body);
+    root.appendChild(divider);
+
+    content.replaceChildren(root);
   } catch (e) {
     console.error('[GameFeatures] Failed to show changelog:', e);
-    document.getElementById('changelog-content').innerHTML = `<div style="color: #ef4444; padding: 20px; text-align: center;">Failed to load changelog: ${e.message}</div>`;
+    const err = document.createElement('div');
+    err.style.cssText = 'color: #ef4444; padding: 20px; text-align: center;';
+    err.textContent = `Failed to load changelog: ${e.message}`;
+    document.getElementById('changelog-content')?.replaceChildren(err);
   }
 }

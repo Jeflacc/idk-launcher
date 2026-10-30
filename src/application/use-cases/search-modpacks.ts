@@ -8,6 +8,6 @@ export class SearchModpacks {
   constructor(private readonly modrinth: ModrinthClient) {}
 
   async execute(query: string, limit = 20) {
-    return this.modrinth.searchModpacks(query, limit);
+    return this.modrinth.searchModpacks(query, null, limit);
   }
 }

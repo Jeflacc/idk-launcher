@@ -23,6 +23,8 @@ export const ModpackSchema = {
           version: z.string().default(''),
           source: z.enum(['modrinth', 'curseforge', 'local']),
           enabled: z.boolean().default(true),
+          modrinthId: z.string().optional(),
+          iconUrl: z.string().optional(),
         }),
       )
       .default([]),
@@ -43,6 +45,15 @@ export const ModpackSchema = {
     lastPlayedAt: z.number().optional(),
     playtimeSeconds: z.number().default(0),
     modCount: z.number().default(0),
+    diskMods: z
+      .array(z.object({ filename: z.string(), path: z.string() }))
+      .optional(),
+    diskResourcepacks: z
+      .array(z.object({ filename: z.string(), path: z.string() }))
+      .optional(),
+    diskShaders: z
+      .array(z.object({ filename: z.string(), path: z.string() }))
+      .optional(),
   }),
 
   /** Lightweight summary for lists. */
@@ -67,6 +78,15 @@ export const ModpackSchema = {
       modCount: z.number().default(0),
       lastPlayedAt: z.number().optional(),
       playtimeSeconds: z.number().default(0),
+      diskMods: z
+        .array(z.object({ filename: z.string(), path: z.string() }))
+        .optional(),
+      diskResourcepacks: z
+        .array(z.object({ filename: z.string(), path: z.string() }))
+        .optional(),
+      diskShaders: z
+        .array(z.object({ filename: z.string(), path: z.string() }))
+        .optional(),
     }),
   ),
 
@@ -75,12 +95,23 @@ export const ModpackSchema = {
     changes: z.record(z.string(), z.unknown()),
   }),
 
+  renameRequest: z.object({
+    modpackId: z.string(),
+    newName: z.string().min(1).max(120),
+  }),
+
   deleteFolderRequest: z.object({
     modpackId: z.string(),
   }),
 
   launchRequest: z.object({
     modpackId: z.string(),
-    quickConnect: z.string().optional(),
+    // The v1 renderer sends `quickConnect: state.quickConnectTarget` which is
+    // `null` when unset — accept null/undefined/absent.
+    quickConnect: z.string().nullable().optional(),
+    authProvider: z.enum(['microsoft', 'elyby', 'offline']).optional(),
+    maxMemoryMb: z.number().int().positive().max(32768).optional(),
+    windowSize: z.object({ width: z.number().int().positive(), height: z.number().int().positive() }).optional(),
+    javaArgs: z.array(z.string()).optional(),
   }),
 } as const;

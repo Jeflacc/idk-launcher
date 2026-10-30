@@ -1,0 +1,33 @@
+<!-- LAUNCH OVERLAY -->
+<div class="launch-overlay" id="launch-overlay">
+  <div class="launch-overlay-card">
+    <div class="launch-card-header">
+      <img src="loading.gif" class="launch-spinner-gif" alt="Loading...">
+      <div class="launch-status" id="launch-status">Preparing game...</div>
+      <div class="launch-card-controls">
+        <button type="button" class="launch-icon-btn" id="btn-minimize-launch"
+                data-action="minimize" title="Minimize (keep using the launcher)" aria-label="Minimize launch overlay">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M4 11h16v2H4z"/></svg>
+        </button>
+        <button type="button" class="launch-icon-btn" id="btn-restore-launch"
+                data-action="restore" title="Expand" aria-label="Expand launch overlay" style="display:none;">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M13 8h-2v2h2V8Zm-2 2H9v2h2v-2Zm4 0h-2v2h2v-2Zm-6 2H7v2h2v-2Zm8 0h-2v2h2v-2ZM7 14H5v2h2v-2Zm12 0h-2v2h2v-2Z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="launch-bar">
+      <div class="launch-fill" id="launch-fill"></div>
+    </div>
+    <div class="launch-card-footer">
+      <span class="launch-hint">You can keep using the launcher while this runs.</span>
+      <button class="modal-btn" id="btn-cancel-launch" style="padding:8px 12px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MINI INDICATOR (shown when launch overlay is minimized) -->
+<div class="launch-mini-indicator" id="launch-mini-indicator" role="button" tabindex="0" title="Restore launch overlay" aria-label="Restore launch overlay">
+  <span class="launch-mini-spinner" aria-hidden="true"></span>
+  <span class="launch-mini-text" id="launch-mini-text">Launching…</span>
+  <button type="button" class="launch-mini-close" id="btn-mini-close" title="Hide indicator (launch continues in background)" aria-label="Hide indicator">×</button>
+</div>

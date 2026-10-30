@@ -153,6 +153,47 @@ describe('ModpackRepository', () => {
     expect(list[0]!.id).toBe('new');
     expect(list[1]!.id).toBe('old');
   });
+
+  it('readProfile migrates a v1 string lastPlayedAt to epoch ms', async () => {
+    const { writeFile, readFile } = await import('node:fs/promises');
+    const { mkdirSync } = await import('node:fs');
+    mkdirSync(`${root}/modpacks/v1-mp`, { recursive: true });
+    await writeFile(
+      `${root}/modpacks/v1-mp/profile.json`,
+      JSON.stringify({
+        id: 'ignored-id',
+        name: 'V1 Pack',
+        mcVersion: '1.20.1',
+        loader: 'fabric',
+        lastPlayedAt: '2026-07-25T18:44:12.000Z',
+        playtimeSeconds: 5,
+      }),
+      'utf8',
+    );
+    const p = await repo.readProfile('v1-mp');
+    expect(p?.lastPlayedAt).toBe(Date.parse('2026-07-25T18:44:12.000Z'));
+    expect(p?.id).toBe('v1-mp');
+  });
+
+  it('updateProfile coerces string/null lastPlayedAt from legacy renderers', async () => {
+    await repo.writeProfile('mp-1', {
+      id: 'mp-1',
+      name: 'Test',
+      description: '',
+      minecraftVersion: '1.20.1',
+      loader: 'fabric',
+      createdAt: 1,
+      updatedAt: 1,
+      playtimeSeconds: 0,
+      mods: [],
+    });
+    await repo.updateProfile('mp-1', { lastPlayedAt: '2026-07-25T18:44:12.000Z' });
+    let p = await repo.readProfile('mp-1');
+    expect(p?.lastPlayedAt).toBe(Date.parse('2026-07-25T18:44:12.000Z'));
+    await repo.updateProfile('mp-1', { lastPlayedAt: null });
+    p = await repo.readProfile('mp-1');
+    expect(p?.lastPlayedAt).toBeUndefined();
+  });
 });
 
 import { afterEach } from 'vitest';

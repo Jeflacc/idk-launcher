@@ -24,6 +24,7 @@ win:
   icon: assets/icon.ico
 nsis:
   oneClick: false
+  installerIcon: assets/icon.ico
   perMachine: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true

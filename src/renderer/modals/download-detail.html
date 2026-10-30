@@ -1,0 +1,35 @@
+<!-- DOWNLOAD DETAIL PANEL -->
+<div class="download-detail-panel" id="download-detail-panel">
+  <div class="ddp-header">
+    <span class="ddp-title" id="ddp-title">Downloading Modpack</span>
+    <button type="button" class="ddp-close" id="btn-ddp-close" aria-label="Close download panel">
+      <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z"/></svg>
+    </button>
+  </div>
+  <div class="ddp-body">
+    <div class="ddp-status" id="ddp-status">Preparing...</div>
+    <div class="ddp-progress-bar">
+      <div class="ddp-progress-fill" id="ddp-progress-fill"></div>
+    </div>
+    <div class="ddp-current-item" id="ddp-current-item"></div>
+    <div class="ddp-metrics">
+      <div class="ddp-metric">
+        <span class="ddp-metric-label">Progress</span>
+        <span class="ddp-metric-value" id="ddp-percent">0%</span>
+      </div>
+      <div class="ddp-metric">
+        <span class="ddp-metric-label">Speed</span>
+        <span class="ddp-metric-value" id="ddp-speed">—</span>
+      </div>
+      <div class="ddp-metric">
+        <span class="ddp-metric-label">ETA</span>
+        <span class="ddp-metric-value" id="ddp-eta">—</span>
+      </div>
+    </div>
+  </div>
+  <div class="ddp-actions">
+    <button class="ddp-btn ddp-cancel" id="btn-ddp-cancel">Cancel</button>
+    <button class="ddp-btn ddp-retry" id="btn-ddp-retry" style="display:none;">Retry</button>
+    <button class="ddp-btn ddp-dismiss" id="btn-ddp-dismiss" style="display:none;">Dismiss</button>
+  </div>
+</div>

@@ -24,7 +24,7 @@
     background:
         radial-gradient(ellipse at 20% 30%, rgba(var(--theme-accent-rgb), 0.04) 0%, transparent 50%),
         radial-gradient(ellipse at 80% 70%, rgba(var(--theme-accent-rgb), 0.03) 0%, transparent 50%),
-        #0d0d0f;
+        var(--surface-2);
     padding: 40px 0 80px;
     min-height: 100%;
 }
@@ -40,17 +40,17 @@
     font-size: 26px;
     font-weight: 700;
     margin-bottom: 30px;
-    color: white;
+    color: var(--color-text-main);
     font-variant: small-caps;
     text-transform: lowercase;
 }
 
 
 .settings-section {
-    background: #1b1b1c;
-    border: 1px solid #2d2d2e;
+    background: var(--surface-4);
+    border: 1px solid var(--color-border-subtle);
     padding: 24px;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
 }
 
 .settings-section h3 {
@@ -58,7 +58,7 @@
     font-size: 16px;
     font-weight: 700;
     margin-bottom: 6px;
-    color: white;
+    color: var(--color-text-main);
 }
 
 .settings-section > p {
@@ -82,7 +82,7 @@
     appearance: none;
     height: 6px;
     border-radius: 3px;
-    background: #2d2d2e;
+    background: var(--surface-8);
     outline: none;
     cursor: pointer;
 }
@@ -91,15 +91,19 @@
     -webkit-appearance: none;
     width: 14px;
     height: 20px;
-    background: #a1a1a2;
-    border: 1px solid #3c3c3d;
+    background: var(--color-text-muted);
+    border: 2px solid #000;
     cursor: pointer;
-    border-radius: 2px;
+    border-radius: 0;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.35),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.35),
+        0 2px 0 #000;
     transition: background 0.15s;
 }
 
 .memory-slider::-webkit-slider-thumb:hover {
-    background: white;
+    background: var(--color-text-main);
 }
 
 .memory-value-label {
@@ -153,11 +157,11 @@
     z-index: 100;
     gap: 0;
     margin: 6px 0 22px;
-    background: rgba(13, 13, 15, 0.92);
-    border-radius: 10px;
-    padding: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    background: var(--color-bg-panel);
+    border-radius: var(--radius-lg);
+    padding: var(--space-1);
+    border: 1px solid var(--color-border-strong);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .settings-tab {
@@ -187,7 +191,7 @@
 }
 
 .settings-tab.active {
-    color: #fff;
+    color: var(--color-text-main);
     font-weight: 700;
 }
 
@@ -245,7 +249,7 @@
     font-family: var(--font-title);
     font-size: 18px;
     font-weight: 800;
-    color: white;
+    color: var(--color-text-main);
     margin: 22px 0 0;
     padding-bottom: 6px;
     letter-spacing: 0.4px;
@@ -288,7 +292,7 @@
 .settings-row-label span {
     font-size: 13px;
     font-weight: 600;
-    color: white;
+    color: var(--color-text-main);
 }
 
 .settings-row-label small {
@@ -310,22 +314,23 @@
 .theme-swatch {
     width: 34px;
     height: 34px;
-    border-radius: calc(var(--theme-radius) * 1.1);
+    border-radius: 0;
     background: var(--swatch);
     display: block;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    border: 2px solid #000;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.25),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.4);
+    transition: transform 0.08s linear, border-color 0.08s linear;
 }
 
 .theme-choice-card:hover .theme-swatch {
     transform: scale(1.1);
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: #000;
 }
 
 .theme-choice-card.active .theme-swatch {
     border-color: #fff;
-    box-shadow: 0 0 16px rgba(var(--theme-accent-rgb), 0.45);
     transform: scale(1.1);
 }
 
@@ -390,37 +395,45 @@
 
 .pill-switch {
     display: flex;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--theme-radius);
+    background: var(--surface-1);
+    border: 2px solid #000;
+    border-radius: 0;
     overflow: hidden;
-    padding: 2px;
+    padding: var(--space-1);
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.5),
+        inset -2px -2px 0 rgba(255, 255, 255, 0.05);
 }
 
 .pill-switch-option {
     flex: 1;
-    padding: 8px 16px;
+    padding: var(--space-5) var(--space-8);
     border: none;
     background: transparent;
-    color: var(--text-muted);
-    font-size: 12px;
-    font-weight: 600;
+    color: var(--color-text-muted);
+    font-size: var(--text-md);
+    font-weight: 700;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-normal);
+    text-shadow: 1px 1px 0 #000;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
     white-space: nowrap;
     border-radius: 0;
 }
 
 .pill-switch-option:hover {
-    color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.04);
+    color: var(--theme-accent-bright);
+    background: rgba(var(--theme-accent-rgb), 0.12);
 }
 
 .pill-switch-option.active {
-    background: rgba(var(--theme-accent-rgb), 0.2);
-    color: var(--theme-accent-bright);
+    background: var(--color-text-main);
+    color: var(--surface-2);
     font-weight: 700;
-    border-radius: calc(var(--theme-radius) - 2px);
+    text-shadow: none;
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.22);
 }
 
 /* Glass Slider */
@@ -461,23 +474,24 @@
 /* Blur Choice */
 .blur-choice-group {
     display: flex;
-    gap: 4px;
+    gap: var(--space-1);
     background: rgba(0, 0, 0, 0.35);
-    padding: 4px;
-    border-radius: calc(var(--theme-radius) * 0.8);
+    padding: var(--space-1);
+    border-radius: calc(var(--radius-md) * 0.8);
     flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--color-border-subtle);
 }
 
 
 .blur-choice-card.active {
-    background: rgba(var(--theme-accent-rgb), 0.22);
-    color: var(--theme-accent-bright);
+    background: var(--color-text-main);
+    color: var(--surface-2);
     font-weight: 700;
-    box-shadow: 0 1px 6px rgba(var(--theme-accent-rgb), 0.15);
+    text-shadow: none;
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.22);
 }
 
-/* Toggle Switch (glass version) */
+/* Toggle Switch (Minecraft pixel version) */
 .tg-switch {
     position: relative;
     display: inline-flex;
@@ -485,6 +499,13 @@
     gap: 8px;
     cursor: pointer;
     flex-shrink: 0;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    text-shadow: 1px 1px 0 #000;
+    line-height: 1;
 }
 
 .tg-switch input {
@@ -496,77 +517,93 @@
 
 .tg-slider {
     position: relative;
-    width: 44px;
-    height: 24px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 36px;
+    height: 20px;
+    background: var(--surface-1);
+    border: 2px solid #000;
+    border-radius: 0;
+    transition: background var(--transition-fast);
     flex-shrink: 0;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.55),
+        inset -2px -2px 0 rgba(255, 255, 255, 0.05);
 }
 
 .tg-slider::before {
     content: "";
     position: absolute;
-    width: 18px;
-    height: 18px;
-    left: 3px;
-    top: 3px;
-    background: rgba(255, 255, 255, 0.85);
-    border-radius: 50%;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    width: 14px;
+    height: 14px;
+    top: 1px;
+    left: 1px;
+    background: var(--color-text-muted);
+    border-radius: 0;
+    transition: transform var(--transition-fast), background var(--transition-fast);
+    box-shadow:
+        inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+        inset -1px -1px 0 rgba(0, 0, 0, 0.45);
 }
 
 .tg-switch input:checked + .tg-slider {
     background: var(--theme-accent);
-    box-shadow: 0 0 12px rgba(var(--theme-accent-rgb), 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.25),
+        inset -2px -2px 0 rgba(255, 255, 255, 0.1);
 }
 
 .tg-switch input:checked + .tg-slider::before {
-    transform: translateX(20px);
+    transform: translateX(16px);
     background: #fff;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .tg-switch:hover .tg-slider {
-    background: rgba(255, 255, 255, 0.15);
+    border-color: #000;
 }
 
 .tg-switch:hover input:checked + .tg-slider {
-    background: var(--theme-accent);
+    background: var(--theme-accent-bright);
 }
 
 .tg-label {
-    font-size: 12px;
-    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.75);
     white-space: nowrap;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    text-shadow: 1px 1px 0 #000;
 }
 
-/* Glass Input */
+/* Glass Input (Minecraft pixel version) */
 .glass-input {
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: calc(var(--theme-radius) * 0.6);
-    padding: 9px 14px;
-    color: white;
-    font-size: 13px;
-    font-family: var(--font-main);
+    background: var(--surface-1);
+    border: 2px solid #000;
+    border-radius: 0;
+    padding: var(--space-5) var(--space-6);
+    color: var(--color-text-main);
+    font-size: var(--text-md);
+    font-family: 'Mojang', 'Minecraftia', monospace;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
     min-width: 0;
     flex: 1;
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.5),
+        inset -2px -2px 0 rgba(255, 255, 255, 0.05);
+    text-shadow: 1px 1px 0 #000;
 }
 
 .glass-input:hover {
-    border-color: rgba(255, 255, 255, 0.15);
-    background: rgba(0, 0, 0, 0.4);
+    border-color: #000;
+    background: var(--surface-2);
 }
 
 .glass-input:focus {
-    border-color: rgba(var(--theme-accent-rgb), 0.5);
-    background: rgba(0, 0, 0, 0.45);
-    box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), 0.12), 0 0 12px rgba(var(--theme-accent-rgb), 0.08);
+    border-color: var(--theme-accent);
+    background: var(--surface-2);
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.5),
+        inset -2px -2px 0 rgba(255, 255, 255, 0.05);
 }
 
 .glass-input.sm {
@@ -576,45 +613,59 @@
 }
 
 .glass-input::placeholder {
-    color: var(--text-dim);
+    color: var(--color-text-muted);
 }
 
-/* Glass Button */
+/* Glass Button (Minecraft pixel version) */
 .glass-btn {
-    padding: 9px 20px;
-    background: rgba(var(--theme-accent-rgb), 0.12);
-    border: 1px solid rgba(var(--theme-accent-rgb), 0.25);
-    border-radius: calc(var(--theme-radius) * 0.6);
-    color: var(--theme-accent-text);
-    font-size: 13px;
+    padding: var(--space-5) var(--space-8);
+    background: var(--surface-4);
+    border: 2px solid #000;
+    border-radius: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-md);
     font-weight: 700;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-normal);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
     white-space: nowrap;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    text-shadow: 1px 1px 0 #000;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.08),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 3px 0 #000;
 }
 
 .glass-btn:hover {
-    background: rgba(var(--theme-accent-rgb), 0.2);
-    border-color: rgba(var(--theme-accent-rgb), 0.4);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 12px rgba(var(--theme-accent-rgb), 0.1);
+    background: var(--theme-accent);
+    border-color: #000;
+    color: var(--color-text-main);
+    transform: none;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.15),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.4),
+        0 3px 0 #000;
 }
 
 .glass-btn:active {
-    transform: translateY(0);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+    transform: translateY(var(--space-1));
+    box-shadow:
+        inset -2px -2px 0 rgba(255, 255, 255, 0.1),
+        inset 2px 2px 0 rgba(0, 0, 0, 0.45);
 }
 
 .glass-btn.danger {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.25);
+    background: var(--surface-4);
+    border-color: #000;
     color: #fca5a5;
 }
 
 .glass-btn.danger:hover {
-    background: rgba(239, 68, 68, 0.25);
+    background: #ef4444;
+    color: #fff;
 }
 
 /* Window Size Group */
@@ -647,29 +698,36 @@
 }
 
 .mem-preset-btn {
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--text-muted);
-    padding: 5px 14px;
-    border-radius: calc(var(--theme-radius) * 0.5);
-    font-size: 12px;
-    font-weight: 600;
+    background: var(--surface-1);
+    border: 2px solid #000;
+    color: var(--color-text-muted);
+    padding: var(--space-3) var(--space-8);
+    border-radius: 0;
+    font-size: var(--text-md);
+    font-weight: 700;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-normal);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
+    text-shadow: 1px 1px 0 #000;
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.5),
+        inset -2px -2px 0 rgba(255, 255, 255, 0.05);
 }
 
 .mem-preset-btn:hover {
-    background: rgba(var(--theme-accent-rgb), 0.1);
-    color: var(--text-secondary);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    color: var(--theme-accent-bright);
 }
 
 .mem-preset-btn.active {
-    background: rgba(var(--theme-accent-rgb), 0.2);
-    border-color: rgba(var(--theme-accent-rgb), 0.35);
-    color: var(--theme-accent-bright);
+    background: var(--color-text-main);
+    border-color: #000;
+    color: var(--surface-2);
     font-weight: 700;
-    box-shadow: 0 0 8px rgba(var(--theme-accent-rgb), 0.12);
+    text-shadow: none;
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.22);
 }
 
 .mem-value {
@@ -863,19 +921,24 @@ body.compact-mode .ui-mode-card span {
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    padding: 6px 4px 4px;
-    background: transparent;
-    border: none;
-    border-radius: calc(var(--theme-radius) * 0.8);
+    padding: 8px 6px 6px;
+    background: #0e0e10;
+    border: 2px solid #000;
+    border-radius: 0;
     cursor: pointer;
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease, box-shadow 0.18s ease;
+    transition: background 0.08s linear, border-color 0.08s linear;
     color: var(--text-secondary);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.04),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5);
 }
 .theme-choice-card:hover {
-    transform: translateY(-2px);
-    background: rgba(var(--theme-accent-rgb), 0.06);
-    border-color: rgba(var(--theme-accent-rgb), 0.4);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: none;
+    background: rgba(var(--theme-accent-rgb), 0.08);
+    border-color: #000;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.04),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5);
 }
 .theme-choice-card:active {
     transform: scale(0.98);
@@ -886,8 +949,11 @@ body.compact-mode .ui-mode-card span {
 }
 .theme-choice-card.active {
     color: white;
-    border-color: var(--theme-accent);
-    box-shadow: 0 0 0 1px var(--theme-accent), 0 4px 12px rgba(var(--theme-accent-glow-rgb), 0.15);
+    background: #1a1a1d;
+    border-color: #000;
+    box-shadow:
+        inset 0 0 0 2px #fff,
+        inset 3px 3px 0 rgba(0, 0, 0, 0.35);
 }
 
 /* Fix: Add hover states to UI mode cards (Issue #6) */
@@ -907,21 +973,27 @@ body.compact-mode .ui-mode-card span {
 
 /* Fix: Add hover states to blur choice cards (Issue #6) */
 .blur-choice-card {
-    padding: 7px 16px;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: calc(var(--theme-radius) * 0.6);
+    padding: 6px 16px;
+    border: 2px solid #000;
+    background: #0e0e10;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Mojang', 'Minecraftia', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 0 #000;
+    border-radius: 0;
     cursor: pointer;
-    transition: background 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
-    text-transform: capitalize;
+    transition: background 0.08s linear, border-color 0.08s linear;
+    box-shadow:
+        inset 2px 2px 0 rgba(0, 0, 0, 0.5),
+        inset -2px -2px 0 rgba(255, 255, 255, 0.05);
 }
 .blur-choice-card:hover {
-    color: var(--text-secondary);
-    background: rgba(var(--theme-accent-rgb), 0.06);
-    border-color: rgba(var(--theme-accent-rgb), 0.4);
+    color: var(--theme-accent-bright);
+    background: rgba(var(--theme-accent-rgb), 0.12);
+    border-color: #000;
 }
 .blur-choice-card:focus-visible {
     outline: 2px solid var(--theme-accent);
@@ -946,27 +1018,33 @@ body.compact-mode .ui-mode-card span {
 /* Fix: Improve slider thumb size and visibility (Issue #5, #8) */
 .glass-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--theme-accent);
-    border: 2px solid var(--theme-accent-bright);
+    width: 16px;
+    height: 16px;
+    border-radius: 0;
+    background: #fff;
+    border: 2px solid #000;
     cursor: pointer;
-    transition: transform 0.1s ease;
-    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.3);
+    transition: background 0.08s linear;
+    box-shadow:
+        inset 1px 1px 0 rgba(255, 255, 255, 0.4),
+        inset -1px -1px 0 rgba(0, 0, 0, 0.4),
+        0 2px 0 #000;
 }
 .glass-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 0 16px rgba(var(--theme-accent-rgb), 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+    background: var(--theme-accent-bright);
+    transform: none;
 }
 .glass-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--theme-accent);
-    border: 2px solid var(--theme-accent-bright);
+    width: 16px;
+    height: 16px;
+    border-radius: 0;
+    background: #fff;
+    border: 2px solid #000;
     cursor: pointer;
-    box-shadow: 0 0 8px rgba(var(--theme-accent-glow-rgb), 0.3);
+    box-shadow:
+        inset 1px 1px 0 rgba(255, 255, 255, 0.4),
+        inset -1px -1px 0 rgba(0, 0, 0, 0.4),
+        0 2px 0 #000;
 }
 
 /* Fix: Improve slider track contrast (Issue #5) */
@@ -975,11 +1053,13 @@ body.compact-mode .ui-mode-card span {
     appearance: none;
     width: 120px;
     height: 6px;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0;
+    background: var(--surface-1);
+    border: 2px solid #000;
     outline: none;
     cursor: pointer;
-    transition: height 0.15s;
+    transition: height var(--transition-fast);
+    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.5);
 }
 .glass-slider:focus-visible {
     box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), 0.2);
@@ -1277,17 +1357,17 @@ body.compact-mode .ui-mode-card span {
 }
 
 .clean-select {
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-    padding: 9px 12px;
-    border-radius: 5px;
+    background: var(--surface-1);
+    border: 1px solid var(--color-border-subtle);
+    color: var(--color-text-main);
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius-md);
     font-family: var(--font-main);
-    font-size: 13px;
+    font-size: var(--text-md);
     outline: none;
     flex: 1;
     cursor: pointer;
-    transition: border-color 0.15s;
+    transition: border-color var(--transition-fast);
 }
 
 .clean-select:focus {
@@ -1295,5 +1375,5 @@ body.compact-mode .ui-mode-card span {
 }
 
 .clean-select option {
-    background: #1b1b1c;
+    background: var(--surface-4);
 }

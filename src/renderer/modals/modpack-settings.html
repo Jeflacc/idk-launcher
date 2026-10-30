@@ -1,0 +1,69 @@
+<!-- Modpack Settings Modal -->
+<div class="mp-settings-modal" id="mp-settings-modal">
+  <div class="mp-settings-box">
+    <div class="mp-settings-header">
+      <h3>Modpack Settings</h3>
+      <button class="mp-settings-close" id="btn-close-mp-settings">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z"/></svg>
+      </button>
+    </div>
+    <div class="mp-settings-content">
+      <div style="display:flex;gap:16px;align-items:center;">
+        <div class="icon-picker" id="mp-settings-icon-picker" title="Select custom icon">
+          <div class="icon-picker-placeholder"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zm-4 8h2v2h-2zm-2 2h2v2h-2zm4 0h2v2h-2zm-8 0h2v2h-2zm2 2h2v2h-2zm2 2h2v2h-2z"/><path d="M20 16h2v2h-2zM8 16h2v2H8zm-2 2h2v2H6zM8 6h2v2H8zM6 8h2v2H6zm2 2h2v2H8zm2-2h2v2h-2z"/></svg></div>
+        </div>
+        <input type="hidden" id="mp-settings-icon" value="" />
+        <div class="mp-settings-section" style="flex:1;">
+          <label>Modpack Name</label>
+          <input type="text" class="clean-input" id="mp-settings-name" placeholder="Modpack name..." style="text-align:left;" />
+        </div>
+      </div>
+
+      <div class="mp-settings-section">
+        <label>Description</label>
+        <textarea class="clean-input" id="mp-settings-description" placeholder="Add a description for this modpack..." style="text-align:left; min-height:80px; resize:vertical;"></textarea>
+      </div>
+
+      <div class="mp-settings-section">
+        <label>Minecraft Version</label>
+        <select class="clean-select" id="mp-settings-version"></select>
+      </div>
+
+      <div class="mp-settings-section">
+        <label>Mod Loader</label>
+        <select class="clean-select" id="mp-settings-loader">
+          <option value="Vanilla">Vanilla</option>
+          <option value="Fabric">Fabric</option>
+          <option value="Forge">Forge</option>
+          <option value="NeoForge">NeoForge</option>
+          <option value="Quilt">Quilt</option>
+        </select>
+      </div>
+
+      <div class="mp-settings-section">
+        <label>Loader Version</label>
+        <input type="text" class="clean-input" id="mp-settings-loader-version" placeholder="Auto-detected" style="text-align:left;" />
+      </div>
+
+      <div class="mp-settings-section">
+        <label>Java Arguments</label>
+        <input type="text" class="clean-input" id="mp-settings-java-args" placeholder="e.g., -XX:+UseG1GC -XX:+ParallelRefProcEnabled" style="text-align:left; font-size:11px;" />
+        <small style="color:var(--text-muted); display:block; margin-top:4px;">Advanced JVM arguments for this modpack</small>
+      </div>
+
+      <div class="mp-settings-section">
+        <label>Game Window Size</label>
+        <div style="display:flex; gap:8px;">
+          <input type="number" class="clean-input" id="mp-settings-width" placeholder="Width" style="text-align:center; flex:1;" />
+          <span style="display:flex; align-items:center; color:var(--text-muted);">&times;</span>
+          <input type="number" class="clean-input" id="mp-settings-height" placeholder="Height" style="text-align:center; flex:1;" />
+        </div>
+      </div>
+
+      <div class="mp-settings-actions">
+        <button class="submit-btn" id="btn-save-mp-settings" style="flex:1;">Save Changes</button>
+        <button class="modal-btn" id="btn-cancel-mp-settings" style="flex:1;">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

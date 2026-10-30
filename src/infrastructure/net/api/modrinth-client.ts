@@ -50,18 +50,36 @@ export class ModrinthClient {
 
   constructor(private readonly http: HttpClient) {}
 
-  searchModpacks(query: string, limit = 20): Promise<{ hits: ModrinthSearchHit[]; total_hits: number }> {
-    const facets = JSON.stringify([['project_type:modpack']]);
-    const url = `${this.base}/search?limit=${limit}&query=${encodeURIComponent(query)}&facets=${encodeURIComponent(facets)}`;
-    return this.http.getJson(url);
+  searchModpacks(query: string, loader: string | null = null, limit = 20, offset = 0, categories: string[] = [], gameVersion: string | null = null): Promise<{ hits: ModrinthSearchHit[]; total_hits: number }> {
+    return this.searchProjects(query, 'modpack', loader, limit, offset, categories, gameVersion);
   }
 
-  searchMods(query: string, loader: string | null, limit = 20): Promise<{ hits: ModrinthSearchHit[]; total_hits: number }> {
-    const facetsParts: string[][] = [['project_type:mod']];
+  searchMods(query: string, loader: string | null, limit = 20, offset = 0, categories: string[] = [], gameVersion: string | null = null): Promise<{ hits: ModrinthSearchHit[]; total_hits: number }> {
+    return this.searchProjects(query, 'mod', loader, limit, offset, categories, gameVersion);
+  }
+
+  searchShaders(query: string, limit = 20, offset = 0, categories: string[] = [], gameVersion: string | null = null): Promise<{ hits: ModrinthSearchHit[]; total_hits: number }> {
+    return this.searchProjects(query, 'shader', null, limit, offset, categories, gameVersion);
+  }
+
+  searchResourcepacks(query: string, limit = 20, offset = 0, categories: string[] = [], gameVersion: string | null = null): Promise<{ hits: ModrinthSearchHit[]; total_hits: number }> {
+    return this.searchProjects(query, 'resourcepack', null, limit, offset, categories, gameVersion);
+  }
+
+  searchProjects(query: string, projectType: string, loader: string | null, limit = 20, offset = 0, categories: string[] = [], gameVersion: string | null = null): Promise<{ hits: ModrinthSearchHit[]; total_hits: number }> {
+    const facetsParts: string[][] = [[`project_type:${projectType}`]];
     if (loader) facetsParts.push([`categories:${loader}`]);
+    for (const cat of categories) {
+      facetsParts.push([`categories:${cat}`]);
+    }
+    if (gameVersion) facetsParts.push([`versions:${gameVersion}`]);
     const facets = JSON.stringify(facetsParts);
-    const url = `${this.base}/search?limit=${limit}&query=${encodeURIComponent(query)}&facets=${encodeURIComponent(facets)}`;
-    return this.http.getJson(url);
+    const params = new URLSearchParams();
+    params.set('limit', String(limit));
+    params.set('offset', String(offset));
+    if (query) params.set('query', query);
+    params.set('facets', facets);
+    return this.http.getJson(`${this.base}/search?${params.toString()}`);
   }
 
   getProject(id: string): Promise<ModrinthProject> {

@@ -224,7 +224,7 @@ function renderVersions() {
         localStorage.setItem('idk_last_played_is_modpack', 'true');
         localStorage.setItem('idk_last_played_modpack_id', mp.id);
 
-        selectedText.innerText = `Modpack: ${mp.name}`;
+        selectedText.innerText = `Instance: ${mp.name}`;
         versionDropdown.classList.remove('open');
         
         if (window.actions?.updateSetupDisplay) window.actions.updateSetupDisplay();
@@ -315,7 +315,7 @@ function renderVersions() {
   if (state.selectedIsModpack) {
     const mp = modpacks.find(m => m.id === state.selectedModpackId);
     if (mp) {
-      selectedText.innerText = `Modpack: ${mp.name}`;
+      selectedText.innerText = `Instance: ${mp.name}`;
       return;
     }
   }

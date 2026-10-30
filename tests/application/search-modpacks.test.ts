@@ -24,7 +24,7 @@ describe('SearchModpacks', () => {
 
     const result = await useCase.execute('skyblock', 10);
 
-    expect(modrinth.searchModpacks).toHaveBeenCalledWith('skyblock', 10);
+    expect(modrinth.searchModpacks).toHaveBeenCalledWith('skyblock', null, 10);
     expect(result.hits).toHaveLength(2);
   });
 
@@ -34,7 +34,7 @@ describe('SearchModpacks', () => {
 
     await useCase.execute('rpg', 5);
 
-    expect(modrinth.searchModpacks).toHaveBeenCalledWith('rpg', 5);
+    expect(modrinth.searchModpacks).toHaveBeenCalledWith('rpg', null, 5);
   });
 
   it('returns empty results when the API returns none', async () => {

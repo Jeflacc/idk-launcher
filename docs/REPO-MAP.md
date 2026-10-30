@@ -9,13 +9,13 @@
 ```
 idk-launcher/
 ├── AGENTS.md                          # AI steering doc — READ FIRST
-├── AUDIT-renderer-backend-code.md     # Historical audit of backend code in renderer
-├── CHANGELOG.md                       # Version history
-├── LICENSE                            # MIT
 ├── README.md                          # Project overview
 ├── docs/
-│   ├── REPO-MAP.md                    # This file
-│   └── v2-frontend-rebuild-plan.md    # 7-phase plan for v2 migration
+│   └── REPO-MAP.md                    # This file
+├── .ignore                            # Ignore overrides (npm/IDE noise)
+├── .gitignore
+├── assets/                            # Build resources (app + installer icons)
+│   └── icon.ico                       # IDK Launcher app/icon.ico — NSIS installer + .exe icon
 ├── electron-builder.d.ts              # Type declarations for electron-builder
 ├── electron-builder.yml               # Electron packaging config (win/mac/linux)
 ├── package.json                       # Dependencies + scripts (type: "module")
@@ -25,9 +25,10 @@ idk-launcher/
 ├── tsconfig.node.json                 # Main/preload/shared TS config
 ├── vite.config.ts                     # Renderer build config (root: src/renderer)
 ├── vitest.config.ts                   # Test config
-├── scripts/
-│   └── build-main.mjs                 # esbuild bundler for main + preload → dist-main/
-└── .gitignore
+└── scripts/                           # Dev-only tools — GITIGNORED, not shipped
+    ├── build-main.mjs                 # esbuild bundler for main + preload → dist-main/
+    ├── batch-vlm-audit.py             # VLM screenshot-audit helper (pixel QA loop)
+    └── fast-screenshots.py            # Screenshot capture helper for audits
 ```
 
 ## Source Code (`src/`)
@@ -38,6 +39,7 @@ The Electron main process — owns all backend logic, IPC handlers, window manag
 
 ```
 src/main/
+├── env-config.ts                      # Runtime env/arg parsing (dev/prod flags)
 ├── index.ts                           # Composition root — bootstraps everything
 ├── ipc/
 │   ├── index.ts                       # IpcDeps interface + registerAllIpcHandlers()
@@ -48,10 +50,10 @@ src/main/
 │       ├── content.handlers.ts        # Content.GetMojangNews/GetTrendingModpacks
 │       ├── crash.handlers.ts          # Crash.Analyze/MissingDependencies/AutoInstall
 │       ├── download.handlers.ts       # Download.* (start/pause/resume/cancel + events)
-│       ├── idk-connect.handlers.ts    # IdkConnect.* (25+ channels: auth/friends/DM/settings)
+│       ├── idk-connect.handlers.ts    # IdkConnect.* (29 channels: auth/friends/DM/settings)
 │       ├── launch.handlers.ts         # Launch.* (minecraft/cancel/modpack/clear-java-path)
 │       ├── mod.handlers.ts            # Mod.* (search/install/remove/update/deps/icons)
-│       ├── modpack.handlers.ts        # Modpack.* (scan/delete/update/launch) + Mod.Install/Export/Unzip
+│       ├── modpack.handlers.ts        # Modpack.* (scan/delete/update/rename/launch) + Mod.Install/Export/Unzip
 │       ├── overlay.handlers.ts        # Overlay.* (init/toggle/sync/close/hide/resume)
 │       ├── settings.handlers.ts       # Settings.* (load/save/reset/export/import)
 │       ├── skin.handlers.ts           # Skin.* (fetch/upload/cape/resolve-texture)
@@ -79,7 +81,7 @@ Use-cases — orchestrate domain + infrastructure for specific user actions.
 ```
 src/application/
 └── use-cases/
-    ├── authenticate-elyby.ts          # AuthenticateElyby — Ely.by login flow
+    ├── authenticate-elyby.ts          # AuthenticateElyby — Ely.by login flow (OAuth2)
     ├── authenticate-microsoft.ts      # AuthenticateMicrosoft — msmc OAuth flow
     ├── export-modpack.ts              # ExportModpack — zip a modpack for sharing
     ├── import-modpack.ts              # ImportModpack — unzip an imported modpack
@@ -122,13 +124,14 @@ src/infrastructure/
 │   └── download-queue.ts              # DownloadQueue — concurrent download manager with events
 ├── fs/
 │   ├── java-detector.ts               # JavaDetector — finds installed Java runtimes
-│   ├── modpack-repository.ts          # ModpackRepository — CRUD for modpack profiles on disk
+│   ├── modpack-repository.ts          # InstanceRepository — folder-name identity, qualification heuristics, legacy-folder migration, rename
 │   ├── path-service.ts                # PathService — safe path resolution (blocks traversal)
 │   └── settings-store.ts              # SettingsStore — JSON settings file with category support
 ├── java/
 │   └── java-service.ts                # JavaService — Java runtime management
 ├── minecraft/
-│   └── launch-service.ts              # LaunchService — wraps minecraft-launcher-core
+│   ├── launch-service.ts              # LaunchService — wraps minecraft-launcher-core
+│   └── mc-launcher.ts                 # Legacy/low-level MC launch helpers (used by launch-service)
 ├── net/
 │   ├── http-client.ts                 # HttpClient — SSRF-protected HTTP client with allowlist
 │   └── api/
@@ -151,7 +154,7 @@ Type-safe contracts shared between main, preload, and renderer.
 
 ```
 src/shared/
-├── ipc-channels.ts                    # IpcChannel registry — 137 channels, single source of truth
+├── ipc-channels.ts                    # IpcChannel registry — 152 channels, single source of truth
 ├── types/
 │   ├── index.ts                       # Re-exports all types
 │   ├── auth.ts                        # AuthSession, account types
@@ -183,17 +186,18 @@ src/renderer/
 ├── ARCHITECTURE.md                    # Renderer architecture doc
 ├── electron-api-shim.js               # Bridges v1 window.electronAPI → v2 window.idk (120+ methods)
 │
-├── app/
-│   └── app-shell.js                   # 2,206-line innerHTML template (to be replaced by HTML files)
-│
 ├── core/
 │   ├── app-state.js                   # Singleton state + actions objects
 │   ├── dom.js                         # DOM helpers: $, $$, byId, on, escapeHtml, loadTemplate, waitForElement
 │   ├── html-loader.js                 # loadPartial() + loadAppShell() for HTML-first rendering
 │   ├── safe-parse.js                  # safeParse() + esc() helpers
 │   ├── settings-migration.js          # Migrates v1 localStorage settings → v2 backend
-│   ├── skin-texture.js                # Skin rendering via IPC (resolveSkinTextureBase64)
+│   ├── skin-texture.js                # Skin rendering via IPC — drawSkinFaceFromBase64 + drawSkinBodyFromBase64 (full-body 2D fallback)
 │   └── views.js                       # View controller (switchView, returnView, window controls)
+│
+├── partials/                          # Static shell partials (background, top-bar, chat-panel, error/warning/download)
+├── views/                             # Static view HTML (login, main, settings, profile, mods, idk-connect)
+├── modals/                            # Static modal HTML (16 files: confirm, render-engine, launch-overlay, crash-analyzer, etc.)
 │
 ├── components/
 │   ├── accessibility-manager.js       # ARIA live region, keyboard nav, focus management
@@ -214,12 +218,12 @@ src/renderer/
 │   ├── launch/launch-feature.js       # Play button, launch overlay, IPC listeners, playtime
 │   ├── mod-resolver/mod-resolver-feature.js # Dependency resolver UI (calls Mod.* IPC)
 │   ├── mod-updates/mod-updates-feature.js # Mod update checker UI (calls Mod.CheckUpdates IPC)
-│   ├── modpacks/modpacks-feature.js   # Modpack manager (list/detail/browser/modals) — 4,365 lines
+│   ├── modpacks/modpacks-feature.js   # Modpack manager (list/detail/browser/modals) — 4,309 lines
 │   ├── overlay/
 │   │   ├── overlay.html               # Overlay window HTML (separate BrowserWindow)
 │   │   ├── overlay.css                # Overlay window styles (891 lines)
 │   │   └── overlay.js                 # Overlay logic — uses IPC, no direct fetch()
-│   ├── profile/profile-feature.js     # Profile page, 3D skin viewer (skinview3d + three.js)
+│   ├── profile/profile-feature.js     # Profile page, 3D skin viewer (skinview3d + three.js) with pixel-sampled fallback to 2D
 │   ├── settings/settings-feature.js   # Settings UI (classic + advanced modes)
 │   ├── tutorial/
 │   │   ├── tutorial.css               # Tutorial overlay styles
@@ -233,69 +237,52 @@ src/renderer/
 │   ├── tokens.css                     # Design tokens (colors, spacing, typography, shadows, transitions)
 │   ├── themes.css                     # 4 theme palettes (emerald/violet/azure/ember)
 │   ├── base.css                       # Reset, body, scrollbars, @font-face, a11y primitives
-│   ├── fixes.css                      # Late-loaded patches (launch overlay click-through)
+│   ├── fixes.css                      # Late-loaded patches (click-through, global border-radius: 0 sweep, error boxes)
+│   ├── global-a11y-fixes.css          # Global accessibility overrides (focus states, ARIA styles)
 │   ├── components/                    # Component styles (replaces monolithic style.css)
-│   │   ├── layout.css                 # Background, top bar, nav, view roots (590 lines)
-│   │   ├── login.css                  # Login view, auth forms (174 lines)
-│   │   ├── main-view.css              # Hero banner, play bar, details (1,421 lines)
-│   │   ├── modpacks.css               # Modpack manager (1,802 lines)
-│   │   ├── settings.css               # Settings view (965 lines)
-│   │   ├── profile.css                # Profile page (803 lines)
-│   │   ├── friends.css                # Friends sidebar, chat (1,187 lines)
-│   │   ├── downloads.css              # Download progress, detail panel (1,714 lines)
-│   │   ├── modals.css                 # All modal dialogs (1,516 lines)
-│   │   ├── performance.css            # Eco/balanced mode overrides (95 lines)
-│   │   ├── responsive.css             # Media queries 1200/1100/768/480 (621 lines)
-│   │   ├── idk-connect.css            # IDK Connect dashboard (401 lines)
-│   │   ├── buttons.css                # Button styles (reserved)
-│   │   ├── forms.css                  # Form input styles (reserved)
-│   │   ├── cards.css                  # Card styles (reserved)
-│   │   └── utilities.css              # Utility classes, animations (reserved)
+│   │   ├── layout.css                 # Background, top bar, nav, view roots (608 lines)
+│   │   ├── login.css                  # Login view, auth forms (259 lines)
+│   │   ├── main-view.css              # Hero banner, play bar, details (1,683 lines)
+│   │   ├── modpacks.css               # Modpack manager (1,841 lines)
+│   │   ├── settings.css               # Settings view (1,379 lines)
+│   │   ├── profile.css                # Profile page (841 lines)
+│   │   ├── friends.css                # Friends sidebar, chat (871 lines)
+│   │   ├── downloads.css              # Download progress, detail panel (830 lines)
+│   │   ├── modals.css                 # All modal dialogs (1,987 lines)
+│   │   ├── performance.css            # Eco/balanced mode overrides (156 lines)
+│   │   ├── responsive.css             # Media queries 1200/1100/768/480 (952 lines)
+│   │   └── idk-connect.css            # IDK Connect dashboard (562 lines)
 │   └── advanced/                      # body.ui-advanced overrides (replaces advanced-theme.css)
-│       ├── shell.css                  # Top bar, nav, view overrides (490 lines)
-│       ├── main-view.css              # Hero, play bar, details (661 lines)
-│       ├── modpacks.css               # Modpack manager overrides (640 lines)
-│       ├── settings.css               # Settings overrides (956 lines)
-│       ├── profile.css                # Profile overrides (919 lines)
-│       ├── friends.css                # Friends/chat overrides (184 lines)
-│       ├── glass-system.css           # Two-layer glass system (86 lines)
-│       └── theme-moods.css            # Theme-specific mood colors (88 lines)
+│       ├── shell.css                  # Top bar, nav, view overrides (309 lines)
+│       ├── main-view.css              # Hero, play bar, details (718 lines)
+│       ├── modpacks.css               # Modpack manager overrides (669 lines)
+│       ├── settings.css               # Settings overrides (1,300 lines)
+│       ├── profile.css                # Profile overrides (565 lines)
+│       ├── friends.css                # Friends/chat overrides (205 lines)
+│       ├── glass-system.css           # Two-layer glass system (92 lines)
+│       └── theme-moods.css            # Theme-specific mood colors (93 lines)
 │
 ├── fonts/
 │   ├── Mojang-Regular.ttf             # Mojang font (regular)
 │   └── Mojang-Bold.ttf                # Mojang font (bold)
 │
-└── public/                            # Static assets served by Vite
-    ├── assets/                        # Organized assets (logos, icons, background video)
-    ├── background.mp4                 # Background video
-    ├── favicon.svg                    # Favicon
-    ├── logo.png                       # Launcher logo
-    ├── loading.gif                    # Loading spinner
-    ├── microsoft.png                  # Microsoft login icon
-    ├── elyby.jpg                      # Ely.by login icon
-    ├── Forge.webp                     # Forge loader icon
-    ├── fabric.png                     # Fabric loader icon
-    ├── quilt.png                      # Quilt loader icon
-    ├── sodium.png                     # Sodium mod icon
-    ├── java.png                       # Java icon
-    ├── banner.png                     # Launcher banner
-    ├── bannerbg.jpg                   # Banner background
-    ├── bg.png                         # Background image
-    ├── clouds.png                     # Cloud texture
-    ├── featured_bg.png                # Featured server background
-    ├── icons.svg                      # SVG icon sprite
-    ├── achievement.png                # Achievement icon
-    ├── playtime.png                   # Playtime icon
-    ├── launcher-login.png             # Login screen image
-    ├── server_logo.png                # Server logo
-    ├── lunasmp.png                    # LunaSMP logo
-    ├── fonts/                         # Font files (duplicated from src/renderer/fonts/)
-    └── fonts/fonts/                   # Nested duplicate (cleanup candidate)
+└── public/                            # Static assets served by Vite (flat — 23 files)
+    ├── achievement.png                ├── background.mp4
+    ├── banner.png                     ├── bannerbg.jpg
+    ├── bg.png                         ├── clouds.png
+    ├── elyby.jpg                      ├── fabric.png
+    ├── favicon.svg                    ├── featured_bg.png
+    ├── Forge.webp                     ├── icons.svg
+    ├── java.png                       ├── launcher-login.png
+    ├── loading.gif                    ├── logo.png
+    ├── lunasmp.png                    ├── microsoft.png
+    ├── playtime.png                   ├── quilt.png
+    ├── server_logo.png                └── sodium.png
 ```
 
 ## Tests (`tests/`)
 
-Mirrors the `src/` structure. 261 tests pass, 12 pre-existing failures (React-path imports).
+Mirrors the `src/` structure. **300/300 tests pass** (React-path failures removed).
 
 ```
 tests/
@@ -310,24 +297,23 @@ tests/
 ├── domain/                            # Domain entity + service tests (8 files)
 │   ├── entities/{account,download,modpack,version}.test.ts
 │   └── services/{crash-analyzer,integrity-policy,mod-resolver,version-filter}.test.ts
-├── infrastructure/                    # Infrastructure client tests (12 files)
+├── infrastructure/                    # Infrastructure client tests (16 files + _helpers.ts)
 │   ├── crypto/secret-store.test.ts
 │   ├── discord/discord-rpc-service.test.ts
 │   ├── download/download-queue.test.ts
+│   ├── fs/_helpers.ts                 # Shared test fixtures for fs tests
 │   ├── fs/{java-detector,modpack-repository,path-service,settings-store}.test.ts
 │   ├── java/java-service.test.ts
-│   ├── minecraft/launch-service.test.ts
+│   ├── minecraft/{launch-service,mc-launcher}.test.ts
 │   ├── net/{curseforge-client,elyby-client,http-client,modrinth-client,mojang-client}.test.ts
 │   ├── tunnel/tunnel-service.test.ts
 │   └── updater/updater-service.test.ts
-├── main/                              # Main process integration tests
+├── main/                              # Main process integration tests (3 files)
 │   ├── ipc/register.test.ts
+│   ├── ipc/crash.handlers.test.ts      # Crash.AutoInstallDependencies (Modrinth search + install)
 │   └── windows/window-manager.test.ts
-├── renderer/                          # Renderer tests (some pre-existing React-path failures)
-│   ├── setup.ts
-│   ├── components/{button,card,ui-primitives}.test.tsx
-│   ├── features/{crash-analyzer-view,discover-view,friends-view,home-view,modpacks-view,settings-view,versions-view}.test.tsx
-│   └── stores/{router-store,session-store}.test.ts
+├── renderer/                          # Renderer setup only (React-path view tests removed)
+│   └── setup.ts
 └── shared/                            # Schema + type tests (7 files)
     ├── auth.schema.test.ts
     ├── download.schema.test.ts
@@ -354,18 +340,18 @@ dist-renderer/                         # Bundled renderer (Vite)
     └── *.map                          # Source maps
 ```
 
-## IPC Channel Inventory (137 total)
+## IPC Channel Inventory (152 total)
 
 | Namespace | Count | Handler File |
 |-----------|-------|-------------|
 | `Window` | 5 | system.handlers.ts |
-| `System` | 9 | system.handlers.ts |
-| `Auth` | 7 | auth.handlers.ts |
-| `Skin` | 6 | skin.handlers.ts |
+| `System` | 10 | system.handlers.ts |
+| `Auth` | 8 | auth.handlers.ts |
+| `Skin` | 7 | skin.handlers.ts |
 | `Version` | 6 | version.handlers.ts |
 | `Launch` | 9 | launch.handlers.ts |
-| `Modpack` | 4 | modpack.handlers.ts |
-| `Mod` | 22 | mod.handlers.ts + modpack.handlers.ts |
+| `Modpack` | 5 | modpack.handlers.ts |
+| `Mod` | 25 | mod.handlers.ts + modpack.handlers.ts |
 | `Download` | 11 | download.handlers.ts |
 | `Settings` | 8 | settings.handlers.ts |
 | `Overlay` | 9 | overlay.handlers.ts |
@@ -407,7 +393,7 @@ main/index.ts (composition root)
   ├── ExportModpack(modpackRepo)
   └── ImportModpack(modpackRepo)
       ↓
-  registerAllIpcHandlers(ipcDeps) → 16 handler files → 137 channels
+  registerAllIpcHandlers(ipcDeps) → 16 handler files → 152 channels
       ↓
   preload/index.ts → window.idk.* (namespaced API)
       ↓
@@ -420,21 +406,31 @@ main/index.ts (composition root)
 
 | Metric | Value |
 |--------|-------|
-| Total source files | ~120 |
-| TypeScript files (main/preload/shared) | 55 |
-| JavaScript files (renderer) | 25 |
-| CSS files | 29 (24 component + 5 foundation) |
-| HTML files | 3 (index.html + overlay.html + app-shell.js template) |
-| IPC channels | 137 (all registered) |
-| Infrastructure clients | 9 |
+| Total source files | ~220 (src 165 + tests 43 + config/docs) |
+| TypeScript files (main/preload/shared) | 75 |
+| JavaScript files (renderer) | 33 |
+| CSS files | 28 (26 in styles/ + overlay.css + tutorial.css) |
+| HTML files | 31 (index.html + overlay.html + 7 partials + 6 views + 16 modals) |
+| IPC channels | 152 (all registered) |
+| Net API clients | 8 (HttpClient + 7 API clients) |
 | Use-cases | 7 |
 | Domain services | 4 |
-| Test files | 52 (261 tests pass) |
-| Total renderer LOC | ~12,000 (was ~16,000 before backend extraction) |
-| Total CSS LOC | ~15,000 (split into 24 modular files) |
+| Test files | 41 (300 tests pass, 0 failures) |
+| Total renderer JS LOC | ~18,600 |
+| Total CSS LOC | ~18,900 |
+
+## Recent Changes (2026-08-04 — pixel-first audit round)
+
+- **Design audit**: enforced square pixel language — global `border-radius: 0` sweep, pixel toggle/slider thumbs, raised 2px-black-border panels, `#friends-auth-error` styled as Mojang red error box; fixed ad/play-bar overlap (`bottom: 130px`, `z-index: 100`).
+- **3D skin preview fix**: removed strict GPU capability gate (false positives); `preserveDrawingBuffer` + 5-point pixel-sample verification; new `drawSkinBodyFromBase64()` full-body 2D fallback in `core/skin-texture.js`.
+- **Icons**: swapped 22 thin (feather/lucide) icons → `pixelarticons` inline SVGs via `pixelIcon()` helper (in `html-loader.js`).
+- **Structure**: added `src/main/env-config.ts`, `src/infrastructure/minecraft/mc-launcher.ts`, `src/renderer/styles/global-a11y-fixes.css`; HTML-first migration complete — `partials/` (7), `views/` (6), `modals/` (16) static HTML loaded by `loadAppShell()`, legacy `app/app-shell.js` innerHTML template deleted; added `scripts/check-html-contract.mjs` + `scripts/verify-html-structure.mjs` (npm: `check:html-contract`, `verify:html`); removed `public/assets/`, `public/fonts/` duplicates; deleted legacy root docs (CHANGELOG.md, LICENSE, AUDIT-renderer-backend-code.md) and `docs/v2-frontend-rebuild-plan.md`; deleted React-path renderer tests (they previously caused 12 failures).
+- **IPC**: 137 → 152 channels (+System.RendererLog, +Auth.GetMicrosoftAuthData, +4 Skin.*, +3 Mod.*).
+- **Dev tooling**: `scripts/` (audit + build helpers) is now gitignored.
+- **Tests**: 300/300 pass (was 261 pass / 12 React-path failures).
 
 ---
 
-**Last updated:** 2026-07-10
-**Commit:** (updated after each session)
+**Last updated:** 2026-08-04
+**Commit:** aea93d9 (pixel-audit round changes are uncommitted in the working tree)
 **Maintained by:** AI agents — update this file after any structural change

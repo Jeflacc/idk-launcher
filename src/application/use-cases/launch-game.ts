@@ -8,6 +8,24 @@ import type { PathService } from '@/infrastructure/fs/path-service';
 import type { LaunchOptions, LaunchProgress } from '@shared/types';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+
+/**
+ * Derive a deterministic offline (cracked) UUID from a username, using the
+ * standard Minecraft "OfflinePlayer:<name>" scheme. This replaces the old
+ * hardcoded all-zeros UUID so every offline account gets a stable, unique
+ * identity that servers and skin resolvers can key off.
+ */
+function offlineUuid(username: string): string {
+  const hash = createHash('md5').update(`OfflinePlayer:${username}`).digest('hex');
+  return [
+    hash.slice(0, 8),
+    hash.slice(8, 12),
+    hash.slice(12, 16),
+    hash.slice(16, 20),
+    hash.slice(20, 32),
+  ].join('-');
+}
 
 export interface LaunchGameDeps {
   launchService: LaunchService;
@@ -37,15 +55,63 @@ export class LaunchGame {
 
   async execute(options: LaunchOptions): Promise<{ success: boolean; error?: string; pid?: number }> {
     const javaVersion = await this.detectRequiredJavaVersion(options.versionId);
-    const java = await this.deps.javaService.ensure(javaVersion);
+    let java: Awaited<ReturnType<typeof this.deps.javaService.ensure>>;
+    try {
+      // The Java phase emits nothing from McLauncher — surface it here so the
+      // renderer never sits on "Initializing..." while a JRE downloads.
+      java = await this.deps.javaService.ensure(javaVersion, (p) => {
+        const message = p.phase === 'extracting'
+          ? `Extracting Java ${javaVersion}...`
+          : p.total > 0
+            ? `Downloading Java ${javaVersion} (${Math.max(0, Math.floor((p.completed / p.total) * 100))}%)`
+            : `Downloading Java ${javaVersion}...`;
+        console.log(`[Launch] ${message}`);
+        this.deps.launchService.reportProgress({
+          type: 'java',
+          phase: p.phase === 'extracting' ? 'extracting' : 'downloading',
+          completed: p.completed,
+          total: p.total || 1,
+          message,
+        });
+      });
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      return {
+        success: false,
+        error: `Failed to prepare Java ${javaVersion}: ${detail} Please check your internet connection and try again.`,
+      };
+    }
     let secrets = await this.deps.secrets.load();
-    let auth = options.authProvider === 'elyby' ? secrets.elyby : secrets.microsoft;
+    let authProviderUsed: 'elyby' | 'microsoft' | 'offline' =
+      options.authProvider === 'elyby' ? 'elyby' : 'microsoft';
+    let auth = authProviderUsed === 'elyby' ? secrets.elyby : secrets.microsoft;
+
+    // The v1 renderer's getMicrosoftAuthData() returns raw AuthSession but
+    // the renderer wraps it in `.data` (which doesn't exist), producing null
+    // → shim sends authProvider='offline' → offline doesn't exist.  Fall back
+    // to whichever session IS available so the user can still launch.
     if (!auth) {
-      return { success: false, error: `No ${options.authProvider} session found. Please sign in.` };
+      if (secrets.elyby) {
+        auth = secrets.elyby;
+        authProviderUsed = 'elyby';
+      } else if (secrets.microsoft) {
+        auth = secrets.microsoft;
+        authProviderUsed = 'microsoft';
+      }
+    }
+    if (!auth) {
+      // Offline play — allow launching without signing in (like TLauncher)
+      authProviderUsed = 'offline';
+      auth = {
+        username: options.username ?? 'Player',
+        uuid: offlineUuid(options.username ?? 'Player'),
+        accessToken: '',
+        expiresAt: 0,
+      } as any;
     }
 
     // Refresh Ely.by OAuth token if expired
-    if (options.authProvider === 'elyby' && secrets.elyby?.refreshToken && secrets.elyby.expiresAt < Date.now()) {
+    if (authProviderUsed === 'elyby' && secrets.elyby?.refreshToken && secrets.elyby.expiresAt < Date.now()) {
       try {
         if (this.deps.elyby && this.deps.elybyClientId && this.deps.elybyClientSecret) {
           const tokenRes = await this.deps.elyby.refreshOAuthToken(
@@ -73,17 +139,14 @@ export class LaunchGame {
       }
     }
 
-    if (!auth) {
-      return { success: false, error: `No ${options.authProvider} session found. Please sign in.` };
-    }
-
     const ctx: LaunchContext = {
       options,
       java,
       auth: {
-        username: auth.username,
-        uuid: auth.uuid,
-        accessToken: auth.accessToken,
+        username: auth!.username,
+        uuid: auth!.uuid,
+        accessToken: auth!.accessToken,
+        provider: authProviderUsed,
       },
       modpackDirectory: options.modpackId
         ? this.deps.modpackRepo['paths'].modpackDirectory(options.modpackId)
@@ -124,18 +187,23 @@ export class LaunchGame {
       }
     }
 
-    // Heuristic: parse the version number to determine Java version
-    // MC 1.18-1.20.x → Java 17
-    // MC 1.20.5+ → Java 21
-    // MC 26+ → Java 25+
+    // Heuristic: parse the version number to determine Java version.
+    // Handles BOTH versioning schemes: classic `1.8.9`/`1.20.1` (major=minor)
+    // and new-style `26.1.2` (major=26).
     const parts = versionId.split('.');
-    if (parts.length >= 2) {
-      const minor = parseInt(parts[1] ?? '', 10);
-      if (!isNaN(minor)) {
-        if (minor >= 25) return 25;
-        if (minor >= 20) return 21;
-        if (minor >= 18) return 17;
-      }
+    let major = 0;
+    if (parts.length >= 2 && parts[0] === '1') {
+      major = parseInt(parts[1] ?? '', 10); // 1.20.1 → 20
+    } else if (parts[0]) {
+      major = parseInt(parts[0], 10); // 26.1.2 → 26
+    }
+    if (!isNaN(major)) {
+      if (major >= 25) return 25;
+      if (major >= 21) return 21;
+      if (major >= 20) return 21;
+      if (major >= 18) return 17;
+      if (major === 17) return 16;
+      if (major >= 8) return 8;
     }
 
     // Default to Java 17 (safest for most versions)

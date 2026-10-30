@@ -9,6 +9,7 @@ import JSZip from 'jszip';
 function mockRepo(dir: string): ModpackRepository & { paths: { modpackDirectory: (id: string) => string } } {
   return {
     writeProfile: vi.fn().mockResolvedValue(undefined),
+    uniqueFolderForName: vi.fn().mockResolvedValue('My Imported Pack'),
     paths: { modpackDirectory: () => dir },
   } as unknown as ModpackRepository & { paths: { modpackDirectory: (id: string) => string } };
 }

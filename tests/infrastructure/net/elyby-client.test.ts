@@ -45,22 +45,41 @@ describe('ElybyClient', () => {
     expect(opts?.method).toBe('POST');
   });
 
-  it('fetchProfile calls /users/:username', async () => {
+  it('fetchProfile calls skinsystem.ely.by/profile and decodes the skin URL', async () => {
     const http = mockHttp();
-    vi.mocked(http.getJson).mockResolvedValue({ id: '1', name: 'Steve', skins: [] });
+    const textures = {
+      timestamp: 1614937327437,
+      profileId: 'ffc8fdc95824509e8a57c99b940fb996',
+      profileName: 'Steve',
+      textures: {
+        SKIN: { url: 'http://ely.by/storage/skins/deadbeef.png', metadata: { model: 'slim' } },
+      },
+    };
+    vi.mocked(http.getJson).mockResolvedValue({
+      id: 'ffc8fdc95824509e8a57c99b940fb996',
+      name: 'Steve',
+      properties: [
+        { name: 'textures', value: Buffer.from(JSON.stringify(textures)).toString('base64') },
+      ],
+    });
     const client = new ElybyClient(http);
 
-    await client.fetchProfile('Steve');
+    const profile = await client.fetchProfile('Steve');
 
     const url = vi.mocked(http.getJson).mock.calls[0]![0] as string;
-    expect(decodeURIComponent(url)).toContain('/users/Steve');
+    expect(url).toContain('skinsystem.ely.by/profile/Steve');
+    expect(profile.skins).toHaveLength(1);
+    expect(profile.skins[0]).toMatchObject({
+      url: 'http://ely.by/storage/skins/deadbeef.png',
+      state: 'ACTIVE',
+    });
   });
 
-  it('fetchSkinTextureUrl returns the skins.ely.by URL', () => {
+  it('fetchSkinTextureUrl returns the skinsystem.ely.by URL', () => {
     const http = mockHttp();
     const client = new ElybyClient(http);
     const url = client.fetchSkinTextureUrl('Steve');
-    expect(url).toBe('https://skins.ely.by/skins/Steve.png');
+    expect(url).toBe('https://skinsystem.ely.by/skins/Steve.png');
   });
 
   it('exchangeOAuthCode posts to /api/oauth2/v1/token', async () => {

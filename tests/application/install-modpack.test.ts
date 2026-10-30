@@ -33,6 +33,7 @@ function mockModrinth(): ModrinthClient {
 function mockRepo(): ModpackRepository & { paths: { modpackDirectory: (id: string) => string } } {
   return {
     writeProfile: vi.fn().mockResolvedValue(undefined),
+    uniqueFolderForName: vi.fn().mockResolvedValue('My Pack'),
     paths: { modpackDirectory: (id: string) => `/tmp/modpacks/${id}` },
   } as unknown as ModpackRepository & { paths: { modpackDirectory: (id: string) => string } };
 }

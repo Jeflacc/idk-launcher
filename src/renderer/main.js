@@ -9,7 +9,7 @@
      3. Register side-effect components (download progress, a11y, error display).
      4. Migrate settings from localStorage to the backend SettingsManager.
      5. Apply runtime DOM classes (window mode, UI scale).
-     6. Render the app shell (the entire DOM is injected by app-shell.js).
+     6. Render the app shell (HTML-first via html-loader: partials/, views/, modals/).
      7. Initialize the view controller (switchView, returnView tracking).
      8. Dynamically import and initialize all feature modules in order.
      9. Initialize background effects and game-feature integrations.
@@ -28,11 +28,10 @@ import "./components/download-progress.js";
 import "./components/accessibility-manager.js";
 import "./components/error-display.js";
 
-// NOTE: html-loader.js (loadAppShell) is the future HTML-first approach.
-// Once views/*.html and partials/*.html files are created, replace
-// renderAppShell() with: await loadAppShell();
-// For now, renderAppShell() injects the full DOM via innerHTML template.
-import { renderAppShell } from "./app/app-shell.js";
+// NOTE: the shell DOM is loaded HTML-first via loadAppShell() (html-loader.js)
+// from partials/ views/ modals/. The legacy app-shell.js template was deleted
+// when the migration completed — the HTML files are the single source of truth.
+import { loadAppShell } from "./core/html-loader.js";
 import { state, actions } from "./core/app-state.js";
 import { createViewController, initWindowControls } from "./core/views.js";
 import { loadAndMigrateSettings } from "./core/settings-migration.js";
@@ -79,9 +78,9 @@ applyWindowModeClass({
 applyModpackUiScale();
 window.addEventListener("resize", applyModpackUiScale);
 
-// 6. Render the app shell — this injects the entire DOM into #app.
-//    All feature init depends on this completing first.
-renderAppShell();
+// 6. Render the app shell — loads partials/views/modals HTML into #app
+//    containers. All feature init depends on this completing first.
+await loadAppShell();
 
 // 7. Create the view controller and register switchView on actions.
 const { switchView, getReturnView } = createViewController();
@@ -99,7 +98,6 @@ const [
   { initAuthFeature },
   { initSettingsFeature },
   { initVersionsFeature },
-  { initVersionModsFeature },
   { initLaunchFeature },
   { initModpacksFeature },
   { initContentFeature },
@@ -111,7 +109,6 @@ const [
   import("./features/auth/auth-feature.js"),
   import("./features/settings/settings-feature.js"),
   import("./features/versions/version-feature.js"),
-  import("./features/versions/version-mods-feature.js"),
   import("./features/launch/launch-feature.js"),
   import("./features/modpacks/modpacks-feature.js"),
   import("./features/content/content-feature.js"),
@@ -150,7 +147,6 @@ actions.showConfirmDialog = showConfirmDialog;
 initAuthFeature({ switchView });
 initSettingsFeature({ switchView });
 initVersionsFeature();
-initVersionModsFeature({ switchView });
 initLaunchFeature();
 initModpacksFeature({ switchView });
 initContentFeature();

@@ -235,28 +235,25 @@ class DownloadProgressTracker {
   }
 
   /**
-   * Update progress with new data (throttled)
+   * Update progress with new data (throttled UI repaint)
    * Requirement 2.1, 2.2, 2.3, 2.4, 2.5
    */
   updateProgress(downloadId, progressData) {
     if (downloadId !== this.currentDownloadId) return;
 
-    // Throttle progress updates to reduce UI re-renders
+    // Always merge the latest values into state.
     const now = Date.now();
-    const updateInterval = this.progress.updateInterval || 500; // Default 500ms
-    
-    if (now - this.progress.lastProgressUpdate < updateInterval) {
-      // Store pending update but don't render yet
-      this.progress.pendingUpdate = progressData;
-      return;
-    }
-
     this.progress = {
       ...this.progress,
       ...progressData,
-      lastProgressUpdate: now
+      lastProgressUpdate: now,
     };
 
+    // Throttle the repaint, not the state merge.
+    if (now - (this._lastUiPaint || 0) < (this.progress.updateInterval || 500)) {
+      return;
+    }
+    this._lastUiPaint = now;
     this.updateUI();
   }
 

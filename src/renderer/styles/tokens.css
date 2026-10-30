@@ -200,6 +200,11 @@
   --tracking-wider: 1.5px;
   --tracking-widest: 2px;
 
+  /* Display heading tracking — floor ≥ -0.04em so letters never touch */
+  --tracking-display-tight: -0.03em;
+  --tracking-display: -0.02em;
+  --tracking-display-loose: 0.02em;
+
   /* ---------------------------------------------------------------------------
      FONT FAMILIES
      --------------------------------------------------------------------------- */
@@ -272,6 +277,7 @@
      LAYOUT DIMENSIONS
      --------------------------------------------------------------------------- */
   --layout-top-bar-height: 56px;
+  --top-bar-height: var(--layout-top-bar-height);
   --layout-sidebar-modpacks: 280px;
   --layout-sidebar-browser: 220px;
   --layout-sidebar-friends: 320px;

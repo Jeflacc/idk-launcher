@@ -158,7 +158,6 @@ async function bootstrap(): Promise<void> {
     width: 1280,
     height: 800,
     frameless: true,
-    transparent: true,
     devUrl: isDev ? 'http://localhost:5173' : undefined,
     productionFile: isDev ? undefined : 'index.html',
   });
@@ -187,6 +186,7 @@ async function bootstrap(): Promise<void> {
     modpackRepo,
     downloadQueue,
     paths,
+    launchService,
     authMicrosoft,
     authElyby,
     launchGame,
@@ -209,7 +209,6 @@ async function bootstrap(): Promise<void> {
         width: 1280,
         height: 800,
         frameless: true,
-        transparent: true,
         devUrl: isDev ? 'http://localhost:5173' : undefined,
         productionFile: isDev ? undefined : 'index.html',
       });
