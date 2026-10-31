@@ -5,27 +5,10 @@ import type { ModpackRepository } from '@/infrastructure/fs/modpack-repository';
 import type { ElybyClient } from '@/infrastructure/net/api/elyby-client';
 import type { HttpClient } from '@/infrastructure/net/http-client';
 import type { PathService } from '@/infrastructure/fs/path-service';
-import type { LaunchOptions, LaunchProgress } from '@shared/types';
+import type { LaunchOptions, LaunchProgress, StoredAccount } from '@shared/types';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createHash } from 'node:crypto';
-
-/**
- * Derive a deterministic offline (cracked) UUID from a username, using the
- * standard Minecraft "OfflinePlayer:<name>" scheme. This replaces the old
- * hardcoded all-zeros UUID so every offline account gets a stable, unique
- * identity that servers and skin resolvers can key off.
- */
-function offlineUuid(username: string): string {
-  const hash = createHash('md5').update(`OfflinePlayer:${username}`).digest('hex');
-  return [
-    hash.slice(0, 8),
-    hash.slice(8, 12),
-    hash.slice(12, 16),
-    hash.slice(16, 20),
-    hash.slice(20, 32),
-  ].join('-');
-}
+import { offlineUuid } from '@/domain/services/offline-uuid';
 
 export interface LaunchGameDeps {
   launchService: LaunchService;
@@ -81,58 +64,111 @@ export class LaunchGame {
         error: `Failed to prepare Java ${javaVersion}: ${detail} Please check your internet connection and try again.`,
       };
     }
+    // ── Auth resolution ──
+    // Priority: explicit accountId > stored activeAccountId > legacy single
+    // session keys > offline fallback. Account tokens never leave this process.
     let secrets = await this.deps.secrets.load();
-    let authProviderUsed: 'elyby' | 'microsoft' | 'offline' =
-      options.authProvider === 'elyby' ? 'elyby' : 'microsoft';
-    let auth = authProviderUsed === 'elyby' ? secrets.elyby : secrets.microsoft;
+    const storedAccounts = Array.isArray(secrets.accounts) ? secrets.accounts : [];
 
-    // The v1 renderer's getMicrosoftAuthData() returns raw AuthSession but
-    // the renderer wraps it in `.data` (which doesn't exist), producing null
-    // → shim sends authProvider='offline' → offline doesn't exist.  Fall back
-    // to whichever session IS available so the user can still launch.
-    if (!auth) {
-      if (secrets.elyby) {
-        auth = secrets.elyby;
-        authProviderUsed = 'elyby';
-      } else if (secrets.microsoft) {
-        auth = secrets.microsoft;
-        authProviderUsed = 'microsoft';
-      }
+    let resolvedAccount: StoredAccount | null = null;
+    if (options.accountId) {
+      resolvedAccount = storedAccounts.find((a) => a.id === options.accountId) ?? null;
     }
-    if (!auth) {
-      // Offline play — allow launching without signing in (like TLauncher)
+    if (!resolvedAccount && secrets.activeAccountId) {
+      resolvedAccount = storedAccounts.find((a) => a.id === secrets.activeAccountId) ?? null;
+    }
+
+    let authProviderUsed: 'elyby' | 'microsoft' | 'offline';
+    let auth: any;
+    let authAccountId: string | null = null;
+
+    if (resolvedAccount) {
+      authAccountId = resolvedAccount.id;
+      authProviderUsed =
+        resolvedAccount.provider === 'elyby'
+          ? 'elyby'
+          : resolvedAccount.provider === 'microsoft'
+            ? 'microsoft'
+            : 'offline';
+      if (resolvedAccount.provider === 'offline') {
+        auth = {
+          username: resolvedAccount.username,
+          uuid: resolvedAccount.uuid || offlineUuid(resolvedAccount.username),
+          accessToken: '',
+          expiresAt: 0,
+        };
+      } else {
+        auth = resolvedAccount;
+      }
+    } else if (options.authProvider === 'offline' && options.username) {
+      // Explicit offline login with a chosen username (legacy renderer path):
+      // honor it directly so offline launching works even when a premium
+      // session is still stored in the secret store.
       authProviderUsed = 'offline';
       auth = {
-        username: options.username ?? 'Player',
-        uuid: offlineUuid(options.username ?? 'Player'),
+        username: options.username,
+        uuid: offlineUuid(options.username),
         accessToken: '',
         expiresAt: 0,
-      } as any;
+      };
+    } else {
+      // Legacy single-session fallback (pre-accounts secret store data).
+      // The v1 renderer's getMicrosoftAuthData() returns raw AuthSession but
+      // the renderer wraps it in `.data` (which doesn't exist), producing null
+      // → shim sends authProvider='offline' → offline doesn't exist.  Fall back
+      // to whichever session IS available so the user can still launch.
+      authProviderUsed = options.authProvider === 'elyby' ? 'elyby' : 'microsoft';
+      auth = authProviderUsed === 'elyby' ? secrets.elyby : secrets.microsoft;
+      if (!auth) {
+        if (secrets.elyby) {
+          auth = secrets.elyby;
+          authProviderUsed = 'elyby';
+        } else if (secrets.microsoft) {
+          auth = secrets.microsoft;
+          authProviderUsed = 'microsoft';
+        }
+      }
+      if (!auth) {
+        // Offline play — allow launching without signing in (like TLauncher)
+        authProviderUsed = 'offline';
+        auth = {
+          username: options.username ?? 'Player',
+          uuid: offlineUuid(options.username ?? 'Player'),
+          accessToken: '',
+          expiresAt: 0,
+        };
+      }
     }
 
-    // Refresh Ely.by OAuth token if expired
-    if (authProviderUsed === 'elyby' && secrets.elyby?.refreshToken && secrets.elyby.expiresAt < Date.now()) {
+    // Refresh Ely.by OAuth token if expired (account-based or legacy session)
+    if (authProviderUsed === 'elyby' && auth?.refreshToken && auth?.expiresAt && auth.expiresAt < Date.now()) {
       try {
         if (this.deps.elyby && this.deps.elybyClientId && this.deps.elybyClientSecret) {
           const tokenRes = await this.deps.elyby.refreshOAuthToken(
-            secrets.elyby.refreshToken,
+            auth.refreshToken,
             this.deps.elybyClientId,
             this.deps.elybyClientSecret,
           );
           const userInfo = await this.deps.elyby.fetchOAuthUserInfo(tokenRes.access_token);
+          const newSession = {
+            accessToken: tokenRes.access_token,
+            refreshToken: tokenRes.refresh_token ?? auth.refreshToken,
+            username: userInfo.username,
+            uuid: userInfo.uuid,
+            expiresAt: Date.now() + tokenRes.expires_in * 1000,
+          };
           secrets = await this.deps.secrets.load();
-          await this.deps.secrets.save({
-            ...secrets,
-            elyby: {
-              accessToken: tokenRes.access_token,
-              refreshToken: tokenRes.refresh_token ?? secrets.elyby?.refreshToken,
-              username: userInfo.username,
-              uuid: userInfo.uuid,
-              expiresAt: Date.now() + tokenRes.expires_in * 1000,
-            },
-          });
-          secrets = await this.deps.secrets.load();
-          auth = secrets.elyby;
+          if (authAccountId) {
+            const accounts = Array.isArray(secrets.accounts) ? secrets.accounts : [];
+            const idx = accounts.findIndex((a) => a.id === authAccountId);
+            const current = idx !== -1 ? accounts[idx] : undefined;
+            if (current) {
+              accounts[idx] = { ...current, ...newSession };
+            }
+            secrets.accounts = accounts;
+          }
+          await this.deps.secrets.save({ ...secrets, elyby: newSession });
+          auth = { ...auth, ...newSession };
         }
       } catch {
         // Token refresh failed — proceed with the old token and let Minecraft handle the auth error

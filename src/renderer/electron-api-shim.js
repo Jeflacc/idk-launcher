@@ -172,6 +172,12 @@
     elybyOAuthAuthenticate: () => idk?.auth.elybyOAuthAuthenticate() ?? Promise.resolve(null),
     fetchElybyProfile: (username) => idk?.auth.fetchElybyProfile(username) ?? Promise.resolve(null),
     getElybyAuthData: () => idk?.auth.getElybyAuthData() ?? Promise.resolve(null),
+    // Multi-account management
+    listAccounts: () => idk?.auth.listAccounts() ?? Promise.resolve({ accounts: [], activeAccountId: null }),
+    getActiveAccount: () => idk?.auth.getActiveAccount() ?? Promise.resolve(null),
+    addOfflineAccount: (username) => idk?.auth.addOfflineAccount(username) ?? Promise.resolve(null),
+    removeAccount: (accountId) => idk?.auth.removeAccount(accountId) ?? Promise.resolve(false),
+    setActiveAccount: (accountId) => idk?.auth.setActiveAccount(accountId) ?? Promise.resolve(null),
 
     // ── Launch ──
     // v1 calls launchMinecraft with 12 positional args. v2 expects a single options object.
@@ -213,6 +219,7 @@
         forceUpdate: forceUpdate === true,
         authProvider,
         username: username || undefined,
+        accountId: window.IdkApp?.state?.activeAccountId || undefined,
       };
       return idk?.launch.minecraft(opts) ?? Promise.resolve({ success: false });
     },
@@ -283,6 +290,8 @@
         maxMemoryMb: memMb,
         windowSize: winSize,
         javaArgs: jArgs,
+        username: window.IdkApp?.state?.currentUser || undefined,
+        accountId: window.IdkApp?.state?.activeAccountId || undefined,
       });
       return Promise.resolve({ success: true });
     },

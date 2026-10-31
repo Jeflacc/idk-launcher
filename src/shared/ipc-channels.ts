@@ -46,6 +46,12 @@ export const IpcChannel = {
     GetElybyAuthData: 'auth:get-elyby-auth-data',
     FetchElybyProfile: 'auth:fetch-elyby-profile',
     SignOut: 'auth:sign-out',
+    // Multi-account management
+    ListAccounts: 'auth:list-accounts',
+    GetActiveAccount: 'auth:get-active-account',
+    AddOfflineAccount: 'auth:add-offline-account',
+    RemoveAccount: 'auth:remove-account',
+    SetActiveAccount: 'auth:set-active-account',
   },
   // Skins
   Skin: {

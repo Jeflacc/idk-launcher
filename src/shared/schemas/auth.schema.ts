@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+const accountProviderSchema = z.enum(['microsoft', 'elyby', 'offline']);
+
+/** Sanitized account — safe to expose over IPC to the renderer (no tokens). */
+const accountInfoSchema = z.object({
+  id: z.string(),
+  provider: accountProviderSchema,
+  username: z.string(),
+  uuid: z.string(),
+  addedAt: z.number(),
+});
+
 export const AuthSchema = {
   microsoftAccount: z.object({
     provider: z.literal('microsoft'),
@@ -55,5 +66,19 @@ export const AuthSchema = {
 
   fetchElybyProfileRequest: z.object({
     username: z.string().min(3),
+  }),
+
+  // ── Multi-account management ──
+  accountProvider: accountProviderSchema,
+  accountInfo: accountInfoSchema,
+  listAccountsResponse: z.object({
+    accounts: z.array(accountInfoSchema),
+    activeAccountId: z.string().nullable(),
+  }),
+  addOfflineAccountRequest: z.object({
+    username: z.string().min(1).max(16),
+  }),
+  accountIdRequest: z.object({
+    accountId: z.string().min(1),
   }),
 } as const;

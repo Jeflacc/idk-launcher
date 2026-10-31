@@ -11,3 +11,30 @@ export interface AuthState {
   status: 'anonymous' | 'authenticating' | 'authenticated' | 'error';
   error: string | null;
 }
+
+/** Account providers supported by the launcher (offline = cracked). */
+export type AccountProvider = 'microsoft' | 'elyby' | 'offline';
+
+/**
+ * Full account record as persisted in the encrypted SecretStore.
+ * Contains tokens for premium providers — NEVER send this to the renderer.
+ */
+export interface StoredAccount {
+  id: string;
+  provider: AccountProvider;
+  username: string;
+  uuid: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  addedAt: number;
+}
+
+/** Sanitized account — safe to expose over IPC to the renderer. */
+export interface AccountInfo {
+  id: string;
+  provider: AccountProvider;
+  username: string;
+  uuid: string;
+  addedAt: number;
+}

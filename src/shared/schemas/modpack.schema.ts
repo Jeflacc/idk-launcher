@@ -113,5 +113,7 @@ export const ModpackSchema = {
     maxMemoryMb: z.number().int().positive().max(32768).optional(),
     windowSize: z.object({ width: z.number().int().positive(), height: z.number().int().positive() }).optional(),
     javaArgs: z.array(z.string()).optional(),
+    username: z.string().optional(),
+    accountId: z.string().optional(),
   }),
 } as const;

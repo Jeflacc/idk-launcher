@@ -91,6 +91,8 @@ export function registerModpackHandlers(
             maxMemoryMb: args.maxMemoryMb,
             windowSize: args.windowSize,
             javaArgs: args.javaArgs,
+            username: args.username,
+            accountId: args.accountId,
           }));
           if (!result.success) {
             console.error('[Launch] Launch failed:', result.error ?? 'Launch failed');

@@ -3778,6 +3778,22 @@ export function initModpacksFeature({ switchView }) {
   // --- Play Modpack ---
   // IPC listeners are already registered globally above \u2014 no setup needed here.
   document.getElementById("btn-play-modpack").addEventListener("click", async () => {
+    // Gate: launching requires an active account.
+    if (!state.activeAccountId && !state.currentUser) {
+      const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
+      const goLogin = await showConfirmDialog({
+        title: "No account selected",
+        message: "You need to add or select an account before launching the game.",
+        confirmText: "Add Account",
+        cancelText: "Cancel",
+        variant: "neutral",
+      });
+      if (goLogin) {
+        actions.switchView?.("login");
+        setTimeout(() => document.getElementById("btn-offline-login")?.click(), 50);
+      }
+      return;
+    }
     const mp = mpGet();
     const isViewingVersion =
       state.activeVersionForMods && !state.activeModpackId;

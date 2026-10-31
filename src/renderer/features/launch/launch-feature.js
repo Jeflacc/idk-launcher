@@ -754,6 +754,24 @@ if (miniClose) {
 
 playBtn.addEventListener('click', async (e) => {
   e.stopPropagation();
+  // Gate: launching requires an active account. If none, send the user to
+  // the login screen instead of starting the game process.
+  if (!state.activeAccountId && !state.currentUser) {
+    const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
+    const goLogin = await showConfirmDialog({
+      title: "No account selected",
+      message: "You need to add or select an account before launching the game.",
+      confirmText: "Add Account",
+      cancelText: "Cancel",
+      variant: "neutral",
+    });
+    if (goLogin) {
+      actions.switchView?.("login");
+      // Open the offline form so they can type a username immediately
+      setTimeout(() => document.getElementById("btn-offline-login")?.click(), 50);
+    }
+    return;
+  }
   if (overlay?.classList.contains('active') && !overlay.classList.contains('minimized')) {
     return;
   }

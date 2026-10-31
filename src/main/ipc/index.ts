@@ -32,6 +32,7 @@ export interface IpcDeps {
   mojangContent: import('@/infrastructure/net/api/mojang-content-client').MojangContentClient;
   curseforge: import('@/infrastructure/net/api/curseforge-client').CurseforgeClient;
   secrets: import('@/infrastructure/crypto/secret-store').SecretStore;
+  manageAccounts: import('@/application/use-cases/manage-accounts').ManageAccounts;
   settingsStore: import('@/infrastructure/fs/settings-store').SettingsStore;
   modpackRepo: import('@/infrastructure/fs/modpack-repository').ModpackRepository;
   downloadQueue: import('@/infrastructure/download/download-queue').DownloadQueue;
@@ -50,7 +51,7 @@ export interface IpcDeps {
 export function registerAllIpcHandlers(deps: IpcDeps): void {
   registerSystemHandlers(deps.windows, deps.http, deps.paths);
   forwardWindowState(deps.windows);
-  registerAuthHandlers(deps.windows, deps.authMicrosoft, deps.authElyby, deps.elyby, deps.secrets);
+  registerAuthHandlers(deps.windows, deps.authMicrosoft, deps.authElyby, deps.elyby, deps.secrets, deps.manageAccounts);
   registerLaunchHandlers(deps.windows, deps.launchGame);
   registerModpackHandlers(deps.windows, deps.modpackRepo, deps.modrinth, deps.installModpack, deps.exportModpack, deps.importModpack, deps.launchGame, deps.launchService);
   registerModHandlers(deps.windows, deps.modrinth, deps.curseforge, deps.modpackRepo, deps.http, deps.downloadQueue, deps.paths);

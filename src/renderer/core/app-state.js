@@ -10,19 +10,43 @@ const offlineAccounts = safeParse(
   [],
 );
 
-const selectedOfflineAccount =
+const storedSelectedOfflineAccount =
   localStorage.getItem("craftlaunch_selected_offline_account") || null;
+
+// Migrate legacy single-username storage into the multi-account list so
+// existing users see their account in the switcher immediately.
+const authModeStored = localStorage.getItem("craftlaunch_authmode") || "offline";
+const legacyUsername = localStorage.getItem("craftlaunch_username") || "";
+const offlineAccountList = Array.isArray(offlineAccounts) ? [...offlineAccounts] : [];
+let selectedOfflineAccount = storedSelectedOfflineAccount;
+let migrated = false;
+if (authModeStored === "offline" && legacyUsername) {
+  if (!offlineAccountList.includes(legacyUsername)) {
+    offlineAccountList.push(legacyUsername);
+    migrated = true;
+  }
+  if (!selectedOfflineAccount) {
+    selectedOfflineAccount = legacyUsername;
+    migrated = true;
+  }
+}
+if (migrated) {
+  localStorage.setItem("craftlaunch_offline_accounts", JSON.stringify(offlineAccountList));
+  localStorage.setItem("craftlaunch_selected_offline_account", selectedOfflineAccount);
+}
 
 export const state = {
   quickConnectTarget: null,
   currentUser:
-    localStorage.getItem("craftlaunch_username") ||
+    legacyUsername ||
     selectedOfflineAccount ||
-    ((localStorage.getItem("craftlaunch_authmode") || "offline") === "offline"
-      ? "Player"
-      : ""),
-  authMode: localStorage.getItem("craftlaunch_authmode") || "offline",
-  offlineAccounts: Array.isArray(offlineAccounts) ? offlineAccounts : [],
+    (authModeStored === "offline" ? "Player" : ""),
+  authMode: authModeStored,
+  // Multi-account (new store — backed by encrypted SecretStore on main side)
+  accounts: [], // populated asynchronously from main after init
+  activeAccountId: localStorage.getItem("craftlaunch_active_account_id") || null,
+  // Legacy offline account list (kept for backward compat + offline chips)
+  offlineAccounts: offlineAccountList,
   selectedOfflineAccount,
   selectedVersion: lastPlayed.version,
   selectedLoader: lastPlayed.loader,

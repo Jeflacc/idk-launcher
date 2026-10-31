@@ -6,6 +6,7 @@ import type {
   DownloadProgress,
   DownloadItem,
   AuthSession,
+  AccountInfo,
   Modpack,
   IdkUser,
   IdkUserProfile,
@@ -70,6 +71,12 @@ export const preloadApi = {
     getElybyAuthData: () =>
       ipcRenderer.invoke(IpcChannel.Auth.GetElybyAuthData) as Promise<AuthSession | null>,
     signOut: () => ipcRenderer.invoke(IpcChannel.Auth.SignOut),
+    // Multi-account management
+    listAccounts: () => ipcRenderer.invoke(IpcChannel.Auth.ListAccounts) as Promise<{ accounts: AccountInfo[]; activeAccountId: string | null }>,
+    getActiveAccount: () => ipcRenderer.invoke(IpcChannel.Auth.GetActiveAccount) as Promise<AccountInfo | null>,
+    addOfflineAccount: (username: string) => ipcRenderer.invoke(IpcChannel.Auth.AddOfflineAccount, { username }) as Promise<AccountInfo>,
+    removeAccount: (accountId: string) => ipcRenderer.invoke(IpcChannel.Auth.RemoveAccount, { accountId }) as Promise<boolean>,
+    setActiveAccount: (accountId: string) => ipcRenderer.invoke(IpcChannel.Auth.SetActiveAccount, { accountId }) as Promise<AccountInfo | null>,
   },
 
   launch: {

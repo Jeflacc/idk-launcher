@@ -523,6 +523,8 @@ body:has(#view-idk-connect.active) .nav-tab[data-target="idk-connect"] {
     flex-direction: column;
     gap: 4px;
     margin-bottom: 6px;
+    max-height: 180px;
+    overflow-y: auto;
 }
 
 .profile-dropdown-account {
@@ -541,6 +543,13 @@ body:has(#view-idk-connect.active) .nav-tab[data-target="idk-connect"] {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     text-shadow: 1px 1px 0 #000;
+    min-width: 0;
+}
+
+.profile-dropdown-account span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .profile-dropdown-account:hover {
@@ -562,8 +571,20 @@ body:has(#view-idk-connect.active) .nav-tab[data-target="idk-connect"] {
     height: 12px;
 }
 
-.profile-dropdown-account.active svg {
-    color: var(--theme-accent-bright);
+.profile-dropdown-account-remove {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    margin-left: 4px;
+    transition: color 0.08s linear;
+}
+
+.profile-dropdown-account-remove:hover {
+    color: #ef4444;
 }
 
 .profile-dropdown-divider {

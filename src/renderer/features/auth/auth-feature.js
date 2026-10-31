@@ -11,17 +11,86 @@ export function initAuthFeature({ switchView }) {
   const btnElybyLogin = document.getElementById("btn-elyby-login");
   const btnMicrosoftLogin = document.getElementById("btn-microsoft-login");
 
-  if (state.currentUser) {
-    // Auto-login
-    updateUserDisplay(state.currentUser);
-    handleOnboardingFlow(switchView);
+  // Load multi-account state from the (encrypted) backend on startup.
+  // Non-blocking: failures fall back to legacy localStorage state.
+  async function loadAccountsFromBackend() {
+    if (!window.electronAPI) return;
+    try {
+      const listRes = await window.electronAPI.listAccounts();
+      if (listRes && Array.isArray(listRes.accounts)) {
+        state.accounts = listRes.accounts;
+        state.activeAccountId = listRes.activeAccountId ?? null;
+      }
+      const active = await window.electronAPI.getActiveAccount();
+      if (active) {
+        state.activeAccountId = active.id;
+        state.currentUser = active.username;
+        state.authMode = active.provider;
+        localStorage.setItem("craftlaunch_username", active.username);
+        localStorage.setItem("craftlaunch_authmode", active.provider);
+        localStorage.setItem("craftlaunch_active_account_id", active.id);
+        updateUserDisplay(active.username);
+      } else if (state.currentUser) {
+        // Legacy fallback: no stored accounts yet but a username exists.
+        updateUserDisplay(state.currentUser);
+      } else {
+        updateUserDisplay("Player");
+      }
+    } catch (e) {
+      console.warn("[Auth] Failed to load accounts from backend:", e);
+      if (state.currentUser) updateUserDisplay(state.currentUser);
+      else updateUserDisplay("Player");
+    }
   }
+
+  // Kick off account loading without blocking startup (Home page renders immediately).
+  loadAccountsFromBackend();
+
+  // Startup flow: always land on the Home page. Login is only required when the
+  // user explicitly wants to launch a game without an active session (handled
+  // in launch-feature / modpacks-feature). Onboarding (EULA / IDK Connect)
+  // still runs once, then we go straight to "main".
+  (async () => {
+    // Run onboarding only the first time (EULA acceptance).
+    if (!localStorage.getItem("idk_agreed_eula")) {
+      // Defer to handleOnboardingFlow which shows the EULA dialog.
+      await handleOnboardingFlow(switchView);
+      return;
+    }
+    if (!localStorage.getItem("idk_connect_prompted_v2")) {
+      await handleOnboardingFlow(switchView);
+      return;
+    }
+    switchView("main");
+  })();
 
   btnOfflineLogin.addEventListener("click", () => {
     offlineForm.classList.add("open");
     // Delay focus slightly so the pointer-events transition completes
     setTimeout(() => loginInput.focus(), 50);
+    renderLoginAccountList();
   });
+
+  // Render existing offline accounts as clickable chips in the login form
+  function renderLoginAccountList() {
+    const listEl = document.getElementById("offline-accounts");
+    if (!listEl) return;
+    const accounts = Array.isArray(state.offlineAccounts) ? state.offlineAccounts : [];
+    listEl.innerHTML = "";
+    accounts.forEach((acct) => {
+      const chip = document.createElement("div");
+      chip.className = `offline-account ${acct === state.selectedOfflineAccount ? "active" : ""}`;
+      chip.textContent = acct;
+      chip.title = `Sign in as ${acct}`;
+      chip.addEventListener("click", (e) => {
+        e.stopPropagation();
+        loginInput.value = acct;
+        listEl.querySelectorAll(".offline-account").forEach((c) => c.classList.remove("active"));
+        chip.classList.add("active");
+      });
+      listEl.appendChild(chip);
+    });
+  }
 
   btnElybyLogin.addEventListener("click", async () => {
     offlineForm.classList.remove("open");
@@ -40,6 +109,16 @@ export function initAuthFeature({ switchView }) {
               .saveSettings({
                 session: { currentUser: state.currentUser, authMode: state.authMode },
                 elybyData: res.data,
+              })
+              .catch(console.error);
+            window.electronAPI
+              .listAccounts()
+              .then((r) => {
+                if (r && Array.isArray(r.accounts)) {
+                  state.accounts = r.accounts;
+                  state.activeAccountId = r.activeAccountId ?? null;
+                  if (r.activeAccountId) localStorage.setItem("craftlaunch_active_account_id", r.activeAccountId);
+                }
               })
               .catch(console.error);
           }
@@ -77,11 +156,24 @@ export function initAuthFeature({ switchView }) {
           state.authMode = "microsoft";
           localStorage.setItem("craftlaunch_username", state.currentUser);
           localStorage.setItem("craftlaunch_authmode", state.authMode);
-          
+
           window.electronAPI.saveSettings({
             session: { currentUser: state.currentUser, authMode: state.authMode },
             microsoftData: res.data
           }).catch(console.error);
+
+          // Refresh the multi-account list from the backend (the IPC handler
+          // already persisted the new account + made it active).
+          window.electronAPI
+            .listAccounts()
+            .then((r) => {
+              if (r && Array.isArray(r.accounts)) {
+                state.accounts = r.accounts;
+                state.activeAccountId = r.activeAccountId ?? null;
+                if (r.activeAccountId) localStorage.setItem("craftlaunch_active_account_id", r.activeAccountId);
+              }
+            })
+            .catch(console.error);
 
           updateUserDisplay(state.currentUser);
           handleOnboardingFlow(switchView);
@@ -109,7 +201,8 @@ export function initAuthFeature({ switchView }) {
     localStorage.setItem("craftlaunch_username", val);
     localStorage.setItem("craftlaunch_authmode", state.authMode);
 
-    // Multi-account: track this offline account in the account list
+    // Multi-account: persist this offline account to the encrypted backend store
+    // and make it the active account (instant switch on next launch).
     const accounts = Array.isArray(state.offlineAccounts) ? state.offlineAccounts : [];
     if (!accounts.includes(val)) {
       accounts.push(val);
@@ -120,6 +213,16 @@ export function initAuthFeature({ switchView }) {
     localStorage.setItem("craftlaunch_selected_offline_account", val);
 
     if (window.electronAPI) {
+      window.electronAPI
+        .addOfflineAccount(val)
+        .then((acct) => {
+          if (acct) {
+            state.activeAccountId = acct.id;
+            state.accounts = state.accounts.filter((a) => a.id !== acct.id).concat(acct);
+            localStorage.setItem("craftlaunch_active_account_id", acct.id);
+          }
+        })
+        .catch(console.error);
       window.electronAPI
         .saveSettings({
           session: { currentUser: val, authMode: "offline" },
@@ -239,10 +342,8 @@ Please review and accept these terms to continue.`,
     const dividerEl = document.getElementById("profile-dd-divider");
     if (!listEl || !sectionEl || !dividerEl) return;
 
-    const accounts = Array.isArray(state.offlineAccounts) ? state.offlineAccounts : [];
-    const isOffline = state.authMode === "offline";
-
-    if (!isOffline || accounts.length === 0) {
+    const accounts = Array.isArray(state.accounts) ? state.accounts : [];
+    if (accounts.length === 0) {
       sectionEl.style.display = "none";
       dividerEl.style.display = "none";
       return;
@@ -254,18 +355,88 @@ Please review and accept these terms to continue.`,
 
     accounts.forEach((acct) => {
       const item = document.createElement("div");
-      item.className = `profile-dropdown-account ${acct === state.selectedOfflineAccount ? "active" : ""}`;
+      const isActive = acct.id === state.activeAccountId;
+      item.className = `profile-dropdown-account ${isActive ? "active" : ""}`;
+      const label =
+        acct.provider === "microsoft"
+          ? "Microsoft"
+          : acct.provider === "elyby"
+            ? "Ely.by"
+            : "Offline";
       item.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18 21L12 17.77L6 21L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-        <span>${escHtml(acct)}</span>
+        <span>${escHtml(acct.username)}</span>
+        <span style="margin-left:auto;font-size:9px;opacity:0.5;">${label}</span>
+        <button class="profile-dropdown-account-remove" title="Remove account" data-id="${acct.id}">×</button>
       `;
-      item.addEventListener("click", (e) => {
+      item.addEventListener("click", async (e) => {
+        // Ignore clicks on the remove button
+        if (e.target && e.target.classList.contains("profile-dropdown-account-remove")) return;
         e.stopPropagation();
-        switchOfflineAccount(acct);
+        await switchAccount(acct.id);
         profileDropdown.classList.remove("active");
       });
+      const removeBtn = item.querySelector(".profile-dropdown-account-remove");
+      if (removeBtn) {
+        removeBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
+          const ok = await showConfirmDialog({
+            title: "Remove account",
+            message: `Remove ${acct.username} (${label}) from this launcher?`,
+            confirmText: "Remove",
+            cancelText: "Cancel",
+            variant: "danger",
+          });
+          if (!ok) return;
+          try {
+            await window.electronAPI.removeAccount(acct.id);
+            state.accounts = state.accounts.filter((a) => a.id !== acct.id);
+            if (state.activeAccountId === acct.id) {
+              state.activeAccountId = state.accounts[0]?.id ?? null;
+              const next = state.accounts.find((a) => a.id === state.activeAccountId);
+              if (next) {
+                state.currentUser = next.username;
+                state.authMode = next.provider;
+                localStorage.setItem("craftlaunch_username", next.username);
+                localStorage.setItem("craftlaunch_authmode", next.provider);
+                localStorage.setItem("craftlaunch_active_account_id", next.id);
+                updateUserDisplay(next.username);
+              } else {
+                state.currentUser = "";
+                state.authMode = "offline";
+                localStorage.removeItem("craftlaunch_username");
+                localStorage.removeItem("craftlaunch_authmode");
+                localStorage.removeItem("craftlaunch_active_account_id");
+                updateUserDisplay("Player");
+              }
+            }
+            renderOfflineAccountList();
+          } catch (err) {
+            console.error(err);
+          }
+        });
+      }
       listEl.appendChild(item);
     });
+  }
+
+  async function switchAccount(accountId) {
+    if (!window.electronAPI) return;
+    try {
+      const acct = await window.electronAPI.setActiveAccount(accountId);
+      if (acct) {
+        state.activeAccountId = acct.id;
+        state.currentUser = acct.username;
+        state.authMode = acct.provider;
+        localStorage.setItem("craftlaunch_username", acct.username);
+        localStorage.setItem("craftlaunch_authmode", acct.provider);
+        localStorage.setItem("craftlaunch_active_account_id", acct.id);
+        updateUserDisplay(acct.username);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   function escHtml(str) {
@@ -290,6 +461,16 @@ Please review and accept these terms to continue.`,
     localStorage.setItem("craftlaunch_offline_accounts", JSON.stringify(accounts));
     localStorage.setItem("craftlaunch_selected_offline_account", val);
     if (window.electronAPI) {
+      try {
+        const acct = await window.electronAPI.addOfflineAccount(val);
+        if (acct) {
+          state.activeAccountId = acct.id;
+          state.accounts = state.accounts.filter((a) => a.id !== acct.id).concat(acct);
+          localStorage.setItem("craftlaunch_active_account_id", acct.id);
+        }
+      } catch (e) {
+        console.error(e);
+      }
       await window.electronAPI
         .saveSettings({ session: { currentUser: val, authMode: "offline" } })
         .catch(console.error);
@@ -375,9 +556,15 @@ Please review and accept these terms to continue.`,
     if (!ok) return;
     state.currentUser = "";
     state.selectedOfflineAccount = null;
+    state.activeAccountId = null;
     localStorage.removeItem("craftlaunch_username");
     localStorage.removeItem("craftlaunch_authmode");
     localStorage.removeItem("craftlaunch_selected_offline_account");
+    localStorage.removeItem("craftlaunch_active_account_id");
+    // Remove the active account from the encrypted store (other accounts remain)
+    if (window.electronAPI && state.activeAccountId) {
+      window.electronAPI.removeAccount(state.activeAccountId).catch(console.error);
+    }
     
     // Logout from IDK Connect as well
     document.getElementById("btn-friends-disconnect")?.click();

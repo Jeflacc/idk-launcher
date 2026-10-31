@@ -83,6 +83,7 @@ src/application/
 └── use-cases/
     ├── authenticate-elyby.ts          # AuthenticateElyby — Ely.by login flow (OAuth2)
     ├── authenticate-microsoft.ts      # AuthenticateMicrosoft — msmc OAuth flow
+    ├── manage-accounts.ts             # ManageAccounts — multi-account store (MS/Ely.by/offline), encrypted
     ├── export-modpack.ts              # ExportModpack — zip a modpack for sharing
     ├── import-modpack.ts              # ImportModpack — unzip an imported modpack
     ├── install-modpack.ts             # InstallModpack — download + setup a Modrinth modpack
@@ -107,6 +108,7 @@ src/domain/
     ├── crash-analyzer.ts              # CrashAnalyzerService — parses crash logs, identifies errors
     ├── integrity-policy.ts            # IntegrityPolicyService — sha1/size verification rules
     ├── mod-resolver.ts                # ModResolverService — dependency resolution + incompatibility detection
+    ├── offline-uuid.ts               # offlineUuid() — deterministic per-username offline UUID (MD5 OfflinePlayer:<name>)
     └── version-filter.ts              # VersionFilterService — filter/sort Minecraft versions
 ```
 

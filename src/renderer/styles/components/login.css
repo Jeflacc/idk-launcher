@@ -172,6 +172,37 @@
     margin-top: 4px;
 }
 
+/* Existing offline account chips in the login form */
+.offline-accounts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.offline-account {
+    background: var(--surface-2);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    font-size: var(--text-sm);
+    color: var(--color-text-main);
+    cursor: pointer;
+    transition: all 0.1s linear;
+    white-space: nowrap;
+}
+
+.offline-account:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-border-accent);
+}
+
+.offline-account.active {
+    background: var(--theme-accent);
+    color: var(--color-text-main);
+    border-color: var(--theme-accent);
+}
+
 /* =========================================================
    FORM INPUTS
    ========================================================= */

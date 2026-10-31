@@ -1078,7 +1078,10 @@ export function initProfileFeature({ switchView, getReturnView }) {
       if (!ok) return;
       disposeSkinViewer();
       state.currentUser = "";
+      state.selectedOfflineAccount = null;
       localStorage.removeItem("craftlaunch_username");
+      localStorage.removeItem("craftlaunch_authmode");
+      localStorage.removeItem("craftlaunch_selected_offline_account");
       // Sync IDK Connect UI
       actions.updateFriendsAuthUI?.();
       switchView("login");

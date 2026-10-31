@@ -109,6 +109,59 @@ describe('LaunchGame', () => {
     expect(ctx.auth.provider).toBe('offline');
   });
 
+  it('honors an explicit offline username even when a microsoft session exists', async () => {
+    // Multi-account switching: user logged out of MS (session still in the
+    // secret store) and picked an offline account — the offline choice wins.
+    const launchService = mockLaunchService();
+    vi.mocked(launchService.launch).mockResolvedValue({ success: true, pid: 55 });
+    const useCase = new LaunchGame({
+      launchService,
+      javaService: mockJavaService(),
+      secrets: mockSecretStore(), // has microsoft session 'Steve'
+      modpackRepo: mockModpackRepo(),
+      http: mockHttpClient(),
+      paths: mockPathService(),
+    });
+
+    const result = await useCase.execute({ ...baseOptions, authProvider: 'offline', username: 'Muzlik_Gamer' });
+
+    expect(result.success).toBe(true);
+    const ctx = vi.mocked(launchService.launch).mock.calls[0]![0] as LaunchContext;
+    expect(ctx.auth.username).toBe('Muzlik_Gamer');
+    expect(ctx.auth.provider).toBe('offline');
+  });
+
+  it('derives a stable version-3 offline UUID from the username', async () => {
+    const launchService = mockLaunchService();
+    vi.mocked(launchService.launch).mockResolvedValue({ success: true, pid: 1 });
+    const secrets = {
+      load: vi.fn().mockResolvedValue({}),
+    } as unknown as SecretStore;
+    const useCase = new LaunchGame({
+      launchService,
+      javaService: mockJavaService(),
+      secrets,
+      modpackRepo: mockModpackRepo(),
+      http: mockHttpClient(),
+      paths: mockPathService(),
+    });
+
+    await useCase.execute({ ...baseOptions, authProvider: 'offline', username: 'Muzlik_Gamer' });
+    const uuid1 = (vi.mocked(launchService.launch).mock.calls[0]![0] as LaunchContext).auth.uuid;
+    // Version 3 (name-based MD5) + IETF variant, standard UUID format
+    expect(uuid1).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-3[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+
+    // Deterministic: same username → same UUID
+    await useCase.execute({ ...baseOptions, authProvider: 'offline', username: 'Muzlik_Gamer' });
+    const uuid2 = (vi.mocked(launchService.launch).mock.calls[1]![0] as LaunchContext).auth.uuid;
+    expect(uuid2).toBe(uuid1);
+
+    // Different username → different UUID
+    await useCase.execute({ ...baseOptions, authProvider: 'offline', username: 'OtherPlayer' });
+    const uuid3 = (vi.mocked(launchService.launch).mock.calls[2]![0] as LaunchContext).auth.uuid;
+    expect(uuid3).not.toBe(uuid1);
+  });
+
   it('launches with a microsoft session', async () => {
     const launchService = mockLaunchService();
     vi.mocked(launchService.launch).mockResolvedValue({ success: true, pid: 1234 });

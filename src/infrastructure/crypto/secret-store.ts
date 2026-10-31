@@ -1,6 +1,7 @@
 import { safeStorage } from 'electron';
 import { readFile, writeFile, unlink, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import type { StoredAccount } from '@shared/types';
 
 /**
  * Encrypted secret store. This is the CORRECTION for v1's most critical
@@ -33,6 +34,13 @@ export interface PersistedSecrets {
     expiresAt?: number;
   };
   connectTunnelToken?: string;
+  /**
+   * Multi-account store (Microsoft, Ely.by and offline). Premium tokens live
+   * here, encrypted at rest — never cross IPC. `activeAccountId` points at the
+   * currently selected account.
+   */
+  accounts?: StoredAccount[];
+  activeAccountId?: string | null;
 }
 
 export class SecretStore {

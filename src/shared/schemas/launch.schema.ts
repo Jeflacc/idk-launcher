@@ -34,6 +34,12 @@ export const LaunchSchema = {
      * 'Player' when omitted.
      */
     username: z.string().optional(),
+    /**
+     * Explicit account id from the multi-account store. When set, the launch
+     * resolves credentials for that account (any provider) — takes priority
+     * over authProvider/username and over the stored activeAccountId.
+     */
+    accountId: z.string().optional(),
   }),
 
   progress: z.object({

@@ -23,6 +23,7 @@ import { DiscordRpcService } from '@/infrastructure/discord/discord-rpc-service'
 import { IntegrityPolicyService } from '@/domain/services/integrity-policy';
 import { AuthenticateMicrosoft } from '@/application/use-cases/authenticate-microsoft';
 import { AuthenticateElyby } from '@/application/use-cases/authenticate-elyby';
+import { ManageAccounts } from '@/application/use-cases/manage-accounts';
 import { LaunchGame } from '@/application/use-cases/launch-game';
 import { InstallModpack } from '@/application/use-cases/install-modpack';
 import { ExportModpack } from '@/application/use-cases/export-modpack';
@@ -144,6 +145,7 @@ async function bootstrap(): Promise<void> {
   const discord = new DiscordRpcService(env.discordClientId);
 
   // Application use-cases
+  const manageAccounts = new ManageAccounts(secrets);
   const authMicrosoft = new AuthenticateMicrosoft(secrets);
   const authElyby = new AuthenticateElyby(elyby, secrets, env.elybyClientId, env.elybyClientSecret, env.elybyRedirectPort);
   const launchGame = new LaunchGame({ launchService, javaService, secrets, modpackRepo, http, paths, elyby, elybyClientId: env.elybyClientId, elybyClientSecret: env.elybyClientSecret });
@@ -182,6 +184,7 @@ async function bootstrap(): Promise<void> {
     mojangContent,
     curseforge,
     secrets,
+    manageAccounts,
     settingsStore,
     modpackRepo,
     downloadQueue,
