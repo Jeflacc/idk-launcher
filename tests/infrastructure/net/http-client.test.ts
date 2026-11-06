@@ -149,5 +149,29 @@ describe('HttpClient', () => {
         http.downloadFile('https://evil.example.com/file', '/tmp/test-download-file'),
       ).rejects.toThrow(HttpClientError);
     });
+
+    it('retries a stalled download then succeeds', async () => {
+      // A body that never emits any data triggers the stall watchdog.
+      const stalledBody = new ReadableStream({ start() {} });
+      const stalledResponse = {
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        body: stalledBody,
+      } as Response;
+      const okResponse = mockResponse('downloaded content');
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce(stalledResponse)
+        .mockResolvedValueOnce(okResponse);
+
+      await http.downloadFile(
+        'https://resources.download.minecraft.net/cc/abcdef',
+        '/tmp/test-download-file',
+        { stallTimeoutMs: 100 },
+      );
+
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
   });
 });

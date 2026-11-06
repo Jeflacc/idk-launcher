@@ -95,6 +95,8 @@ export class HttpClientError extends Error {
     message: string,
     public readonly statusCode: number | null,
     public readonly url: string,
+    /** When true, the failure is transient (e.g. a stalled download) and should be retried. */
+    public readonly retryable = false,
   ) {
     super(message);
     this.name = 'HttpClientError';
@@ -162,9 +164,10 @@ export class HttpClient {
       } catch (err) {
         lastError = err;
         if (opts.signal?.aborted) throw err;
-        // Don't retry HTTP errors (4xx/5xx) or integrity errors — those are deterministic.
-        // Only retry transient network failures (fetch failed, timeout, ECONNRESET, etc.)
-        if (err instanceof HttpClientError) throw err;
+        // Don't retry non-retryable HTTP errors (4xx/5xx) or integrity errors —
+        // those are deterministic. Retry transient network failures (fetch failed,
+        // timeout, ECONNRESET) and stalled downloads.
+        if (err instanceof HttpClientError && !err.retryable) throw err;
         if (err instanceof IntegrityError) throw err;
         // Backoff before retry: 500ms, 1500ms, 3000ms
         if (attempt < this.maxRetries) {
@@ -211,7 +214,7 @@ export class HttpClient {
         stallTimer = setTimeout(() => {
           body.destroy();
           stream.destroy();
-          reject(new HttpClientError(`Download stalled (no data for ${Math.round((opts.stallTimeoutMs ?? 60_000) / 1000)}s) [${url}]`, null, url));
+          reject(new HttpClientError(`Download stalled (no data for ${Math.round((opts.stallTimeoutMs ?? 60_000) / 1000)}s) [${url}]`, null, url, true));
         }, opts.stallTimeoutMs ?? 60_000);
       };
       armStallTimer();
