@@ -66,7 +66,7 @@ export class ModpackRepository {
         // Name comes ONLY from the folder name — never from config content.
         name: folder,
         description: config.description ?? '',
-        minecraftVersion: config.minecraftVersion ?? '',
+        minecraftVersion: config.minecraftVersion || this.inferVersion(folder) || '',
         loader: config.loader ?? 'vanilla',
         loaderVersion: config.loaderVersion,
         iconPath: config.iconPath,

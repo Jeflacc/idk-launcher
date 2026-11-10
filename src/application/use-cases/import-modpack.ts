@@ -28,6 +28,12 @@ export class ImportModpack {
       minecraftVersion = parsed.minecraftVersion ?? '';
       loader = parsed.loader ?? 'vanilla';
     }
+
+    if (!minecraftVersion) {
+      throw new Error(
+        'Cannot import modpack: Minecraft version is empty. The source profile.json does not specify a valid minecraftVersion.',
+      );
+    }
     await this.repo.writeProfile(folder, {
       id: folder,
       name,
