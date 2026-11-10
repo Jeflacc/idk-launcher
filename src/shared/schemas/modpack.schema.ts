@@ -108,6 +108,16 @@ export const ModpackSchema = {
     newName: z.string().min(1).max(120),
   }),
 
+  detectVersionLoaderRequest: z.object({
+    modpackId: z.string(),
+  }),
+
+  detectVersionLoaderResponse: z.object({
+    minecraftVersion: z.string(),
+    loader: z.enum(['vanilla', 'forge', 'fabric', 'quilt', 'neoforge']),
+    loaderVersion: z.string().optional(),
+  }),
+
   deleteFolderRequest: z.object({
     modpackId: z.string(),
   }),

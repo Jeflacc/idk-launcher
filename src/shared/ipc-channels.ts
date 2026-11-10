@@ -92,6 +92,7 @@ export const IpcChannel = {
     UpdateProfile: 'modpack:update-profile',
     Rename: 'modpack:rename',
     Launch: 'modpack:launch',
+    DetectVersionLoader: 'modpack:detect-version-loader',
   },
   // Mods / resources
   Mod: {

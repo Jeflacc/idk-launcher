@@ -63,6 +63,20 @@ export function registerModpackHandlers(
     { senderCheck: senderOk },
   );
 
+  // Manual auto-detection: reads modrinth.index.json / manifest.json / folder
+  // name to detect version and loader. Never overrides user-set values.
+  registerInvoke(
+    IpcChannel.Modpack.DetectVersionLoader,
+    ModpackSchema.detectVersionLoaderRequest,
+    async (_event, args) => {
+      const profile = await repo.readProfile(args.modpackId);
+      if (!profile) throw new Error('Instance not found');
+      const dir = repo['paths'].modpackDirectory(args.modpackId);
+      return repo.detectVersionAndLoader(dir, args.modpackId, profile);
+    },
+    { senderCheck: senderOk },
+  );
+
   registerSend(
     IpcChannel.Modpack.Launch,
     ModpackSchema.launchRequest,

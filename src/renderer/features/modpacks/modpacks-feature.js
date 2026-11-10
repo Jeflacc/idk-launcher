@@ -1625,6 +1625,52 @@ export function initModpacksFeature({ switchView }) {
       document.getElementById("mp-settings-modal").classList.add("active");
     });
 
+  // --- Modpack Settings: Auto-detect version & loader ---
+  document
+    .getElementById("btn-mp-settings-detect-version")
+    .addEventListener("click", async () => {
+      const btn = document.getElementById("btn-mp-settings-detect-version");
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-dasharray="40 60" stroke-dashoffset="0"><animate attributeName="stroke-dashoffset" values="0;100" dur="1s" repeatCount="indefinite" /></circle></svg>';
+      try {
+        const mp = mpGet();
+        if (!mp) {
+          throw new Error("No modpack selected");
+        }
+        const result = await window.electronAPI.modpack.detectVersionLoader(mp.id);
+        const versionSelect = document.getElementById("mp-settings-version");
+        const loaderSelect = document.getElementById("mp-settings-loader");
+        const loaderVersionInput = document.getElementById("mp-settings-loader-version");
+
+        // Only set version if not already manually set (don't override user input)
+        if (result.minecraftVersion && versionSelect) {
+          const existingOption = [...versionSelect.options].some(
+            (o) => o.value === result.minecraftVersion,
+          );
+          if (existingOption) {
+            versionSelect.value = result.minecraftVersion;
+          }
+        }
+
+        if (result.loader && loaderSelect) {
+          loaderSelect.value = result.loader.charAt(0).toUpperCase() + result.loader.slice(1);
+        }
+
+        if (result.loaderVersion && loaderVersionInput) {
+          loaderVersionInput.value = result.loaderVersion;
+        }
+
+        btn.innerHTML = originalHtml;
+      } catch (err) {
+        btn.innerHTML = originalHtml;
+        const msg = err instanceof Error ? err.message : String(err);
+        actions.showWarningToast?.(`Auto-detect failed: ${msg}`);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
   document
     .getElementById("btn-close-mp-settings")
     .addEventListener("click", () => {

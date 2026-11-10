@@ -104,6 +104,12 @@ export const preloadApi = {
       ipcRenderer.invoke(IpcChannel.Modpack.UpdateProfile, { modpackId, changes }),
     rename: (modpackId: string, newName: string) =>
       ipcRenderer.invoke(IpcChannel.Modpack.Rename, { modpackId, newName }) as Promise<string>,
+    detectVersionLoader: (modpackId: string) =>
+      ipcRenderer.invoke(IpcChannel.Modpack.DetectVersionLoader, { modpackId }) as Promise<{
+        minecraftVersion: string;
+        loader: string;
+        loaderVersion?: string;
+      }>,
     scanDownloadedVersions: () =>
       ipcRenderer.invoke(IpcChannel.Version.ScanDownloaded) as Promise<{
         success: boolean;

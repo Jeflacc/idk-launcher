@@ -116,12 +116,12 @@ export class ModpackRepository {
   }
 
   /**
-   * Detect Minecraft version and loader from official modpack config files.
-   * User-set values in idk-config.txt / profile.json always take priority.
-   * Auto-detection from modrinth.index.json / manifest.json only runs when
-   * the config has no version at all.
+   * Public entry point for manual auto-detection from IPC. Detects version and
+   * loader from official modpack config files (modrinth.index.json,
+   * manifest.json) or folder name inference. User-set config values are never
+   * overridden.
    */
-  private async detectVersionAndLoader(
+  async detectVersionAndLoader(
     dir: string,
     folder: string,
     config: Partial<ModpackProfile>,
