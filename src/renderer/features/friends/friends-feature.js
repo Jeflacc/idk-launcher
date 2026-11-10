@@ -549,6 +549,7 @@ export function initFriendsFeature() {
 
     // --- PANEL SWITCHING ---
     function showPanel(panelName) {
+      authPanel.style.display = "none";
       mainPanel.style.display = "none";
       searchPanel.style.display = "none";
       profilePanel.style.display = "none";

@@ -545,164 +545,126 @@
 
 #view-idk-connect {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: stretch;
-    height: 100%;
-    overflow: hidden;
+    align-items: center;
+    justify-content: center;
 }
-#friends-auth-panel {
-    display: none;
-    height: 100%;
+#view-idk-connect .mods-content-wrapper {
+    height: auto;
+    max-height: none;
+    flex: none;
     justify-content: center;
     align-items: center;
 }
+#friends-auth-panel {
+    height: auto;
+    justify-content: center;
+    align-items: center;
+}
+
+/* =========================================================
+   AUTH PANEL — No AI Slop redesign
+   ========================================================= */
+
 #friends-auth-panel .mp-wizard-section {
     background: var(--surface-4);
     border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-lg);
     box-shadow:
-        0 20px 40px rgba(0, 0, 0, 0.6),
+        0 12px 24px rgba(0, 0, 0, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    width: 100%;
-    max-width: 420px;
-    padding: var(--space-14) var(--space-10);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-8);
 }
 
-/* Auth inputs — clean, token-driven */
-.auth-input {
-    width: 100%;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid var(--color-border-strong);
-    border-radius: var(--radius-md);
-    color: var(--color-text-main);
-    padding: var(--space-5);
-    font-size: var(--text-md);
-    font-family: var(--font-body);
-    outline: none;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-}
-.auth-input:focus {
-    border-color: var(--theme-accent);
-    background: rgba(0, 0, 0, 0.35);
-    box-shadow: 0 0 0 3px rgba(var(--theme-accent-rgb), 0.12);
-}
-.auth-input::placeholder {
-    color: rgba(255, 255, 255, 0.35);
-}
-
-/* Primary Connect button */
-.auth-submit {
-    width: 100%;
+/* Primary LOGIN button */
+#tab-friends-login {
     background-color: var(--theme-accent);
     color: var(--surface-2);
-    border: none;
-    border-radius: var(--radius-md);
+    border: 2px solid #000;
+    border-radius: var(--radius-sm);
     font-family: var(--font-title);
     font-weight: 800;
     font-size: var(--text-md);
     letter-spacing: var(--tracking-tight);
     text-transform: uppercase;
-    padding: var(--space-5);
-    cursor: pointer;
-    transition: background-color 0.18s ease, transform 0.1s ease;
+    text-shadow: 1px 1px 0 #000;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.15),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3);
+    transition: all var(--transition-fast);
 }
-.auth-submit:hover {
+#tab-friends-login:hover {
     background-color: var(--theme-accent-bright);
     transform: translateY(-1px);
 }
-.auth-submit:active {
+#tab-friends-login:active {
     transform: translateY(1px);
 }
 
-/* Auth error message */
-.auth-error {
-    color: var(--color-danger);
-    font-size: var(--text-sm);
-    text-align: center;
-    margin-bottom: var(--space-4);
-    padding: var(--space-3);
-    background: rgba(var(--color-danger-rgb), 0.1);
-    border: 1px solid rgba(var(--color-danger-rgb), 0.3);
-    border-radius: var(--radius-md);
-}
-
-/* Auth tabs */
-.auth-tabs {
-    display: flex;
-    gap: var(--space-2);
-    margin-bottom: var(--space-6);
-}
-.auth-tab {
-    flex: 1;
-    background: var(--surface-2);
-    border: 1px solid var(--color-border-strong);
-    border-radius: var(--radius-md);
-    color: var(--color-text-secondary);
-    font-family: var(--font-title);
-    font-weight: 700;
-    font-size: var(--text-sm);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-tight);
-    padding: var(--space-3);
-    cursor: pointer;
-    transition: all 0.18s ease;
-}
-.auth-tab:hover {
-    background: var(--surface-3);
-    color: var(--color-text-main);
-}
-.auth-tab.active {
-    background: var(--theme-accent);
-    color: var(--surface-2);
-    border-color: var(--theme-accent);
-}
-
-/* Auth heading */
-.auth-title {
-    margin: 0 0 var(--space-2) 0;
-    font-family: var(--font-title);
-    font-size: var(--text-xl);
-    font-weight: 800;
-    color: var(--color-text-main);
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-tight);
-}
-
-.auth-subtitle {
-    margin: 0 0 var(--space-8) 0;
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    text-align: center;
-    line-height: 1.5;
-}
-
-/* Primary LOGIN button (legacy id kept for JS) */
-#tab-friends-login,
+/* Secondary REGISTER button — ghost style */
 #tab-friends-register {
-    all: unset;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-title);
+    font-weight: 800;
+    font-size: var(--text-md);
+    letter-spacing: var(--tracking-tight);
+    text-transform: uppercase;
+    transition: all var(--transition-fast);
+}
+#tab-friends-register:hover {
+    background: var(--surface-2);
+    border-color: var(--color-border-accent);
+    color: var(--color-text-main);
+}
+#tab-friends-register:active {
+    transform: scale(0.98);
 }
 
-/* Primary Connect button (legacy id kept for JS) */
+/* Primary Connect button */
 #btn-friends-auth-submit {
-    all: unset;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background-color: var(--theme-accent);
+    color: var(--surface-2);
+    border: 2px solid #000;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-title);
+    font-weight: 800;
+    font-size: var(--text-md);
+    letter-spacing: var(--tracking-tight);
+    text-transform: uppercase;
+    text-shadow: 1px 1px 0 #000;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.15),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.3);
+    transition: all var(--transition-fast);
     width: 100%;
+    padding: var(--space-5);
+}
+#btn-friends-auth-submit:hover {
+    background-color: var(--theme-accent-bright);
+    transform: translateY(-1px);
+}
+#btn-friends-auth-submit:active {
+    transform: translateY(1px);
 }
 
-/* Legacy clean-input override — auth panel now uses .auth-input */
+/* Auth inputs — reinforce clean-input in this context */
 #friends-auth-username,
 #friends-auth-email,
 #friends-auth-password,
 #friends-auth-otp {
-    all: unset;
+    font-family: var(--font-title);
+    font-size: var(--text-md);
+}
+#friends-auth-otp {
+    letter-spacing: 4px;
+    text-align: center;
+}
+
+/* Auth error message */
+#friends-auth-error {
+    color: var(--color-danger);
+    font-size: var(--text-xs);
+    margin-bottom: var(--space-2);
+    text-align: center;
 }
