@@ -1590,7 +1590,7 @@ export function initModpacksFeature({ switchView }) {
 
   document
     .getElementById("btn-save-mp-settings")
-    .addEventListener("click", () => {
+    .addEventListener("click", async () => {
       const mp = mpGet();
       const isViewingVersion =
         state.activeVersionForMods && !state.activeModpackId;
@@ -3803,7 +3803,8 @@ export function initModpacksFeature({ switchView }) {
   // --- Play Modpack ---
   // IPC listeners are already registered globally above \u2014 no setup needed here.
   document.getElementById("btn-play-modpack").addEventListener("click", async () => {
-    // Gate: launching requires an active account.
+    // Gate: launching requires an active account. If none, open the offline
+    // account form on the current page (TLauncher style — stay on home page).
     if (!state.activeAccountId && !state.currentUser) {
       const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
       const goLogin = await showConfirmDialog({
@@ -3814,8 +3815,9 @@ export function initModpacksFeature({ switchView }) {
         variant: "neutral",
       });
       if (goLogin) {
-        actions.switchView?.("login");
-        setTimeout(() => document.getElementById("btn-offline-login")?.click(), 50);
+        const btnOfflineLogin = document.getElementById("btn-offline-login");
+        if (btnOfflineLogin) btnOfflineLogin.click();
+        setTimeout(() => document.getElementById("login-username")?.focus(), 100);
       }
       return;
     }

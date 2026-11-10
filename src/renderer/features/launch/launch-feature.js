@@ -754,8 +754,8 @@ if (miniClose) {
 
 playBtn.addEventListener('click', async (e) => {
   e.stopPropagation();
-  // Gate: launching requires an active account. If none, send the user to
-  // the login screen instead of starting the game process.
+  // Gate: launching requires an active account. If none, open the offline
+  // account form on the current page (TLauncher style — stay on home page).
   if (!state.activeAccountId && !state.currentUser) {
     const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
     const goLogin = await showConfirmDialog({
@@ -766,9 +766,10 @@ playBtn.addEventListener('click', async (e) => {
       variant: "neutral",
     });
     if (goLogin) {
-      actions.switchView?.("login");
-      // Open the offline form so they can type a username immediately
-      setTimeout(() => document.getElementById("btn-offline-login")?.click(), 50);
+      // Open the offline account form on the home page — do not switch views.
+      const btnOfflineLogin = document.getElementById("btn-offline-login");
+      if (btnOfflineLogin) btnOfflineLogin.click();
+      setTimeout(() => document.getElementById("login-username")?.focus(), 100);
     }
     return;
   }

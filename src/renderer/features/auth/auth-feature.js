@@ -47,22 +47,9 @@ export function initAuthFeature({ switchView }) {
   loadAccountsFromBackend();
 
   // Startup flow: always land on the Home page. Login is only required when the
-  // user explicitly wants to launch a game without an active session (handled
-  // in launch-feature / modpacks-feature). Onboarding (EULA / IDK Connect)
-  // still runs once, then we go straight to "main".
-  (async () => {
-    // Run onboarding only the first time (EULA acceptance).
-    if (!localStorage.getItem("idk_agreed_eula")) {
-      // Defer to handleOnboardingFlow which shows the EULA dialog.
-      await handleOnboardingFlow(switchView);
-      return;
-    }
-    if (!localStorage.getItem("idk_connect_prompted_v2")) {
-      await handleOnboardingFlow(switchView);
-      return;
-    }
-    switchView("main");
-  })();
+  // user explicitly tries to launch a game without an active session (handled
+  // in launch-feature / modpacks-feature).
+  switchView("main");
 
   btnOfflineLogin.addEventListener("click", () => {
     offlineForm.classList.add("open");
@@ -123,7 +110,7 @@ export function initAuthFeature({ switchView }) {
               .catch(console.error);
           }
           updateUserDisplay(state.currentUser);
-          handleOnboardingFlow(switchView);
+          switchView("main");
         } else {
           alert("Ely.by login failed or was cancelled.");
         }
@@ -176,7 +163,7 @@ export function initAuthFeature({ switchView }) {
             .catch(console.error);
 
           updateUserDisplay(state.currentUser);
-          handleOnboardingFlow(switchView);
+          switchView("main");
         } else {
           alert(res?.error || "Microsoft login failed or cancelled.");
         }
@@ -230,7 +217,7 @@ export function initAuthFeature({ switchView }) {
         .catch(console.error);
     }
     updateUserDisplay(val);
-    handleOnboardingFlow(switchView);
+    switchView("main");
   }
 
   async function handleOnboardingFlow(switchViewFn) {
@@ -554,6 +541,7 @@ Please review and accept these terms to continue.`,
       variant: "neutral",
     });
     if (!ok) return;
+    const accountId = state.activeAccountId; // save before clearing
     state.currentUser = "";
     state.selectedOfflineAccount = null;
     state.activeAccountId = null;
@@ -562,8 +550,8 @@ Please review and accept these terms to continue.`,
     localStorage.removeItem("craftlaunch_selected_offline_account");
     localStorage.removeItem("craftlaunch_active_account_id");
     // Remove the active account from the encrypted store (other accounts remain)
-    if (window.electronAPI && state.activeAccountId) {
-      window.electronAPI.removeAccount(state.activeAccountId).catch(console.error);
+    if (window.electronAPI && accountId) {
+      window.electronAPI.removeAccount(accountId).catch(console.error);
     }
     
     // Logout from IDK Connect as well
@@ -579,6 +567,7 @@ Please review and accept these terms to continue.`,
     }
     // Sync IDK Connect UI
     actions.updateFriendsAuthUI?.();
-    switchView("login");
+    // Stay on home page after logout (TLauncher style)
+    switchView("main");
   });
 }
