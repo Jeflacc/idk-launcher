@@ -171,13 +171,17 @@ async function deleteVersion(versionId) {
   });
   if (!confirmed) return;
   const wasSelected = state.selectedVersion === versionId;
-  if (window.electronAPI?.deleteVersion) {
-    try {
-      await window.electronAPI.deleteVersion(versionId);
-    } catch (e) {
-      console.error("[Versions] Failed to delete version:", e);
-      actions.showWarningToast?.("Failed to delete version.");
-    }
+  if (!window.electronAPI?.deleteVersion) {
+    console.error("[Versions] electronAPI.deleteVersion is not available");
+    actions.showWarningToast?.("Delete is not available in this build.");
+    return;
+  }
+  try {
+    await window.electronAPI.deleteVersion(versionId);
+  } catch (e) {
+    console.error("[Versions] Failed to delete version:", e);
+    actions.showWarningToast?.("Failed to delete version.");
+    return;
   }
   await scanDownloadedVersions();
   if (wasSelected) {
