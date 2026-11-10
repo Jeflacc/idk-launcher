@@ -162,7 +162,7 @@ export function initModpacksFeature({ switchView }) {
                   ? existing.loader
                   : diskMp.loader || "Vanilla",
               iconUrl: existing?.iconUrl || diskMp.iconUrl || null,
-              favorite: existing?.favorite || false,
+              favorite: diskMp.favorite ?? existing?.favorite ?? false,
               lastPlayed:
                 existing?.lastPlayed ||
                 (diskMp.lastPlayedAt
@@ -268,6 +268,7 @@ export function initModpacksFeature({ switchView }) {
           windowHeight: mp.windowHeight || 768,
           description: mp.description || '',
           iconPath: mp.iconUrl || '',
+          favorite: mp.favorite ?? false,
           lastPlayedAt:
             typeof mp.lastPlayed === 'number'
               ? mp.lastPlayed

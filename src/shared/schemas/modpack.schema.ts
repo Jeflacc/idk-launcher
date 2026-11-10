@@ -14,6 +14,7 @@ export const ModpackSchema = {
     updatedAt: z.number(),
     lastPlayedAt: z.number().optional(),
     playtimeSeconds: z.number().default(0),
+    favorite: z.boolean().optional(),
     mods: z
       .array(
         z.object({
@@ -45,6 +46,7 @@ export const ModpackSchema = {
     lastPlayedAt: z.number().optional(),
     playtimeSeconds: z.number().default(0),
     modCount: z.number().default(0),
+    favorite: z.boolean().optional(),
     diskMods: z
       .array(z.object({ filename: z.string(), path: z.string() }))
       .optional(),

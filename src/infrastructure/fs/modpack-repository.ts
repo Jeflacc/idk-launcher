@@ -51,6 +51,7 @@ export class ModpackRepository {
           updatedAt: Date.now(),
           lastPlayedAt: undefined,
           playtimeSeconds: 0,
+          favorite: false,
           mods: [],
         };
         await this.writeConfigTxt(folder, config);
@@ -74,6 +75,7 @@ export class ModpackRepository {
         updatedAt: config.updatedAt ?? Date.now(),
         lastPlayedAt: config.lastPlayedAt,
         playtimeSeconds: config.playtimeSeconds ?? 0,
+        favorite: config.favorite ?? false,
         modCount,
         diskMods,
         diskResourcepacks,
@@ -209,6 +211,7 @@ export class ModpackRepository {
         updatedAt: json.updatedAt ?? Date.now(),
         lastPlayedAt: this.toEpochMs(json.lastPlayedAt),
         playtimeSeconds: json.playtimeSeconds ?? 0,
+        favorite: json.favorite ?? false,
         mods: json.mods ?? [],
       };
     } catch {
@@ -232,6 +235,7 @@ export class ModpackRepository {
         updatedAt: json.updatedAt,
         lastPlayedAt: this.toEpochMs(json.lastPlayedAt),
         playtimeSeconds: json.playtimeSeconds ?? 0,
+        favorite: json.favorite ?? false,
         mods: json.mods ?? [],
       };
     } catch {
