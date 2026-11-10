@@ -1636,6 +1636,7 @@ export function initModpacksFeature({ switchView }) {
         mpRenderDetail();
       } else if (mp) {
         // Save modpack settings
+        const oldName = mp.name;
         mp.name =
           document.getElementById("mp-settings-name").value.trim() || mp.name;
         mp.iconUrl = document.getElementById("mp-settings-icon").value || mp.iconUrl;
@@ -1657,6 +1658,29 @@ export function initModpacksFeature({ switchView }) {
           parseInt(document.getElementById("mp-settings-height").value) || 768;
 
         mpSave();
+
+        // If the name changed, rename the folder on disk so the config file
+        // (idk-config.txt) stays with the renamed folder, then re-fetch data.
+        if (mp.name !== oldName && window.electronAPI?.renameInstance) {
+          try {
+            const newFolder = await window.electronAPI.renameInstance(mp.id, mp.name);
+            if (newFolder) {
+              state.activeModpackId = newFolder;
+              // Refresh from disk so the renamed config is re-read
+              await loadProfilesFromDisk();
+            }
+          } catch (err) {
+            const msg = err?.message || String(err);
+            if (/running/i.test(msg)) {
+              actions.showWarningToast("Can't rename while a game is running.");
+            } else if (/already exists/i.test(msg)) {
+              actions.showWarningToast(`An instance named "${mp.name}" already exists.`);
+            } else {
+              actions.showWarningToast(`Rename failed: ${msg}`);
+            }
+          }
+        }
+
         mpRenderList();
         mpRenderDetail();
       }
@@ -1672,7 +1696,8 @@ export function initModpacksFeature({ switchView }) {
       const isViewingVersion =
         state.activeVersionForMods && !state.activeModpackId;
 
-      if (isViewingVersion) {
+      // If viewing a version (not an instance), block deletion.
+      if (isViewingVersion && !mp) {
         actions.showWarningToast("Cannot delete versions.");
         return;
       }
