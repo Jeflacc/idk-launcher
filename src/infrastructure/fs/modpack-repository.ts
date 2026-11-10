@@ -21,6 +21,9 @@ import { PathService } from './path-service';
  *   scan: renamed to their profile name and their JSON id rewritten to match.
  */
 export class ModpackRepository {
+  /** Fixed config filename stored inside each instance folder. */
+  private static readonly CONFIG_FILE = 'idk-config.txt';
+
   constructor(private readonly paths: PathService) {}
 
   async list(): Promise<Modpack[]> {
@@ -153,11 +156,6 @@ export class ModpackRepository {
         name: newName,
       });
     }
-    // The folder rename moves any stale <old>.txt along with it; remove it so
-    // only <newName>.txt remains (the config file tracks the folder name).
-    try {
-      await rm(join(this.paths.modpacks, newFolder, `${folder}.txt`), { force: true });
-    } catch {}
     return newFolder;
   }
 
@@ -208,11 +206,11 @@ export class ModpackRepository {
     }
   }
 
-  /** Read the folder-named txt config (<folder>.txt) without `name`. */
+  /** Read the fixed idk-config.txt config without `name`. */
   private async readConfigTxt(folder: string): Promise<Partial<ModpackProfile> | null> {
     try {
       const dir = this.paths.modpackDirectory(folder);
-      const raw = await readFile(join(dir, `${folder}.txt`), 'utf8');
+      const raw = await readFile(join(dir, ModpackRepository.CONFIG_FILE), 'utf8');
       const json = JSON.parse(raw);
       return {
         description: json.description ?? '',
@@ -231,11 +229,11 @@ export class ModpackRepository {
     }
   }
 
-  /** Write the folder-named txt config, stripping `name` (folder owns the name). */
+  /** Write the fixed idk-config.txt config, stripping `name` (folder owns the name). */
   private async writeConfigTxt(folder: string, config: Partial<ModpackProfile>): Promise<void> {
     const dir = this.paths.modpackDirectory(folder);
     const { name, ...rest } = config as { name?: string; [key: string]: unknown };
-    await writeFile(join(dir, `${folder}.txt`), JSON.stringify(rest, null, 2), 'utf8');
+    await writeFile(join(dir, ModpackRepository.CONFIG_FILE), JSON.stringify(rest, null, 2), 'utf8');
   }
 
   private async tryReadProfile(folder: string): Promise<ModpackProfile | null> {
