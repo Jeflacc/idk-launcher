@@ -104,6 +104,11 @@ export const preloadApi = {
       ipcRenderer.invoke(IpcChannel.Modpack.UpdateProfile, { modpackId, changes }),
     rename: (modpackId: string, newName: string) =>
       ipcRenderer.invoke(IpcChannel.Modpack.Rename, { modpackId, newName }) as Promise<string>,
+    scanDownloadedVersions: () =>
+      ipcRenderer.invoke(IpcChannel.Version.ScanDownloaded) as Promise<{
+        success: boolean;
+        versions: Array<{ id: string; loader: string }>;
+      }>,
     launch: (
       modpackId: string,
       options?: {

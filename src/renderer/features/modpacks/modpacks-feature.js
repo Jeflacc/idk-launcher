@@ -37,6 +37,17 @@ export function initModpacksFeature({ switchView }) {
       return;
     }
     await loadProfilesFromDisk();
+    // Rescan downloaded versions so the UI reflects the deletion immediately
+    if (window.electronAPI?.scanDownloadedVersions) {
+      try {
+        const result = await window.electronAPI.scanDownloadedVersions();
+        if (result && result.success) {
+          state.downloadedVersions = result.versions || [];
+        }
+      } catch (e) {
+        console.error("[Versions] Failed to rescan downloaded versions:", e);
+      }
+    }
     if (wasSelected) {
       state.activeVersionForMods = null;
       state.activeModpackId = null;
@@ -107,11 +118,9 @@ export function initModpacksFeature({ switchView }) {
             });
           };
 
-          // Build lookup maps \u2014 by ID and by name (for legacy matching)
+          // Build lookup maps - by ID only (by name would resurrect old names
+          // after rename since folder name = id and both change together)
           const existingById = new Map(state.modpacks.map((mp) => [mp.id, mp]));
-          const existingByName = new Map(
-            state.modpacks.map((mp) => [mp.name?.toLowerCase().trim(), mp]),
-          );
 
           console.log(
             "[Modpacks] localStorage IDs:",
@@ -127,8 +136,7 @@ export function initModpacksFeature({ switchView }) {
           const newModpacks = diskProfiles.map((diskMp) => {
             // Try to find existing entry by ID, then by name
             const existing =
-              existingById.get(diskMp.id) ||
-              existingByName.get(diskMp.name?.toLowerCase().trim());
+              existingById.get(diskMp.id);
             const existingValidMcVersion =
               existing?.mcVersion && isValidMcVersion(existing.mcVersion)
                 ? existing.mcVersion
