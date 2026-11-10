@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, readdir, rm, access } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { ModpackSchema } from '@shared/schemas/modpack.schema';
@@ -21,9 +21,6 @@ import { PathService } from './path-service';
  *   scan: renamed to their profile name and their JSON id rewritten to match.
  */
 export class ModpackRepository {
-  /** Legacy folder prefixes that get migrated to friendly names on first scan. */
-  private static readonly LEGACY_PREFIX = /^(modpack|version)-/;
-
   constructor(private readonly paths: PathService) {}
 
   async list(): Promise<Modpack[]> {
@@ -33,27 +30,46 @@ export class ModpackRepository {
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
       if (entry.name.startsWith('.')) continue;
-      const folder = await this.migrateLegacyFolder(entry.name);
-      const profile = (await this.tryReadProfile(folder)) ?? (await this.materializeHeuristicProfile(folder));
-      if (!profile) continue;
+      const folder = entry.name;
       const dir = join(this.paths.modpacks, folder);
+
+      // Read the folder-named txt config; create a default one if absent so
+      // every folder under instances/ is a first-class modpack.
+      let config = await this.readConfigTxt(folder);
+      if (!config) {
+        config = {
+          description: '',
+          minecraftVersion: this.inferVersion(folder),
+          loader: 'vanilla',
+          loaderVersion: undefined,
+          iconPath: undefined,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          lastPlayedAt: undefined,
+          playtimeSeconds: 0,
+          mods: [],
+        };
+        await this.writeConfigTxt(folder, config);
+      }
+
       const modCount = await this.countMods(dir);
       const diskMods = await this.listDiskFiles(dir, 'mods', '.jar');
       const diskResourcepacks = await this.listDiskFiles(dir, 'resourcepacks', ['.zip', '.jar']);
       const diskShaders = await this.listDiskFiles(dir, 'shaderpacks', ['.zip', '.jar']);
       result.push({
         id: folder,
-        name: profile.name,
-        description: profile.description,
-        minecraftVersion: profile.minecraftVersion,
-        loader: profile.loader,
-        loaderVersion: profile.loaderVersion,
-        iconPath: profile.iconPath,
+        // Name comes ONLY from the folder name — never from config content.
+        name: folder,
+        description: config.description ?? '',
+        minecraftVersion: config.minecraftVersion ?? '',
+        loader: config.loader ?? 'vanilla',
+        loaderVersion: config.loaderVersion,
+        iconPath: config.iconPath,
         directory: dir,
-        createdAt: profile.createdAt,
-        updatedAt: profile.updatedAt,
-        lastPlayedAt: profile.lastPlayedAt,
-        playtimeSeconds: profile.playtimeSeconds,
+        createdAt: config.createdAt ?? Date.now(),
+        updatedAt: config.updatedAt ?? Date.now(),
+        lastPlayedAt: config.lastPlayedAt,
+        playtimeSeconds: config.playtimeSeconds ?? 0,
         modCount,
         diskMods,
         diskResourcepacks,
@@ -61,6 +77,12 @@ export class ModpackRepository {
       });
     }
     return result.sort((a, b) => (b.updatedAt - a.updatedAt));
+  }
+
+  /** Infer a Minecraft version from a folder name like "1.20.1" or "1.20.1 Fabric". */
+  private inferVersion(folder: string): string {
+    const m = /^(\d+\.\d+(?:\.\d+)?)/.exec(folder);
+    return m?.[1] ?? '';
   }
 
   async readProfile(folder: string): Promise<ModpackProfile | null> {
@@ -72,6 +94,10 @@ export class ModpackRepository {
     await mkdir(dir, { recursive: true });
     await mkdir(join(dir, 'mods'), { recursive: true });
     await writeFile(join(dir, 'profile.json'), JSON.stringify(profile, null, 2), 'utf8');
+    // Persist a folder-named txt config (<folder>.txt). The config never stores
+    // the modpack name — that comes from the folder name. Strip `name` before
+    // writing so the file is safe to reuse if the folder is renamed.
+    await this.writeConfigTxt(folder, profile);
   }
 
   async updateProfile(folder: string, changes: Record<string, unknown>): Promise<ModpackProfile> {
@@ -93,6 +119,12 @@ export class ModpackRepository {
 
   async delete(folder: string): Promise<void> {
     const dir = this.paths.modpackDirectory(folder);
+    await rm(dir, { recursive: true, force: true });
+  }
+
+  /** Delete a downloaded version folder from the shared versions dir. */
+  async deleteVersion(versionId: string): Promise<void> {
+    const dir = join(this.paths.versions, versionId);
     await rm(dir, { recursive: true, force: true });
   }
 
@@ -121,6 +153,11 @@ export class ModpackRepository {
         name: newName,
       });
     }
+    // The folder rename moves any stale <old>.txt along with it; remove it so
+    // only <newName>.txt remains (the config file tracks the folder name).
+    try {
+      await rm(join(this.paths.modpacks, newFolder, `${folder}.txt`), { force: true });
+    } catch {}
     return newFolder;
   }
 
@@ -139,97 +176,26 @@ export class ModpackRepository {
     return candidate;
   }
 
-  // ── Migration / qualification ──
-
-  /**
-   * First-scan migration: legacy `modpack-<uuid>` / `version-<id>` folders are
-   * renamed to their profile.json name (or the bare version id) so folder names
-   * become friendly. JSON `id` is rewritten to the new folder name.
-   */
-  private async migrateLegacyFolder(folder: string): Promise<string> {
-    if (!ModpackRepository.LEGACY_PREFIX.test(folder)) return folder;
-    const profile = await this.tryReadProfile(folder);
-    if (!profile) return folder;
-    const bare = folder.replace(ModpackRepository.LEGACY_PREFIX, '');
-    const friendly = profile.name || bare;
-    const target = await this.uniqueFolderForName(friendly);
-    if (target === folder) {
-      if (profile.id !== folder) {
-        await this.writeProfile(folder, { ...profile, id: folder });
-      }
-      return folder;
-    }
-    try {
-      const renamed = await this.paths.renameInstanceFolder(folder, target);
-      await this.writeProfile(renamed, { ...profile, id: renamed });
-      console.log(`[Instances] Migrated legacy folder "${folder}" → "${renamed}"`);
-      return renamed;
-    } catch (err) {
-      console.warn(`[Instances] Could not migrate "${folder}":`, err);
-      return folder;
-    }
-  }
-
-  /**
-   * Qualification without a profile.json: if the folder looks like a Minecraft
-   * game directory, materialize a default profile so it becomes a first-class
-   * instance. The Minecraft version is inferred from the folder name when it
-   * looks like a version string.
-   */
-  private async materializeHeuristicProfile(folder: string): Promise<ModpackProfile | null> {
-    const dir = join(this.paths.modpacks, folder);
-    if (!(await this.looksLikeGameDirectory(dir))) return null;
-    const versionMatch = /^(\d+\.\d+(?:\.\d+)?)/.exec(folder);
-    const profile: ModpackProfile = {
-      ...this.emptyProfile(folder),
-      minecraftVersion: versionMatch?.[1] ?? '',
-    };
-    try {
-      await this.writeProfile(folder, profile);
-      console.log(`[Instances] Qualified "${folder}" as an instance (heuristics)`);
-    } catch {
-      // profile write failed — still treat as an instance for this scan
-    }
-    return profile;
-  }
-
-  private async looksLikeGameDirectory(dir: string): Promise<boolean> {
-    const exists = async (rel: string): Promise<boolean> => {
-      try {
-        await access(join(dir, rel));
-        return true;
-      } catch {
-        return false;
-      }
-    };
-    if ((await exists('options.txt')) && (await exists('servers.dat'))) return true;
-    for (const sub of ['mods', 'logs', 'saves']) {
-      try {
-        const entries = await readdir(join(dir, sub));
-        if (entries.length > 0) return true;
-      } catch {
-        // subdir missing — not evidence of a game dir
-      }
-    }
-    return false;
-  }
-
   // ── Helpers ──
 
-  private async tryReadProfile(folder: string): Promise<ModpackProfile | null> {
+  /**
+   * Read config for a folder from <folder>.txt, falling back to legacy
+   * profile.json. Returns config fields WITHOUT `name` — the name always
+   * comes from the folder name.
+   */
+  private async readConfig(folder: string): Promise<Partial<ModpackProfile> | null> {
+    const txt = await this.readConfigTxt(folder);
+    if (txt) return txt;
     try {
       const dir = this.paths.modpackDirectory(folder);
       const raw = await readFile(join(dir, 'profile.json'), 'utf8');
       const json = JSON.parse(raw);
-      // Migrate v1 profile format to v2. The folder name is ALWAYS the id —
-      // any legacy id in the JSON is ignored.
-      const migrated = {
-        id: folder,
-        name: json.name ?? folder,
+      // Folder name is ALWAYS the id/name — any legacy id/name in JSON ignored.
+      return {
         description: json.description ?? '',
         minecraftVersion: json.minecraftVersion ?? json.mcVersion ?? '',
         loader: (json.loader ?? 'vanilla').toLowerCase(),
-        loaderVersion: json.loaderVersion ?? undefined,
+        loaderVersion: json.loaderVersion,
         iconPath: json.iconPath ?? undefined,
         createdAt: json.createdAt ?? Date.now(),
         updatedAt: json.updatedAt ?? Date.now(),
@@ -237,10 +203,46 @@ export class ModpackRepository {
         playtimeSeconds: json.playtimeSeconds ?? 0,
         mods: json.mods ?? [],
       };
-      return ModpackSchema.profile.parse(migrated);
     } catch {
       return null;
     }
+  }
+
+  /** Read the folder-named txt config (<folder>.txt) without `name`. */
+  private async readConfigTxt(folder: string): Promise<Partial<ModpackProfile> | null> {
+    try {
+      const dir = this.paths.modpackDirectory(folder);
+      const raw = await readFile(join(dir, `${folder}.txt`), 'utf8');
+      const json = JSON.parse(raw);
+      return {
+        description: json.description ?? '',
+        minecraftVersion: json.minecraftVersion ?? '',
+        loader: (json.loader ?? 'vanilla').toLowerCase(),
+        loaderVersion: json.loaderVersion,
+        iconPath: json.iconPath,
+        createdAt: json.createdAt,
+        updatedAt: json.updatedAt,
+        lastPlayedAt: this.toEpochMs(json.lastPlayedAt),
+        playtimeSeconds: json.playtimeSeconds ?? 0,
+        mods: json.mods ?? [],
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /** Write the folder-named txt config, stripping `name` (folder owns the name). */
+  private async writeConfigTxt(folder: string, config: Partial<ModpackProfile>): Promise<void> {
+    const dir = this.paths.modpackDirectory(folder);
+    const { name, ...rest } = config as { name?: string; [key: string]: unknown };
+    await writeFile(join(dir, `${folder}.txt`), JSON.stringify(rest, null, 2), 'utf8');
+  }
+
+  private async tryReadProfile(folder: string): Promise<ModpackProfile | null> {
+    const config = await this.readConfig(folder);
+    if (!config) return null;
+    // Name comes from the folder, never from config content.
+    return { id: folder, name: folder, ...config } as ModpackProfile;
   }
 
   private async listDiskFiles(instanceDir: string, subdir: string, extensions: string | string[]): Promise<Array<{ filename: string; path: string }>> {

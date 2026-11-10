@@ -204,6 +204,18 @@ export function registerVersionHandlers(
     { senderCheck: senderOk },
   );
 
+  // Delete a downloaded version folder from the shared versions dir.
+  registerInvoke(
+    IpcChannel.Version.DeleteVersion,
+    VersionSchema.deleteVersionRequest,
+    async (_event, args) => {
+      if (!repo) throw new Error('Version deletion requires the modpack repository');
+      await repo.deleteVersion(args.versionId);
+      return true;
+    },
+    { senderCheck: senderOk },
+  );
+
    // Scan a version's mods folder and return installed mod info.
    // Mods live in the profiles directory (instances), not in the shared versions dir.
    registerInvoke(

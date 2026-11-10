@@ -68,6 +68,7 @@ export const IpcChannel = {
     ScanDownloaded: 'version:scan-downloaded',
     Download: 'version:download',
     CancelDownload: 'version:cancel-download',
+    DeleteVersion: 'version:delete',
     ScanVersionMods: 'version:scan-mods',
     GetManifest: 'version:get-manifest',
     GetSodiumVersions: 'version:get-sodium-versions',

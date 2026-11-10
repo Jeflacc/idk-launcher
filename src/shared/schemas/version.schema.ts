@@ -36,4 +36,8 @@ export const VersionSchema = {
   cancelDownloadRequest: z.object({
     versionId: z.string().optional(),
   }),
+
+  deleteVersionRequest: z.object({
+    versionId: z.string(),
+  }),
 } as const;

@@ -36,8 +36,9 @@ describe('PathService', () => {
     expect(paths.assets).toContain(join('minecraft', 'assets'));
   });
 
-  it('modpacks is under userData', () => {
-    expect(paths.modpacks).toContain('modpacks');
+  it('modpacks (instances) is under userData', () => {
+    expect(paths.modpacks).toContain(join('minecraft', 'instances'));
+    expect(paths.instances).toBe(paths.modpacks);
   });
 
   it('settingsFile ends with settings.json', () => {

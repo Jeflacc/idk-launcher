@@ -77,7 +77,7 @@ describe('ModpackRepository', () => {
       mods: [],
     });
     const p = await repo.readProfile('mp-1');
-    expect(p?.name).toBe('Test');
+    expect(p?.name).toBe('mp-1');
     expect(p?.minecraftVersion).toBe('1.20.1');
   });
 

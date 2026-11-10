@@ -54,6 +54,7 @@ export class PathService {
 
   get modpacks(): string {
     if (this._modpacks) return this._modpacks;
+    // v2 default: instances live under <minecraftRoot>/instances.
     // v1 stored modpack profiles in minecraft-data/profiles/. Use it for backward compat.
     const v1Profiles = join(this.userDataRoot, 'minecraft-data', 'profiles');
     try {
@@ -65,8 +66,13 @@ export class PathService {
         }
       }
     } catch { /* v1 dir doesn't exist — use v2 */ }
-    this._modpacks = join(this.userDataRoot, 'modpacks');
+    this._modpacks = join(this.minecraftRoot, 'instances');
     return this._modpacks;
+  }
+
+  /** Alias for `modpacks` — instances live under <minecraftRoot>/instances. */
+  get instances(): string {
+    return this.modpacks;
   }
 
   get cache(): string {

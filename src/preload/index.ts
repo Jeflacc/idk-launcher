@@ -161,6 +161,8 @@ export const preloadApi = {
       ipcRenderer.invoke(IpcChannel.Version.Download, { versionId, loader, loaderVersion }),
     cancelDownload: (versionId?: string) =>
       ipcRenderer.invoke(IpcChannel.Version.CancelDownload, { versionId }),
+    deleteVersion: (versionId: string) =>
+      ipcRenderer.invoke(IpcChannel.Version.DeleteVersion, { versionId }),
   },
 
   skin: {

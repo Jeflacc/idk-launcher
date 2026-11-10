@@ -160,6 +160,34 @@ async function scanDownloadedVersions() {
   }
 }
 
+async function deleteVersion(versionId) {
+  const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
+  const confirmed = await showConfirmDialog({
+    title: "Delete version",
+    message: `Are you sure you want to delete version "${versionId}"? This cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+    variant: "danger",
+  });
+  if (!confirmed) return;
+  const wasSelected = state.selectedVersion === versionId;
+  if (window.electronAPI?.deleteVersion) {
+    try {
+      await window.electronAPI.deleteVersion(versionId);
+    } catch (e) {
+      console.error("[Versions] Failed to delete version:", e);
+      actions.showWarningToast?.("Failed to delete version.");
+    }
+  }
+  await scanDownloadedVersions();
+  if (wasSelected) {
+    state.selectedVersion = null;
+    state.selectedLoader = "Vanilla";
+    const selectedText = document.getElementById("selected-version-text");
+    if (selectedText) selectedText.innerText = "Version: (none)";
+  }
+}
+
 // Scan on startup
 scanDownloadedVersions();
 
@@ -287,7 +315,23 @@ function renderVersions() {
         <span class="option-type">${label}</span>
       </span>
     `;
-    
+
+    // Delete button for downloaded versions
+    if (state.downloadedVersions.includes(v.id)) {
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'version-delete-btn';
+      delBtn.title = `Delete version ${v.id}`;
+      delBtn.textContent = '×';
+      delBtn.style.cssText =
+        'background:none;border:none;color:#ef4444;font-size:16px;cursor:pointer;margin-left:auto;padding:0 4px;line-height:1;';
+      delBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        deleteVersion(v.id);
+      });
+      el.appendChild(delBtn);
+    }
+
     el.addEventListener('click', () => {
       state.selectedIsModpack = false;
       state.selectedModpackId = null;
