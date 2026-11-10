@@ -280,6 +280,15 @@ export function initContentFeature() {
       const profileIsActive = document
         .getElementById("view-profile")
         ?.classList.contains("active");
+      const idkConnectIsActive = document
+        .getElementById("view-idk-connect")
+        ?.classList.contains("active");
+
+      // Always close idk-connect when navigating to a different view
+      if (idkConnectIsActive && target !== "idk-connect") {
+        actions.switchView?.(target);
+        return;
+      }
 
       if (target === "profile") {
         if (!profileIsActive) {
@@ -307,6 +316,9 @@ export function initContentFeature() {
           closeSettings
         )
           closeSettings.click();
+        else {
+          actions.switchView?.("main");
+        }
       } else if (target === "mods") {
         if (profileIsActive) {
           actions.closeProfile?.("mods");
