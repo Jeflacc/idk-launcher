@@ -68,6 +68,20 @@ export class ModpackRepository {
       // Detect version/loader from official config files when not set
       const detected = await this.detectVersionAndLoader(dir, folder, config);
 
+      // Persist detected values back to idk-config.txt so they survive refreshes
+      if (
+        detected.minecraftVersion !== config.minecraftVersion ||
+        detected.loader !== config.loader ||
+        detected.loaderVersion !== config.loaderVersion
+      ) {
+        await this.writeConfigTxt(folder, {
+          ...config,
+          minecraftVersion: detected.minecraftVersion,
+          loader: detected.loader as 'vanilla' | 'forge' | 'fabric' | 'quilt' | 'neoforge',
+          loaderVersion: detected.loaderVersion,
+        });
+      }
+
       result.push({
         id: folder,
         // Name comes ONLY from the folder name — never from config content.
@@ -104,7 +118,7 @@ export class ModpackRepository {
   /**
    * Detect Minecraft version and loader from official modpack config files,
    * checking in priority order:
-   *  1. idk-config.txt / profile.json (our config — already loaded)
+   *  1. idk-config.txt / profile.json (our config — only if loader was explicitly set, not just 'vanilla' default)
    *  2. modrinth.index.json (Modrinth modpacks)
    *  3. manifest.json (CurseForge modpacks)
    *  4. Folder name fallback (inferVersion)
@@ -114,8 +128,8 @@ export class ModpackRepository {
     folder: string,
     config: Partial<ModpackProfile>,
   ): Promise<{ minecraftVersion: string; loader: string; loaderVersion?: string }> {
-    // 1. Already have version from config — use it
-    if (config.minecraftVersion && config.loader) {
+    // 1. Use config values only if loader was explicitly set (not just 'vanilla' default)
+    if (config.minecraftVersion && config.loader && config.loader !== 'vanilla') {
       return {
         minecraftVersion: config.minecraftVersion,
         loader: config.loader,
@@ -123,7 +137,7 @@ export class ModpackRepository {
       };
     }
 
-    // 2. Try modrinth.index.json
+    // 2. Try modrinth.index.json (official Modrinth modpack format)
     try {
       const mrPath = join(dir, 'modrinth.index.json');
       const mrRaw = await readFile(mrPath, 'utf8');
@@ -141,7 +155,7 @@ export class ModpackRepository {
       // modrinth.index.json not present or invalid — continue
     }
 
-    // 3. Try manifest.json (CurseForge)
+    // 3. Try manifest.json (official CurseForge modpack format)
     try {
       const mfPath = join(dir, 'manifest.json');
       const mfRaw = await readFile(mfPath, 'utf8');
@@ -162,10 +176,9 @@ export class ModpackRepository {
 
     // 4. Fall back to folder name inference
     const inferredVersion = this.inferVersion(folder);
-    const inferredLoader = inferredVersion ? config.loader ?? 'vanilla' : 'vanilla';
     return {
       minecraftVersion: inferredVersion,
-      loader: inferredLoader,
+      loader: config.loader ?? 'vanilla',
       loaderVersion: undefined,
     };
   }
