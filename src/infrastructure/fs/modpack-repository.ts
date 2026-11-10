@@ -140,13 +140,17 @@ export class ModpackRepository {
       const mrPath = join(dir, 'modrinth.index.json');
       const mrRaw = await readFile(mrPath, 'utf8');
       const mr = JSON.parse(mrRaw);
-      const versions: string[] | undefined = mr?.minecraft?.versions;
-      if (versions && versions.length > 0) {
-        const detectedLoader = this.detectLoaderFromModrinthDeps(mr.dependencies);
+      const mcVersion = mr?.minecraft?.version;
+      if (mcVersion) {
+        const modLoaders: Array<{ id?: string }> | undefined =
+          mr?.minecraft?.modLoaders;
+        const detectedLoader = this.detectLoaderFromCurseforge(modLoaders);
         return {
-          minecraftVersion: versions[0]!,
+          minecraftVersion: mcVersion,
           loader: detectedLoader,
-          loaderVersion: undefined,
+          loaderVersion: modLoaders?.[0]?.id
+            ? modLoaders[0].id.replace(/^[a-z]+-/, '')
+            : undefined,
         };
       }
     } catch {
@@ -179,24 +183,6 @@ export class ModpackRepository {
       loader: config.loader ?? 'vanilla',
       loaderVersion: undefined,
     };
-  }
-
-  /** Detect loader from Modrinth index.json dependencies array. */
-  private detectLoaderFromModrinthDeps(deps: unknown): string {
-    if (!Array.isArray(deps)) return 'vanilla';
-    for (const dep of deps) {
-      if (typeof dep !== 'object' || dep === null) continue;
-      const id = (dep as { id?: string; type?: string }).id;
-      const type = (dep as { type?: string }).type;
-      if (type === 'loader' || id?.includes('-loader')) {
-        const lid = String(id || '').toLowerCase();
-        if (lid.includes('fabric')) return 'fabric';
-        if (lid.includes('forge')) return 'forge';
-        if (lid.includes('quilt')) return 'quilt';
-        if (lid.includes('neoforge')) return 'neoforge';
-      }
-    }
-    return 'vanilla';
   }
 
   /** Detect loader from CurseForge manifest.json modLoaders array. */
