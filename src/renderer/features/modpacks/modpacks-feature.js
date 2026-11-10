@@ -987,10 +987,11 @@ export function initModpacksFeature({ switchView }) {
         favBtn.style.display = "none";
       } else {
         favBtn.style.display = "";
+        favBtn.title = mp.favorite ? "Unfavorite Modpack" : "Favorite Modpack";
         const svg = favBtn.querySelector("svg");
         if (svg) {
           svg.setAttribute("fill", mp.favorite ? "var(--theme-accent)" : "none");
-          svg.style.color = mp.favorite ? "var(--theme-accent)" : "currentColor";
+          svg.setAttribute("stroke", mp.favorite ? "var(--theme-accent)" : "currentColor");
         }
       }
     }
