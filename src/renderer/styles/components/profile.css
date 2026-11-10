@@ -19,7 +19,9 @@
    ========================================================= */
 
 #view-profile {
-    background: var(--surface-2);
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-color: var(--theme-bg);
     overflow: hidden;
 }
 
