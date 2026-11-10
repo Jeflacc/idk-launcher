@@ -14,6 +14,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   </head>
   <body>
+    <script>
+      if (localStorage.getItem("idk_launcher_ui_mode") === "advanced") {
+        document.body.classList.add("ui-advanced");
+        document.body.dataset.uiMode = "advanced";
+      }
+    </script>
     <!--
       App shell containers. loadAppShell() (core/html-loader.js) appends
       partials/ views/ modals/ HTML files into these in a fixed order.
