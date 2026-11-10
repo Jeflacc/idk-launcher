@@ -122,6 +122,7 @@ export function initFriendsFeature() {
     // --- VIEW CHANGED LISTENER ---
     document.addEventListener("idk:view-changed", (e) => {
       if (e.detail.viewName === "idk-connect") {
+        updateFriendsAuthUI();
         refreshFriendsData();
       }
     });
