@@ -260,7 +260,7 @@ export function initModpacksFeature({ switchView }) {
         await window.electronAPI.updateModpackProfile({
           modpackId: mp.id,
           name: mp.name,
-          mcVersion: mp.mcVersion,
+          minecraftVersion: mp.mcVersion,
           loader: (mp.loader || 'vanilla').toLowerCase(),
           loaderVersion: mp.loaderVersion || '',
           javaArgs: mp.javaArgs || '',

@@ -21,6 +21,9 @@ export class ModpackEntity implements Modpack {
     public readonly lastPlayedAt?: number,
     public readonly playtimeSeconds: number = 0,
     public readonly modCount: number = 0,
+    public readonly javaArgs: string = '',
+    public readonly windowWidth: number = 1024,
+    public readonly windowHeight: number = 768,
   ) {}
 
   static fromProfile(profile: ModpackProfile, directory: string, modCount: number): ModpackEntity {
@@ -38,6 +41,9 @@ export class ModpackEntity implements Modpack {
       profile.lastPlayedAt,
       profile.playtimeSeconds,
       modCount,
+      profile.javaArgs ?? '',
+      profile.windowWidth ?? 1024,
+      profile.windowHeight ?? 768,
     );
   }
 
@@ -59,6 +65,9 @@ export class ModpackEntity implements Modpack {
       Date.now(),
       this.playtimeSeconds + durationSeconds,
       this.modCount,
+      this.javaArgs,
+      this.windowWidth,
+      this.windowHeight,
     );
   }
 

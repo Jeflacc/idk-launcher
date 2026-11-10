@@ -15,6 +15,9 @@ export const ModpackSchema = {
     lastPlayedAt: z.number().optional(),
     playtimeSeconds: z.number().default(0),
     favorite: z.boolean().optional(),
+    javaArgs: z.string().default(''),
+    windowWidth: z.number().default(1024),
+    windowHeight: z.number().default(768),
     mods: z
       .array(
         z.object({
@@ -47,6 +50,9 @@ export const ModpackSchema = {
     playtimeSeconds: z.number().default(0),
     modCount: z.number().default(0),
     favorite: z.boolean().optional(),
+    javaArgs: z.string().default(''),
+    windowWidth: z.number().default(1024),
+    windowHeight: z.number().default(768),
     diskMods: z
       .array(z.object({ filename: z.string(), path: z.string() }))
       .optional(),

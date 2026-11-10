@@ -572,9 +572,15 @@ export function registerModHandlers(
           minecraftVersion: cfMcVersion,
           loader: cfLoader,
           loaderVersion: cfLoaderRaw.replace(/^[a-z]+-/, '') || undefined,
+          iconPath: undefined,
           createdAt: Date.now(),
           updatedAt: Date.now(),
+          lastPlayedAt: undefined,
           playtimeSeconds: 0,
+          favorite: false,
+          javaArgs: '',
+          windowWidth: 1024,
+          windowHeight: 768,
           mods: [],
         });
 
@@ -713,9 +719,15 @@ export function registerModHandlers(
           minecraftVersion: mcVersion,
           loader: (loaders.length ? (loaders[0] ?? 'vanilla') : 'vanilla') as 'vanilla' | 'forge' | 'fabric' | 'quilt' | 'neoforge',
           loaderVersion: loaderVersion || undefined,
+          iconPath: undefined,
           createdAt: Date.now(),
           updatedAt: Date.now(),
+          lastPlayedAt: undefined,
           playtimeSeconds: 0,
+          favorite: false,
+          javaArgs: '',
+          windowWidth: 1024,
+          windowHeight: 768,
           mods: [],
         });
 

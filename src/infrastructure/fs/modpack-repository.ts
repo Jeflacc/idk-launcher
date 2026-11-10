@@ -52,6 +52,9 @@ export class ModpackRepository {
           lastPlayedAt: undefined,
           playtimeSeconds: 0,
           favorite: false,
+          javaArgs: '',
+          windowWidth: 1024,
+          windowHeight: 768,
           mods: [],
         };
         await this.writeConfigTxt(folder, config);
@@ -76,6 +79,9 @@ export class ModpackRepository {
         lastPlayedAt: config.lastPlayedAt,
         playtimeSeconds: config.playtimeSeconds ?? 0,
         favorite: config.favorite ?? false,
+        javaArgs: config.javaArgs ?? '',
+        windowWidth: config.windowWidth ?? 1024,
+        windowHeight: config.windowHeight ?? 768,
         modCount,
         diskMods,
         diskResourcepacks,
@@ -212,6 +218,9 @@ export class ModpackRepository {
         lastPlayedAt: this.toEpochMs(json.lastPlayedAt),
         playtimeSeconds: json.playtimeSeconds ?? 0,
         favorite: json.favorite ?? false,
+        javaArgs: json.javaArgs ?? '',
+        windowWidth: json.windowWidth ?? 1024,
+        windowHeight: json.windowHeight ?? 768,
         mods: json.mods ?? [],
       };
     } catch {
@@ -236,6 +245,9 @@ export class ModpackRepository {
         lastPlayedAt: this.toEpochMs(json.lastPlayedAt),
         playtimeSeconds: json.playtimeSeconds ?? 0,
         favorite: json.favorite ?? false,
+        javaArgs: json.javaArgs ?? '',
+        windowWidth: json.windowWidth ?? 1024,
+        windowHeight: json.windowHeight ?? 768,
         mods: json.mods ?? [],
       };
     } catch {
@@ -287,9 +299,16 @@ export class ModpackRepository {
       description: '',
       minecraftVersion: '',
       loader: 'vanilla',
+      loaderVersion: undefined,
+      iconPath: undefined,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      lastPlayedAt: undefined,
       playtimeSeconds: 0,
+      favorite: false,
+      javaArgs: '',
+      windowWidth: 1024,
+      windowHeight: 768,
       mods: [],
     };
   }

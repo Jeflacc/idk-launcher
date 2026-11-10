@@ -41,9 +41,15 @@ export class InstallModpack {
       minecraftVersion: input.minecraftVersion,
       loader: input.loader,
       loaderVersion: undefined,
+      iconPath: undefined,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      lastPlayedAt: undefined,
       playtimeSeconds: 0,
+      favorite: false,
+      javaArgs: '',
+      windowWidth: 1024,
+      windowHeight: 768,
       mods: [],
     });
 
