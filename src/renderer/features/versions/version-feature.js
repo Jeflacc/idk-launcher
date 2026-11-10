@@ -106,7 +106,8 @@ updateLoaderUI(state.selectedLoader);
 
 state.sodiumSupportedVersions = new Set();
 state.downloadedVersions = [];
-let currentVersionTab = 'all'; // 'all' or 'downloaded'
+let currentVersionTab = 'downloaded'; // 'all' or 'downloaded' — default to downloaded so only
+// versions actually on disk are shown by default
 
 // Scan the versions directory to detect downloaded versions
 async function scanDownloadedVersions() {
