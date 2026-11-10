@@ -135,7 +135,7 @@ async function bootstrap(): Promise<void> {
   const minotar = new MinotarClient(http);
   const mojangContent = new MojangContentClient(http);
   const curseforge = new CurseforgeClient(http, env.curseforgeApiKey);
-  const modpackRepo = new ModpackRepository(paths);
+  const modpackRepo = new ModpackRepository(paths, secrets);
   const downloadQueue = new DownloadQueue(http, settings.network.concurrentDownloads);
   const integrity = new IntegrityPolicyService(settings);
   const launchService = new LaunchService(paths, http, integrity);

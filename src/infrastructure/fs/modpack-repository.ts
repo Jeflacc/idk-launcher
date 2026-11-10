@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import { ModpackSchema } from '@shared/schemas/modpack.schema';
 import type { ModpackProfile, Modpack } from '@shared/types';
 import { PathService } from './path-service';
+import type { SecretStore } from '../crypto/secret-store';
 
 /**
  * Disk repository for instances (formerly "modpacks"). Each instance lives in
@@ -24,7 +25,7 @@ export class ModpackRepository {
   /** Fixed config filename stored inside each instance folder. */
   private static readonly CONFIG_FILE = 'idk-config.txt';
 
-  constructor(private readonly paths: PathService) {}
+  constructor(private readonly paths: PathService, private readonly secrets: SecretStore) {}
 
   async list(): Promise<Modpack[]> {
     await mkdir(this.paths.modpacks, { recursive: true });
@@ -150,6 +151,15 @@ export class ModpackRepository {
     const newFolder = await this.paths.renameInstanceFolder(folder, newName);
     if (profile) {
       await this.writeProfile(newFolder, { ...profile, id: newFolder, name: newName, updatedAt: Date.now() });
+      // Also update the account name in SecretStore so loadProfilesFromDisk()
+      // picks up the renamed account instead of resurrecting the old name
+    const s = await this.secrets.load();
+    const accounts = s.accounts ?? [];
+    const existing = accounts.find((a) => a.id === folder);
+    if (existing) {
+      existing.username = newName;
+      await this.secrets.save(s);
+    }
     } else {
       await this.writeProfile(newFolder, {
         ...this.emptyProfile(newFolder),
