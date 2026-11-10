@@ -39,7 +39,7 @@ export class ModpackRepository {
 
       // Read the folder-named txt config; create a default one if absent so
       // every folder under instances/ is a first-class modpack.
-      let config = await this.readConfigTxt(folder);
+      let config = await this.readConfig(folder);
       if (!config) {
         config = {
           description: '',

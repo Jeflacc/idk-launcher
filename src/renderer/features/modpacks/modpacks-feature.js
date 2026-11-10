@@ -454,7 +454,13 @@ export function initModpacksFeature({ switchView }) {
         list.appendChild(modpacksHeader);
       }
 
-      permanentModpacks.forEach((mp) => {
+      permanentModpacks
+        .slice()
+        .sort((a, b) => {
+          if (a.favorite === b.favorite) return 0;
+          return a.favorite ? -1 : 1;
+        })
+        .forEach((mp) => {
         const el = document.createElement("div");
         el.className =
           "modpack-item" + (mp.id === state.activeModpackId ? " active" : "");
