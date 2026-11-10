@@ -1657,7 +1657,10 @@ export function initModpacksFeature({ switchView }) {
         mp.windowHeight =
           parseInt(document.getElementById("mp-settings-height").value) || 768;
 
-        mpSave();
+        mp.windowHeight =
+          parseInt(document.getElementById("mp-settings-height").value) || 768;
+
+        await mpSave();
 
         // If the name changed, rename the folder on disk so the config file
         // (idk-config.txt) stays with the renamed folder, then re-fetch data.
