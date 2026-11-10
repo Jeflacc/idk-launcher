@@ -313,6 +313,7 @@
       return idk?.version.download(args.versionId ?? args.version ?? '', args.loader, args.loaderVersion) ?? Promise.resolve({ success: false });
     },
     cancelDownload: (versionId) => idk?.version.cancelDownload(versionId) ?? Promise.resolve({ success: false }),
+    deleteVersion: (versionId) => idk?.version.deleteVersion(versionId) ?? Promise.resolve({ success: false }),
     pauseDownload: (downloadId) => idk?.download.pause(downloadId) ?? Promise.resolve({ success: false }),
     resumeDownload: (downloadId) => idk?.download.resume(downloadId) ?? Promise.resolve({ success: false }),
     onDownloadProgress: (cb) => idk?.download.onProgress(cb) ?? noop(),
