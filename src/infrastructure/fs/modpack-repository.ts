@@ -116,28 +116,26 @@ export class ModpackRepository {
   }
 
   /**
-   * Detect Minecraft version and loader from official modpack config files,
-   * checking in priority order:
-   *  1. idk-config.txt / profile.json (our config — only if loader was explicitly set, not just 'vanilla' default)
-   *  2. modrinth.index.json (Modrinth modpacks)
-   *  3. manifest.json (CurseForge modpacks)
-   *  4. Folder name fallback (inferVersion)
+   * Detect Minecraft version and loader from official modpack config files.
+   * User-set values in idk-config.txt / profile.json always take priority.
+   * Auto-detection from modrinth.index.json / manifest.json only runs when
+   * the config has no version at all.
    */
   private async detectVersionAndLoader(
     dir: string,
     folder: string,
     config: Partial<ModpackProfile>,
   ): Promise<{ minecraftVersion: string; loader: string; loaderVersion?: string }> {
-    // 1. Use config values only if loader was explicitly set (not just 'vanilla' default)
-    if (config.minecraftVersion && config.loader && config.loader !== 'vanilla') {
+    // 1. User-set config values always win — never override them
+    if (config.minecraftVersion) {
       return {
         minecraftVersion: config.minecraftVersion,
-        loader: config.loader,
+        loader: config.loader ?? 'vanilla',
         loaderVersion: config.loaderVersion,
       };
     }
 
-    // 2. Try modrinth.index.json (official Modrinth modpack format)
+    // 2. Try modrinth.index.json (official Modrinth modpack format) — only when no version set
     try {
       const mrPath = join(dir, 'modrinth.index.json');
       const mrRaw = await readFile(mrPath, 'utf8');
@@ -155,7 +153,7 @@ export class ModpackRepository {
       // modrinth.index.json not present or invalid — continue
     }
 
-    // 3. Try manifest.json (official CurseForge modpack format)
+    // 3. Try manifest.json (official CurseForge modpack format) — only when no version set
     try {
       const mfPath = join(dir, 'manifest.json');
       const mfRaw = await readFile(mfPath, 'utf8');
@@ -174,7 +172,7 @@ export class ModpackRepository {
       // manifest.json not present or invalid — continue
     }
 
-    // 4. Fall back to folder name inference
+    // 4. Fall back to folder name inference — only when no version set
     const inferredVersion = this.inferVersion(folder);
     return {
       minecraftVersion: inferredVersion,
