@@ -85,9 +85,9 @@ export class ModpackRepository {
     return result.sort((a, b) => (b.updatedAt - a.updatedAt));
   }
 
-  /** Infer a Minecraft version from a folder name like "1.20.1" or "1.20.1 Fabric". */
+  /** Infer a Minecraft version from a folder name like "Fabulously Optimized 1.20.1" or "1.20.1". */
   private inferVersion(folder: string): string {
-    const m = /^(\d+\.\d+(?:\.\d+)?)/.exec(folder);
+    const m = /(\d+\.\d+(?:\.\d+)?)/.exec(folder);
     return m?.[1] ?? '';
   }
 

@@ -37,11 +37,20 @@ export class LaunchGame {
   }
 
   async execute(options: LaunchOptions): Promise<{ success: boolean; error?: string; pid?: number }> {
+    // A non-vanilla loader requires a valid Minecraft version to resolve the
+    // loader profile. Reject early with a clear message instead of failing deep
+    // inside Fabric/Forge/Quilt/NeoForge loader resolution.
+    if (options.loader && options.loader !== 'vanilla' && !options.versionId) {
+      return {
+        success: false,
+        error:
+          'Minecraft version not set for this modpack. Open modpack settings and select a Minecraft version, then try launching again.',
+      };
+    }
+
     const javaVersion = await this.detectRequiredJavaVersion(options.versionId);
     let java: Awaited<ReturnType<typeof this.deps.javaService.ensure>>;
     try {
-      // The Java phase emits nothing from McLauncher — surface it here so the
-      // renderer never sits on "Initializing..." while a JRE downloads.
       java = await this.deps.javaService.ensure(javaVersion, (p) => {
         const message = p.phase === 'extracting'
           ? `Extracting Java ${javaVersion}...`
