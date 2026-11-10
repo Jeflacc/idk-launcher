@@ -64,14 +64,18 @@ export class ModpackRepository {
       const diskMods = await this.listDiskFiles(dir, 'mods', '.jar');
       const diskResourcepacks = await this.listDiskFiles(dir, 'resourcepacks', ['.zip', '.jar']);
       const diskShaders = await this.listDiskFiles(dir, 'shaderpacks', ['.zip', '.jar']);
+
+      // Detect version/loader from official config files when not set
+      const detected = await this.detectVersionAndLoader(dir, folder, config);
+
       result.push({
         id: folder,
         // Name comes ONLY from the folder name — never from config content.
         name: folder,
         description: config.description ?? '',
-        minecraftVersion: config.minecraftVersion || this.inferVersion(folder) || '',
-        loader: config.loader ?? 'vanilla',
-        loaderVersion: config.loaderVersion,
+        minecraftVersion: detected.minecraftVersion,
+        loader: detected.loader as 'vanilla' | 'forge' | 'fabric' | 'quilt' | 'neoforge',
+        loaderVersion: detected.loaderVersion ?? config.loaderVersion,
         iconPath: config.iconPath,
         directory: dir,
         createdAt: config.createdAt ?? Date.now(),
@@ -95,6 +99,107 @@ export class ModpackRepository {
   private inferVersion(folder: string): string {
     const m = /(\d+\.\d+(?:\.\d+)?)/.exec(folder);
     return m?.[1] ?? '';
+  }
+
+  /**
+   * Detect Minecraft version and loader from official modpack config files,
+   * checking in priority order:
+   *  1. idk-config.txt / profile.json (our config — already loaded)
+   *  2. modrinth.index.json (Modrinth modpacks)
+   *  3. manifest.json (CurseForge modpacks)
+   *  4. Folder name fallback (inferVersion)
+   */
+  private async detectVersionAndLoader(
+    dir: string,
+    folder: string,
+    config: Partial<ModpackProfile>,
+  ): Promise<{ minecraftVersion: string; loader: string; loaderVersion?: string }> {
+    // 1. Already have version from config — use it
+    if (config.minecraftVersion && config.loader) {
+      return {
+        minecraftVersion: config.minecraftVersion,
+        loader: config.loader,
+        loaderVersion: config.loaderVersion,
+      };
+    }
+
+    // 2. Try modrinth.index.json
+    try {
+      const mrPath = join(dir, 'modrinth.index.json');
+      const mrRaw = await readFile(mrPath, 'utf8');
+      const mr = JSON.parse(mrRaw);
+      const versions: string[] | undefined = mr?.minecraft?.versions;
+      if (versions && versions.length > 0) {
+        const detectedLoader = this.detectLoaderFromModrinthDeps(mr.dependencies);
+        return {
+          minecraftVersion: versions[0]!,
+          loader: detectedLoader,
+          loaderVersion: undefined,
+        };
+      }
+    } catch {
+      // modrinth.index.json not present or invalid — continue
+    }
+
+    // 3. Try manifest.json (CurseForge)
+    try {
+      const mfPath = join(dir, 'manifest.json');
+      const mfRaw = await readFile(mfPath, 'utf8');
+      const mf = JSON.parse(mfRaw);
+      const mcVersion = mf?.minecraft?.version;
+      const modLoaders: Array<{ id?: string }> | undefined = mf?.minecraft?.modLoaders;
+      if (mcVersion) {
+        const detectedLoader = this.detectLoaderFromCurseforge(modLoaders);
+        return {
+          minecraftVersion: mcVersion,
+          loader: detectedLoader,
+          loaderVersion: modLoaders?.[0]?.id ? modLoaders[0].id.replace(/^[a-z]+-/, '') : undefined,
+        };
+      }
+    } catch {
+      // manifest.json not present or invalid — continue
+    }
+
+    // 4. Fall back to folder name inference
+    const inferredVersion = this.inferVersion(folder);
+    const inferredLoader = inferredVersion ? config.loader ?? 'vanilla' : 'vanilla';
+    return {
+      minecraftVersion: inferredVersion,
+      loader: inferredLoader,
+      loaderVersion: undefined,
+    };
+  }
+
+  /** Detect loader from Modrinth index.json dependencies array. */
+  private detectLoaderFromModrinthDeps(deps: unknown): string {
+    if (!Array.isArray(deps)) return 'vanilla';
+    for (const dep of deps) {
+      if (typeof dep !== 'object' || dep === null) continue;
+      const id = (dep as { id?: string; type?: string }).id;
+      const type = (dep as { type?: string }).type;
+      if (type === 'loader' || id?.includes('-loader')) {
+        const lid = String(id || '').toLowerCase();
+        if (lid.includes('fabric')) return 'fabric';
+        if (lid.includes('forge')) return 'forge';
+        if (lid.includes('quilt')) return 'quilt';
+        if (lid.includes('neoforge')) return 'neoforge';
+      }
+    }
+    return 'vanilla';
+  }
+
+  /** Detect loader from CurseForge manifest.json modLoaders array. */
+  private detectLoaderFromCurseforge(modLoaders: unknown): string {
+    if (!Array.isArray(modLoaders)) return 'vanilla';
+    for (const ml of modLoaders) {
+      if (typeof ml !== 'object' || ml === null) continue;
+      const id = String((ml as { id?: string }).id || '').toLowerCase();
+      if (id.includes('fabric')) return 'fabric';
+      if (id.includes('forge')) return 'forge';
+      if (id.includes('quilt')) return 'quilt';
+      if (id.includes('neoforge')) return 'neoforge';
+    }
+    return 'vanilla';
   }
 
   async readProfile(folder: string): Promise<ModpackProfile | null> {
