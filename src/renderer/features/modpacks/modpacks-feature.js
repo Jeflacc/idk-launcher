@@ -423,14 +423,8 @@ export function initModpacksFeature({ switchView }) {
           <svg width="20" height="20" viewBox="-1 -1 26 26" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 0 0z"></path></svg>
         </div>
         <div class="mp-item-info"><strong>${v.id}</strong><span>${displayLoader}</span></div>
-        <button class="version-delete-btn" type="button" title="Delete version ${v.id}" style="background:none;border:none;color:#ef4444;font-size:16px;cursor:pointer;margin-left:auto;padding:0 4px;line-height:1;">×</button>
         `;
-        el.addEventListener("click", (ev) => {
-          if (ev.target && ev.target.classList.contains("version-delete-btn")) {
-            ev.stopPropagation();
-            deleteVersion(v.id);
-            return;
-          }
+        el.addEventListener("click", () => {
           state.activeVersionForMods = v.id;
           state.activeModpackId = null;
           state.selectedVersion = v.id;
@@ -1730,7 +1724,7 @@ export function initModpacksFeature({ switchView }) {
       document.getElementById("mp-settings-modal").classList.remove("active");
     });
 
-  // --- Delete Modpack ---
+  // --- Delete Modpack / Version ---
   document
     .getElementById("btn-delete-modpack")
     .addEventListener("click", async () => {
@@ -1738,9 +1732,9 @@ export function initModpacksFeature({ switchView }) {
       const isViewingVersion =
         state.activeVersionForMods && !state.activeModpackId;
 
-      // If viewing a version (not an instance), block deletion.
+      // If viewing a version (not an instance), delete the version via the shared function
       if (isViewingVersion && !mp) {
-        actions.showWarningToast("Cannot delete versions.");
+        await deleteVersion(state.activeVersionForMods);
         return;
       }
 
