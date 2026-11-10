@@ -13,6 +13,38 @@ export function initModpacksFeature({ switchView }) {
   // Global flag to pause profile scanning during deletion
   let isDeleting = false;
 
+  async function deleteVersion(versionId) {
+    const { showConfirmDialog } = await import("../../components/confirm-dialog.js");
+    const confirmed = await showConfirmDialog({
+      title: "Delete version",
+      message: `Are you sure you want to delete version "${versionId}"? This cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+    const wasSelected = state.activeVersionForMods === versionId;
+    if (!window.electronAPI?.deleteVersion) {
+      console.error("[Versions] electronAPI.deleteVersion is not available");
+      actions.showWarningToast?.("Delete is not available in this build.");
+      return;
+    }
+    try {
+      await window.electronAPI.deleteVersion(versionId);
+    } catch (e) {
+      console.error("[Versions] Failed to delete version:", e);
+      actions.showWarningToast?.("Failed to delete version.");
+      return;
+    }
+    await loadProfilesFromDisk();
+    if (wasSelected) {
+      state.activeVersionForMods = null;
+      state.activeModpackId = null;
+    }
+    mpRenderList();
+    mpRenderDetail();
+  }
+
   // Scan profiles directory on disk and merge with localStorage
   async function loadProfilesFromDisk() {
     // Skip if deletion is in progress
@@ -388,10 +420,17 @@ export function initModpacksFeature({ switchView }) {
           (state.activeVersionForMods === v.id ? " active" : "");
         el.innerHTML = `
         <div class="mp-item-icon" style="width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(var(--theme-accent-rgb),0.15);flex-shrink:0;border:2px solid rgba(var(--theme-accent-rgb),0.3);">
-          <svg width="20" height="20" viewBox="-1 -1 26 26" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 0 0z"></path></svg>
+          <svg width="20" height="20" viewBox="-1 -1 26 26" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--theme-accent);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 0 0z"></path></svg>
         </div>
-        <div class="mp-item-info"><strong>${v.id}</strong><span>${displayLoader}</span></div>`;
-        el.addEventListener("click", () => {
+        <div class="mp-item-info"><strong>${v.id}</strong><span>${displayLoader}</span></div>
+        <button class="version-delete-btn" type="button" title="Delete version ${v.id}" style="background:none;border:none;color:#ef4444;font-size:16px;cursor:pointer;margin-left:auto;padding:0 4px;line-height:1;">×</button>
+        `;
+        el.addEventListener("click", (ev) => {
+          if (ev.target && ev.target.classList.contains("version-delete-btn")) {
+            ev.stopPropagation();
+            deleteVersion(v.id);
+            return;
+          }
           state.activeVersionForMods = v.id;
           state.activeModpackId = null;
           state.selectedVersion = v.id;
