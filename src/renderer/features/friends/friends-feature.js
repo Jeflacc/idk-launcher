@@ -1434,7 +1434,7 @@ export function initFriendsFeature() {
     actions.openChatWithFriend = enterChat;
     actions.openFriendsSidebar = () => {
       actions.switchView?.("idk-connect");
-      mainPanel.style.display = "flex";
+      updateFriendsAuthUI();
       chatPanel.style.display = "none";
       const dot = document.getElementById("friends-unread-dot");
       if (dot) dot.style.display = "none";
