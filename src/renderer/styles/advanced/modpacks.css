@@ -18,6 +18,20 @@
    ============================================================================ */
 
 /* Advanced shared page chrome */
+/* Consistent dot-grid background for ALL advanced views (main, mods, profile, settings) */
+body.ui-advanced #view-main,
+body.ui-advanced #view-mods,
+body.ui-advanced #view-settings,
+body.ui-advanced #view-profile {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-color: var(--theme-bg);
+}
+
+body.ui-advanced #view-main .main-hero-banner,
+body.ui-advanced .profile-main-stage {
+    background-image: none;
+}
 
 body.ui-advanced #view-mods,
 body.ui-advanced #view-settings {
